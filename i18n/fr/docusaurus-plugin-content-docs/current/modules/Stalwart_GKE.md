@@ -3,21 +3,78 @@ title: "Module Stalwart GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Stalwart sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Stalwart_GKE.md @ a4095cd sha256:e8540c0b889b -->
+<!-- translated-from: docs/modules/Stalwart_GKE.md @ e69407af sha256:9cb561b166cb -->
 
 # Module Stalwart GKE — Guide de configuration {#stalwart-gke-module--configuration-guide}
 
-<img src="https://storage.googleapis.com/rad-public-2b65/modules/Stalwart_GKE.png" alt="Stalwart sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
+Ce guide décrit les variables de configuration disponibles dans le module `Stalwart_GKE`. `Stalwart_GKE` est un **module enveloppant** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration d'application partagée [`Stalwart_Common`](./Stalwart_Common.md) pour déployer [Stalwart Mail Server](https://stalw.art/) — un serveur de messagerie open source qui sert SMTP, IMAP, POP3, JMAP et ManageSieve à partir d'un seul binaire Rust — sur Google Kubernetes Engine (GKE) Autopilot.
 
-Ce guide décrit les variables de configuration disponibles dans le module `Stalwart_GKE`. `Stalwart_GKE` est un **module enveloppe** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration d'application partagée [`Stalwart_Common`](./Stalwart_Common.md) pour déployer [Stalwart Mail Server](https://stalw.art/) — un serveur de messagerie open-source qui fournit SMTP, IMAP, POP3, JMAP et ManageSieve à partir d'un seul binaire Rust — sur Google Kubernetes Engine (GKE) Autopilot.
+La plupart des options de configuration dans `Stalwart GKE` correspondent directement aux mêmes options dans `App GKE`. Lorsqu'une variable a un comportement identique, ce guide fait référence au guide `App GKE` plutôt que de répéter la même documentation. Seules les variables et les valeurs par défaut **spécifiques à Stalwart** sont décrites en détail ici.
 
-La plupart des options de configuration de `Stalwart GKE` correspondent directement aux mêmes options de `App GKE`. Lorsqu'une variable a un comportement identique, ce guide fait référence au guide `App GKE` plutôt que de répéter la même documentation. Seules les variables et les valeurs par défaut **spécifiques à Stalwart** sont décrites en détail ici.
+> **Note :** Les variables marquées comme *gérées par la plateforme* sont définies et maintenues par la plateforme. Vous n'avez normalement pas besoin de les modifier.
 
-> **Remarque :** Les variables marquées comme *gérées par la plateforme* sont définies et maintenues par la plateforme. Vous n'avez normalement pas besoin de les modifier.
-
-> **GKE uniquement :** Il n'existe pas de variante Cloud Run. Les protocoles de messagerie sont des protocoles en ligne que Cloud Run ne peut pas transférer, et Stalwart fonctionne normalement sur le port 443 tandis que son port 8080 ne s'ouvre que lorsqu'il n'est pas configuré ou n'a pas réussi à démarrer — le contrat `$PORT` de Cloud Run ne serait donc satisfait que lorsque le serveur est en panne.
+> **GKE uniquement :** Il n'y a pas de variante Cloud Run. Les protocoles de messagerie sont des protocoles en ligne que Cloud Run ne peut pas transférer, et Stalwart sert normalement sur le port 443 tandis que son port 8080 ne s'ouvre que lorsqu'il n'est pas configuré ou n'a pas réussi à démarrer — le contrat `$PORT` de Cloud Run serait donc satisfait précisément lorsque le serveur est en panne.
 
 ---
+
+## Ce que coûte Stalwart sur RAD, et comment cela se compare {#what-stalwart-costs-on-rad-and-how-that-compares}
+
+**Stalwart sur le module GKE Autopilot de RAD coûte environ 110,13 US$ par mois dans un projet Google Cloud que vous possédez, avec les frais de module facturés une seule fois en crédits RAD.** Il n'y a pas de variante Cloud Run — les protocoles de messagerie nécessitent les ports TCP de longue durée que Cloud Run ne peut pas transférer — GKE Autopilot est donc la seule façon dont RAD déploie Stalwart. Si vous n'avez besoin d'un serveur de messagerie qu'occasionnellement — pour des tests, un cours, un projet de courte durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 US$) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+
+### Ce que vous payez sur RAD {#what-you-pay-on-rad}
+
+| | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
+|---|---|---|
+| Frais de module, une fois par déploiement | 110 crédits (11 US$ au prix de la recharge) | 99 crédits (10 % de moins) |
+| Temps de build | Environ 3-6 crédits par build | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **110,13 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **99 crédits par jour**, soit environ 2 970 par mois |
+| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est détenu en réserve |
+
+10 crédits coûtent 1 US$ pour une recharge unique, et moins pour un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas un deuxième ensemble de ces éléments.
+
+**Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
+
+| Ressource (valeur par défaut du module) | Par mois |
+|---|---|
+| Pod GKE Autopilot, 1 vCPU / 2 GiB | 39,68 US$ |
+| Cloud SQL pour MySQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 US$ |
+| Serveur de fichiers NFS/cache (petite VM) | 13,43 US$ |
+| Cloud NAT et réseau | 5,00 US$ |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1,00 US$ |
+| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 |
+| **Total** | **110,13 US$** |
+
+### Comment cela se compare {#how-it-compares}
+
+- Le niveau payant de Stalwart est une *licence* Enterprise pour le même binaire auto-hébergé (prix par boîte aux lettres, facturé annuellement ou mensuellement) — ce n'est pas un service de messagerie hébergé que quelqu'un d'autre gère pour vous, ce n'est donc pas une alternative comparable à RAD gérant l'infrastructure.
+- Une comparaison auto-gérée pour un serveur de messagerie, qui nécessite une base de données et un serveur de fichiers ainsi que le processus de messagerie lui-même : Hetzner CPX22 (2 vCPU/4 Go) coûte environ 24 $/mois, un Droplet DigitalOcean 2 vCPU/4 Go coûte le même 24 $/mois, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) coûte environ 49 $/mois — plus le temps de l'administrateur pour la configuration DKIM/SPF/DMARC, les sauvegardes, les correctifs de sécurité et le renouvellement TLS, que Cloud SQL géré, Secret Manager et la surveillance de RAD couvrent pour vous.
+- Exécuter votre propre serveur de messagerie — sur RAD ou ailleurs — échange les frais par siège d'un fournisseur de boîtes aux lettres hébergées contre l'infrastructure plus le travail continu de délivrabilité (DNS inverse, réputation IP) qu'un fournisseur comme Google Workspace ou Fastmail prend en charge pour vous.
+
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+
+Si Stalwart s'exécute dans un projet géré par RAD pour vous, la suppression de l'ensemble du projet délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression d'un module, cela ne démolit pas Cloud SQL, la VM NFS ou la ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
+
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Cela ne coûte qu'une poignée de crédits (moins de 1 US$) au total pour une chaîne de déploiement typique de 2-3.
+
+Ce qu'il faut : vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+
+Un véritable écart : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé la configuration de messagerie de Stalwart ou conservé des données de boîte aux lettres que vous souhaitez conserver, copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de la supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+
+### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+
+Dans votre propre projet, ou une fois la fenêtre de restauration de 30 jours passée, l'alternative est de supprimer Stalwart purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module, plus les builds — environ 115 crédits (environ 11,50 US$) dans votre propre projet, ou 104 crédits dans un projet géré par RAD.
+
+La suppression ne permet d'économiser de l'argent que si Stalwart devait rester inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution quotidien — par rapport au total du projet ci-dessus (environ 3,67 US$ par jour), cela représente environ 4 jours ou plus, ou environ 2 jours ou plus dans un projet géré par RAD (99 crédits par jour). La majeure partie du coût d'exécution ici est la base de données et le serveur de fichiers NFS ; ils ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de Stalwart pendant que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
+
+Conservez d'abord les données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+
+### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
+
+- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les cabinets de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est interrompue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les frais propres à RAD et les estimations de crédits quotidiens ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration. Aucun SaaS de messagerie hébergé commercial actuellement vérifié exécutant Stalwart lui-même n'existe, donc aucun prix concurrent n'est mentionné.
 
 ## Référence de configuration standard {#standard-configuration-reference}
 
@@ -26,21 +83,21 @@ Les zones de configuration suivantes sont fournies par le module sous-jacent `Ap
 | Zone de configuration | Section App GKE.md | Notes spécifiques à Stalwart |
 |---|---|---|
 | Projet et identité | §2 IAM et contrôle d'accès | Identique. |
-| Identité de l'application | §3.A Compute (GKE Autopilot) | Modifier le nom d'affichage `Wiki.js` restant ; voir [Groupe 3](#group-3-application-identity). |
-| Exécution et mise à l'échelle | §3.A Compute (GKE Autopilot) | `container_port = 443` ; conserver un réplica ; voir [Groupe 4](#group-4-runtime--scaling). |
+| Identité de l'application | §3.A Calcul (GKE Autopilot) | Modifiez le nom d'affichage restant `Wiki.js` ; voir [Groupe 3](#group-3-application-identity). |
+| Exécution et mise à l'échelle | §3.A Calcul (GKE Autopilot) | `container_port = 443` ; conservez un réplica ; voir [Groupe 4](#group-4-runtime--scaling). |
 | Variables d'environnement et secrets | §3 Configuration du service principal | `STALWART_RECOVERY_ADMIN` appartient à `secret_environment_variables` ; voir [Groupe 5](#group-5-environment-variables--secrets). |
 | Service Kubernetes et ports | §5 Trafic et Ingress | L4 `LoadBalancer` transportant 443 plus six ports de messagerie ; voir [Groupe 6 et la carte des ports](#group-6-kubernetes-service-workload--ports). |
-| Charges de travail avec état | §3.A Compute (GKE Autopilot) | StatefulSet avec un PVC à `/var/lib/stalwart` ; voir [Groupe 7](#group-7-stateful-workloads). |
-| Budgets d'interruption de pod | §7.A Budgets d'interruption de pod | Créé uniquement pendant `max_instance_count > 1`. |
-| Observabilité et vérifications de santé | §3.A Compute (GKE Autopilot) | **Sondes TCP sur 443** ; voir [Groupe 10](#group-10-observability--health). |
+| Charges de travail avec état | §3.A Calcul (GKE Autopilot) | StatefulSet avec un PVC à `/var/lib/stalwart` ; voir [Groupe 7](#group-7-stateful-workloads). |
+| Budgets d'interruption de pod | §7.A Budgets d'interruption de pod | Créé uniquement lorsque `max_instance_count > 1`. |
+| Observabilité et vérifications de santé | §3.A Calcul (GKE Autopilot) | **Sondes TCP sur 443** ; voir [Groupe 10](#group-10-observability--health). |
 | Jobs d'initialisation et CronJobs | §3.E Jobs d'initialisation et CronJobs | Pas de job d'initialisation — Stalwart crée son propre schéma. |
 | CI/CD, autorisation binaire | §6 CI/CD et livraison, §4.C | Identique. |
-| Stockage — NFS / GCS | §3.C Stockage (NFS / GCS / GCS Fuse) | Non utilisé par Stalwart ; voir [Groupes 13-14](#groups-13-and-14-storage). |
+| Stockage — NFS / GCS | §3.C Stockage (NFS / GCS / GCS Fuse) | Non utilisé par Stalwart ; voir [Groupes 13–14](#groups-13-and-14-storage). |
 | Redis | §8.A Redis / Memorystore | Désactiver ; voir [Groupe 15](#group-15-redis). |
 | Configuration de la base de données | §3.B Base de données (Cloud SQL) | **MySQL 8.0, fixé par `Stalwart_Common`** ; voir [Groupe 16](#group-16-database). |
-| Plan de sauvegarde, importation et SQL personnalisé | §3.B, §8.B, §3.E | Identique. |
+| Planification de sauvegarde, importation et SQL personnalisé | §3.B, §8.B, §3.E | Identique. |
 | Domaine personnalisé et IP statique | §5.C Réservation d'IP statique | IP statique sur le LoadBalancer ; pas de Gateway ; voir [Groupe 19](#group-19-custom-domain-static-ip--network-tags). |
-| IAP, Cloud Armor, CDN | §4.A, §4.B, §5.B | Fonctionnalités de la Gateway (HTTP) — elles ne couvrent pas les ports de messagerie. |
+| IAP, Cloud Armor, CDN | §4.A, §4.B, §5.B | Fonctionnalités de la passerelle (HTTP) — elles ne couvrent pas les ports de messagerie. |
 | Contrôles de service VPC | §4.D Contrôles de service VPC | Identique. |
 
 ---
@@ -49,14 +106,14 @@ Les zones de configuration suivantes sont fournies par le module sous-jacent `Ap
 
 `Stalwart GKE` transmet ses variables à `App GKE` et ajoute un sous-module `Stalwart Common` qui fournit la configuration d'application spécifique à Stalwart. Les principaux effets sont les suivants :
 
-1. **Une image enveloppe écrit `config.json`.** Stalwart lit un seul fichier `--config /etc/stalwart/config.json` qui ne contient que sa définition de **DataStore**, et le fichier n'est pas livré dans l'image. `App_GKE` ne peut pas monter une ConfigMap dans le conteneur de l'application, donc `Stalwart_Common` construit `FROM stalwartlabs/stalwart:<version>` avec un point d'entrée qui rend le fichier à partir des `DB_IP`, `DB_PORT`, `DB_NAME` et `DB_USER` de la fondation à chaque démarrage. Le mot de passe n'est pas écrit dans le fichier — son `authSecret` est `{ "@type": "EnvironmentVariable", "variableName": "DB_PASSWORD" }`.
-2. **La base de données est MySQL 8.0, accessible via l'IP privée.** `Stalwart_Common` définit `database_type = "MYSQL_8_0"` et `enable_cloudsql_volume = false` ; le `host` du DataStore est l'IP privée brute de Cloud SQL. Ces valeurs proviennent de `Stalwart_Common` et remplacent les entrées `database_type` et `enable_cloudsql_volume` de l'enveloppe, tout comme le port du conteneur (443).
-3. **Il n'y a pas de job d'initialisation.** L'étape `db-create` de la fondation provisionne la base de données et l'utilisateur, et Stalwart crée ses propres tables (27 lors d'une nouvelle installation) lors de la première connexion.
-4. **Le conteneur sert sur 443, jamais 8080.** Le port d'écoute HTTPS normal de Stalwart (interface d'administration, JMAP, `/healthz/live`) est 443. Le port 8080 ne s'ouvre que dans ses états de démarrage ("aucun fichier de configuration n'a été trouvé") et de récupération ("le démarrage a échoué").
-5. **Les sondes sont TCP sur 443.** Le `HEALTHCHECK` de l'image est `curl https://127.0.0.1:443/healthz/live || curl http://127.0.0.1:8080/healthz/live`, qui signale un serveur cassé comme sain via le repli 8080. Une sonde HTTP n'est pas non plus possible : la sonde HTTP de `App_GKE` n'a pas de champ `scheme`, elle ne peut donc pas vérifier un port HTTPS.
-6. **Le Service est un LoadBalancer TCP L4 avec les ports de messagerie ajoutés.** `service_port = 443` plus `extra_service_ports` (25, 465, 587, 993, 995, 4190).
-7. **Réplica unique par conception.** Un deuxième réplica nécessite le coordinateur de Stalwart, qui nécessite Redis ; le module évite Redis. Notez que la valeur par défaut `max_instance_count` de l'enveloppe est `3` — définissez-la sur `1`.
-8. **Les domaines, les écouteurs et le TLS ne sont pas configurés.** Chaque paramètre Stalwart autre que le DataStore réside dans la base de données et est appliqué avec `stalwart-cli` (une image séparée). Le module ne gère pas cette étape.
+1.  **Une image wrapper écrit `config.json`.** Stalwart lit un seul fichier `--config /etc/stalwart/config.json` qui ne contient que sa définition **DataStore**, et le fichier n'est pas livré dans l'image. `App_GKE` ne peut pas monter une ConfigMap dans le conteneur de l'application, donc `Stalwart_Common` construit `FROM stalwartlabs/stalwart:<version>` avec un point d'entrée qui rend le fichier à partir des variables `DB_IP`, `DB_PORT`, `DB_NAME` et `DB_USER` de la fondation à chaque démarrage. Le mot de passe n'est pas écrit dans le fichier — son `authSecret` est `{ "@type": "EnvironmentVariable", "variableName": "DB_PASSWORD" }`.
+2.  **La base de données est MySQL 8.0, accessible via l'IP privée.** `Stalwart_Common` définit `database_type = "MYSQL_8_0"` et `enable_cloudsql_volume = false` ; le `host` DataStore est l'IP privée brute de Cloud SQL. Ces valeurs proviennent de `Stalwart_Common` et remplacent les entrées `database_type` et `enable_cloudsql_volume` du wrapper, tout comme le port du conteneur (443).
+3.  **Il n'y a pas de job d'initialisation.** L'étape `db-create` de la fondation provisionne la base de données et l'utilisateur, et Stalwart crée ses propres tables (27 lors d'une nouvelle installation) lors de la première connexion.
+4.  **Le conteneur sert sur le port 443, jamais 8080.** L'écouteur HTTPS normal de Stalwart (interface d'administration, JMAP, `/healthz/live`) est le port 443. Le port 8080 ne s'ouvre que dans ses états de démarrage ("aucun fichier de configuration n'a été trouvé") et de récupération ("le démarrage a échoué").
+5.  **Les sondes sont TCP sur le port 443.** La propre `HEALTHCHECK` de l'image est `curl https://127.0.0.1:443/healthz/live || curl http://127.0.0.1:8080/healthz/live`, qui signale un serveur défectueux comme sain via le repli 8080. Une sonde HTTP n'est pas non plus possible : la sonde HTTP de `App_GKE` n'a pas de champ `scheme`, elle ne peut donc pas vérifier un port HTTPS.
+6.  **Le service est un équilibreur de charge TCP L4 avec les ports de messagerie ajoutés.** `service_port = 443` plus `extra_service_ports` (25, 465, 587, 993, 995, 4190).
+7.  **Réplica unique par conception.** Un deuxième réplica nécessite le coordinateur de Stalwart, qui nécessite Redis ; le module évite Redis. Notez que la valeur par défaut `max_instance_count` du wrapper est `3` — définissez-la sur `1`.
+8.  **Les domaines, les écouteurs et TLS ne sont pas configurés.** Tous les paramètres de Stalwart autres que le DataStore résident dans la base de données et sont appliqués avec `stalwart-cli` (une image distincte). Le module ne câble pas cette étape.
 
 ---
 
@@ -77,9 +134,9 @@ Identique à `App_GKE` : `support_users` (`[]`) et `resource_labels` (`{}`).
 | Variable | Valeur par défaut Stalwart GKE | Notes |
 |---|---|---|
 | `application_name` | `"stalwart"` | Nom de base pour toutes les ressources GCP et Kubernetes. **Ne pas modifier après le déploiement.** |
-| `application_display_name` | `"Wiki.js"` | Un vestige du module à partir duquel l'enveloppe a été copiée. C'est ce que la console GCP, la description de l'IP statique et les tableaux de bord affichent — définissez-le sur `"Stalwart Mail Server"` ou similaire. |
-| `application_description` | `"Wiki.js - The most powerful and extensible open source Wiki software"` | Également un vestige, mais **non utilisé** — la description de la charge de travail provient de `Stalwart_Common` ("Stalwart — serveur de messagerie et de collaboration open-source…"). |
-| `application_version` | `"v0.16.22"` | Tag `stalwartlabs/stalwart`, passé à la build comme `STALWART_VERSION`. **Épinglez une version exacte** — cette valeur remplace la valeur par défaut `_Common`. Une reconstruction sous un tag inchangé ne produit pas de diff Terraform. |
+| `application_display_name` | `"Wiki.js"` | Un reste du module dont le wrapper a été copié. C'est ce que la console GCP, la description de l'IP statique et les tableaux de bord affichent — définissez-le sur `"Stalwart Mail Server"` ou similaire. |
+| `application_description` | `"Wiki.js - The most powerful and extensible open source Wiki software"` | Également un reste, mais **non utilisé** — la description de la charge de travail provient de `Stalwart_Common` ("Stalwart — serveur de messagerie et de collaboration open source…"). |
+| `application_version` | `"v0.16.22"` | Tag `stalwartlabs/stalwart`, transmis au build en tant que `STALWART_VERSION`. **Épinglez une version exacte** — cette valeur remplace la valeur par défaut `_Common`. Une reconstruction sous un tag inchangé ne produit pas de diff Terraform. |
 
 ---
 
@@ -87,15 +144,15 @@ Identique à `App_GKE` : `support_users` (`[]`) et `resource_labels` (`{}`).
 
 | Variable | Valeur par défaut Stalwart GKE | Notes |
 |---|---|---|
-| `container_port` | `443` | **Sans effet** — `App_GKE` prend le port du conteneur de `Stalwart_Common`, qui le fixe à 443, le port d'écoute HTTPS normal de Stalwart (jamais 8080, le port de démarrage/récupération). Les sondes TCP vérifient ce port. |
-| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "2Gi" }` | Également passé à `Stalwart_Common` comme limites du conteneur. |
+| `container_port` | `443` | **Sans effet** — `App_GKE` prend le port du conteneur de `Stalwart_Common`, qui le fixe à 443, l'écouteur HTTPS normal de Stalwart (jamais 8080, le port de démarrage/récupération). Les sondes TCP vérifient ce port. |
+| `container_resources` | `{ cpu_limit = "1000m", memory_limit = "2Gi" }` | Également transmis à `Stalwart_Common` comme limites du conteneur. |
 | `min_instance_count` | `1` | Gardez au moins un réplica — le courrier doit être reçu en continu. |
 | `max_instance_count` | `3` | **Définir sur `1`.** Toute valeur supérieure à 1 crée un HorizontalPodAutoscaler (min `min_instance_count`, max cette valeur, mise à l'échelle sur l'utilisation du CPU et de la mémoire) et un PodDisruptionBudget. Un deuxième réplica nécessite le coordinateur de Stalwart, qui nécessite Redis, que ce module ne configure pas. |
-| `container_image_source` | `"custom"` | Construit l'image de l'enveloppe. `"prebuilt"` déploierait une image sans le générateur `config.json` ; Stalwart ne trouverait alors aucune configuration et ouvrirait le port 8080. |
+| `container_image_source` | `"custom"` | Construit l'image wrapper. `"prebuilt"` déploierait une image sans le générateur `config.json` ; Stalwart ne trouverait alors aucune configuration et ouvrirait le port 8080. |
 | `container_image` | `"stalwartlabs/stalwart"` | Référence de l'image de base. |
 | `enable_image_mirroring` | `true` | Mettre en miroir l'image dans Artifact Registry. |
 | `enable_cloudsql_volume` | `true` | **Sans effet** — `Stalwart_Common` le définit toujours sur `false` (pas de sidecar Auth Proxy). |
-| `service_annotations` / `service_labels` | `{}` | Appliqué au Service Kubernetes **uniquement lors de la création** ; `App_GKE` ignore les modifications ultérieures. |
+| `service_annotations` / `service_labels` | `{}` | Appliqué au service Kubernetes **uniquement à la création** ; `App_GKE` ignore les modifications ultérieures. |
 
 ---
 
@@ -109,14 +166,14 @@ Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](.
 
 | Variable | Valeur par défaut | Objectif |
 |---|---|---|
-| `STALWART_PUBLIC_URL` | `""` | URL de base publiée pour la découverte OAuth, OIDC et JMAP. Laissée vide volontairement — une mauvaise valeur est transmise aux clients dans les documents de découverte. L'enveloppe n'a pas d'entrée dédiée pour cela ; définissez-la via `environment_variables` une fois que vous avez un domaine (par exemple `https://mail.example.com`). |
-| `STALWART_DATASTORE_TYPE` | `"MySql"` | Le `@type` du DataStore que le point d'entrée rend, dérivé du moteur `Stalwart_Common` provisions. Ne le remplacez pas. |
+| `STALWART_PUBLIC_URL` | `""` | URL de base publiée pour la découverte OAuth, OIDC et JMAP. Laissée vide volontairement — une mauvaise valeur est transmise aux clients dans les documents de découverte. Le wrapper n'a pas d'entrée dédiée pour cela ; définissez-la via `environment_variables` une fois que vous avez un domaine (par exemple `https://mail.example.com`). |
+| `STALWART_DATASTORE_TYPE` | `"MySql"` | Le `@type` DataStore que le point d'entrée rend, dérivé des provisions du moteur `Stalwart_Common`. Ne le remplacez pas. |
 
 Le point d'entrée lit également `STALWART_DB_USE_TLS` et `STALWART_DB_ALLOW_INVALID_CERTS` (tous deux par défaut `false`) pour la connexion DataStore ; les valeurs par défaut sont correctes pour Cloud SQL via l'IP privée.
 
 **Administrateur de démarrage — définissez-le :**
 
-L'administrateur de Stalwart est fourni comme `STALWART_RECOVERY_ADMIN`, avec la valeur `username:password`. Stockez-le dans Secret Manager et mappez-le dans `secret_environment_variables` :
+L'administrateur de Stalwart est fourni en tant que `STALWART_RECOVERY_ADMIN`, avec la valeur `username:password`. Stockez-le dans Secret Manager et mappez-le dans `secret_environment_variables` :
 
 ```bash
 printf 'admin:%s' "$(openssl rand -base64 24)" | \
@@ -139,27 +196,27 @@ Les variables de secrets restantes (`secret_rotation_period`, `secret_propagatio
 
 | Variable | Valeur par défaut | Notes |
 |---|---|---|
-| `service_type` | `"LoadBalancer"` | Un équilibreur de charge réseau externe passthrough (`networking.gke.io/load-balancer-type: External`). Les protocoles de messagerie en ont besoin — une Gateway/Ingress ne transporte que du HTTP. |
+| `service_type` | `"LoadBalancer"` | Un équilibreur de charge réseau passthrough externe (`networking.gke.io/load-balancer-type: External`). Les protocoles de messagerie en ont besoin — une passerelle/Ingress ne transporte que du HTTP. |
 | `service_port` | `443` | Port de service principal (nommé `http`), ciblant le port de conteneur 443. |
-| `session_affinity` | `"ClientIP"` | Les requêtes provenant d'une même adresse IP client vont au même pod. |
-| `workload_type` | `"StatefulSet"` | Identité stable plus le PVC par pod du Groupe 7. |
+| `session_affinity` | `"ClientIP"` | Les requêtes provenant d'une même adresse IP client vont vers le même pod. |
+| `workload_type` | `"StatefulSet"` | Identité stable plus le PVC par pod du groupe 7. |
 | `namespace_name` | `""` | Dérivé du nom du service lorsqu'il est vide. |
-| `enable_network_segmentation` | `false` | Kubernetes NetworkPolicies. |
+| `enable_network_segmentation` | `false` | Politiques réseau Kubernetes. |
 | `termination_grace_period_seconds` | `30` | Secondes entre SIGTERM et SIGKILL. |
 
-**Carte des ports.** `extra_service_ports` (une entrée du Groupe 0, gérée par la plateforme) ajoute les ports de messagerie au même Service. Chacun cible le même port sur le conteneur et utilise TCP :
+**Carte des ports.** `extra_service_ports` (une entrée du groupe 0, gérée par la plateforme) ajoute les ports de messagerie au même service. Chacun cible le même port sur le conteneur et utilise TCP :
 
 | Port | Nom | Protocole |
 |---|---|---|
-| `443` | `http` | HTTPS — interface d'administration, JMAP, `/healthz/live`. Le TLS est terminé par Stalwart, pas par Google. |
-| `25` | `smtp` | SMTP. En pratique, uniquement entrant — Google Cloud bloque le port 25 sortant. |
+| `443` | `http` | HTTPS — interface d'administration, JMAP, `/healthz/live`. TLS est terminé par Stalwart, pas par Google. |
+| `25` | `smtp` | SMTP. Entrant uniquement en pratique — Google Cloud bloque le port 25 sortant. |
 | `465` | `submissions` | Soumission SMTP, TLS implicite. |
 | `587` | `submission` | Soumission SMTP (STARTTLS) ; également le port pour relayer le courrier sortant via un hôte intelligent. |
 | `993` | `imaps` | IMAP, TLS implicite. |
 | `995` | `pop3s` | POP3, TLS implicite. |
 | `4190` | `managesieve` | ManageSieve (vérifié pour renvoyer la propre bannière de Stalwart). |
 
-IMAP en texte clair (143) et POP3 (110) sont omis volontairement — les ports TLS implicites font le même travail sans chemin d'accès aux identifiants en texte clair. Le port 8080 n'est pas publié. GKE crée automatiquement les règles de pare-feu pour un service `LoadBalancer`. La description de la variable indique toujours qu'elle est "déclarée mais NON transférée" ; ce texte est obsolète — `main.tf` la transfère à `App_GKE`.
+Les ports IMAP (143) et POP3 (110) en texte clair sont omis volontairement — les ports TLS implicites font le même travail sans chemin d'authentification en clair. Le port 8080 n'est pas publié. GKE crée automatiquement les règles de pare-feu pour un service `LoadBalancer`. La description de la variable indique toujours qu'elle est "déclarée mais NON transférée" ; ce texte est obsolète — `main.tf` la transfère à `App_GKE`.
 
 ---
 
@@ -186,7 +243,7 @@ IMAP en texte clair (143) et POP3 (110) sont omis volontairement — les ports T
 
 ## Groupe 10 : Observabilité et santé {#group-10-observability--health}
 
-Contrairement aux enveloppes dont les sondes proviennent des propres variables de leur module `_Common`, `Stalwart GKE` transmet `startup_probe_config` et `health_check_config` à `Stalwart_Common`, de sorte que **ces deux entrées sont les sondes sur le conteneur Stalwart**.
+Contrairement aux wrappers dont les sondes proviennent des propres variables de leur module `_Common`, `Stalwart GKE` transmet `startup_probe_config` et `health_check_config` à `Stalwart_Common`, de sorte que **ces deux entrées sont les sondes sur le conteneur Stalwart**.
 
 **Sonde de démarrage (`startup_probe_config`) :**
 
@@ -208,7 +265,7 @@ kubectl exec -n "$NS" <pod> -- curl -s -o /dev/null -w '%{http_code}' http://127
 
 Un serveur entièrement configuré refuse cette connexion. **Ne redirigez pas une sonde défaillante vers le port 8080.**
 
-`uptime_check_config` est par défaut `{ enabled = false, path = "/" }`. Sans Gateway, la vérification de disponibilité de `App_GKE` est une vérification HTTP simple (pas de SSL) contre `service_port` sur l'adresse externe — mais Stalwart sert le port 443 uniquement via HTTPS, donc laissez-le désactivé.
+`uptime_check_config` est par défaut `{ enabled = false, path = "/" }`. Sans passerelle, le test de disponibilité de `App_GKE` est un test HTTP simple (sans SSL) contre `service_port` sur l'adresse externe — mais Stalwart ne sert le port 443 qu'en HTTPS, donc laissez-le désactivé.
 
 ---
 
@@ -246,11 +303,11 @@ Les autres entrées de stockage et de rétention d'images se comportent comme da
 
 | Variable | Valeur par défaut | Notes |
 |---|---|---|
-| `database_type` | `"MYSQL_8_0"` | Utilisé uniquement par la validation au moment de la planification. Le moteur provisionné et rendu dans `config.json` est défini par `Stalwart_Common` (MySQL 8.0) ; l'enveloppe ne lui transmet pas cette valeur. |
+| `database_type` | `"MYSQL_8_0"` | Utilisé uniquement pour la validation au moment de la planification. Le moteur provisionné et rendu dans `config.json` est défini par `Stalwart_Common` (MySQL 8.0) ; le wrapper ne lui transmet pas cette valeur. |
 | `application_database_name` / `application_database_user` | `"stalwart"` | **Inerte** — la fondation nomme la base de données et l'utilisateur d'après le service. |
-| `database_password_length` | `32` | Ne pas modifier sur un déploiement en cours d'exécution — cela écrit un nouveau mot de passe dans Secret Manager sans mettre à jour l'utilisateur de la base de données. |
-| `enable_postgres_extensions` | `false` | Non applicable à MySQL ; laissez `false`. |
-| `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | `false` / `90` | Stalwart lit le mot de passe de la variable d'environnement `DB_PASSWORD`, de sorte qu'un mot de passe modifié prend effet lorsque le pod est redémarré après la modification. |
+| `database_password_length` | `32` | Ne pas modifier sur un déploiement en cours — cela écrit un nouveau mot de passe dans Secret Manager sans mettre à jour l'utilisateur de la base de données. |
+| `enable_postgres_extensions` | `false` | Non applicable à MySQL ; laisser `false`. |
+| `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | `false` / `90` | Stalwart lit le mot de passe de la variable d'environnement `DB_PASSWORD`, de sorte qu'un mot de passe modifié prend effet lorsque le pod est redémarré après la rotation. |
 
 ---
 
@@ -270,23 +327,23 @@ Identique à `App_GKE`. Les scripts s'exécutent sur la base de données Stalwar
 
 | Variable | Valeur par défaut | Notes |
 |---|---|---|
-| `reserve_static_ip` | `true` | Réserve une IP externe statique **régionale** et l'attribue au service LoadBalancer, afin que les enregistrements MX et DNS aient une cible stable. (Elle n'est pas appliquée lorsque Cloud Deploy est activé.) |
-| `static_ip_name` | `""` | Auto-généré comme `<service-name>-lb-ip` lorsqu'il est vide. |
-| `enable_custom_domain` | `false` | Laissez `false`. `true` crée une Gateway, qui est uniquement HTTP et duplique le port 443 déjà sur le LoadBalancer — et utilise une autre IP externe. |
-| `application_domains` | `[]` | Utilisé uniquement avec une Gateway. |
+| `reserve_static_ip` | `true` | Réserve une IP externe statique **régionale** et l'attribue au service LoadBalancer, de sorte que les enregistrements MX et DNS aient une cible stable. (Elle n'est pas appliquée lorsque Cloud Deploy est activé.) |
+| `static_ip_name` | `""` | Généré automatiquement comme `<service-name>-lb-ip` lorsqu'il est vide. |
+| `enable_custom_domain` | `false` | Laisser `false`. `true` crée une passerelle, qui est uniquement HTTP et duplique le port 443 déjà sur le LoadBalancer — et utilise une autre IP externe. |
+| `application_domains` | `[]` | Utilisé uniquement avec une passerelle. |
 | `network_tags` | `["nfsserver"]` | Balises réseau de nœud/pod. |
 
 ---
 
-## Groupes 20-22 : IAP, Cloud Armor et CDN, Contrôles de service VPC {#groups-2022-iap-cloud-armor--cdn-vpc-service-controls}
+## Groupes 20-22 : IAP, Cloud Armor et CDN, contrôles de service VPC {#groups-2022-iap-cloud-armor--cdn-vpc-service-controls}
 
-`enable_iap`, `enable_cloud_armor` et `enable_cdn` agissent tous sur une Gateway (HTTP) ; l'activation de Cloud Armor ou CDN en crée une. Aucun d'entre eux ne protège les ports de messagerie sur le LoadBalancer. Les contrôles de service VPC et la journalisation d'audit (Groupe 22) sont identiques à [App_GKE](./App_GKE.md).
+`enable_iap`, `enable_cloud_armor` et `enable_cdn` agissent tous sur une passerelle (HTTP) ; l'activation de Cloud Armor ou du CDN en crée une. Aucun d'entre eux ne protège les ports de messagerie sur le LoadBalancer. Les contrôles de service VPC et la journalisation d'audit (Groupe 22) sont identiques à [App_GKE](./App_GKE.md).
 
 ---
 
 ## Gardes de validation {#validation-guards}
 
-`validation.tf` échoue le plan lorsque `min_instance_count > max_instance_count` ; lorsque `enable_redis = true` sans `redis_host` ni `enable_nfs` ; lorsque `enable_iap = true` sans les deux champs client OAuth ; ou lorsque `enable_cloudsql_volume = true` avec `database_type = "NONE"`.
+`validation.tf` fait échouer le plan lorsque `min_instance_count > max_instance_count` ; lorsque `enable_redis = true` sans `redis_host` ni `enable_nfs` ; lorsque `enable_iap = true` sans les deux champs client OAuth ; ou lorsque `enable_cloudsql_volume = true` avec `database_type = "NONE"`.
 
 ---
 
@@ -294,11 +351,11 @@ Identique à `App_GKE`. Les scripts s'exécutent sur la base de données Stalwar
 
 ### Console Google Cloud {#google-cloud-console}
 
-- **Kubernetes Engine → Charges de travail** — le StatefulSet Stalwart et son pod.
-- **Kubernetes Engine → Gateways, Services et Ingress** — le service LoadBalancer avec ses sept ports et son IP externe.
-- **Réseau VPC → Adresses IP** — l'adresse `…-lb-ip` réservée.
-- **SQL** — l'instance Cloud SQL contenant la base de données Stalwart.
-- **Secret Manager** — le mot de passe de la base de données et votre secret `STALWART_RECOVERY_ADMIN`.
+-   **Kubernetes Engine → Charges de travail** — le StatefulSet Stalwart et son pod.
+-   **Kubernetes Engine → Passerelles, services et Ingress** — le service LoadBalancer avec ses sept ports et son IP externe.
+-   **Réseau VPC → Adresses IP** — l'adresse `…-lb-ip` réservée.
+-   **SQL** — l'instance Cloud SQL hébergeant la base de données Stalwart.
+-   **Secret Manager** — le mot de passe de la base de données et votre secret `STALWART_RECOVERY_ADMIN`.
 
 ### gcloud CLI et kubectl {#gcloud-cli-and-kubectl}
 
@@ -334,11 +391,11 @@ gcloud secrets list --project "$PROJECT" --filter="name~stalwart"
 | `service_name` | Nom du service Kubernetes |
 | `namespace` | Espace de noms Kubernetes |
 | `service_cluster_ip` | ClusterIP du service |
-| `service_external_ip` | IP externe du LoadBalancer — l'adresse vers laquelle les clients de messagerie et les enregistrements MX pointent |
+| `service_external_ip` | IP externe de l'équilibreur de charge — l'adresse vers laquelle pointent les clients de messagerie et les enregistrements MX |
 | `service_url` | Rendu comme `http://` plus l'IP externe. Stalwart répond **HTTPS sur 443**, utilisez donc `https://` + `service_external_ip`. |
 | `database_instance_name` / `database_name` / `database_user` | Instance Cloud SQL, base de données et utilisateur |
 | `database_password_secret` | Secret Manager secret contenant le mot de passe de la base de données |
-| `database_host` | Rapporte toujours `127.0.0.1` (la valeur par défaut du proxy de la fondation) ; Stalwart se connecte en fait à l'IP privée de Cloud SQL |
+| `database_host` | Toujours `127.0.0.1` (la valeur par défaut du proxy de la fondation) ; Stalwart se connecte en fait à l'IP privée de Cloud SQL |
 | `database_port` | Port de la base de données |
 | `storage_buckets` | Buckets GCS créés |
 | `container_image` | Image de conteneur utilisée pour le déploiement |
@@ -354,23 +411,21 @@ gcloud secrets list --project "$PROJECT" --filter="name~stalwart"
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
-| `startup_probe_config` / `health_check_config` | `type = "TCP"` | **Critique** | Une sonde `HTTP` ne peut pas vérifier le port 443 de Stalwart, qui est uniquement HTTPS, et fera échouer un pod sain. Le port de la sonde est fixé à 443 par `Stalwart_Common` ; ne contournez jamais une sonde défaillante en ciblant le port 8080, qui répond précisément lorsque Stalwart n'est pas configuré ou n'a pas réussi à démarrer. |
-| `container_image_source` | `"custom"` | **Critique** | Sans l'enveloppe, il n'y a pas de `config.json` ; Stalwart ouvre le port 8080 en mode démarrage et ne sert aucun courrier. |
+| `startup_probe_config` / `health_check_config` | `type = "TCP"` | **Critique** | Une sonde `HTTP` ne peut pas vérifier le port 443 de Stalwart (HTTPS uniquement) et fera échouer un pod sain. Le port de la sonde est fixé à 443 par `Stalwart_Common` ; ne contournez jamais une sonde défaillante en ciblant le port 8080, qui ne répond que lorsque Stalwart n'est pas configuré ou n'a pas réussi à démarrer. |
+| `container_image_source` | `"custom"` | **Critique** | Sans le wrapper, il n'y a pas de `config.json` ; Stalwart ouvre le port 8080 en mode bootstrap et ne sert aucun courrier. |
 | `STALWART_RECOVERY_ADMIN` | Défini via `secret_environment_variables` | **Élevé** | Non défini, le seul mot de passe administrateur est imprimé une fois dans le journal du conteneur. |
-| `max_instance_count` | `1` | **Élevé** | La valeur par défaut `3` permet au HPA d'ajouter des réplicas, qui nécessitent un coordinateur basé sur Redis que le module ne configure pas, et crée un PDB. |
+| `max_instance_count` | `1` | **Élevé** | Le `3` par défaut permet au HPA d'ajouter des réplicas, qui nécessitent un coordinateur basé sur Redis que le module ne configure pas, et crée un PDB. |
 | Configuration du serveur (domaines, écouteurs, TLS) | Appliquer avec `stalwart-cli` après le déploiement | **Élevé** | Non effectué par le module. Tant que ce n'est pas fait, le port 8080 reste ouvert dans le pod et des connexions TLS externes ont été observées comme étant fermées sans certificat. |
-| Courrier sortant | Hôte intelligent sur 587 | **Élevé** | Google Cloud bloque le port 25 sortant ; la livraison MX directe vers d'autres domaines ne peut pas fonctionner. |
-| `database_password_length` | Laisser inchangé | **Élevé** | Le modifier sur un déploiement en cours d'exécution interrompt l'authentification de la base de données. |
-| `application_version` | Un tag de version exact | **Moyen** | Une reconstruction sous un tag inchangé ne crée pas de nouveau modèle de pod ; `kubectl rollout restart` tire l'image reconstruite (politique de tirage `Always`). |
-| `enable_custom_domain` / `enable_cloud_armor` / `enable_cdn` | `false` | **Moyen** | Chacun crée une Gateway qui ne transporte que du HTTP et consomme une autre IP externe ; les ports de messagerie ne sont pas affectés. |
-| `reserve_static_ip` | `true` | **Moyen** | Avec `false`, le LoadBalancer obtient une IP éphémère qui change chaque fois que le service est recréé — les enregistrements MX deviendraient obsolètes. |
+| Courrier sortant | Smart host sur 587 | **Élevé** | Google Cloud bloque le port 25 sortant ; la livraison MX directe vers d'autres domaines ne peut pas fonctionner. |
+| `database_password_length` | Laisser inchangé | **Élevé** | Le modifier sur un déploiement en cours rompt l'authentification de la base de données. |
+| `application_version` | Une balise de version exacte | **Moyen** | Une reconstruction sous une balise inchangée ne crée pas de nouveau modèle de pod ; `kubectl rollout restart` tire l'image reconstruite (politique de tirage `Always`). |
+| `enable_custom_domain` / `enable_cloud_armor` / `enable_cdn` | `false` | **Moyen** | Chacun crée une passerelle qui ne transporte que du HTTP et consomme une autre IP externe ; les ports de messagerie ne sont pas affectés. |
+| `reserve_static_ip` | `true` | **Moyen** | Avec `false`, le LoadBalancer obtient une IP éphémère qui change chaque fois que le Service est recréé — les enregistrements MX deviendraient obsolètes. |
 | `stateful_pvc_storage_class` / `stateful_pvc_size` | Décider avant le premier déploiement | **Moyen** | Les modèles de PVC StatefulSet sont immuables ; les modifications ultérieures ne s'appliquent pas au PVC existant. |
 | `application_display_name` | `"Stalwart Mail Server"` | **Faible** | La valeur par défaut fournie affiche `Wiki.js` dans la console et les tableaux de bord. |
 | `enable_nfs` | `false` si rien d'autre n'en a besoin | **Faible** | Par défaut `true` et monte un partage NFS que Stalwart n'utilise jamais. |
 
-<!-- related-guides -->
-
 ## Guides associés {#related-guides}
 
 - [Lab pratique : Stalwart sur GKE Autopilot](../labs/Stalwart_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
-- [Module de configuration partagée Stalwart Common](Stalwart_Common.md) — la couche d'application sur laquelle ce module est construit.
+- [Module de configuration partagée commune de Stalwart](Stalwart_Common.md) — la couche applicative sur laquelle ce module est construit.

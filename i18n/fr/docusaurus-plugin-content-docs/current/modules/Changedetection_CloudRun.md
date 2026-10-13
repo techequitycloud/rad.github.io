@@ -3,7 +3,7 @@ title: "Changedetection sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Changedetection sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Changedetection_CloudRun.md @ 15fd4c7 sha256:5385999873f4 -->
+<!-- translated-from: docs/modules/Changedetection_CloudRun.md @ e69407af sha256:8e2b5981b1c5 -->
 
 # Changedetection sur Google Cloud Run {#changedetection-on-google-cloud-run}
 
@@ -11,133 +11,180 @@ description: "Référence de configuration pour le déploiement de Changedetecti
 
 changedetection.io est un service open source auto-hébergé qui surveille les pages web
 pour détecter les changements et envoie des notifications lorsqu'ils se produisent. Ce
-module déploie changedetection.io sur **Cloud Run v2** sur la base de la fondation
+module déploie changedetection.io sur **Cloud Run v2** au-dessus de la fondation
 [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud
 partagée.
 
-Ce guide se concentre sur les services cloud utilisés par changedetection.io et sur la
-manière de les explorer et de les exploiter à partir de la console Google Cloud et de
-la ligne de commande. Pour les mécanismes communs à chaque application Cloud Run —
-identité de service, ingress et équilibrage de charge, scaling et concurrence, CI/CD,
+Ce guide se concentre sur les services cloud que changedetection.io utilise et sur la
+manière de les explorer et de les exploiter depuis la console Google Cloud et la ligne
+de commande. Pour les mécanismes communs à chaque application Cloud Run — identité de
+service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de
-vie du déploiement — reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md)
-plutôt que de les répéter ici.
+vie du déploiement — reportez-vous au [guide de la fondation
+App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
+## Ce que coûte changedetection.io sur RAD, et comment cela se compare {#what-changedetectionio-costs-on-rad-and-how-that-compares}
+
+**changedetection.io sur le module Cloud Run de RAD coûte environ 19 $ US par mois dans votre propre projet Google Cloud, sans frais de licence supplémentaires** — changedetection.io est open source. Dans un projet géré par RAD pour vous, le même déploiement est facturé à **9 crédits par jour** (environ 270 par mois, soit environ 27 $ US au prix de la recharge). Ou consultez le [guide GKE](Changedetection_GKE.md) pour une capacité toujours active sur les pods. Si vous n'avez besoin de changedetection.io qu'occasionnellement — études, démo, projet de courte durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour quelques crédits, de sorte que ce chiffre mensuel devient quelques dollars à la place. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+
+### Ce que vous payez sur RAD {#what-you-pay-on-rad}
+
+changedetection.io est open source, il n'y a donc pas de frais de licence. Vous payez pour trois choses :
+
+| | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
+|---|---|---|
+| Frais de module, une fois par déploiement | 40 crédits (4 $ US au prix de la recharge) | 36 crédits (10 % de moins) |
+| Temps de build | Quelques crédits par build (environ 3–6 crédits) | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **19 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **9 crédits par jour**, environ 270 par mois (environ 27 $ US au prix de la recharge) |
+| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+10 crédits coûtent 1 $ US lors d'une recharge ponctuelle, et moins avec un forfait mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par chaque application du projet, de sorte qu'une deuxième application n'ajoute pas de deuxième base de données.
+
+**Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
+
+| Ressource (module par défaut) | Par mois |
+|---|---|
+| Cloud Run, 1x vCPU / 1 GiB (chaud) | 13,14 $ US |
+| Cloud NAT et réseau | 5 $ US |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
+| **Total** | **environ 19 $ US** |
+
+Ces prix sont les mêmes en africa-south1 (Johannesburg).
+
+- **Ce module est maintenu chaud par défaut** (`min_instance_count ≥ 1`), donc le chiffre Cloud Run ci-dessus suppose déjà qu'il ne se met jamais à l'échelle zéro.
+
+### Comment cela se compare, pour la surveillance des pages pour les changements {#how-it-compares-for-monitoring-pages-for-changes}
+
+L'équipe de changedetection.io vend un plan hébergé directement sur changedetection.io : **8,99 $ US par mois**, incluant 5 000 surveillances d'URL, annulable à tout moment. Ce plan unique est le moyen le plus simple de l'utiliser sans rien à exécuter ; le module de RAD exécute le même changedetection.io open source sur une infrastructure que vous pouvez voir, sans plafond de nombre de surveillances autre que ce que la taille de l'instance prend en charge, pour les frais de module plus l'utilisation de Google Cloud ci-dessus — environ 19 $ US par mois dans votre propre projet, un peu plus que le plan hébergé mais avec les données résidant dans votre propre projet.
+
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+
+Si changedetection.io s'exécute dans **un projet géré par RAD pour vous**, la suppression de l'ensemble du projet — plutôt que la suppression de ce seul module — délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet. Google le conserve, récupérable, pendant 30 jours, et comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend. Contrairement à la suppression d'un module, cela ne supprime pas Cloud SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête simplement.
+
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut demander à Google de restaurer le projet et de rattacher son compte de facturation, puis d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes, et une mise à jour ne facture jamais les frais de module à nouveau. Pour une chaîne de déploiement typique de 2 à 3 déploiements, cela ne coûte qu'une poignée de crédits au total (environ 5 à 10 crédits, moins de 1 $ US).
+- **Ce dont cela a besoin.** Vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), le restaurer vous-même dans les 30 jours — après quoi Google le supprime définitivement — et effacer à nouveau le seuil d'admission du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+- **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage désactivée, il est donc très probable qu'il disparaisse dès que le projet est supprimé — même si le projet lui-même est récupérable pendant 30 jours. Copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de la supprimer s'il y a quelque chose à conserver ; pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+
+Source : [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects).
+
+### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+
+Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée, la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous en avez besoin.
+
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les builds : environ 44 crédits (environ 4,40 $ US) au prix de la recharge, et environ 15 à 20 minutes de temps de build (moyenne de la propre plateforme de RAD). La suppression ne permet d'économiser de l'argent que si changedetection.io resterait inutilisé pendant environ **6 jours ou plus** — dans votre propre projet, cela représente environ 0,64 $ US par jour, et dans un projet géré par RAD, c'est 9 crédits par jour.
+- Le coût d'exécution de ce module est entièrement le sien — rien dans le tableau ci-dessus n'est partagé avec d'autres applications du projet, donc la suppression de changedetection.io arrête tout.
+- **Conservez d'abord les données.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+
+### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
+
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés retournent au formateur.
+- **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+
+Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+
+**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais RAD et estimation des crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour la fenêtre de pause/restauration et la mise en garde sur le bucket de sauvegarde ; [plan hébergé changedetection.io](https://changedetection.io/) ; les prix changent, vérifiez chaque source avant de vous fier à un chiffre.
+
 ## 1. Vue d'ensemble {#1-overview}
 
-changedetection.io s'exécute comme un conteneur Python/Flask unique sur Cloud Run v2.
-Le déploiement relie un ensemble délibérément restreint de services Google Cloud — il
-n'y a pas de base de données et pas de cache :
+changedetection.io s'exécute comme un conteneur Python/Flask unique sur Cloud Run v2. Le
+déploiement relie un ensemble délibérément restreint de services Google Cloud — il n'y
+a pas de base de données et pas de cache :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Compute | Cloud Run v2 | Service Python/Flask, 1 vCPU / 1 GiB par défaut, écoute sur le port 5000 |
+| Calcul | Cloud Run v2 | Service Python/Flask, 1 vCPU / 1 GiB par défaut, écoute sur le port 5000 |
 | Base de données | _Aucune_ | `database_type = NONE` — changedetection.io stocke tout l'état sur disque, pas en SQL |
-| Datastore persistant | Cloud Storage (GCS FUSE) | Un bucket de données monté à `/datastore` contenant la configuration de surveillance, les instantanés et l'historique |
-| Cache et file d'attente | _Aucun_ | Redis n'est pas utilisé ; explicitement désactivé |
-| Secrets | Secret Manager | Aucun secret d'application n'est injecté ; le jeton de l'API REST est créé dans l'interface web |
-| Ingress | URL Cloud Run / Cloud Load Balancing | URL par défaut `run.app` ; équilibreur de charge HTTPS externe optionnel + domaine personnalisé |
+| Stockage de données persistant | Cloud Storage (GCS FUSE) | Un bucket de données monté à `/datastore` contenant la configuration de surveillance, les instantanés et l'historique |
+| Cache et file d'attente | _Aucun_ | Redis n'est pas utilisé ; explicitement désactivé |
+| Secrets | Secret Manager | Aucun secret d'application n'est injecté ; le jeton d'API REST est créé dans l'interface utilisateur web |
+| Ingress | URL Cloud Run / Cloud Load Balancing | URL par défaut `run.app` ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
-**Valeurs par défaut judicieuses à connaître à l'avance :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **Pas de base de données, pas de Redis.** changedetection.io est entièrement
-  autonome. Il n'y a pas d'instance Cloud SQL, pas de job `db-init` et pas d'étape de
-  migration de schéma. Redis est désactivé (`enable_redis = false`) et `enable_cloudsql_volume = false`.
-- **Tout l'état réside dans un seul bucket GCS.** Le bucket de datastore est monté à
-  `/datastore` via GCS FUSE (`enable_gcs_storage_volume = true`, nécessite l'environnement
-  d'exécution gen2). La suppression ou la recréation de ce bucket entraîne la perte de
-  chaque surveillance et de son historique.
+- **Pas de base de données, pas de Redis.** changedetection.io est entièrement autonome. Il n'y a pas
+  d'instance Cloud SQL, pas de job `db-init`, et pas d'étape de migration de schéma. Redis est désactivé
+  (`enable_redis = false`) et `enable_cloudsql_volume = false`.
+- **Tout l'état réside dans un seul bucket GCS.** Le bucket de stockage de données est monté à `/datastore`
+  via GCS FUSE (`enable_gcs_storage_volume = true`, nécessite l'environnement d'exécution gen2). La suppression ou la recréation de ce bucket entraîne la perte de chaque surveillance et de son historique.
 - **Instance unique par défaut.** `min_instance_count = 1` et `max_instance_count = 1`.
-  changedetection.io exécute son planificateur de récupération en cours de processus
-  par rapport à un seul datastore sur disque ; l'exécution de plusieurs instances par
-  rapport au même datastore monté en FUSE risque une corruption par écriture
-  simultanée. Gardez `max_instance_count = 1`.
-- **`min_instance_count = 1` (pas de mise à l'échelle à zéro).** L'instance unique est maintenue
-  active afin que le planificateur de récupération continue d'exécuter les vérifications
-  de surveillance même sans trafic web entrant. Le CPU reste basé sur les requêtes
-  (`cpu_always_allocated = false`), ce qui est suffisant pour les vérifications HTTP simples ;
-  définissez-le sur `true` pour les récupérations de navigateur/Playwright ou les
-  filtres lourds.
+  changedetection.io exécute son planificateur de récupération en interne par rapport à un seul stockage de données sur disque ; l'exécution de plusieurs instances par rapport au même stockage de données monté en FUSE risque une corruption par écriture concurrente. Gardez `max_instance_count = 1`.
+- **`min_instance_count = 1` (pas de mise à l'échelle à zéro).** L'instance unique est maintenue chaude afin que
+  le planificateur de récupération continue d'exécuter les vérifications de surveillance même sans trafic web entrant.
+  Le CPU reste basé sur les requêtes (`cpu_always_allocated = false`), ce qui est suffisant pour les vérifications HTTP simples ; définissez-le sur `true` pour les récupérations de navigateur/Playwright ou les filtres lourds.
 - **Ingress public par défaut.** `ingress_settings = "all"` afin que le tableau de bord web soit
-  accessible depuis un navigateur. L'interface utilisateur est livrée **sans
-  connexion** — définissez un mot de passe dans **Settings → General**
-  immédiatement, et/ou activez IAP.
+  accessible depuis un navigateur. L'interface utilisateur est livrée **sans connexion** — définissez un mot de passe dans
+  **Settings → General** immédiatement, et/ou activez IAP.
 - **`BASE_URL` est injecté automatiquement.** L'URL de service Cloud Run prédite est
-  injectée sous `BASE_URL` (`service_url_env_var_name = "BASE_URL"`) afin que les liens de
-  notification se résolvent à l'adresse de service réelle.
-- **Épinglage de version.** Avec `application_version = "latest"`, la build de l'image épingle un tag
-  connu et fonctionnel (`0.50.19`) via l'argument de build spécifique à l'application
-  `CHANGEDETECTION_VERSION`.
+  injectée sous `BASE_URL` (`service_url_env_var_name = "BASE_URL"`) afin que les liens de notification
+  résolvent l'adresse de service réelle.
+- **Épinglage de version.** Avec `application_version = "latest"`, la build d'image épingle une
+  balise connue et fonctionnelle (`0.50.19`) via l'argument de build `CHANGEDETECTION_VERSION` spécifique à l'application.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de
-services et de ressources sont rapportés dans les [Sorties](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de services et de ressources sont
+rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service changedetection.io {#a-cloud-run--the-changedetectionio-service}
 
-changedetection.io s'exécute comme un service Cloud Run v2 écoutant sur le port 5000.
-Chaque déploiement crée une révision immuable ; le trafic peut être réparti entre les
-révisions pour des déploiements sûrs. Étant donné que le planificateur de récupération
-s'exécute en cours de processus, le service est normalement épinglé à une seule
-instance toujours active.
+changedetection.io s'exécute comme un service Cloud Run v2 écoutant sur le port 5000. Chaque
+déploiement crée une révision immuable ; le trafic peut être réparti entre les révisions pour
+des déploiements sûrs. Comme le planificateur de récupération s'exécute en interne, le service est normalement
+épinglé à une seule instance toujours chaude.
 
-- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les
-  logs et les métriques.
-- **CLI :**
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les journaux et
+  les métriques.
+- **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION"
   gcloud run services describe <service-name> --project "$PROJECT" --region "$REGION"
   gcloud run revisions list --service <service-name> --project "$PROJECT" --region "$REGION"
   ```
 
-Voir [App_CloudRun](App_CloudRun.md) pour le scaling, la concurrence, l'environnement
-d'exécution et la répartition du trafic.
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence, l'environnement d'exécution et
+la répartition du trafic.
 
 ### B. Base de données — non utilisée {#b-database--not-used}
 
 changedetection.io n'utilise **aucune base de données SQL**. `database_type = NONE` est fixé par
-[Changedetection_Common](Changedetection_Common.md) ; aucune instance Cloud SQL n'est
-créée et il n'y a pas de job d'initialisation `db-init`. Tout l'état persistant réside
-dans le bucket de datastore GCS décrit ci-dessous.
+[Changedetection_Common](Changedetection_Common.md) ; aucune instance Cloud SQL n'est créée
+et il n'y a pas de job d'initialisation `db-init`. Tout l'état persistant réside dans le bucket de stockage de données GCS décrit ci-dessous.
 
-### C. Cloud Storage — le datastore {#c-cloud-storage--the-datastore}
+### C. Cloud Storage — le stockage de données {#c-cloud-storage--the-datastore}
 
 Un seul bucket **Cloud Storage** est provisionné automatiquement et monté à
-`/datastore` en tant que volume **GCS FUSE** (`DATASTORE_PATH = /datastore`). Il contient la
-configuration de surveillance JSON, les instantanés de page et l'historique des
-modifications — tout ce que l'application persiste.
+`/datastore` comme volume **GCS FUSE** (`DATASTORE_PATH = /datastore`). Il contient la
+configuration de surveillance JSON, les instantanés de page et l'historique des modifications — tout ce que l'application
+persiste.
 
-- **Console :** Cloud Storage → Buckets.
-- **CLI :**
+- **Console :** Cloud Storage → Buckets.
+- **CLI :**
   ```bash
   gcloud storage buckets list --project "$PROJECT" --filter="name~storage"
   gcloud storage ls gs://<data-bucket>/          # bucket name is in the Outputs
   gcloud storage ls gs://<data-bucket>/url-watches.json
   ```
 
-GCS FUSE nécessite l'environnement d'exécution gen2 (le défaut). Voir
+GCS FUSE nécessite l'environnement d'exécution gen2 (par défaut). Voir
 [App_CloudRun](App_CloudRun.md) pour les options GCS FUSE et CMEK.
 
 ### D. Cache et file d'attente — non utilisés {#d-cache--queue--not-used}
 
-changedetection.io n'utilise pas Redis ni aucune file d'attente externe ; son
-planificateur de surveillance est en cours de processus. `enable_redis = false` est défini
-explicitement et aucune entrée Redis n'est câblée.
+changedetection.io n'utilise pas Redis ni aucune file d'attente externe ; son planificateur de surveillance est
+interne. `enable_redis = false` est défini explicitement et aucune entrée Redis n'est câblée.
 
 ### E. Secret Manager {#e-secret-manager}
 
-Aucun secret d'application n'est injecté dans le conteneur — le jeton d'API REST
-optionnel est généré dans l'interface web (**Settings → API**), et le datastore
-n'utilise pas de clé de chiffrement. Secret Manager est toujours disponible pour tout
-`secret_environment_variables` fourni par l'opérateur.
+Aucun secret d'application n'est injecté dans le conteneur — le jeton d'API REST facultatif est
+généré dans l'interface utilisateur web (**Settings → API**), et le stockage de données n'utilise aucune clé de chiffrement.
+Secret Manager est toujours disponible pour tout `secret_environment_variables` fourni par l'opérateur.
 
-- **Console :** Security → Secret Manager.
-- **CLI :**
+- **Console :** Sécurité → Secret Manager.
+- **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
@@ -147,14 +194,13 @@ Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotatio
 
 ### F. Réseau et ingress {#f-networking--ingress}
 
-Le service est accessible à son URL `run.app` par défaut (`ingress_settings = "all"`), ce qui
-permet un accès public au tableau de bord via un navigateur. Un équilibreur de charge
-HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peuvent être
-superposés ; les paramètres d'ingress et le contrôle d'égresse VPC contrôlent la
-connectivité.
+Le service est accessible à son URL `run.app` par défaut (`ingress_settings = "all"`),
+ce qui permet un accès public au tableau de bord via un navigateur. Un équilibreur de charge HTTPS externe
+avec un domaine personnalisé, Cloud CDN et Cloud Armor peuvent être superposés ; les paramètres d'ingress
+et le contrôle d'egress VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL de service) ; Network services → Load balancing.
-- **CLI :**
+- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
   gcloud compute addresses list --project "$PROJECT"
@@ -164,12 +210,11 @@ Voir [App_CloudRun](App_CloudRun.md).
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les logs des conteneurs sont acheminés vers Cloud Logging ; les métriques Cloud Run
-sont acheminées vers Cloud Monitoring, avec des tests de disponibilité et des règles
-d'alerte optionnels.
+Les journaux de conteneurs sont acheminés vers Cloud Logging ; les métriques Cloud Run sont acheminées vers Cloud Monitoring, avec
+des tests de disponibilité et des stratégies d'alerte facultatifs.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
-- **CLI :**
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
   ```
@@ -178,41 +223,32 @@ d'alerte optionnels.
 
 ## 3. Comportement de l'application changedetection.io {#3-changedetectionio-application-behaviour}
 
-- **Pas de configuration de base de données au premier déploiement.** Il n'y a pas de
-  base de données et pas de job d'initialisation. Au premier démarrage,
-  changedetection.io crée ses fichiers de datastore (`url-watches.json` et les répertoires
-  d'historique par surveillance) sous `/datastore` s'ils n'existent pas déjà.
-- **Pas de migrations de schéma.** Les mises à niveau du format du datastore sont
-  gérées en interne par l'application au démarrage ; il n'y a pas d'étape de migration
-  distincte à exécuter.
-- **Le datastore est le seul actif avec état.** Tout ce dont l'application se souvient
-  — surveillances, instantanés, historique des différences, configuration des
-  notifications et tout mot de passe d'interface utilisateur — réside dans le bucket de
-  datastore GCS. Protégez-le en conséquence ; la recréation du bucket efface tout
-  l'état.
-- **Pas de connexion par défaut.** Le tableau de bord est livré ouvert. Définissez un
-  mot de passe sous **Settings → General → Password** immédiatement après le premier
-  accès, et/ou activez IAP devant le service. Il n'y a pas de compte administrateur ou
-  de credential par défaut.
-- **Le jeton de l'API REST est créé dans l'interface utilisateur.** Pour utiliser
-  l'API REST, générez un jeton sous **Settings → API** et transmettez-le comme en-tête
-  `x-api-key`. Il n'est pas injecté via une variable d'environnement.
-- **`BASE_URL` pour les liens de notification.** L'URL de service prédite est injectée
-  sous `BASE_URL` afin que les corps de notification contiennent des liens absolus
-  fonctionnels. Vérifiez qu'elle correspond à l'URL de service réelle après le
-  déploiement :
+- **Pas de configuration de base de données au premier déploiement.** Il n'y a pas de base de données et pas de job d'initialisation. Au premier
+  démarrage, changedetection.io crée ses fichiers de stockage de données (`url-watches.json` et les
+  répertoires d'historique par surveillance) sous `/datastore` s'ils n'existent pas déjà.
+- **Pas de migrations de schéma.** Les mises à niveau du format de stockage de données sont gérées en interne par l'application au démarrage ; il n'y a pas d'étape de migration distincte à exécuter.
+- **Le stockage de données est le seul actif avec état.** Tout ce dont l'application se souvient — surveillances,
+  instantanés, historique des différences, configuration des notifications et tout mot de passe d'interface utilisateur — réside dans le bucket de stockage de données GCS. Protégez-le en conséquence ; la recréation du bucket efface tout l'état.
+- **Pas de connexion par défaut.** Le tableau de bord est livré ouvert. Définissez un mot de passe sous
+  **Settings → General → Password** immédiatement après le premier accès, et/ou activez IAP
+  devant le service. Il n'y a pas de compte ou de credential administrateur par défaut.
+- **Le jeton d'API REST est créé dans l'interface utilisateur.** Pour utiliser l'API REST, générez un jeton sous
+  **Settings → API** et passez-le comme en-tête `x-api-key`. Il n'est pas injecté via une
+  variable d'environnement.
+- **`BASE_URL` pour les liens de notification.** L'URL de service prédite est injectée sous
+  `BASE_URL` afin que les corps de notification contiennent des liens absolus fonctionnels. Vérifiez qu'elle correspond
+  à l'URL de service réelle après le déploiement :
   ```bash
   gcloud run services describe <service-name> \
     --region "$REGION" --project "$PROJECT" --format='value(status.url)'
   ```
-- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/` —
-  l'interface web, qui renvoie HTTP 200 une fois que le serveur Flask est prêt. Le
-  premier démarrage est rapide (pas de migrations) ; la sonde de démarrage par défaut
-  permet un délai initial de 15 secondes plus une fenêtre de 10 tentatives.
-- **Contrainte de scaling.** Gardez `max_instance_count = 1`. Plusieurs instances partagent le même
-  datastore monté en FUSE et entreraient en concurrence sur les écritures ; l'application
-  n'a pas de coordination distribuée.
-- **Inspecter l'environnement d'exécution :**
+- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/` — l'interface utilisateur web, qui renvoie
+  HTTP 200 une fois que le serveur Flask est prêt. Le premier démarrage est rapide (pas de migrations) ; la
+  sonde de démarrage par défaut autorise un délai initial de 15 secondes plus une fenêtre de 10 tentatives.
+- **Contrainte de mise à l'échelle.** Gardez `max_instance_count = 1`. Plusieurs instances partagent le
+  même stockage de données monté en FUSE et se feraient concurrence sur les écritures ; l'application n'a pas de
+  coordination distribuée.
+- **Inspecter l'environnement d'exécution :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" \
     --format='value(spec.template.spec.containers[0].env)'
@@ -222,16 +258,15 @@ d'alerte optionnels.
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de
-déploiement. Seuls les paramètres spécifiques ou notables pour changedetection.io sont
-listés ; toutes les autres entrées sont héritées de [App_CloudRun](App_CloudRun.md)
-avec leur comportement standard.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres
+spécifiques ou notables pour changedetection.io sont listés ; toutes les autres entrées sont héritées
+de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(requis)_ | Projet Google Cloud cible. |
+| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région pour le service et les ressources régionales. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
@@ -241,8 +276,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails ayant accès au projet et aux alertes de surveillance. |
-| `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
+| `support_users` | `[]` | E-mails autorisés à accéder au projet et aux alertes de surveillance. |
+| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -250,27 +285,27 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `application_name` | `changedetection` | Nom de base pour les ressources. Ne pas modifier après le premier déploiement. |
+| `application_name` | `changedetection` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | `Changedetection.io` | Nom lisible par l'homme affiché dans la console. |
 | `description` | `changedetection.io — self-hosted website change detection and monitoring/notification service` | Description du service. |
-| `application_version` | `latest` | Tag de version de l'image. `latest` épingle la build à `0.50.19` via `CHANGEDETECTION_VERSION` ; épinglez explicitement pour des déploiements reproductibles. |
+| `application_version` | `latest` | Balise de version de l'image. `latest` épingle la build à `0.50.19` via `CHANGEDETECTION_VERSION` ; épinglez explicitement pour des déploiements reproductibles. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `1000m` | CPU par instance. |
-| `memory_limit` | `1Gi` | Mémoire par instance (le plancher gen2 est de 512Mi). |
-| `min_instance_count` | `1` | Maintient une instance active afin que le planificateur de récupération continue de fonctionner. |
+| `memory_limit` | `1Gi` | Mémoire par instance (le plancher gen2 est de 512 Mi). |
+| `min_instance_count` | `1` | Maintient une instance chaude afin que le planificateur de récupération continue de fonctionner. |
 | `cpu_always_allocated` | `false` | Le CPU basé sur les requêtes est suffisant pour les vérifications légères du planificateur intégré. Définissez `true` lorsque les surveillances utilisent le récupérateur de navigateur/Playwright ou des filtres lourds, qui sont sinon limités entre les requêtes. |
-| `max_instance_count` | `1` | **Gardez à 1** — plusieurs instances entrent en concurrence sur le datastore partagé. |
+| `max_instance_count` | `1` | **Gardez à 1** — plusieurs instances se font concurrence sur le stockage de données partagé. |
 | `container_port` | `5000` | changedetection.io écoute sur le port 5000. |
-| `execution_environment` | `gen2` | Requis pour le montage du datastore GCS FUSE. |
+| `execution_environment` | `gen2` | Requis pour le montage du stockage de données GCS FUSE. |
 | `timeout_seconds` | `300` | Durée maximale de la requête (0–3600 secondes). |
-| `enable_cloudsql_volume` | `false` | Pas de Cloud SQL — le sidecar Auth Proxy n'est pas nécessaire. |
+| `enable_cloudsql_volume` | `false` | Pas de Cloud SQL — le side-car Auth Proxy n'est pas nécessaire. |
 | `enable_image_mirroring` | `true` | Mettre en miroir l'image changedetection.io dans Artifact Registry. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
@@ -290,8 +325,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres non secrets supplémentaires (par exemple `FETCH_WORKERS`, `PLAYWRIGHT_DRIVER_URL`). `DATASTORE_PATH` et `BASE_URL` sont définis automatiquement. |
-| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. |
+| `environment_variables` | `{}` | Paramètres supplémentaires non secrets (par exemple `FETCH_WORKERS`, `PLAYWRIGHT_DRIVER_URL`). `DATASTORE_PATH` et `BASE_URL` sont définis automatiquement. |
+| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
@@ -300,15 +335,15 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). Puisqu'il n'y a pas de base de données, sauvegardez le bucket de datastore. |
-| `backup_retention_days` | `7` | Rétention ; augmentez pour la production/conformité. |
+| `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). Comme il n'y a pas de base de données, sauvegardez le bucket de stockage de données. |
+| `backup_retention_days` | `7` | Rétention ; augmenter pour la production/conformité. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ### Groupe 8 — CI/CD et Binary Authorization {#group-8--cicd--binary-authorization}
 
-Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
-[App_CloudRun](App_CloudRun.md). Entrées clés : `enable_cicd_trigger`,
+Intégration standard Cloud Build / Cloud Deploy d'App_CloudRun — voir
+[App_CloudRun](App_CloudRun.md). Entrées clés : `enable_cicd_trigger`,
 `github_repository_url`, `github_token`, `enable_cloud_deploy`,
 `enable_binary_authorization`.
 
@@ -316,7 +351,7 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Provisionner un équilibreur de charge HTTPS global + WAF Cloud Armor. |
+| `enable_cloud_armor` | `false` | Provisionner un équilibreur de charge HTTPS global + Cloud Armor WAF. |
 | `admin_ip_ranges` | `[]` | Plages CIDR exemptées des règles WAF. |
 | `application_domains` | `[]` | Noms de domaine personnalisés pour l'équilibreur de charge HTTPS (corrige également `BASE_URL`). |
 | `enable_cdn` | `false` | Activer Cloud CDN sur le backend de l'équilibreur de charge HTTPS. |
@@ -328,11 +363,11 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Créer le bucket GCS du datastore. |
-| `storage_buckets` | `[]` | Buckets GCS supplémentaires au-delà du bucket de datastore auto-provisionné. |
-| `enable_nfs` | `false` | NFS est désactivé ; le datastore utilise GCS FUSE. |
+| `create_cloud_storage` | `true` | Créer le bucket GCS de stockage de données. |
+| `storage_buckets` | `[]` | Buckets GCS supplémentaires au-delà du bucket de stockage de données auto-provisionné. |
+| `enable_nfs` | `false` | NFS est désactivé ; le stockage de données utilise GCS FUSE. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage à l'intérieur du conteneur (lorsque NFS est activé). |
-| `gcs_volumes` | `[]` | Montages de volume GCS FUSE supplémentaires (nécessite gen2). |
+| `gcs_volumes` | `[]` | Montages de volumes GCS FUSE supplémentaires (nécessite gen2). |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -340,7 +375,7 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `NONE` | Fixé à `NONE` par Changedetection_Common ; changedetection.io n'a pas de base de données SQL. |
+| `database_type` | `NONE` | Fixé à `NONE` par Changedetection_Common ; changedetection.io n'a pas de base de données SQL. |
 | `service_url_env_var_name` | `BASE_URL` | Nom de la variable d'environnement pour l'URL de service injectée. changedetection.io lit `BASE_URL` pour les liens de notification. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
@@ -349,8 +384,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Pas de job d'initialisation intégré — changedetection.io ne nécessite pas de bootstrap. Fournir uniquement pour le chargement de données personnalisées. |
-| `cron_jobs` | `[]` | Jobs planifiés par la plateforme (changedetection.io planifie ses propres vérifications de surveillance en interne). |
+| `initialization_jobs` | `[]` | Pas de job d'initialisation intégré — changedetection.io ne nécessite aucun amorçage. Fournir uniquement pour le chargement de données personnalisé. |
+| `cron_jobs` | `[]` | Jobs planifiés par la plateforme facultatifs (changedetection.io planifie ses propres vérifications de surveillance en interne). |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -358,20 +393,20 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/` 15s de délai | Sonde de démarrage contre l'interface web. |
-| `liveness_probe` | HTTP `/` 30s de délai | Sonde de vivacité contre l'interface web. |
-| `uptime_check_config` | `{ enabled=false, path="/" }` | Test de disponibilité Cloud Monitoring optionnel. |
-| `alert_policies` | `[]` | Règles d'alerte métriques. |
+| `startup_probe` | HTTP `/` 15s de délai | Sonde de démarrage contre l'interface utilisateur web. |
+| `liveness_probe` | HTTP `/` 30s de délai | Sonde de vivacité contre l'interface utilisateur web. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Test de disponibilité Cloud Monitoring facultatif. |
+| `alert_policies` | `[]` | Stratégies d'alerte métrique. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
-### Groupe 23 — VPC Service Controls et Audit Logging {#group-23--vpc-service-controls--audit-logging}
+### Groupe 23 — VPC Service Controls et journalisation d'audit {#group-23--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
 | `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
-| `enable_audit_logging` | `false` | Logs d'audit Cloud détaillés. |
+| `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
@@ -379,8 +414,8 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 
 ## 5. Sorties {#5-outputs}
 
-Retournées lors d'un déploiement réussi — le moyen le plus rapide de localiser et
-d'explorer les ressources en cours d'exécution.
+Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les
+ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
@@ -389,7 +424,7 @@ d'explorer les ressources en cours d'exécution.
 | `service_location` | Région dans laquelle le service s'exécute. |
 | `stage_services` | Détails du service spécifiques à l'étape (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
-| `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket de datastore). |
+| `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket de stockage de données). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
@@ -399,45 +434,44 @@ d'explorer les ressources en cours d'exécution.
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Audit logging et état CMEK. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et les combinaisons* au moment de la planification — IAP sans identités autorisées, un runtime `gen1` avec des montages GCS FUSE, un `backup_retention_days` hors plage, `min_instance_count > max_instance_count`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au moment de l'application ou de l'exécution.
+> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et les combinaisons* au moment de la planification — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages GCS FUSE, un `backup_retention_days` hors plage, `min_instance_count > max_instance_count`. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si erroné |
 |---|---|---|---|
-| Bucket GCS du datastore | Ne jamais supprimer/recréer | Critique | Le bucket contient chaque surveillance, instantané et entrée d'historique — le supprimer entraîne la perte permanente de tout l'état de surveillance. |
-| `max_instance_count` | `1` | Critique | Plusieurs instances écrivent simultanément dans le même datastore monté en FUSE et corrompent `url-watches.json` ; l'application n'a pas de verrouillage distribué. |
-| Mot de passe de l'interface web | Définir immédiatement | Élevé | Le tableau de bord est livré **sans connexion** ; le laisser ouvert sur un ingress public expose toutes les surveillances et la configuration des notifications à quiconque ayant l'URL. |
-| `application_name` | Définir une fois | Élevé | Immuable après le premier déploiement ; le renommage recrée le bucket de datastore et orpheline les données existantes. |
-| `enable_gcs_storage_volume` / montage du datastore | Garder activé | Élevé | Sans le montage `/datastore`, l'état est écrit sur le disque de conteneur éphémère et perdu à chaque révision/redémarrage. |
-| `execution_environment` | `gen2` | Élevé | GCS FUSE nécessite gen2 ; `gen1` ne peut pas monter le bucket de datastore (bloqué au moment de la planification). |
-| `ingress_settings` | `all` (ou IAP) | Élevé | Ingress public + pas de connexion = tableau de bord ouvert. Associez `all` à un mot de passe d'interface utilisateur ou à IAP ; `internal` bloque entièrement l'accès au navigateur. |
-| `service_url_env_var_name` / `BASE_URL` | URL de service réelle | Moyen | Un `BASE_URL` erroné produit des liens absolus cassés dans les notifications de changement. |
-| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro (`0`) arrête le planificateur de récupération en cours de processus lorsqu'il est inactif, de sorte que les surveillances ne sont pas vérifiées avant la prochaine requête entrante. |
-| `enable_cloudsql_volume` / `database_type` | `false` / `NONE` | Faible | changedetection.io n'a pas de base de données ; l'activation du câblage Cloud SQL provisionne une infrastructure inutilisée. |
-| `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité de la sauvegarde du datastore. |
+| Bucket GCS de stockage de données | Ne jamais supprimer/recréer | Critique | Le bucket contient chaque surveillance, instantané et entrée d'historique — sa suppression entraîne la perte permanente de tout l'état de surveillance. |
+| `max_instance_count` | `1` | Critique | Plusieurs instances écrivent simultanément dans le même stockage de données monté en FUSE et corrompent `url-watches.json` ; l'application n'a pas de verrouillage distribué. |
+| Mot de passe de l'interface utilisateur web | Définir immédiatement | Élevé | Le tableau de bord est livré **sans connexion** ; le laisser ouvert sur un ingress public expose toutes les surveillances et la configuration des notifications à quiconque ayant l'URL. |
+| `application_name` | Définir une fois | Élevé | Immuable après le premier déploiement ; le renommage recrée le bucket de stockage de données et orpheline les données existantes. |
+| `enable_gcs_storage_volume` / montage du stockage de données | Garder activé | Élevé | Sans le montage `/datastore`, l'état est écrit sur le disque éphémère du conteneur et perdu à chaque révision/redémarrage. |
+| `execution_environment` | `gen2` | Élevé | GCS FUSE nécessite gen2 ; `gen1` ne peut pas monter le bucket de stockage de données (bloqué au moment de la planification). |
+| `ingress_settings` | `all` (ou IAP) | Élevé | Ingress public + pas de connexion = tableau de bord ouvert. Associez `all` à un mot de passe d'interface utilisateur ou à IAP ; `internal` bloque entièrement l'accès au navigateur. |
+| `service_url_env_var_name` / `BASE_URL` | URL de service réelle | Moyen | Un `BASE_URL` erroné produit des liens absolus brisés dans les notifications de changement. |
+| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro (`0`) arrête le planificateur de récupération interne pendant l'inactivité, de sorte que les surveillances ne sont pas vérifiées avant la prochaine requête entrante. |
+| `enable_cloudsql_volume` / `database_type` | `false` / `NONE` | Faible | changedetection.io n'a pas de base de données ; l'activation du câblage Cloud SQL provisionne une infrastructure inutilisée. |
+| `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité de la sauvegarde du stockage de données. |
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — identité de service,
-scaling et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP,
-Binary Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
-**[App_CloudRun](App_CloudRun.md)**. La configuration d'application spécifique à
-changedetection.io partagée avec la variante GKE est décrite dans
-**[Changedetection_Common](Changedetection_Common.md)**.
+Pour le comportement de la fondation référencé tout au long — identité de service, mise à l'échelle et
+concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization,
+VPC-SC, sauvegardes et mise en miroir d'images — voir **[App_CloudRun](App_CloudRun.md)**.
+La configuration d'application spécifique à changedetection.io partagée avec la variante GKE est
+décrite dans **[Changedetection_Common](Changedetection_Common.md)**.
 
 <!-- related-guides -->
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : Changedetection sur Cloud Run](../labs/Changedetection_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
+- [Lab pratique : Changedetection sur Cloud Run](../labs/Changedetection_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Changedetection sur GKE Autopilot](Changedetection_GKE.md) — la même application sur Kubernetes, pour lorsque vous avez besoin de l'autre cible de déploiement.
 - [Changedetection Common — Configuration d'application partagée](Changedetection_Common.md) — la configuration partagée par les deux cibles de déploiement.
 - Déployé aux côtés de [Matomo sur Google Cloud Run](Matomo_CloudRun.md), [Umami sur Google Cloud Run](Umami_CloudRun.md), [Shlink sur Google Cloud Run](Shlink_CloudRun.md) dans la solution **Analyse web axée sur la confidentialité**.

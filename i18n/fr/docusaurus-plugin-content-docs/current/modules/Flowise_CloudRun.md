@@ -1,78 +1,123 @@
 ---
 title: "Flowise sur Google Cloud Run"
-description: "Référence de configuration pour déployer Flowise sur Google Cloud Run avec le module RAD — variables, architecture, réseau et exploitation."
+description: "Référence de configuration pour le déploiement de Flowise sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Flowise_CloudRun.md @ 3055034 sha256:668fe58fdc7d -->
+<!-- translated-from: docs/modules/Flowise_CloudRun.md @ e69407af sha256:099d9cc55d11 -->
 
 # Flowise sur Google Cloud Run {#flowise-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Flowise_CloudRun.png" alt="Flowise sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Flowise est un outil open source de création visuelle de workflows d'IA qui permet aux
-non-développeurs d'assembler des pipelines d'IA LangChain et LlamaIndex au moyen d'une
-interface glisser-déposer. Ce module déploie Flowise sur **Cloud Run v2** au-dessus du
-socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google
-Cloud partagée.
+Flowise est un constructeur de flux de travail visuels d'IA open source qui permet aux non-développeurs d'assembler des pipelines d'IA LangChain et LlamaIndex via une interface glisser-déposer. Ce module déploie Flowise sur **Cloud Run v2** au-dessus du socle [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud qu'utilise Flowise et sur la manière de
-les explorer et de les exploiter depuis la console Google Cloud et la ligne de
-commande. Pour les mécanismes communs à toute application Cloud Run — identité du
-service, entrée et équilibrage de charge, mise à l'échelle et concurrence, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de
-vie du déploiement — reportez-vous au
-[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud utilisés par Flowise et sur la manière de les explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à chaque application Cloud Run — identité de service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
+## Coût de Flowise sur RAD et comparaison {#what-flowise-costs-on-rad-and-how-that-compares}
+
+**Dans un projet Google Cloud que vous possédez, le module Cloud Run de Flowise sur RAD coûte environ 69 $ US par mois, plus 7,50 $ US une fois par déploiement et aucune licence par utilisateur.** GKE Autopilot est l'alternative pour les charges de travail qui doivent rester actives en permanence ou s'exécuter à côté d'autres applications Kubernetes ; voir le [guide GKE](Flowise_GKE.md), environ 93 $ US par mois. Flowise est un constructeur de flux de travail visuels d'IA open source pour assembler des pipelines LangChain et LlamaIndex par glisser-déposer. Les chiffres sont ceux du 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+
+Si cela s'exécute dans un projet géré par RAD pour vous, il peut être supprimé et restauré dans les 30 jours pour quelques crédits au lieu de rester en cours d'exécution — ainsi, un déploiement à usage occasionnel coûte quelques dollars par mois, et non 69 $ US. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+
+### Ce que vous payez sur RAD {#what-you-pay-on-rad}
+
+| | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
+|---|---|---|
+| Frais de module, une fois par déploiement | 75 crédits (7,50 $ US au prix de la recharge) | 67,5 crédits (10 % de moins) |
+| Temps de build | Quelques crédits par build | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **69 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **26 crédits par jour**, environ 780 par mois (environ 78 $ US au prix de la recharge) |
+| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins avec un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par chaque application du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
+
+**Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
+
+| Ressource (valeur par défaut du module) | Par mois |
+|---|---|
+| Cloud Run, 1 vCPU / 1 Gio, mise à l'échelle à zéro | 12 $ US |
+| Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51 $ US |
+| Passerelle Cloud NAT et adresse IP | 5 $ US |
+| Cloud Storage pour les sauvegardes | 1 $ US |
+| **Total** | **environ 69 $ US** |
+
+### Comparaison {#how-it-compares}
+
+Flowise a son propre plan hébergé officiel, **Flowise Cloud** : le plan Cloud hébergé de Flowise commence à 35 $/mois (Starter : flux illimités, 10 000 prédictions/mois, 1 Go de stockage) ; un plan Pro à 65 $/mois augmente ces limites — lu le 8 octobre 2026.
+
+| Option | Par mois | Qui l'exécute |
+|---|---|---|
+| Flowise Cloud, Starter (plan hébergé officiel) | 35 $ US/mois | Flowise |
+| **RAD, Cloud Run, votre propre projet** | **69 $ US**, plus 7,50 $ US une fois | L'automatisation de RAD, dans votre projet |
+| **RAD, Cloud Run, un projet géré par RAD** | **environ 780 crédits (78 $ US)** | RAD |
+| RAD, GKE Autopilot | environ 93 $ US ; voir le [guide GKE Autopilot](Flowise_GKE.md) | RAD |
+
+Le prix de Flowise Cloud a été lu sur sa propre page de tarification le 8 octobre 2026 et a pu changer depuis — vérifiez la source avant de vous fier au chiffre.
+
+- **Flowise Cloud est la comparaison fixe ; un serveur autogéré est la comparaison flexible.** Sur votre propre machine Hetzner ou DigitalOcean (2 vCPU/4 Go, environ 24 $ US/mois) ou une instance GCP Compute Engine e2-standard-2 (2 vCPU/8 Go, environ 49 $ US/mois), vous paieriez moins en espèces que l'une ou l'autre option, mais vous géreriez vous-même le système d'exploitation, la base de données, les sauvegardes, les correctifs de sécurité et les mises à niveau — exactement ce que Cloud SQL, Secret Manager et la surveillance gérés par RAD font pour vous.
+- **Un serveur bon marché est bon marché jusqu'à ce que quelque chose tombe en panne.** Sur RAD, les sauvegardes, la récupération à un point dans le temps, la rotation des mots de passe via Secret Manager, ainsi que la journalisation et la surveillance proviennent de Google Cloud par défaut. Sur votre propre serveur, ou sur un plan hébergé à prix fixe sans contrôle de l'infrastructure, chacun de ces éléments est un travail que quelqu'un doit encore faire ou une limite que vous ne pouvez pas modifier.
+
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+
+Si Flowise s'exécute dans **un projet géré par RAD pour vous**, vous avez une option au-delà de la mise à l'échelle : **supprimez l'ensemble du projet et restaurez-le dans les 30 jours pour presque rien.** Cela convient bien mieux à un déploiement dont vous n'avez besoin qu'occasionnellement — pour étudier en vue d'une certification, une démo, un besoin saisonnier — que de le faire fonctionner en continu.
+
+- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet. Google ne le supprime pas immédiatement : il le conserve, récupérable, pendant 30 jours, et comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend. Contrairement à la suppression d'un module, cela ne supprime pas Cloud SQL, la VM ou Cloud Run un par un — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
+- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela coûte une poignée de crédits de temps de build au total (moins de 1 $ US) pour une chaîne typique de 2 à 3 déploiements.
+- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, et non 69 $ US.** Déployez Flowise, utilisez-le pour une session, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre à jour, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez que les frais de module une seule fois, les builds, et les heures où il était réellement actif.
+- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que vous apportez et dont RAD ne gère que la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+- **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé ce déploiement et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+
+### Ne payez que pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+
+Cloud Run se met déjà à l'échelle zéro entre les requêtes, de sorte que la majeure partie de son propre coût de calcul s'arrête d'elle-même lorsque personne ne l'utilise. L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois que la fenêtre de 30 jours est passée, la façon d'arrêter de payer est de supprimer le déploiement et de le déployer à nouveau lorsque vous en avez besoin.**
+
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds : environ 80 crédits (8 $ US). La suppression permet d'économiser de l'argent si Flowise resterait autrement inutilisé pendant environ 4 jours ou plus dans votre propre projet (environ 2,29 $ US par jour), ou environ 3 jours ou plus dans un projet géré par RAD (26 crédits par jour).
+- **Supprimez tout ce que Flowise utilise.** La majeure partie du coût d'exécution est généralement la base de données et toute VM de fichier/cache partagée. Elles ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de cette application pendant que quelque chose d'autre partage le projet n'économise que la partie de calcul propre à cette application.
+- **Conservez d'abord les données.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+- **Notez vos paramètres.** RAD ne recrée pas un déploiement supprimé pour vous ; vous entrez à nouveau les paramètres lorsque vous déployez.
+
+### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
+
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose de Flowise dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+
+Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+
+**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais propres à RAD et estimation des crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour le mécanisme de pause/restauration ; [Tarification Flowise Cloud](https://flowiseai.com/). Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
+
 ## 1. Vue d'ensemble {#1-overview}
 
-Flowise s'exécute dans un conteneur Node.js sur Cloud Run v2. Le déploiement assemble
-un ensemble ciblé de services Google Cloud :
+Flowise s'exécute comme un conteneur Node.js sur Cloud Run v2. Le déploiement connecte un ensemble ciblé de services Google Cloud :
 
-| Fonctionnalité | Service Google Cloud | Remarques |
+| Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | Cloud Run v2 | Service Node.js, 1 vCPU / 1 GiB par défaut, mise à l'échelle automatique selon les requêtes |
-| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — Flowise ne prend pas en charge MySQL dans ce déploiement |
-| Stockage objet | Cloud Storage | Un bucket de téléversement dédié toujours provisionné ; il stocke les fichiers téléversés dans Flowise |
-| Secrets | Secret Manager | Mot de passe administrateur Flowise généré automatiquement |
-| Entrée | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe + domaine personnalisé facultatifs |
+| Calcul | Cloud Run v2 | Service Node.js, 1 vCPU / 1 Gio par défaut, autoscaling basé sur les requêtes |
+| Base de données | Cloud SQL pour PostgreSQL 15 | Requis — Flowise ne prend pas en charge MySQL dans ce déploiement |
+| Stockage d'objets | Cloud Storage | Un bucket de téléchargement dédié toujours provisionné ; stocke les téléchargements de fichiers Flowise |
+| Secrets | Secret Manager | Mot de passe administrateur Flowise auto-généré |
+| Ingress | URL Cloud Run / Équilibrage de charge Cloud | URL par défaut `run.app`, équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **PostgreSQL 15 est obligatoire.** Choisir MySQL ou `NONE` empêche le démarrage.
-- **Le stockage de fichiers adossé à GCS est toujours activé.** `STORAGE_TYPE=gcs` et
-  `APIKEY_STORAGE_TYPE=db` sont injectés automatiquement ; les clés d'API sont stockées
-  dans la base de données, et non dans des fichiers.
-- **Les variables `DATABASE_*` sont renseignées par le script de point d'entrée**
-  (`flowise-entrypoint.sh`) à partir des variables `DB_*` standard de la plateforme au
-  démarrage du conteneur — ne les définissez pas directement comme variables
-  d'environnement.
-- **`min_instance_count = 0` par défaut.** Des démarrages à froid de 10–20s peuvent
-  dépasser les délais d'expiration des clients LLM en aval pour les requêtes entrantes
-  — définissez `1` pour un usage en production sensible à la latence.
-- **Le mot de passe administrateur est généré automatiquement** et stocké dans Secret
-  Manager ; vous ne le définissez jamais en clair.
-- **Redis est désactivé par défaut.** Il n'est pas requis pour les fonctionnalités de
-  base de Flowise, mais les déploiements multi-instances qui partagent l'état
-  d'exécution des flux en tirent profit.
+- **PostgreSQL 15 est obligatoire.** La sélection de MySQL ou `NONE` interrompt le démarrage.
+- **Le stockage de fichiers basé sur GCS est toujours activé.** `STORAGE_TYPE=gcs` et `APIKEY_STORAGE_TYPE=db` sont injectés automatiquement ; les clés API sont stockées dans la base de données, pas dans des fichiers.
+- **Les variables `DATABASE_*` sont mappées par le script de point d'entrée** (`flowise-entrypoint.sh`) à partir des variables `DB_*` standard de la plateforme au démarrage du conteneur — ne les définissez pas directement comme variables d'environnement.
+- **`min_instance_count = 0` par défaut.** Les démarrages à froid de 10 à 20 secondes peuvent dépasser les délais d'expiration des clients LLM en aval sur les requêtes entrantes — définissez `1` pour une utilisation en production sensible à la latence.
+- **Le mot de passe administrateur est généré automatiquement** et stocké dans Secret Manager ; vous ne le définissez jamais en texte clair.
+- **Redis est désactivé par défaut.** Il n'est pas requis pour les fonctionnalités principales de Flowise, mais les déploiements multi-instances qui partagent l'état d'exécution du flux en bénéficient.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du
-service et des ressources sont indiqués dans les [sorties](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de service et de ressource sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Flowise {#a-cloud-run--the-flowise-service}
 
-Flowise s'exécute comme un service Cloud Run v2 qui se met à l'échelle automatiquement
-selon la charge de requêtes, entre les nombres minimal et maximal d'instances. Chaque
-déploiement crée une révision immuable ; le trafic peut être réparti entre les
-révisions pour des déploiements progressifs sûrs.
+Flowise s'exécute comme un service Cloud Run v2 qui s'adapte automatiquement en fonction de la charge de requêtes entre le nombre minimal et maximal d'instances. Chaque déploiement crée une révision immuable ; le trafic peut être réparti entre les révisions pour des déploiements sûrs.
 
-- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les
-  journaux et les métriques.
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les journaux et les métriques.
 - **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION"
@@ -80,19 +125,13 @@ révisions pour des déploiements progressifs sûrs.
   gcloud run revisions list --service <service-name> --project "$PROJECT" --region "$REGION"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
-l'environnement d'exécution et la répartition du trafic.
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence, l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Flowise stocke toutes les données applicatives (définitions de flux, identifiants,
-exécutions) dans une instance Cloud SQL for PostgreSQL 15 gérée. Le service s'y
-connecte de manière privée via le **Cloud SQL Auth Proxy** sur un socket Unix (sans IP
-publique). Lors du premier déploiement, un Job d'initialisation crée la base de
-données et l'utilisateur de l'application.
+Flowise stocke toutes les données d'application (définitions de flux, identifiants, exécutions) dans une instance Cloud SQL pour PostgreSQL 15 gérée. Le service se connecte en privé via le **proxy d'authentification Cloud SQL** sur un socket Unix (pas d'IP publique). Lors du premier déploiement, un job d'initialisation crée la base de données et l'utilisateur de l'application.
 
-- **Console :** SQL → sélectionnez l'instance pour les connexions, sauvegardes, flags
-  et métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -100,17 +139,11 @@ données et l'utilisateur de l'application.
   gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
-pour le modèle de connexion, les sauvegardes et la rotation du mot de passe.
+Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe se trouvent dans les [Sorties](#5-outputs). Voir [App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Cloud Storage {#c-cloud-storage}
 
-Un bucket de téléversement **Cloud Storage** dédié est toujours provisionné par
-Flowise_Common. Son nom est injecté automatiquement dans le service en tant que
-`GOOGLE_CLOUD_STORAGE_BUCKET_NAME`. Flowise écrit tous les fichiers téléversés par les
-utilisateurs (documents, images) dans ce bucket. Des buckets supplémentaires peuvent
-être configurés via `storage_buckets`.
+Un bucket de téléchargement **Cloud Storage** dédié est toujours provisionné par Flowise_Common. Son nom est injecté automatiquement dans le service sous la forme `GOOGLE_CLOUD_STORAGE_BUCKET_NAME`. Flowise écrit tous les fichiers téléchargés par l'utilisateur (documents, images) dans ce bucket. Des buckets supplémentaires peuvent être configurés via `storage_buckets`.
 
 - **Console :** Cloud Storage → Buckets.
 - **CLI :**
@@ -119,46 +152,39 @@ utilisateurs (documents, images) dans ce bucket. Des buckets supplémentaires pe
   gcloud storage ls gs://<uploads-bucket>/          # bucket name is in the Outputs
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
+Voir [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
 
 ### D. Secret Manager {#d-secret-manager}
 
-Le mot de passe administrateur de Flowise est stocké dans Secret Manager et injecté
-dans le service à l'exécution ; la valeur en clair n'apparaît jamais dans la
-configuration. Le mot de passe de la base de données est géré séparément par le
-socle.
+Le mot de passe administrateur de Flowise est stocké dans Secret Manager et injecté dans le service au moment de l'exécution ; le texte en clair n'apparaît jamais dans la configuration. Le mot de passe de la base de données est géré séparément par le socle.
 
-- **Console :** Security → Secret Manager.
+- **Console :** Sécurité → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
+Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### E. Réseau et entrée {#e-networking--ingress}
+### E. Réseau et ingress {#e-networking--ingress}
 
-Le service est joignable par défaut à son URL `run.app`. Un équilibreur de charge
-HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté
-par-dessus ; les paramètres d'entrée et la sortie VPC contrôlent la connectivité.
+Le service est accessible par son URL `run.app` par défaut. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peuvent être superposés ; les paramètres d'ingress et le contrôle d'egress VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
+- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md).
+Voir [App_CloudRun](App_CloudRun.md).
 
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
-Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques Cloud Run
-et Cloud SQL alimentent Cloud Monitoring, avec des tests de disponibilité et des
-règles d'alerte facultatifs.
+Les journaux de conteneur sont acheminés vers Cloud Logging ; les métriques Cloud Run et Cloud SQL sont acheminées vers Cloud Monitoring, avec des tests de disponibilité et des stratégies d'alerte facultatifs.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
+- **Console :** Journalisation → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -168,145 +194,117 @@ règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application Flowise {#3-flowise-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un Job
-  d'initialisation (`db-init`) utilisant l'image `postgres:15-alpine` crée la base de
-  données et l'utilisateur Flowise et accorde les privilèges avant le démarrage du
-  service. Il est idempotent et peut être relancé sans risque.
-- **Sonde de santé.** Les sondes de démarrage et de vivacité ciblent toutes deux le
-  point de terminaison de santé dédié de Flowise, `/api/v1/ping`, qui renvoie HTTP 200
-  lorsque l'application est prête. La sonde de démarrage accorde jusqu'à 5 minutes de
-  budget de démarrage (30 échecs × intervalle de 10 secondes) pour laisser le temps à
-  l'initialisation de la base de données au premier démarrage.
-- **Connexion administrateur.** Le nom d'utilisateur administrateur initial est
-  configurable via `flowise_username` (par défaut `admin`). Le mot de passe
-  administrateur est généré automatiquement et stocké dans Secret Manager ;
-  récupérez-le avec :
+- **Configuration de la base de données au premier déploiement.** Un job d'initialisation (`db-init`) utilisant l'image `postgres:15-alpine` crée la base de données et l'utilisateur Flowise et accorde les privilèges avant le démarrage du service. Il est idempotent et peut être réexécuté en toute sécurité.
+- **Sonde de santé.** Les sondes de démarrage et de vivacité ciblent le point de terminaison de santé dédié de Flowise `/api/v1/ping`, qui renvoie HTTP 200 lorsque l'application est prête. La sonde de démarrage autorise jusqu'à 5 minutes de budget de démarrage (30 échecs × intervalle de 10 secondes) pour tenir compte de l'initialisation de la base de données au premier démarrage.
+- **Connexion administrateur.** Le nom d'utilisateur administrateur initial est configurable via `flowise_username` (par défaut `admin`). Le mot de passe administrateur est auto-généré et stocké dans Secret Manager ; récupérez-le avec :
   ```bash
   gcloud secrets versions access latest \
     --secret=<resource_prefix>-flowise-password --project "$PROJECT"
   ```
-- **Remappage des variables de base de données.** `flowise-entrypoint.sh` mappe
-  inconditionnellement `DB_HOST`, `DB_USER`, `DB_NAME` et `DB_PASSWORD` (injectés par
-  la plateforme) vers `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_NAME` et
-  `DATABASE_PASSWORD` au démarrage du conteneur. Ne définissez pas directement les
-  variables `DATABASE_*`.
-- **Stockage de fichiers GCS.** `STORAGE_TYPE=gcs` et `GCLOUD_PROJECT` sont toujours
-  injectés. Flowise écrit les fichiers téléversés dans le bucket GCS provisionné
-  automatiquement. Remplacer `STORAGE_TYPE` entraîne l'écriture des téléversements sur
-  le stockage éphémère de Cloud Run, perdu à chaque nouvelle révision.
-- **Considérations multi-instances.** Flowise conserve l'état d'exécution des flux en
-  mémoire. Exécuter plus d'une instance sans Redis fait échouer les exécutions de flux
-  lorsque les requêtes sont réparties vers une autre instance. Conservez
-  `max_instance_count = 1` sauf si Redis est configuré.
+- **Remappage des variables de base de données.** `flowise-entrypoint.sh` mappe inconditionnellement `DB_HOST`, `DB_USER`, `DB_NAME` et `DB_PASSWORD` (injectés par la plateforme) vers `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_NAME` et `DATABASE_PASSWORD` au démarrage du conteneur. Ne définissez pas directement les variables `DATABASE_*`.
+- **Stockage de fichiers GCS.** `STORAGE_TYPE=gcs` et `GCLOUD_PROJECT` sont toujours injectés. Flowise écrit les fichiers téléchargés dans le bucket GCS auto-provisionné. La surcharge de `STORAGE_TYPE` entraîne l'écriture des téléchargements dans le stockage éphémère de Cloud Run et leur perte à chaque nouvelle révision.
+- **Considérations multi-instances.** Flowise stocke l'état d'exécution du flux en mémoire. L'exécution de plusieurs instances sans Redis entraîne l'échec des exécutions de flux lorsque les requêtes sont équilibrées vers une instance différente. Conservez `max_instance_count = 1` sauf si Redis est configuré.
 
 ---
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de
-déploiement. Seuls les paramètres propres à Flowise ou notables pour lui sont listés ;
-toutes les autres entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur
-comportement standard.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour Flowise sont listés ; toutes les autres entrées sont héritées de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
-| `region` | `us-central1` | Région du service et des ressources régionales. |
+| `project_id` | _(requis)_ | Projet Google Cloud cible. |
+| `region` | `us-central1` | Région pour le service et les ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail auxquelles sont accordés l'accès au projet et les alertes de surveillance. |
+| `support_users` | `[]` | E-mails autorisés à accéder au projet et aux alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `application_name` | `flowise` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
+| `application_name` | `flowise` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | `Flowise` | Nom convivial affiché dans la console. |
 | `application_description` | _(défini)_ | Description du service. |
 | `application_version` | `latest` | Tag de version de l'image Flowise. |
-| `flowise_username` | `admin` | Nom d'utilisateur administrateur de Flowise injecté en tant que `FLOWISE_USERNAME`. Modifiez-le avant toute exposition publique. |
+| `flowise_username` | `admin` | Nom d'utilisateur administrateur Flowise injecté comme `FLOWISE_USERNAME`. À modifier avant d'exposer publiquement. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
-| `container_image_source` | `custom` | `custom` construit l'image via Cloud Build ; `prebuilt` déploie une URI d'image existante. |
-| `container_image` | `""` | URI d'image de remplacement (utilisée uniquement lorsque `container_image_source = "prebuilt"`). |
+| `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
+| `container_image_source` | `custom` | `custom` construit via Cloud Build ; `prebuilt` déploie une URI d'image existante. |
+| `container_image` | `""` | Remplacer l'URI de l'image (utilisé uniquement lorsque `container_image_source = "prebuilt"`). |
 | `cpu_limit` | `1000m` | CPU par instance. |
-| `memory_limit` | `1Gi` | Mémoire par instance ; augmentez-la vers 2 GiB pour de grands graphes de flux. |
-| `min_instance_count` | `0` | Nombre minimal d'instances. Définissez ≥ 1 pour éviter la latence des démarrages à froid pour les charges de travail d'IA. |
-| `max_instance_count` | `1` | Nombre maximal d'instances. N'augmentez cette valeur qu'avec Redis activé. |
+| `memory_limit` | `1Gi` | Mémoire par instance ; augmenter vers 2 Gio pour les grands graphes de flux. |
+| `min_instance_count` | `0` | Instances minimales. Définir ≥ 1 pour éviter la latence de démarrage à froid pour les charges de travail IA. |
+| `max_instance_count` | `1` | Instances maximales. Augmenter uniquement avec Redis activé. |
 | `container_port` | `3000` | Flowise écoute sur le port 3000. |
-| `execution_environment` | `gen2` | Gen2 est requis pour les montages de volumes NFS. |
-| `timeout_seconds` | `300` | Durée maximale d'une requête. Augmentez-la pour les exécutions de workflows d'IA de longue durée (max. 3600). |
-| `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions par socket. |
+| `execution_environment` | `gen2` | Gen2 est requis pour les montages de volume NFS. |
+| `timeout_seconds` | `300` | Durée maximale de la requête. Augmenter pour les exécutions de flux de travail IA de longue durée (max 3600). |
+| `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions socket. |
 
 ### Groupe 5 — Accès et réseau {#group-5--access--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `ingress_settings` | `all` | Réseaux autorisés à joindre le service. Utilisez `internal` ou `internal-and-cloud-load-balancing` pour restreindre l'accès. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Mode d'acheminement du trafic sortant via le connecteur VPC. |
-| `enable_iap` | `false` | Exige une connexion Google via Identity-Aware Proxy. Recommandé en production. |
-| `iap_authorized_users` / `iap_authorized_groups` | `[]` | Personnes autorisées à accéder via IAP. |
+| `ingress_settings` | `all` | Quels réseaux peuvent atteindre le service. Utiliser `internal` ou `internal-and-cloud-load-balancing` pour restreindre. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Comment le trafic sortant est acheminé via le connecteur VPC. |
+| `enable_iap` | `false` | Exiger la connexion Google via Identity-Aware Proxy. Recommandé pour la production. |
+| `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder via IAP. |
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres non secrets supplémentaires. Ne remplacez pas les variables gérées par la plateforme (`DATABASE_*`, `FLOWISE_*`, `STORAGE_TYPE`). |
-| `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom du secret Secret Manager (par ex. `{ OPENAI_API_KEY = "flowise-openai-key" }`). |
-| `secret_propagation_delay` | `30` | Secondes d'attente après la création d'un secret avant de poursuivre. |
-| `secret_rotation_period` | `2592000s` | Cadence des notifications de rotation. |
+| `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Ne pas remplacer les variables gérées par la plateforme (`DATABASE_*`, `FLOWISE_*`, `STORAGE_TYPE`). |
+| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager (par exemple `{ OPENAI_API_KEY = "flowise-openai-key" }`). |
+| `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
+| `secret_rotation_period` | `2592000s` | Cadence de notification de rotation. |
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `backup_schedule` | `0 2 * * *` | Cron des sauvegardes automatiques (UTC). |
-| `backup_retention_days` | `7` | Durée de rétention ; augmentez-la pour la production/la conformité. |
-| `enable_backup_import` / `backup_source` / `backup_file` / `backup_format` | options de restauration | Restaure à partir d'une sauvegarde lors du déploiement. |
+| `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
+| `backup_retention_days` | `7` | Rétention ; augmenter pour la production/conformité. |
+| `enable_backup_import` / `backup_source` / `backup_file` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
 ### Groupe 8 — CI/CD et Binary Authorization {#group-8--cicd--binary-authorization}
 
-Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — consultez
-[App_CloudRun](App_CloudRun.md). Entrées principales : `enable_cicd_trigger`,
-`github_repository_url`, `github_token`, `enable_cloud_deploy`,
-`enable_binary_authorization`.
+Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir [App_CloudRun](App_CloudRun.md). Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`, `enable_cloud_deploy`, `enable_binary_authorization`.
 
 ### Groupe 9 — Scripts SQL personnalisés {#group-9--custom-sql-scripts}
 
-`enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`,
-`custom_sql_scripts_use_root` — exécutent du SQL depuis un bucket GCS après le
-provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
+`enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`, `custom_sql_scripts_use_root` — exécuter du SQL à partir d'un bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention d'images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Provisionne un équilibreur de charge HTTPS global + le WAF Cloud Armor. |
-| `application_domains` | `[]` | Noms d'hôte personnalisés avec SSL géré par Google. |
-| `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'équilibreur de charge HTTPS. Nécessite `enable_cloud_armor = true`. |
-| `admin_ip_ranges` | `[]` | Plages CIDR autorisées pour l'accès privilégié. |
-| `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | _(défini)_ | Règle de nettoyage d'Artifact Registry. |
+| `enable_cloud_armor` | `false` | Provisionner un équilibreur de charge HTTPS global + Cloud Armor WAF. |
+| `application_domains` | `[]` | Noms d'hôtes personnalisés avec SSL géré par Google. |
+| `enable_cdn` | `false` | Activer Cloud CDN sur le backend de l'équilibreur de charge HTTPS. Nécessite `enable_cloud_armor = true`. |
+| `admin_ip_ranges` | `[]` | CIDR autorisés à un accès privilégié. |
+| `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | _(défini)_ | Politique de nettoyage d'Artifact Registry. |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Provisionne les buckets définis dans `storage_buckets`. Le bucket de téléversement de Flowise est toujours créé par Flowise_Common. |
+| `create_cloud_storage` | `true` | Provisionner des buckets dans `storage_buckets`. Le bucket de téléchargement Flowise est toujours créé par Flowise_Common. |
 | `storage_buckets` | `[{ name_suffix="data" }]` | Buckets GCS supplémentaires à provisionner. |
-| `enable_nfs` | `false` | Provisionne un volume NFS Filestore. Nécessite `gen2`. |
-| `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
-| `gcs_volumes` | `[]` | Montages de volumes GCS Fuse. |
+| `enable_nfs` | `false` | Provisionner un volume NFS Filestore. Nécessite `gen2`. |
+| `nfs_mount_path` | `/mnt/nfs` | Chemin de montage à l'intérieur du conteneur. |
+| `gcs_volumes` | `[]` | Montages de volume GCS Fuse. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
@@ -315,7 +313,7 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Moteur Cloud SQL. Flowise nécessite PostgreSQL. |
 | `application_database_name` | `flowisedb` | Nom de la base de données. Immuable après le premier déploiement. |
-| `application_database_user` | `flowiseuser` | Utilisateur applicatif. Immuable après le premier déploiement. |
+| `application_database_user` | `flowiseuser` | Utilisateur de l'application. Immuable après le premier déploiement. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 | `db_host_env_var_name` / `db_name_env_var_name` / `db_user_env_var_name` / `db_port_env_var_name` / `service_url_env_var_name` | `""` | Noms de variables d'environnement supplémentaires pour les détails de connexion, en plus des variables `DB_*` standard. |
@@ -324,24 +322,24 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[{ name="db-init", … }]` | Laissez la valeur par défaut pour utiliser le job de configuration PostgreSQL intégré. |
+| `initialization_jobs` | `[{ name="db-init", … }]` | Laisser la valeur par défaut pour utiliser le job de configuration PostgreSQL intégré. |
 | `cron_jobs` | `[]` | Jobs Cloud Run récurrents déclenchés par Cloud Scheduler. |
-| `additional_services` | `[]` | Services Cloud Run supplémentaires déployés aux côtés de Flowise. |
+| `additional_services` | `[]` | Services Cloud Run supplémentaires déployés avec Flowise. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` / `startup_probe_config` | HTTP `/api/v1/ping`, délai de 30–60s | Sonde de démarrage ; accorde un budget de 5 minutes pour l'initialisation de la base de données. |
+| `startup_probe` / `startup_probe_config` | HTTP `/api/v1/ping`, délai de 30 à 60 s | Sonde de démarrage ; alloue un budget de 5 minutes pour l'initialisation de la base de données. |
 | `liveness_probe` / `health_check_config` | HTTP `/api/v1/ping` | Sonde de vivacité. |
 | `uptime_check_config` | désactivé, chemin `/` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
-| `alert_policies` | `[]` | Règles d'alerte sur métriques. |
+| `alert_policies` | `[]` | Stratégies d'alerte métrique. |
 
 ### Groupe 21 — Redis (facultatif) {#group-21--redis-optional}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Active Redis. Non requis pour les fonctionnalités de base ; nécessaire pour les déploiements multi-instances. |
+| `enable_redis` | `false` | Activer Redis. Non requis pour les fonctionnalités principales ; nécessaire pour les déploiements multi-instances. |
 | `redis_host` | `null` | Point de terminaison Redis. Requis lorsque `enable_redis = true`. |
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
@@ -350,27 +348,26 @@ provisionnement. Consultez [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | Plages CIDR du niveau d'accès / mode simulation (dry-run). |
-| `enable_audit_logging` | `false` | Cloud Audit Logs détaillés. |
+| `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
+| `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Renvoyées à l'issue d'un déploiement réussi — le moyen le plus rapide de localiser et
-d'explorer les ressources en cours d'exécution.
+Retournées lors d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
-| `service_location` | Région dans laquelle s'exécute le service. |
-| `stage_services` | URL des services propres à chaque étape (Cloud Deploy). |
+| `service_location` | Région dans laquelle le service s'exécute. |
+| `stage_services` | URL de service spécifiques à l'étape (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
-| `database_name` / `database_user` | Nom / utilisateur de la base de données applicative. |
-| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
+| `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
+| `database_password_secret` | Secret Manager contenant le mot de passe de la base de données. |
 | `database_host` / `database_port` | Point de terminaison / port de la base de données (sensible). |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
@@ -378,12 +375,12 @@ d'explorer les ressources en cours d'exécution.
 | `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants du projet. |
-| `cicd_enabled` / `cicd_configuration` | État et détails de la CI/CD. |
-| `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails du dépôt de la CI/CD. |
-| `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Dépôt et déclencheur de build. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État de la journalisation d'audit et de CMEK. |
+| `project_id` / `project_number` | Identifiants de projet. |
+| `cicd_enabled` / `cicd_configuration` | État et détails CI/CD. |
+| `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails du dépôt CI/CD. |
+| `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
@@ -392,36 +389,32 @@ d'explorer les ressources en cours d'exécution.
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critique | Flowise nécessite PostgreSQL ; MySQL/`NONE` empêche le démarrage. |
+| `database_type` | `POSTGRES_15` | Critique | Flowise nécessite PostgreSQL ; MySQL/`NONE` interrompt le démarrage. |
 | `enable_cloudsql_volume` | `true` | Critique | Sans le sidecar Auth Proxy, la connexion à la base de données est refusée. |
-| `application_database_name` / `_user` | à définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activer sans fichier de sauvegarde valide fait échouer le job d'import. |
-| `flowise_username` | à modifier par rapport à `admin` | Élevé | Le nom d'utilisateur par défaut est connu publiquement ; combiné à un mot de passe deviné, il donne un accès complet à tous les flux d'IA. |
-| `FLOWISE_SECRETKEY_OVERWRITE` | à laisser non défini après le premier déploiement | Élevé | Le modifier ou le supprimer après le premier déploiement brouille définitivement toutes les clés d'API LLM et tous les identifiants de vector store stockés. |
-| `memory_limit` | `1Gi` | Élevé | En dessous de 512Mi, le processus Node.js est arrêté pour manque de mémoire (OOM) au démarrage. La production avec de grands graphes de flux nécessite 2Gi. |
-| `max_instance_count` | `1` (sans Redis) | Élevé | Plusieurs instances sans magasin Redis partagé font échouer les exécutions de flux lorsque les requêtes sont routées vers une autre instance. |
-| `STORAGE_TYPE` | `gcs` (par défaut) | Élevé | Le remplacer par toute autre valeur écrit les téléversements sur un stockage éphémère, perdu à chaque nouvelle révision. |
-| `ingress_settings` | à restreindre pour un usage d'administration | Élevé | La valeur par défaut `all` autorise le trafic de toute source ; définissez `internal-and-cloud-load-balancing` pour restreindre l'accès. |
-| `enable_iap` | à activer pour un usage d'administration | Élevé | Sinon, l'interface Flowise est accessible publiquement sans authentification. |
-| `min_instance_count` | `1` | Moyen | `0` provoque des démarrages à froid de 10–20 s qui dépassent fréquemment les délais d'expiration des clients LLM en aval. |
-| `enable_redis` | à activer avec >1 instance | Moyen | Requis pour partager l'état de session/de file d'attente entre plusieurs instances. |
-| `startup_probe.failure_threshold` | `30` (par défaut) | Moyen | Le réduire en dessous de 10 conduit Cloud Run à redémarrer le conteneur avant que Flowise ait terminé l'initialisation de sa base de données au premier démarrage. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une rétention conforme. |
+| `application_database_name` / `_user` | défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit les données. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans fichier de sauvegarde valide fait échouer le job d'importation. |
+| `flowise_username` | changer de `admin` | Élevé | Le nom d'utilisateur par défaut est publiquement connu ; combiné à un mot de passe deviné, il accorde un accès complet à tous les flux d'IA. |
+| `FLOWISE_SECRETKEY_OVERWRITE` | laisser non défini après le premier déploiement | Élevé | La modification ou la suppression de ceci après le premier déploiement brouille de manière permanente toutes les clés API LLM stockées et les identifiants de magasin de vecteurs. |
+| `memory_limit` | `1Gi` | Élevé | En dessous de 512 Mio, le processus Node.js est tué par manque de mémoire au démarrage. La production avec de grands graphes de flux nécessite 2 Gio. |
+| `max_instance_count` | `1` (sans Redis) | Élevé | Plusieurs instances sans magasin Redis partagé entraînent l'échec des exécutions de flux lorsque les requêtes sont acheminées vers une instance différente. |
+| `STORAGE_TYPE` | `gcs` (par défaut) | Élevé | La surcharge vers autre chose écrit les téléchargements dans un stockage éphémère, perdu à chaque nouvelle révision. |
+| `ingress_settings` | restreindre pour l'administration | Élevé | La valeur par défaut `all` autorise le trafic de n'importe quelle source ; définir sur `internal-and-cloud-load-balancing` pour restreindre. |
+| `enable_iap` | activer pour l'administration | Élevé | L'interface utilisateur de Flowise est autrement accessible publiquement sans authentification. |
+| `min_instance_count` | `1` | Moyen | `0` provoque des démarrages à froid de 10 à 20 s qui dépassent fréquemment les délais d'expiration des clients LLM en aval. |
+| `enable_redis` | activer avec >1 instance | Moyen | Requis pour l'état de session/file d'attente partagé entre plusieurs instances. |
+| `startup_probe.failure_threshold` | `30` (par défaut) | Moyen | La réduction en dessous de 10 entraîne le redémarrage du conteneur par Cloud Run avant que Flowise n'ait terminé son initialisation de base de données au premier démarrage. |
+| `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
 
 ---
 
-Pour le comportement du socle évoqué tout au long de cette page — identité du service,
-mise à l'échelle et concurrence, entrée et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
-**[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à Flowise,
-partagée avec la variante GKE, est décrite dans **[Flowise_Common](Flowise_Common.md)**.
+Pour le comportement du socle référencé tout au long — identité de service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir **[App_CloudRun](App_CloudRun.md)**. La configuration d'application spécifique à Flowise partagée avec la variante GKE est décrite dans **[Flowise_Common](Flowise_Common.md)**.
 
 <!-- related-guides -->
 
-## Guides associés {#related-guides}
+## Guides connexes {#related-guides}
 
-- [Lab pratique : Flowise sur Cloud Run](../labs/Flowise_CloudRun.md) — déployez-le pas à pas, avec les écrans de la console et les commandes à chaque étape.
-- [Flowise sur GKE Autopilot](Flowise_GKE.md) — la même application sur Kubernetes, lorsque vous avez besoin de l'autre cible de déploiement.
-- [Flowise Common — Configuration applicative partagée](Flowise_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- [Lab pratique : Flowise sur Cloud Run](../labs/Flowise_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
+- [Flowise sur GKE Autopilot](Flowise_GKE.md) — la même application sur Kubernetes, pour les cas où vous avez besoin de l'autre cible de déploiement.
+- [Flowise Common — Configuration d'application partagée](Flowise_Common.md) — la configuration partagée par les deux cibles de déploiement.

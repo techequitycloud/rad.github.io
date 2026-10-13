@@ -1,104 +1,213 @@
 ---
 title: "NetBox sur Google Cloud Run"
-description: "Référence de configuration pour déployer NetBox sur Google Cloud Run avec le module RAD — variables, architecture, réseau et exploitation."
+description: "Référence de configuration pour le déploiement de NetBox sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Netbox_CloudRun.md @ 3055034 sha256:3b785fac1ac0 -->
+<!-- translated-from: docs/modules/Netbox_CloudRun.md @ e69407af sha256:d7e90e5673c7 -->
 
 # NetBox sur Google Cloud Run {#netbox-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Netbox_CloudRun.png" alt="NetBox sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-NetBox est la « source de vérité » open source de référence pour les équipes
-d'ingénierie réseau — gestion des adresses IP (IPAM), inventaire des équipements et
-des baies, câblage et topologie réseau, le tout modélisé sous forme de données
-structurées derrière une API REST/GraphQL complète. Ce module déploie NetBox sur
-**Cloud Run v2** en s'appuyant sur le socle [App_CloudRun](App_CloudRun.md), qui
-provisionne et gère l'infrastructure Google Cloud partagée.
+NetBox est la « source de vérité » open source standard de l'industrie pour les
+équipes d'ingénierie réseau — gestion des adresses IP (IPAM), inventaire des
+appareils et des racks, câblage et topologie réseau, le tout modélisé sous
+forme de données structurées derrière une API REST/GraphQL complète. Ce module
+déploie NetBox sur **Cloud Run v2** au-dessus de la fondation
+[App_CloudRun](App_CloudRun.md), qui provisionne et gère
+l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud qu'utilise NetBox et sur la manière de
-les explorer et de les exploiter depuis la console Google Cloud et la ligne de
-commande. Pour les mécanismes communs à toutes les applications Cloud Run — identité
-du service, ingress et équilibrage de charge, mise à l'échelle et concurrence,
-CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et
-cycle de vie du déploiement — reportez-vous au
-[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud utilisés par NetBox et sur la
+manière de les explorer et de les exploiter depuis la console Google Cloud et
+la ligne de commande. Pour les mécanismes communs à chaque application Cloud
+Run — identité de service, entrée et équilibrage de charge, mise à l'échelle
+et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
+Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
+[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les
+répéter ici.
 
 ---
 
+## Ce que coûte Netbox sur RAD, et comment cela se compare {#what-netbox-costs-on-rad-and-how-that-compares}
+
+**Le module Cloud Run de Netbox sur RAD coûte environ 99 $ US par mois, les frais de module étant facturés une fois en crédits RAD.** Si vous avez besoin que Netbox reste opérationnel en continu, qu'il s'adapte à plusieurs pods ou qu'il fonctionne aux côtés d'autres charges de travail Kubernetes, consultez le [guide GKE](Netbox_GKE.md) pour cette option. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 $ US) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont ceux du 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+
+### Ce que vous payez sur RAD {#what-you-pay-on-rad}
+
+RAD déploie **Netbox**, qui est open source, il n'y a donc pas de frais de licence par utilisateur. Vous payez pour trois choses :
+
+| | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
+|---|---|---|
+| Frais de module, une fois par déploiement | 110 crédits (11 $ US au prix de la recharge) | 99 crédits (10 % de moins) |
+| Temps de build | Environ 3-6 crédits par build | Idem |
+| Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **99 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **32 crédits par jour**, soit environ 960 par mois (environ 96 $ US au prix de la recharge, 77 $ US au tarif du plan Scale) |
+| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins avec un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas un deuxième ensemble de ces éléments.
+
+**Coût de fonctionnement par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
+
+| Ressource (valeur par défaut du module) | Par mois |
+|---|---|
+| Cloud Run, 2x vCPU / 2 Gio (scaleToZero) | 28,37 $ US |
+| Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
+| Serveur de fichiers NFS/cache (petite VM) | 13,43 $ US |
+| Cloud NAT et réseau | 5 $ US |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
+| **Total** | **environ 99 $ US** |
+
+### Comment cela se compare {#how-it-compares}
+
+- **Aucun SaaS géré clé en main n'a été vérifié pour Netbox lui-même**, donc la comparaison honnête est un serveur autogéré : un Hetzner CPX22 (2 vCPU/4 Go) coûte environ 24 $/mois, un DigitalOcean 2 vCPU/4 Go Droplet environ 24 $/mois, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) environ 49 $/mois.
+- Aucune offre SaaS gérée pour ce projet open source exact n'a pu être vérifiée avec un prix actuel et publié, donc aucun chiffre n'est donné ici. Pour la documentation d'infrastructure et l'IPAM, le choix réaliste pour la plupart des équipes est l'auto-hébergement (NetBox est déjà gratuit et open source) contre le paiement du temps d'un ingénieur pour maintenir cette copie auto-hébergée patchée et sauvegardée, ce qui est le fossé que comblent Cloud SQL géré et l'automatisation de RAD.
+- **Le prix du VPS n'est pas le coût total.** Sur un VPS nu, c'est aussi vous qui patcher l'OS, faire tourner les sauvegardes et maintenir la base de données (le cas échéant) en bonne santé. Cloud SQL géré, Secret Manager et la surveillance de RAD couvrent cela pour vous, ce qui est le véritable argument en faveur de RAD par rapport à une boîte moins chère — pas le prix affiché.
+
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+
+Si Netbox s'exécute dans **un projet géré par RAD pour vous**, vous avez une deuxième option qui va bien
+au-delà de la mise à l'échelle à zéro : **supprimez l'ensemble du projet et restaurez-le dans les 30 jours pour presque
+rien.** Cela convient bien mieux à Netbox dont vous n'avez besoin qu'occasionnellement — une démo, une évaluation, un projet
+saisonnier — que de le faire fonctionner en continu.
+
+- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de
+  supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable,
+  pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant cette période d'attente. Contrairement
+  à la suppression d'un module, cela ne détruit pas la base de données, la VM ou la ressource de calcul
+  une par une — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
+- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer.
+  RAD demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande de
+  lancer **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été
+  détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une
+  reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela coûte environ une poignée de crédits (moins de 1 $ US) au
+  total pour une chaîne de déploiement typique de 2-3.
+- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 99 $ US.** Déployez Netbox, utilisez-le
+  pendant un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Update, et
+  supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez qu'une seule fois les frais de module, les builds et le temps
+  pendant lequel Netbox était réellement en ligne.
+- **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet que vous apportez et dont RAD ne gère que la facturation),
+  et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement.
+  La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser
+  le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude et de démo conviennent). Google indique que la plupart
+  des services sont entièrement fonctionnels dans les 36 heures suivant une restauration.
+- **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes sont écrites dans un bucket à l'intérieur du
+  projet, et ce bucket n'est **pas** protégé par la suppression logicielle de Cloud Storage, il est donc très probable
+  qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30
+  jours. Si vous avez personnalisé Netbox et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive,
+  ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien
+  d'irremplaçable, cela n'a pas d'importance.
+
+### Payez uniquement pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+
+L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours
+passée, la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous
+en avez besoin.**
+
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds : environ 115
+  crédits (11,50 $ US) dans votre propre projet, ou 104
+  crédits dans un projet géré par RAD. La suppression permet d'économiser de l'argent une fois que Netbox resterait inutilisé pendant
+  environ 3 jours ou plus dans votre propre projet (environ 3,29 $ US par
+  jour), ou environ 3 jours ou plus dans un projet géré par RAD (32 crédits par
+  jour).
+- **La majeure partie du coût de fonctionnement est généralement la base de données et toute VM de fichier/cache partagée.** Elles ne s'arrêtent que
+  lorsque rien d'autre dans le projet ne les utilise, donc la suppression de Netbox alors que quelque chose d'autre partage le
+  projet ne sauve que la partie calcul de cette application.
+- **Gardez vos données en premier.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées
+  avec lui, donc copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+
+### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
+
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant
+  obtient Netbox dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une
+  allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie
+  la sienne. Tout est supprimé à la fin de la session et les crédits non utilisés sont reversés au formateur.
+- **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute Netbox pour un client à partir d'un
+  portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation
+  est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire
+  transfère le projet et les déploiements deviennent la propriété du client.
+- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par
+  carte, virement bancaire ou argent mobile.
+
+**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour la fenêtre de récupération de 30 jours et ce qu'elle dit sur les objets Cloud Storage sans suppression logicielle ; frais RAD et estimations de crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing). Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
+
 ## 1. Vue d'ensemble {#1-overview}
 
-NetBox s'exécute sous la forme d'un conteneur Python/Django construit sur mesure sur
-Cloud Run v2, qui encapsule l'image officielle `netboxcommunity/netbox` avec un
-processus d'arrière-plan `rqworker --with-scheduler` colocalisé. Le déploiement
-assemble un ensemble ciblé de services Google Cloud :
+NetBox s'exécute en tant que conteneur Python/Django personnalisé sur Cloud Run
+v2, enveloppant l'image officielle `netboxcommunity/netbox` avec un
+processus `rqworker --with-scheduler` d'arrière-plan colocalisé. Le
+déploiement relie un ensemble ciblé de services Google Cloud :
 
-| Fonctionnalité | Service Google Cloud | Remarques |
+| Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | Cloud Run v2 | Image construite sur mesure, 2 vCPU / 2 GiB par défaut, autoscaling serverless ; mise à l'échelle jusqu'à zéro prise en charge |
-| Base de données | Cloud SQL for PostgreSQL 15 | Obligatoire — NetBox ne prend en charge ni MySQL ni SQLite en production |
-| Stockage objet | Cloud Storage (GCS Fuse) | Un bucket `media` monté sur `/etc/netbox/media`, le véritable `MEDIA_ROOT` de NetBox |
-| Cache et file d'attente | Redis (obligatoire) | File de tâches (`REDIS_DATABASE=0`) et cache (`REDIS_CACHE_DATABASE=1`) sur des bases logiques distinctes ; utilise par défaut l'IP du serveur NFS |
+| Calcul | Cloud Run v2 | Image personnalisée, 2 vCPU / 2 Gio par défaut, autoscaling sans serveur ; mise à l'échelle à zéro prise en charge |
+| Base de données | Cloud SQL pour PostgreSQL 15 | Requis — NetBox ne prend pas en charge MySQL ou SQLite en production |
+| Stockage d'objets | Cloud Storage (GCS Fuse) | Un bucket `media` monté à `/etc/netbox/media`, le véritable `MEDIA_ROOT` de NetBox |
+| Cache et file d'attente | Redis (obligatoire) | File d'attente de tâches (`REDIS_DATABASE=0`) et cache (`REDIS_CACHE_DATABASE=1`) sur des bases de données logiques distinctes ; par défaut, l'adresse IP du serveur NFS |
 | Secrets | Secret Manager | `SECRET_KEY` et `SUPERUSER_PASSWORD` générés automatiquement ; mot de passe de la base de données |
-| Ingress | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe + domaine personnalisé en option |
+| Entrée | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la
-  couche applicative partagée ; NetBox ne prend en charge ni MySQL ni SQLite en
-  production.
-- **Redis est obligatoire, pas facultatif.** NetBox utilise Redis comme broker pour
-  son système de tâches d'arrière-plan RQ (Redis Queue) — webhooks, scripts
-  personnalisés, rapports et jobs planifiés/système — et comme backend de cache. Il
-  s'agit de **deux bases Redis logiques distinctes** (`REDIS_DATABASE=0`,
-  `REDIS_CACHE_DATABASE=1`) ; la documentation de NetBox avertit que partager un même
-  numéro de base risque de faire perdre des tâches d'arrière-plan en file d'attente
-  lors d'un vidage du cache.
-- **Un worker d'arrière-plan est colocalisé dans le même conteneur.** L'image exécute
-  `manage.py rqworker --with-scheduler` comme processus en arrière-plan à côté du
-  serveur web Granian. Sans lui, les tâches d'arrière-plan s'accumulent silencieusement
-  en file d'attente et ne s'exécutent jamais — aucune erreur distincte n'est signalée.
-- **Les téléversements de médias sont montés sur le véritable `MEDIA_ROOT` de
-  NetBox.** `/etc/netbox/media`, et non `/opt/netbox/netbox/media` qui semble plus
-  évident — confirmé en conditions réelles via `manage.py shell`. Une erreur sur ce
-  chemin ne produit aucune erreur ; les téléversements ne sont simplement jamais
-  persistés dans GCS (voir §4 pour l'histoire complète).
-- **Démarrage à froid privilégiant le coût par défaut** (`cpu_always_allocated = false`,
-  `min_instance_count = 0`). **Compromis :** le worker RQ ne s'exécute que tant
-  qu'une requête maintient l'instance active — les tâches d'arrière-plan sont mises
-  en file et traitées à la requête suivante au lieu de s'exécuter immédiatement.
-  Définissez ensemble `cpu_always_allocated = true` et `min_instance_count >= 1` pour
-  rétablir un traitement continu.
-- **Le conteneur s'exécute en tant que root** (uid 0 / gid 0) — l'image officielle
-  `netboxcommunity/netbox` ne définit aucun `USER`. C'est intentionnel et conforme à
-  l'amont ; le montage GCS Fuse est fixé en conséquence à `uid=0`/`gid=0`.
-- **`SECRET_KEY` et `SUPERUSER_PASSWORD` sont générés automatiquement** et stockés
-  dans Secret Manager. `SECRET_KEY` doit comporter au moins 50 caractères (NetBox
-  l'impose) ; il est généré avec 64 caractères.
-- **Les contrôles d'état utilisent `/login/`, et non `/api/status/`.** La page de
-  connexion est publique et non authentifiée ; l'API de statut nécessite une
-  authentification et ferait échouer chaque sonde.
+  couche d'application partagée ; NetBox ne prend pas en charge MySQL ou SQLite
+  pour une utilisation en production.
+- **Redis est obligatoire, pas facultatif.** NetBox utilise Redis comme
+  intermédiaire pour son système de tâches d'arrière-plan RQ (Redis Queue) —
+  webhooks, scripts personnalisés, rapports et jobs planifiés/système — et
+  comme backend de cache. Ce sont **deux bases de données Redis logiques
+  distinctes** (`REDIS_DATABASE=0`, `REDIS_CACHE_DATABASE=1`) ; la
+  propre documentation de NetBox avertit que le partage d'un seul numéro de
+  base de données risque de perdre les tâches d'arrière-plan en file d'attente
+  lors d'un vidage de cache.
+- **Un worker d'arrière-plan est colocalisé dans le même conteneur.** L'image
+  exécute `manage.py rqworker --with-scheduler` en tant que processus
+  d'arrière-plan à côté du serveur web Granian. Sans cela, les tâches
+  d'arrière-plan sont mises en file d'attente silencieusement et ne
+  s'exécutent jamais — il n'y a pas d'erreur distincte.
+- **Les téléchargements de médias sont montés au véritable `MEDIA_ROOT` de
+  NetBox.** `/etc/netbox/media`, pas le plus évident
+  `/opt/netbox/netbox/media` — confirmé en direct via
+  `manage.py shell`. Une erreur de chemin ne provoque pas d'erreur ; les
+  téléchargements ne persistent tout simplement jamais dans GCS (voir §4 pour
+  l'histoire complète).
+- **Démarrage à froid axé sur les coûts par défaut**
+  (`cpu_always_allocated = false`, `min_instance_count = 0`). **Compromis :** le
+  worker RQ ne s'exécute que tant qu'une requête maintient l'instance chaude —
+  les tâches d'arrière-plan sont mises en file d'attente et traitées lors de
+  la prochaine requête au lieu de s'exécuter immédiatement. Définissez
+  `cpu_always_allocated = true` et `min_instance_count >= 1` ensemble pour
+  restaurer le traitement continu.
+- **Le conteneur s'exécute en tant que root** (uid 0 / gid 0) — l'image
+  officielle `netboxcommunity/netbox` ne définit pas
+  `USER`. C'est intentionnel et correspond à l'amont ; le
+  montage GCS Fuse est épinglé à `uid=0`/`gid=0` en
+  conséquence.
+- **`SECRET_KEY` et `SUPERUSER_PASSWORD` sont générés
+  automatiquement** et stockés dans Secret Manager. `SECRET_KEY` doit
+  comporter au moins 50 caractères (NetBox l'impose) ; il est généré à 64.
+- **Les vérifications de santé utilisent `/login/`, pas
+  `/api/status/`.** La page de connexion est publique et non authentifiée ;
+  l'API de statut nécessite une authentification et échouerait à chaque sonde.
 - **`ALLOWED_HOSTS = "*"` et `CORS_ORIGIN_ALLOW_ALL = "true"` sont ouverts par
-  défaut** pour un premier déploiement sans intervention — restreignez-les via
-  `environment_variables` avant d'exposer une instance de production sur Internet.
+  défaut** pour un premier déploiement sans intervention — resserrez via
+  `environment_variables` avant d'exposer une instance de production à
+  Internet.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms du
-service et des ressources sont indiqués dans les [sorties](#5-outputs) du
-déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des services et des ressources sont
+rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service NetBox {#a-cloud-run--the-netbox-service}
 
-NetBox s'exécute en tant que service Cloud Run v2 qui s'adapte automatiquement à la
-charge des requêtes entre les nombres minimal et maximal d'instances. Chaque
-déploiement crée une révision immuable ; le trafic peut être réparti entre les
-révisions pour des déploiements progressifs sûrs.
+NetBox s'exécute en tant que service Cloud Run v2 qui s'adapte automatiquement
+en fonction de la charge de requêtes entre le nombre minimum et maximum
+d'instances. Chaque déploiement crée une révision immuable ; le trafic peut
+être réparti entre les révisions pour des déploiements sûrs.
 
-- **Console :** Cloud Run → sélectionnez le service pour voir les révisions, le
-  trafic, les journaux et les métriques.
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les journaux et
+  les métriques.
 - **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION"
@@ -106,20 +215,18 @@ révisions pour des déploiements progressifs sûrs.
   gcloud run revisions list --service <service-name> --project "$PROJECT" --region "$REGION"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
-l'environnement d'exécution et la répartition du trafic.
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence, l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL for PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
+### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-NetBox stocke toutes les données d'inventaire et d'IPAM (équipements, baies,
-adresses IP, préfixes, VLAN, circuits, utilisateurs) dans une instance gérée Cloud
-SQL for PostgreSQL 15. Le service s'y connecte de manière privée via le **Cloud SQL
-Auth Proxy** sur un socket Unix ; aucune IP publique n'est exposée. Au premier
-déploiement, un Job d'initialisation crée la base de données et l'utilisateur de
-l'application.
+NetBox stocke toutes les données d'inventaire et d'IPAM (appareils, racks,
+adresses IP, préfixes, VLAN, circuits, utilisateurs) dans une instance Cloud
+SQL pour PostgreSQL 15 gérée. Le service se connecte en privé via le
+**proxy d'authentification Cloud SQL** sur un socket Unix ; aucune IP
+publique n'est exposée. Lors du premier déploiement, un job
+d'initialisation crée la base de données et l'utilisateur de l'application.
 
-- **Console :** SQL → sélectionnez l'instance pour voir les connexions, les
-  sauvegardes, les flags et les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -127,15 +234,15 @@ l'application.
   gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
-pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
+Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe se trouvent dans les
+[Sorties](#5-outputs). Voir [App_CloudRun](App_CloudRun.md) pour le
+modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
-### C. Cloud Storage (stockage des médias GCS Fuse) {#c-cloud-storage-gcs-fuse-media-store}
+### C. Cloud Storage (magasin de médias GCS Fuse) {#c-cloud-storage-gcs-fuse-media-store}
 
-Un bucket `media` dédié est provisionné automatiquement et monté sur
+Un bucket `media` dédié est provisionné automatiquement et monté à
 `/etc/netbox/media` — le véritable `MEDIA_ROOT` de NetBox — pour les images
-d'équipements/de baies téléversées et les pièces jointes.
+d'appareils/racks téléchargées et les pièces jointes.
 
 - **Console :** Cloud Storage → Buckets.
 - **CLI :**
@@ -144,15 +251,15 @@ d'équipements/de baies téléversées et les pièces jointes.
   gcloud storage ls gs://<media-bucket>/          # bucket name is in the Outputs
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour GCS Fuse et les options CMEK.
+Voir [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
 
-### D. Redis (file de tâches et cache) {#d-redis-task-queue-and-cache}
+### D. Redis (file d'attente de tâches et cache) {#d-redis-task-queue-and-cache}
 
-Redis est **obligatoire** (`enable_redis = true` par défaut). Lorsque `redis_host`
-est laissé vide et que `enable_nfs` vaut true, l'IP de la VM du serveur NFS est
-utilisée comme point de terminaison Redis. NetBox répartit son usage entre deux bases
-logiques — `REDIS_DATABASE=0` pour la file de tâches RQ, `REDIS_CACHE_DATABASE=1`
-pour le cache.
+Redis est **obligatoire** (`enable_redis = true` par défaut). Lorsque
+`redis_host` est laissé vide et `enable_nfs` est vrai, l'IP de la VM du
+serveur NFS est utilisée comme point de terminaison Redis. NetBox répartit son
+utilisation sur deux bases de données logiques — `REDIS_DATABASE=0` pour la file
+d'attente de tâches RQ, `REDIS_CACHE_DATABASE=1` pour le cache.
 
 - **Console :** Memorystore → Redis (si vous utilisez une instance gérée).
 - **CLI :**
@@ -166,44 +273,44 @@ pour le cache.
 
 ### E. Secret Manager {#e-secret-manager}
 
-Deux secrets cryptographiques sont générés automatiquement et stockés dans Secret
-Manager : `SECRET_KEY` (secret cryptographique Django utilisé pour les sessions, la
-protection CSRF et les cookies signés) et `SUPERUSER_PASSWORD` (le mot de passe du
-compte administrateur initial). Le mot de passe de la base de données est géré
-séparément par le socle.
+Deux secrets cryptographiques sont générés automatiquement et stockés dans
+Secret Manager : `SECRET_KEY` (secret cryptographique Django utilisé pour
+les sessions, le CSRF et les cookies signés) et `SUPERUSER_PASSWORD` (le mot de
+passe du compte administrateur initial). Le mot de passe de la base de données
+est géré séparément par la fondation.
 
-- **Console :** Security → Secret Manager.
+- **Console :** Sécurité → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT"
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de
-rotation.
+Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
 ### F. Réseau et entrée {#f-networking--ingress}
 
-Le service est accessible par défaut via son URL `run.app`. Un équilibreur de charge
-HTTPS externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut être ajouté ;
-les paramètres d'ingress et l'egress VPC contrôlent la connectivité.
+Le service est accessible par son URL `run.app` par défaut. Un équilibreur de
+charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor
+peuvent être superposés ; les paramètres d'entrée et de sortie VPC contrôlent
+la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
+- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md).
+Voir [App_CloudRun](App_CloudRun.md).
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les journaux des conteneurs sont envoyés vers Cloud Logging ; les métriques de Cloud
-Run et de Cloud SQL vers Cloud Monitoring, avec des tests de disponibilité et des
-règles d'alerte facultatifs.
+Les journaux de conteneur sont envoyés à Cloud Logging ; les métriques Cloud Run
+et Cloud SQL sont envoyées à Cloud Monitoring, avec des vérifications de
+disponibilité et des politiques d'alerte facultatives.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -213,59 +320,66 @@ règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application NetBox {#3-netbox-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un Job
-  d'initialisation exécute `db-init.sh` avec `postgres:15-alpine`. Il se connecte via
-  le Cloud SQL Auth Proxy et crée de manière idempotente la base de données et
-  l'utilisateur de l'application, puis accorde les privilèges. Le job peut être
-  relancé sans risque.
-- **Migrations de la base de données au démarrage.** `docker-entrypoint.sh true`
-  exécute de manière synchrone la séquence de premier démarrage propre à NetBox à
-  chaque démarrage du conteneur — attente de la disponibilité de la base,
-  `migrate --no-input`, nettoyage des contenttypes obsolètes, nettoyage des sessions
-  et réindexation paresseuse de l'index de recherche — avant le démarrage du serveur
-  web et du worker RQ. C'est idempotent ; sans effet lorsqu'il n'y a rien de nouveau à
-  migrer.
-- **L'amorçage du superutilisateur est idempotent.** Le compte administrateur
-  initial (`admin_user`/`admin_email`, mot de passe issu de Secret Manager) est créé
-  à partir des variables d'environnement `SUPERUSER_*` au premier démarrage ; la
-  création est ignorée — sans erreur — si un utilisateur portant ce nom existe déjà,
-  ce qui la rend sûre à chaque redémarrage.
-- **Les téléversements de médias sont persistés dans le véritable `MEDIA_ROOT`.** Le
-  `MEDIA_ROOT` réel de NetBox est `/etc/netbox/media` (confirmé en conditions réelles
-  via `manage.py shell`), et c'est là qu'est monté le volume GCS Fuse `media`. Une
-  révision antérieure de ce module montait à la place `/opt/netbox/netbox/media`, qui
-  semble plus évident — un chemin NetBox réel mais inexistant — ce qui faisait écrire
-  les téléversements sur le système de fichiers éphémère du conteneur : ils étaient
-  relisibles immédiatement (même système de fichiers local, donc l'aller-retour
-  « fonctionnait »), mais n'atteignaient jamais GCS et étaient perdus à chaque
-  redémarrage du conteneur, de façon identique sur Cloud Run **et** sur GKE. Le
-  problème a été corrigé en rectifiant le chemin de montage, vérifié en conditions
-  réelles avec `gcloud storage ls` affichant le fichier de test téléversé avec la
-  bonne taille en octets, le bon type de contenu et un horodatage dans les 5 secondes
-  suivant le téléversement. **Leçon :** cela ressemblait exactement à une limitation
-  de stockage propre à Cloud Run jusqu'à ce qu'on le trace avec un véritable accès
-  shell — c'était un banal bug de chemin de montage Terraform affectant les deux
-  plateformes de façon identique, et non une lacune de la plateforme.
-- **`CSRF_TRUSTED_ORIGINS` reflète l'URL réelle du service.** Calculé à partir de
-  `module.deployment_id.service_name`, propre à l'application, et du numéro de
-  projet — et non du préfixe de ressources propre au seul tenant, qui construirait
-  l'URL d'un service inexistant et rejetterait chaque POST authentifié (y compris la
-  connexion) avec un échec CSRF. Vérifiez la valeur déployée :
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` en utilisant
+  `postgres:15-alpine`. Il se connecte via le proxy d'authentification Cloud SQL
+  et crée de manière idempotente la base de données et l'utilisateur de
+  l'application, puis accorde les privilèges. Le job peut être réexécuté en
+  toute sécurité.
+- **Migrations de base de données au démarrage.** `docker-entrypoint.sh true` exécute
+  la propre séquence de premier démarrage de NetBox de manière synchrone à
+  chaque démarrage de conteneur — une attente de disponibilité de la base de
+  données, `migrate --no-input`, un nettoyage des types de contenu obsolètes, un
+  nettoyage de session et une réindexation paresseuse de l'index de recherche
+  — avant le démarrage du serveur web et du worker RQ. C'est idempotent ; une
+  opération nulle lorsqu'il n'y a rien de nouveau à migrer.
+- **Le bootstrap du superutilisateur est idempotent.** Le compte
+  administrateur initial (`admin_user`/`admin_email`, mot de passe de
+  Secret Manager) est créé à partir des variables d'environnement
+  `SUPERUSER_*` au premier démarrage ; la création est ignorée — ce n'est
+  pas une erreur — si un utilisateur portant ce nom existe déjà, elle est donc
+  sûre à chaque redémarrage.
+- **Les téléchargements de médias persistent dans le véritable
+  `MEDIA_ROOT`.** Le véritable `MEDIA_ROOT` de NetBox est
+  `/etc/netbox/media` (confirmé en direct via `manage.py shell`),
+  où le volume `media` GCS Fuse est monté. Une révision
+  antérieure de ce module montait le plus évident `/opt/netbox/netbox/media` à la
+  place — un chemin NetBox réel et inexistant — ce qui entraînait l'écriture
+  des téléchargements dans le système de fichiers éphémère du conteneur : ils
+  étaient lisibles immédiatement (même système de fichiers local, donc
+  l'aller-retour « fonctionnait »), mais n'atteignaient jamais GCS et étaient
+  perdus à chaque redémarrage du conteneur, sur **à la fois** Cloud Run et GKE
+  identiquement. Cela a été corrigé en corrigeant le chemin de montage, vérifié
+  en direct avec `gcloud storage ls` montrant le fichier de test téléchargé
+  avec la taille en octets, le type de contenu et l'horodatage corrects dans
+  les 5 secondes suivant le téléchargement. **Leçon :** cela ressemblait
+  exactement à une limitation de stockage spécifique à Cloud Run jusqu'à ce
+  qu'elle soit tracée avec un accès shell réel — c'était un bug de chemin de
+  montage Terraform banal affectant les deux plateformes identiquement, pas un
+  manque de plateforme.
+- **`CSRF_TRUSTED_ORIGINS` reflète l'URL réelle du service.** Calculé à partir
+  de `module.deployment_id.service_name` et du numéro de projet — pas le
+  préfixe de ressource réservé au locataire, qui construirait une URL pour un
+  service qui n'existe pas et rejetterait chaque POST authentifié (y compris
+  la connexion) avec une erreur CSRF. Vérifiez la valeur déployée :
   ```bash
   gcloud run services describe <service-name> \
     --region "$REGION" --project "$PROJECT" \
     --format='value(status.url)'
   ```
-- **Le worker RQ traite les tâches d'arrière-plan.** Les webhooks, scripts
-  personnalisés, rapports et jobs planifiés/système sont exécutés par `manage.py rqworker
-  --with-scheduler`, colocalisé dans le même conteneur que le serveur web. Avec la
-  valeur par défaut de démarrage à froid privilégiant le coût, ce worker ne s'exécute
-  que tant qu'une instance est active ; activez `cpu_always_allocated = true` +
-  `min_instance_count >= 1` pour un traitement continu en arrière-plan.
-- **Chemin de contrôle d'état.** Les sondes de démarrage et de vivacité ciblent
-  `/login/` — la page de connexion publique et non authentifiée de NetBox.
-  `/api/status/` nécessite une authentification et ferait échouer chaque sonde.
-- **Inspectez l'exécution des jobs :**
+- **Le worker RQ traite les tâches d'arrière-plan.** Les webhooks, les scripts
+  personnalisés, les rapports et les jobs planifiés/système sont exécutés par
+  `manage.py rqworker
+  --with-scheduler`, colocalisé dans le même conteneur que le serveur web.
+  Avec la valeur par défaut de démarrage à froid axée sur les coûts, ce worker
+  ne s'exécute que tant qu'une instance est chaude ; activez
+  `cpu_always_allocated = true` + `min_instance_count >= 1` pour un traitement
+  continu des tâches d'arrière-plan.
+- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent
+  `/login/` — la page de connexion publique et non authentifiée de
+  NetBox. `/api/status/` nécessite une authentification et échouerait à
+  chaque sonde.
+- **Inspecter l'exécution du job :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -275,111 +389,111 @@ règles d'alerte facultatifs.
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la plateforme
-de déploiement. Seuls les paramètres propres à NetBox ou notables pour lui sont
-listés ; toutes les autres entrées sont héritées d'[App_CloudRun](App_CloudRun.md)
-avec leur comportement standard.
+Les variables sont regroupées exactement telles qu'elles apparaissent sur la
+plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
+NetBox sont listés ; toutes les autres entrées sont héritées de
+[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
-| `region` | `us-central1` | Région du service et des ressources régionales. |
+| `region` | `us-central1` | Région pour le service et les ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail recevant l'accès au projet et les alertes de surveillance. |
-| `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
+| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
+| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `application_name` | `netbox` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
-| `display_name` | `NetBox - Network Documentation & IPAM` | Nom lisible affiché dans la console. |
+| `application_name` | `netbox` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
+| `display_name` | `NetBox - Network Documentation & IPAM` | Nom lisible par l'homme affiché dans la console. |
 | `description` | _(défini)_ | Description du service. |
-| `application_version` | `latest` | Tag de version de l'image de conteneur, transmis à l'ARG de build `APPLICATION_VERSION` du Dockerfile. |
+| `application_version` | `latest` | Étiquette de version de l'image du conteneur, transmise à l'ARG de build `APPLICATION_VERSION` du Dockerfile. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
+| `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `2000m` | CPU par instance ; partagé par le serveur web et le worker RQ. |
-| `memory_limit` | `2Gi` | Mémoire par instance ; minimum 1Gi. |
-| `min_instance_count` | `0` | `0` active la mise à l'échelle jusqu'à zéro ; le worker RQ ne s'exécute que tant qu'une instance est active. |
+| `memory_limit` | `2Gi` | Mémoire par instance ; minimum 1 Gio. |
+| `min_instance_count` | `0` | `0` active la mise à l'échelle à zéro ; le worker RQ ne s'exécute que tant qu'une instance est chaude. |
 | `max_instance_count` | `3` | Limite supérieure de l'autoscaling. |
-| `cpu_always_allocated` | `false` | `true` + `min_instance_count >= 1` rétablit le traitement continu des tâches d'arrière-plan. |
+| `cpu_always_allocated` | `false` | `true` + `min_instance_count >= 1` restaure le traitement continu des tâches d'arrière-plan. |
 | `container_port` | `8080` | Le serveur Granian (WSGI) de NetBox écoute sur le port 8080. |
 | `execution_environment` | `gen2` | Gen2 requis pour les montages GCS Fuse. |
-| `timeout_seconds` | `300` | Durée maximale d'une requête (0–3600 secondes). |
-| `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions par socket. |
-| `enable_image_mirroring` | `true` | Met en miroir l'image construite dans Artifact Registry. |
-| `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements progressifs. |
+| `timeout_seconds` | `300` | Durée maximale de la requête (0 à 3600 secondes). |
+| `enable_cloudsql_volume` | `true` | Proxy d'authentification Cloud SQL pour les connexions socket. |
+| `enable_image_mirroring` | `true` | Mettre en miroir l'image construite dans Artifact Registry. |
+| `traffic_split` | `[]` | Répartir le trafic entre les révisions pour des déploiements échelonnés. |
 | `max_revisions_to_retain` | `7` | Anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Accès et contrôle d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `ingress_settings` | `all` | Contrôle d'ingress Cloud Run. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | N'achemine que le trafic RFC 1918 via le VPC. |
-| `enable_iap` | `false` | Exige une connexion Google. |
+| `ingress_settings` | `all` | Contrôle d'entrée Cloud Run. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Acheminer uniquement le trafic RFC 1918 via VPC. |
+| `enable_iap` | `false` | Exiger la connexion Google. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder via IAP. |
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Ne définissez pas `SECRET_KEY`, `SUPERUSER_PASSWORD` ni `DB_*` ici — ils sont injectés automatiquement. |
-| `secret_environment_variables` | `{}` | Table variable d'environnement → nom du secret Secret Manager. |
-| `secret_propagation_delay` | `30` | Secondes d'attente après la création d'un secret avant de poursuivre. |
-| `secret_rotation_period` | `2592000s` | Fréquence des notifications de rotation de Secret Manager. |
+| `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Ne pas définir `SECRET_KEY`, `SUPERUSER_PASSWORD` ou `DB_*` ici — ils sont injectés automatiquement. |
+| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. |
+| `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
+| `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. |
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatique (UTC). |
-| `backup_retention_days` | `7` | Durée de conservation ; augmentez-la pour la production/la conformité. |
-| `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaure à partir d'une sauvegarde lors du déploiement. |
+| `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
+| `backup_retention_days` | `7` | Rétention ; augmenter pour la production/conformité. |
+| `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
-### Groupe 8 — CI/CD et Binary Authorization {#group-8--cicd--binary-authorization}
+### Groupe 8 — CI/CD et autorisation binaire {#group-8--cicd--binary-authorization}
 
-Intégration Cloud Build / Cloud Deploy standard d'App_CloudRun — voir
-[App_CloudRun](App_CloudRun.md). Entrées principales : `enable_cicd_trigger`,
+Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
+[App_CloudRun](App_CloudRun.md). Entrées clés : `enable_cicd_trigger`,
 `github_repository_url`, `github_token`, `enable_cloud_deploy`,
 `enable_binary_authorization`.
 
 ### Groupe 9 — Scripts SQL personnalisés {#group-9--custom-sql-scripts}
 
 `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`,
-`custom_sql_scripts_path`, `custom_sql_scripts_use_root` — exécutent du SQL depuis un
+`custom_sql_scripts_path`, `custom_sql_scripts_use_root` — exécuter du SQL à partir d'un
 bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 
-### Groupe 10 — Équilibreur de charge, CDN et rétention des images {#group-10--load-balancer-cdn--image-retention}
+### Groupe 10 — Équilibreur de charge, CDN et rétention d'images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Provisionne un équilibreur de charge HTTPS global + le WAF Cloud Armor. |
+| `enable_cloud_armor` | `false` | Provisionner le LB HTTPS global + WAF Cloud Armor. |
 | `admin_ip_ranges` | `[]` | Plages CIDR exemptées des règles WAF. |
-| `application_domains` | `[]` | Noms de domaine personnalisés pour l'équilibreur de charge HTTPS. |
-| `enable_cdn` | `false` | Active Cloud CDN sur le backend de l'équilibreur de charge HTTPS. |
+| `application_domains` | `[]` | Noms de domaine personnalisés pour le LB HTTPS. |
+| `enable_cdn` | `false` | Activer Cloud CDN sur le backend du LB HTTPS. |
 | `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | _(défini)_ | Politique de nettoyage d'Artifact Registry. |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Crée les buckets GCS définis dans `storage_buckets`. |
-| `storage_buckets` | `[]` | Buckets GCS supplémentaires en plus du bucket de médias provisionné automatiquement. |
+| `create_cloud_storage` | `true` | Créer des buckets GCS définis dans `storage_buckets`. |
+| `storage_buckets` | `[]` | Buckets GCS supplémentaires au-delà du bucket média auto-provisionné. |
 | `enable_nfs` | `true` | Provisionne NFS ; utilisé comme hôte Redis lorsque `redis_host` est vide. |
-| `nfs_mount_path` | `/mnt/nfs` | Chemin de montage dans le conteneur. |
-| `gcs_volumes` | `[]` | Montages de volumes GCS Fuse. Lorsqu'il est vide, `Netbox_Common` monte automatiquement `netbox-media` sur `/etc/netbox/media` (le véritable `MEDIA_ROOT` de NetBox). |
+| `nfs_mount_path` | `/mnt/nfs` | Chemin de montage à l'intérieur du conteneur. |
+| `gcs_volumes` | `[]` | Montages de volume GCS Fuse. Lorsqu'il est vide, `Netbox_Common` monte automatiquement `netbox-media` à `/etc/netbox/media` (le véritable `MEDIA_ROOT` de NetBox). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
@@ -388,118 +502,118 @@ bucket GCS après le provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 |---|---|---|
 | `database_type` | `POSTGRES_15` | Fixe ; NetBox nécessite PostgreSQL 14+. |
 | `db_name` | `netbox` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
-| `db_user` | `netbox` | Utilisateur de la base de données de l'application. Mot de passe généré automatiquement dans Secret Manager. |
-| `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
+| `db_user` | `netbox` | Utilisateur de la base de données de l'application. Mot de passe auto-généré dans Secret Manager. |
+| `database_password_length` | `32` | Longueur du mot de passe généré (16-64). |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
-| `cron_jobs` | `[]` | Non transmis — NetBox n'a aucune tâche récurrente planifiée par la plateforme ; ses propres jobs planifiés s'exécutent plutôt via le worker RQ colocalisé. |
-| `additional_services` | `[]` | Services Cloud Run supplémentaires déployés aux côtés de NetBox. |
+| `initialization_jobs` | `[]` | Laisser vide pour utiliser le job `db-init` intégré. |
+| `cron_jobs` | `[]` | Non transféré — NetBox n'a pas de tâches récurrentes planifiées par la plateforme ; ses propres jobs planifiés s'exécutent via le worker RQ colocalisé à la place. |
+| `additional_services` | `[]` | Services Cloud Run supplémentaires déployés avec NetBox. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/login/`, délai de 60s, seuil d'échec de 60 | Sonde de démarrage propre à NetBox (prise en compte). |
-| `liveness_probe` | HTTP `/login/`, fenêtre d'échec de 30s | Sonde de vivacité propre à NetBox. |
-| `startup_probe_config` / `health_check_config` | valeurs par défaut génériques d'App_CloudRun | Sondes structurées alternatives ; remplacées par `startup_probe`/`liveness_probe` ci-dessus. |
-| `uptime_check_config` | `{ enabled=true, path="/login/" }` | Test de disponibilité Cloud Monitoring. |
-| `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
+| `startup_probe` | HTTP `/login/`, délai de 60s, seuil d'échec de 60 | Sonde de démarrage spécifique à NetBox (prend effet). |
+| `liveness_probe` | HTTP `/login/`, fenêtre d'échec de 30s | Sonde de vivacité spécifique à NetBox. |
+| `startup_probe_config` / `health_check_config` | valeurs par défaut génériques App_CloudRun | Sondes structurées alternatives ; remplacées par `startup_probe`/`liveness_probe` ci-dessus. |
+| `uptime_check_config` | `{ enabled=true, path="/login/" }` | Vérification de la disponibilité de Cloud Monitoring. |
+| `alert_policies` | `[]` | Politiques d'alerte métrique. |
 
 ### Groupe 15 — Paramètres de l'application NetBox {#group-15--netbox-application-settings}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `time_zone` | `UTC` | Fuseau horaire des horodatages et des tâches planifiées de NetBox. |
-| `admin_user` | `admin` | Nom d'utilisateur du superutilisateur créé automatiquement. La création est idempotente — ignorée s'il existe déjà. |
-| `admin_email` | `admin@example.com` | Adresse e-mail du superutilisateur créé automatiquement. |
+| `time_zone` | `UTC` | Fuseau horaire pour les horodatages et les tâches planifiées de NetBox. |
+| `admin_user` | `admin` | Nom d'utilisateur du superutilisateur auto-créé. La création est idempotente — ignorée s'il existe déjà. |
+| `admin_email` | `admin@example.com` | E-mail du superutilisateur auto-créé. |
 
 ### Groupe 21 — Cache et file d'attente Redis {#group-21--redis-cache--queue}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `true` | **Obligatoire.** Sert de support à la file de tâches RQ et à la couche de cache de NetBox. NetBox ne peut pas fonctionner sans. |
-| `redis_host` | `""` | Point de terminaison Redis. Laissez vide pour utiliser l'IP du serveur NFS (nécessite `enable_nfs = true`). |
+| `enable_redis` | `true` | **Obligatoire.** Prend en charge la file d'attente de tâches RQ et la couche de cache de NetBox. NetBox ne peut pas fonctionner sans elle. |
+| `redis_host` | `""` | Point de terminaison Redis. Laisser vide pour utiliser l'IP du serveur NFS (nécessite `enable_nfs = true`). |
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
-### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — Contrôles de service VPC et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_vpc_sc` | `false` | Impose un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR du niveau d'accès / mode simulation (dry-run). |
-| `enable_audit_logging` | `false` | Journaux Cloud Audit Logs détaillés. |
+| `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
+| `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localiser et
+Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
-| `service_url` | URL publique `run.app` de l'interface web de NetBox. |
-| `service_location` | Région dans laquelle s'exécute le service. |
-| `stage_services` | Détails des services propres à chaque étape (Cloud Deploy). |
+| `service_url` | URL publique `run.app` de l'interface utilisateur web de NetBox. |
+| `service_location` | Région dans laquelle le service s'exécute. |
+| `stage_services` | Détails du service spécifiques à l'étape (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
-| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
+| `database_password_secret` | Secret Manager secret contenant le mot de passe de la base de données. |
 | `database_host` / `database_port` | Point de terminaison / port de la base de données. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | Statut de surveillance, canaux, vérifications de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants du projet. |
-| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |
+| `project_id` / `project_number` | Identifiants de projet. |
+| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | Statut et détails CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État de la journalisation d'audit et de CMEK. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | Statut VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et statut CMEK. |
 
 ---
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module fait passer sa configuration par le moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un réplica en lecture sans son instance principale, IAP sans identité autorisée, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de base [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et les combinaisons* au moment de la planification — un réplica en lecture sans son primaire, IAP sans identités autorisées, un runtime `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant qu'aucune ressource ne soit créée, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| Chemin de montage `gcs_volumes` (défini automatiquement sur `/etc/netbox/media`) | Ne jamais le remplacer par un autre chemin sans avoir confirmé le véritable `MEDIA_ROOT` de NetBox | Critique | Un mauvais chemin de montage laisse les téléversements sur le système de fichiers éphémère du conteneur — ils sont relisibles immédiatement, mais silencieusement perdus à chaque redémarrage, sans aucune erreur. Ce bug précis a été trouvé et corrigé sur l'ancien montage `/opt/netbox/netbox/media` de ce module. |
-| `SECRET_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Le renouveler invalide toutes les sessions actives et les cookies signés ; NetBox impose également une longueur minimale de 50 caractères. |
-| `SUPERUSER_PASSWORD` (généré automatiquement) | Le changer via l'interface de NetBox, pas en régénérant le secret | Moyen | Régénérer la valeur dans Secret Manager ne modifie pas rétroactivement le mot de passe du compte administrateur déjà créé. |
-| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf pour une restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `enable_redis` | `true` (obligatoire) | Critique | Le système de tâches d'arrière-plan de NetBox (webhooks, rapports, scripts, jobs planifiés) et sa couche de cache ne fonctionnent pas sans Redis — il n'existe aucun mode de repli. |
-| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais NFS désactivé et qu'aucun hôte n'est défini, la connexion Redis est vide et le traitement en arrière-plan ne s'exécute jamais, sans signalement. |
-| `REDIS_DATABASE` / `REDIS_CACHE_DATABASE` | Les garder distincts (`0` / `1`) | Élevé | Partager une même base Redis logique risque de faire perdre des tâches d'arrière-plan en file lors d'un vidage du cache, selon la documentation de NetBox. |
-| `memory_limit` | `2Gi` | Élevé | Des valeurs inférieures à 1Gi risquent des arrêts pour OOM, surtout avec le worker RQ colocalisé dans le même conteneur. |
-| `cpu_always_allocated` / `min_instance_count` | `true` + `>=1` si les jobs d'arrière-plan doivent s'exécuter en continu | Moyen | Avec la valeur par défaut privilégiant le coût (`false` / `0`), les webhooks/rapports/jobs planifiés ne s'exécutent que tant qu'une requête maintient l'instance active — ils sont mis en file au lieu de s'exécuter immédiatement. |
-| `ALLOWED_HOSTS` / `CORS_ORIGIN_ALLOW_ALL` (injectés automatiquement à `"*"` / `"true"`) | Les restreindre pour un usage en production exposé sur Internet | Moyen | Laissés ouverts, tout nom d'hôte/toute origine est accepté — acceptable pour un premier déploiement, pas pour une instance de production renforcée. |
-| `CSRF_TRUSTED_ORIGINS` (calculé automatiquement) | Vérifier après le déploiement qu'il correspond à l'URL réelle du service | Élevé | Une valeur obsolète ou incorrecte rejette chaque POST authentifié, y compris la connexion, avec un échec CSRF. |
-| `ingress_settings` | `all` pour un accès public | Moyen | `internal` bloque l'accès du navigateur au parcours de connexion/configuration, sauf via VPN/IAP. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour une conservation conforme. |
-| `enable_cloud_armor` | à activer en production | Moyen | L'interface d'administration est accessible publiquement sans protection WAF par défaut. |
+| Chemin de montage `gcs_volumes` (défini automatiquement sur `/etc/netbox/media`) | Ne jamais remplacer par un chemin différent, sauf si vous avez confirmé le vrai `MEDIA_ROOT` de NetBox | Critique | Un chemin de montage erroné laisse les téléchargements sur le système de fichiers éphémère du conteneur — ils se lisent bien immédiatement, mais sont silencieusement perdus à chaque redémarrage sans erreur. Ce bogue exact a été trouvé et corrigé sur le montage `/opt/netbox/netbox/media` antérieur de ce module. |
+| `SECRET_KEY` (généré automatiquement) | Ne jamais faire pivoter après le premier démarrage | Critique | Le faire pivoter invalide toutes les sessions actives et les cookies signés ; NetBox impose également une longueur minimale de 50 caractères. |
+| `SUPERUSER_PASSWORD` (généré automatiquement) | Faire pivoter via l'interface utilisateur de NetBox, et non en régénérant le secret | Moyen | La régénération de la valeur Secret Manager ne modifie pas rétroactivement le mot de passe du compte administrateur déjà créé. |
+| `db_name` / `db_user` | Définir une seule fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans un `backup_uri` valide fait échouer le job d'importation. |
+| `enable_redis` | `true` (obligatoire) | Critique | Le système de tâches en arrière-plan de NetBox (webhooks, rapports, scripts, jobs planifiés) et sa couche de cache ne fonctionnent pas sans Redis — il n'y a pas de mode de secours. |
+| `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais NFS est désactivé et qu'aucun hôte n'est défini, la connexion Redis est vide et le traitement en arrière-plan ne s'exécute jamais silencieusement. |
+| `REDIS_DATABASE` / `REDIS_CACHE_DATABASE` | Garder séparés (`0` / `1`) | Élevé | Le partage d'une seule base de données Redis logique risque de perdre les tâches en arrière-plan en file d'attente lors d'un vidage du cache, selon la propre documentation de NetBox. |
+| `memory_limit` | `2Gi` | Élevé | Les valeurs inférieures à 1 Gi risquent des arrêts OOM, en particulier avec le worker RQ colocalisé dans le même conteneur. |
+| `cpu_always_allocated` / `min_instance_count` | `true` + `>=1` si les jobs en arrière-plan doivent s'exécuter en continu | Moyen | Avec la valeur par défaut axée sur les coûts (`false` / `0`), les webhooks/rapports/jobs planifiés ne s'exécutent que lorsqu'une requête maintient l'instance active — ils sont mis en file d'attente au lieu de s'exécuter immédiatement. |
+| `ALLOWED_HOSTS` / `CORS_ORIGIN_ALLOW_ALL` (`"*"` / `"true"` auto-injectés) | Renforcer pour une utilisation en production face à Internet | Moyen | Laissé ouvert, tout nom d'hôte/origine est accepté — acceptable pour un premier déploiement, pas pour une instance de production renforcée. |
+| `CSRF_TRUSTED_ORIGINS` (calculé automatiquement) | Vérifier qu'il correspond à l'URL réelle du service après le déploiement | Élevé | Une valeur obsolète ou incorrecte rejette chaque POST authentifié, y compris la connexion, avec une erreur CSRF. |
+| `ingress_settings` | `all` pour un accès public | Moyen | `internal` bloque l'accès du navigateur au flux de connexion/configuration, sauf s'il est atteint via VPN/IAP. |
+| `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
+| `enable_cloud_armor` | activer pour la production | Moyen | L'interface utilisateur d'administration est publiquement accessible sans protection WAF par défaut. |
 
 ---
 
-Pour le comportement du socle évoqué tout au long de ce guide — identité du
-service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des
-images — consultez **[App_CloudRun](App_CloudRun.md)**. La configuration applicative
-propre à NetBox partagée avec la variante GKE est décrite dans
-**[Netbox_Common](Netbox_Common.md)**.
+Pour le comportement de la fondation référencé partout — identité de service,
+mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud
+Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
+d'images — voir **[App_CloudRun](App_CloudRun.md)**. La configuration
+d'application spécifique à NetBox partagée avec la variante GKE est décrite
+dans **[Netbox_Common](Netbox_Common.md)**.
 
 <!-- related-guides -->
 
@@ -507,5 +621,5 @@ propre à NetBox partagée avec la variante GKE est décrite dans
 
 - [Lab pratique : NetBox sur Cloud Run](../labs/Netbox_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [NetBox sur GKE Autopilot](Netbox_GKE.md) — la même application sur Kubernetes, lorsque vous avez besoin de l'autre cible de déploiement.
-- [NetBox Common — Configuration applicative partagée](Netbox_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- [NetBox Common — Configuration d'application partagée](Netbox_Common.md) — la configuration partagée par les deux cibles de déploiement.
 - Déployé aux côtés de [Snipe-IT sur Google Cloud Run](SnipeIT_CloudRun.md), [BookStack sur Google Cloud Run](BookStack_CloudRun.md), [Homepage sur Google Cloud Run](Homepage_CloudRun.md) dans la solution **IT Asset & Infrastructure Records**.
