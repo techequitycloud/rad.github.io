@@ -31,5 +31,19 @@ npm run serve      # serve the production build locally
 npm run typecheck  # TypeScript check
 ```
 
-Deployment is automated: pushes to `main` build and publish to GitHub Pages,
-then submit changed URLs to IndexNow (see `.github/workflows/deploy.yml`).
+Deployment is **manual** (owner decision 2026-10-13, Actions spending limit):
+pushing to `main` does **not** publish the site. Publish by starting
+`.github/workflows/deploy.yml` with **Run workflow** or `gh workflow run
+deploy.yml`; it builds, publishes to GitHub Pages, then submits changed URLs to
+IndexNow (inputs `indexnow` / `indexnow_base` choose whether and since which
+commit). The French translations workflow is manual too
+(`gh workflow run translate-fr.yml`, `-f mode=validate` for the check).
+
+Before pushing, run the checks locally — this never publishes anything:
+
+```bash
+bash scripts/ci-local.sh           # install, build, French check, stale report
+bash scripts/ci-local.sh --list    # sections; --only <section> runs one
+bash scripts/ci-local.sh --translate   # also translate stale French pages
+                                       # (needs ANTHROPIC_API_KEY exported)
+```

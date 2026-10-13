@@ -502,6 +502,8 @@ Bulk-inserts `<YouTubeEmbed>` components and PDF links, from a hardcoded list of
 
 Per `CLAUDE.md`: commit directly to `main` with descriptive messages referencing what changed and why, then push straight to `main`. `main` has GitHub branch-protection rules configured, but this repo's actual practice is to push directly to it — GitHub reports "Bypassed rule violations" (with the specific rule listed, e.g. "Changes must be made through a pull request") on each such push rather than rejecting it. Do not detour through a `claude/...` feature branch + PR unless the user explicitly asks for one.
 
+Pushing to `main` does not publish the site: `deploy.yml` and `translate-fr.yml` are manual-only (`workflow_dispatch`, owner decision 2026-10-13). Run `bash scripts/ci-local.sh` before pushing; publish with `gh workflow run deploy.yml` only when the user asks.
+
 ---
 
 ## 14. Automated Verification

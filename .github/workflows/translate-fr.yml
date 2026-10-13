@@ -26,21 +26,21 @@ name: French translations
 # VERTEX_PROJECT; optional VERTEX_LOCATION (us-central1), TRANSLATE_MODEL
 # (gemini-2.5-flash).
 
+# MANUAL-ONLY by owner decision 2026-10-13 (Actions spending limit): this no
+# longer runs on pull requests or on pushes to main. Start it with "Run workflow"
+# or `gh workflow run translate-fr.yml`. For the PR check, run it on the PR's
+# branch: `gh workflow run translate-fr.yml --ref <branch> -f mode=validate`.
+# mode=validate runs the old pull-request check; mode=sync (default) runs the old
+# push-to-main sync. Locally: `bash scripts/ci-local.sh` runs the check and the
+# stale report; translating there is opt-in with --translate.
 on:
-  pull_request:
-    paths:
-      - 'i18n/fr/**'
-      - 'scripts/i18n/**'
-  push:
-    branches: [main]
-    paths:
-      - 'docs/guides/**'
-      - 'docs/design/**'
-      - 'docs/certification/**'
-      - 'docs/labs/**'
-      - 'docs/modules/**'
   workflow_dispatch:
     inputs:
+      mode:
+        description: 'validate = check every French page against its English source (the former PR check); sync = report / translate stale pages (the former push-to-main run)'
+        type: choice
+        options: [sync, validate]
+        default: sync
       pages:
         description: 'Translate exactly these English pages now (space-separated, e.g. docs/labs/Ghost_CloudRun.md). Works even while FR_AUTO_TRANSLATE is off; ignores the options below.'
         default: ''
@@ -62,7 +62,7 @@ concurrency:
 
 jobs:
   validate:
-    if: github.event_name == 'pull_request'
+    if: inputs.mode == 'validate'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -77,7 +77,7 @@ jobs:
         run: node scripts/i18n/check.mjs --all
 
   sync:
-    if: github.event_name != 'pull_request' && !startsWith(github.event.head_commit.message, 'i18n(fr):')
+    if: inputs.mode != 'validate'
     runs-on: ubuntu-latest
     timeout-minutes: 300
     permissions:
