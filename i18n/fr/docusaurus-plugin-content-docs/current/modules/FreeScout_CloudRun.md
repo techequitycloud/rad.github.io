@@ -1,94 +1,118 @@
 ---
 title: "FreeScout sur Google Cloud Run"
-description: "Référence de configuration pour déployer FreeScout sur Google Cloud Run avec le module RAD — variables, architecture, réseau et exploitation."
+description: "Référence de configuration pour le déploiement de FreeScout sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/FreeScout_CloudRun.md @ 3055034 sha256:e72e18187560 -->
+<!-- translated-from: docs/modules/FreeScout_CloudRun.md @ e69407af sha256:5c73abbf6354 -->
 
 # FreeScout sur Google Cloud Run {#freescout-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/FreeScout_CloudRun.png" alt="FreeScout sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-FreeScout est une plateforme gratuite et auto-hébergée de **helpdesk et de boîte aux
-lettres partagée** construite sur Laravel (PHP) — elle transforme des boîtes de
-réception partagées en une file de tickets collaborative avec conversations, tags,
-réponses enregistrées, profil client, API REST et système de plugins. Ce module
-déploie FreeScout sur **Cloud Run v2** au-dessus du socle
-[App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud
-partagée.
+FreeScout est une plateforme **de service d'assistance et de boîte de réception partagée** gratuite et auto-hébergée, basée sur Laravel (PHP). Elle transforme les boîtes de réception e-mail partagées en une file d'attente de tickets collaborative avec conversations, tags, réponses enregistrées, profil client, API REST et un système de plugins. Ce module déploie FreeScout sur **Cloud Run v2** en s'appuyant sur la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud qu'utilise FreeScout et sur la manière de
-les explorer et de les exploiter depuis la console Google Cloud et la ligne de
-commande. Pour les mécanismes communs à toute application Cloud Run — identité du
-service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de
-vie du déploiement — reportez-vous au
-[guide du socle App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud utilisés par FreeScout et sur la manière de les explorer et de les opérer depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les applications Cloud Run — identité de service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — veuillez vous référer au [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
+## Ce que FreeScout coûte sur RAD, et comment cela se compare {#what-freescout-costs-on-rad-and-how-that-compares}
+
+**L'exécution de FreeScout dans votre propre projet Google Cloud coûte environ 83,61 $ US/mois en frais Google Cloud, en plus d'un frais de module RAD unique de 110 crédits** (99 crédits — 10 % de moins — dans un projet géré par RAD). FreeScout est un service d'assistance et de boîte de réception partagée gratuit et open-source, basé sur Laravel. Si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement et le reprendre plus tard — voir "Mettez-le en pause gratuitement" ci-dessous.
+
+*FreeScout est également disponible sur GKE — consultez le [guide GKE](FreeScout_GKE.md) si vous avez besoin d'une orchestration basée sur Kubernetes ; ce guide couvre l'option Cloud Run, moins coûteuse.*
+
+### Ce que vous payez sur RAD {#what-you-pay-on-rad}
+
+| | Votre propre projet | Projet géré par RAD |
+|---|---|---|
+| Frais de module | **110 crédits** (une seule fois) | **99 crédits** (une seule fois, 10 % de moins) |
+| Temps de build | ~3–6 crédits (une seule fois, par build) | ~3–6 crédits (une seule fois, par build) |
+| Coût d'exécution Google Cloud | ~83,61 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~32 crédits/jour (~3,20 $ US/jour), facturé à l'heure au prix catalogue plus la marge de RAD |
+
+**Coût d'exécution par défaut dans votre propre projet**
+
+| Ressource | $ US/mois (prix catalogue Google, us-central1) |
+|---|---|
+| Cloud Run, 1x vCPU / 2 Gio (scaleToZero) | 13,16 $ US |
+| Cloud SQL pour MySQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
+| Serveur de fichiers NFS/cache (petite VM) | 13,43 $ US |
+| Cloud NAT et réseau | 5 $ US |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
+| **Total** | **83,61 $ US** |
+
+### Comment cela se compare {#how-it-compares}
+
+- Il n'existe pas de version officiellement hébergée/cloud de FreeScout pour la comparaison, donc la comparaison honnête se fait avec une infrastructure auto-gérée, et non avec un SaaS concurrent.
+- Un VPS nu d'environ 1 vCPU / 2 Gio — un Hetzner CPX22 (2 vCPU/4 Go, ~24 $ US/mois), un DigitalOcean 2 vCPU/4 Go Droplet (24 $ US/mois), ou le propre Compute Engine e2-standard-2 de GCP (2 vCPU/8 Go, ~49 $ US/mois) — est généralement moins cher que le prix affiché par RAD ; un VPS d'une ou deux tailles inférieures le serait encore plus.
+- Ce prix inférieur n'inclut pas le temps de l'administrateur : mise à jour du système d'exploitation, rotation des sauvegardes de base de données, renouvellement des certificats TLS et surveillance des temps d'arrêt. Cloud SQL géré par RAD, Secret Manager et la surveillance le font pour vous, ce qui est le véritable compromis, et non le prix affiché.
+- RAD ne prétend pas être moins cher qu'un VPS nu en termes monétaires — ce n'est généralement pas le cas. L'intérêt de RAD est ce qui est géré pour vous.
+
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+
+Si FreeScout est exécuté dans un **projet géré par RAD**, vous pouvez arrêter de le payer entièrement sans le détruire. La suppression de ce projet délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression du module FreeScout seul, cela ne supprime pas Cloud SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
+
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Cela ne coûte qu'une poignée de crédits de temps de build au total — environ 5 à 10 crédits, moins de 1 $ US, pour une chaîne de déploiement typique de 2 à 3. Les frais de module de 99 crédits ne sont pas facturés à nouveau.
+
+Ce que cela nécessite : vous devez être propriétaire du projet (pas un projet dont RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
+
+Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé FreeScout et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+
+### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+
+Si FreeScout se trouve dans votre propre projet (ou si plus de 30 jours se sont écoulés sur un projet géré par RAD), la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer plus tard lorsque vous en aurez à nouveau besoin.
+
+Un redéploiement coûte à nouveau les frais de module, plus les builds : environ **110 + ~3–6 crédits** (~11,45 $ US) dans votre propre projet, ou **99 + ~3–6 crédits** sur un projet géré par RAD.
+
+La suppression ne permet d'économiser de l'argent que si FreeScout devait rester inutilisé assez longtemps pour compenser le coût de ce redéploiement par rapport à son propre coût d'exécution : environ **5 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa facture Google Cloud d'environ 83,61 $ US/mois), ou **environ 4 jours ou plus** d'inactivité dans un projet géré par RAD (par rapport à ses ~32 crédits/jour).
+
+La majeure partie du coût d'exécution de FreeScout est la base de données et la VM de fichier/cache partagée. Elles ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de cette application pendant que quelque chose d'autre partage le projet n'économise que la part de calcul de cette application sur le total ci-dessus.
+
+Gardez les données en premier : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+
+### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
+
+- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant dispose de l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les cabinets de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les propres frais de RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration.
+
 ## 1. Vue d'ensemble {#1-overview}
 
-FreeScout s'exécute sous la forme d'un unique conteneur PHP (nginx + php-fpm) sur
-Cloud Run v2, construit comme une image personnalisée légère `FROM tiredofit/freescout`.
-Le déploiement assemble un ensemble ciblé de services Google Cloud :
+FreeScout s'exécute comme un conteneur PHP unique (nginx + php-fpm) sur Cloud Run v2, construit comme une image personnalisée légère `FROM tiredofit/freescout`. Le déploiement connecte un ensemble ciblé de services Google Cloud :
 
-| Fonctionnalité | Service Google Cloud | Remarques |
+| Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | Cloud Run v2 | Conteneur PHP sur le port 80, 1 vCPU / 2 GiB par défaut, autoscaling serverless ; scale-to-zero pris en charge |
-| Base de données | Cloud SQL for MySQL 8.0 | Obligatoire — FreeScout ne prend en charge ni PostgreSQL ni d'autres moteurs |
-| Fichiers persistants | Cloud Filestore (NFS) | Activé par défaut ; monté sur `/var/lib/freescout` pour les pièces jointes et les données d'exécution |
-| Stockage d'objets | Cloud Storage | Un bucket de téléversements (`gcs-freescout<tenant-prefix>-freescout-uploads`) provisionné automatiquement |
-| Cache (facultatif) | Redis | Cache d'objets facultatif ; désactivé par défaut |
-| Secrets | Secret Manager | `APP_KEY` Laravel et `ADMIN_PASS` de premier démarrage générés automatiquement ; mot de passe de la base de données |
-| Ingress | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe et domaine personnalisé facultatifs |
+| Calcul | Cloud Run v2 | Conteneur PHP sur le port 80, 1 vCPU / 2 Gio par défaut, mise à l'échelle automatique sans serveur ; prise en charge de la mise à l'échelle à zéro |
+| Base de données | Cloud SQL pour MySQL 8.0 | Obligatoire — FreeScout ne prend pas en charge PostgreSQL ou d'autres moteurs |
+| Fichiers persistants | Cloud Filestore (NFS) | Activé par défaut ; monté à `/var/lib/freescout` pour les pièces jointes et les données d'exécution |
+| Stockage d'objets | Cloud Storage | Un bucket de téléchargement (`gcs-freescout<tenant-prefix>-freescout-uploads`) provisionné automatiquement |
+| Cache (optionnel) | Redis | Cache d'objets optionnel ; désactivé par défaut |
+| Secrets | Secret Manager | `APP_KEY` Laravel auto-généré et `ADMIN_PASS` de première exécution ; mot de passe de la base de données |
+| Ingress | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut ; équilibreur de charge HTTPS externe optionnel + domaine personnalisé |
 
-**Valeurs par défaut judicieuses à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître à l'avance :**
 
-- **MySQL 8.0 est obligatoire.** Le moteur de base de données est fixé par la couche
-  applicative partagée (`MYSQL_8_0`) ; choisir un autre moteur empêche le démarrage.
-- **L'`APP_KEY` Laravel est généré automatiquement** et stocké dans Secret Manager.
-  Il chiffre les données de session et toutes les colonnes chiffrées de la base
-  (identifiants de boîtes aux lettres stockés, jetons OAuth). **Ne le renouvelez jamais
-  après le premier démarrage** — cela invaliderait définitivement toutes les données
-  chiffrées auparavant.
-- **Un administrateur initial est créé automatiquement.** `ADMIN_EMAIL` (par défaut
-  `admin@techequity.cloud`), avec le secret `ADMIN_PASS` généré, crée le premier
-  administrateur au premier démarrage. Modifiez le mot de passe dans l'interface après
-  la première connexion.
-- **`APP_URL` / `SITE_URL` sont définis sur l'URL du service.** FreeScout construit les
-  liens absolus et son parcours `/` → tableau de bord/connexion à partir d'`APP_URL` ;
-  le point d'entrée du conteneur le résout à partir du `CLOUDRUN_SERVICE_URL` réel à
-  l'exécution.
-- **Cloud SQL est joint en TCP (IP privée), et non par socket.** `enable_cloudsql_volume`
-  vaut `false` par défaut sur Cloud Run ; l'application se connecte au `DB_IP` injecté
-  sur le port 3306. MySQL via l'IP privée ne nécessite pas de SSL côté client.
-- **NFS est activé par défaut** afin que les pièces jointes et les fichiers d'exécution
-  survivent au recyclage des conteneurs et aux démarrages à froid après un
-  scale-to-zero. Nécessite l'environnement d'exécution `gen2`.
-- **Le scale-to-zero est activé** (`min_instance_count = 0`, `max_instance_count = 1`).
-  Les démarrages à froid ajoutent plusieurs secondes à la première requête après une
-  période d'inactivité ; définissez `min_instance_count = 1` pour garder le service
-  toujours actif.
-- **La santé est signalée sur `GET /`.** Il n'existe pas d'endpoint de santé JSON
-  dédié ; la sonde de démarrage est TCP et la sonde de vivacité est `GET /`.
+- **MySQL 8.0 est obligatoire.** Le moteur de base de données est fixé par la couche d'application partagée (`MYSQL_8_0`) ; la sélection de tout autre moteur empêche le démarrage.
+- **La `APP_KEY` Laravel est générée automatiquement** et stockée dans Secret Manager. Elle chiffre les données de session et toutes les colonnes de base de données chiffrées (informations d'identification de boîte aux lettres stockées, jetons OAuth). **Ne la faites jamais pivoter après le premier démarrage** — cela invaliderait de manière permanente toutes les données précédemment chiffrées.
+- **Un administrateur de première exécution est automatiquement créé.** `ADMIN_EMAIL` (par défaut `admin@techequity.cloud`) avec le secret `ADMIN_PASS` généré crée le premier administrateur au premier démarrage. Changez le mot de passe dans l'interface utilisateur après la première connexion.
+- **`APP_URL` / `SITE_URL` sont définis sur l'URL du service.** FreeScout construit des liens absolus et son flux `/` → tableau de bord/connexion à partir de `APP_URL` ; le point d'entrée du conteneur le résout à partir de l'`CLOUDRUN_SERVICE_URL` réel au moment de l'exécution.
+- **Cloud SQL est accessible via TCP (IP privée), pas un socket.** `enable_cloudsql_volume` par défaut à `false` sur Cloud Run ; l'application se connecte à l'`DB_IP` injecté sur le port 3306. MySQL sur l'IP privée ne nécessite pas de SSL client.
+- **NFS est activé par défaut** afin que les pièces jointes et les fichiers d'exécution survivent au recyclage des conteneurs et aux démarrages à froid de la mise à l'échelle à zéro. Nécessite l'environnement d'exécution `gen2`.
+- **La mise à l'échelle à zéro est activée** (`min_instance_count = 0`, `max_instance_count = 1`). Les démarrages à froid ajoutent plusieurs secondes à la première requête après l'inactivité ; définissez `min_instance_count = 1` pour maintenir le service toujours chaud.
+- **L'état de santé est signalé sur `GET /`.** Il n'y a pas de point de terminaison JSON de santé dédié ; la sonde de démarrage est TCP et la sonde de vivacité est `GET /`.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
-services et des ressources figurent dans les [Sorties](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de services et de ressources sont signalés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service FreeScout {#a-cloud-run--the-freescout-service}
 
-FreeScout s'exécute comme un service Cloud Run v2 qui s'adapte automatiquement à la
-charge des requêtes entre les nombres minimal et maximal d'instances. Chaque
-déploiement crée une révision immuable ; le trafic peut être réparti entre révisions
-pour des déploiements progressifs sûrs.
+FreeScout s'exécute en tant que service Cloud Run v2 qui s'adapte automatiquement en fonction de la charge de requêtes entre les nombres minimum et maximum d'instances. Chaque déploiement crée une révision immuable ; le trafic peut être réparti entre les révisions pour des déploiements sûrs.
 
-- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les
-  journaux et les métriques.
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les journaux et les métriques.
 - **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION" \
@@ -97,21 +121,13 @@ pour des déploiements progressifs sûrs.
   gcloud run revisions list --service <service-name> --project "$PROJECT" --region "$REGION"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
-l'environnement d'exécution et la répartition du trafic.
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence, l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud SQL for MySQL 8.0 {#b-cloud-sql-for-mysql-80}
+### B. Cloud SQL pour MySQL 8.0 {#b-cloud-sql-for-mysql-80}
 
-FreeScout stocke toutes les données applicatives (conversations, boîtes aux lettres,
-utilisateurs, clients, paramètres) dans une instance gérée Cloud SQL for MySQL 8.0.
-Sur Cloud Run, le service se connecte via l'**IP privée de l'instance (TCP, port
-3306)** — `enable_cloudsql_volume` vaut `false` par défaut. Lors du premier
-déploiement, le Job `db-init` crée la base de données applicative, l'utilisateur et
-les droits ; l'application exécute ensuite ses propres migrations de schéma au
-démarrage.
+FreeScout stocke toutes les données de l'application (conversations, boîtes aux lettres, utilisateurs, clients, paramètres) dans une instance Cloud SQL gérée pour MySQL 8.0. Sur Cloud Run, le service se connecte via l'**IP privée de l'instance (TCP, port 3306)** — `enable_cloudsql_volume` par défaut à `false`. Lors du premier déploiement, le Job `db-init` crée la base de données de l'application, l'utilisateur et les autorisations ; l'application exécute ensuite ses propres migrations de schéma au démarrage.
 
-- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les
-  flags et les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT" --filter="name~freescout"
@@ -119,18 +135,13 @@ démarrage.
   gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe
-figurent dans les [Sorties](#5-outputs). Consultez [App_CloudRun](App_CloudRun.md)
-pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
+Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe se trouvent dans les [Sorties](#5-outputs). Voir [App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Cloud Filestore (NFS) {#c-cloud-filestore-nfs}
 
-Les pièces jointes et les fichiers d'exécution de FreeScout sont conservés sur un
-volume NFS monté sur `/var/lib/freescout` (activé par défaut). Les téléversements
-restent ainsi durables malgré les changements de révision et le scale-to-zero. NFS
-nécessite l'environnement d'exécution `gen2`.
+Les pièces jointes et les fichiers d'exécution de FreeScout sont persistés sur un volume NFS monté à `/var/lib/freescout` (activé par défaut). Cela garantit la durabilité des téléchargements lors des changements de révision et de la mise à l'échelle à zéro. NFS nécessite l'environnement d'exécution `gen2`.
 
-- **Console :** Filestore → Instances (instance gérée par Services_GCP ou intégrée).
+- **Console :** Filestore → Instances (une instance gérée par Services_GCP ou une instance intégrée).
 - **CLI :**
   ```bash
   gcloud filestore instances list --project "$PROJECT"
@@ -139,12 +150,11 @@ nécessite l'environnement d'exécution `gen2`.
     --format='value(spec.template.spec.volumes)'
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour le modèle de découverte du NFS partagé.
+Voir [App_CloudRun](App_CloudRun.md) pour le modèle de découverte NFS partagé.
 
 ### D. Cloud Storage {#d-cloud-storage}
 
-Un bucket de téléversements **Cloud Storage** dédié (`gcs-freescout<tenant-prefix>-freescout-uploads`) est provisionné
-automatiquement. Des buckets supplémentaires peuvent être déclarés via `storage_buckets`.
+Un bucket de téléchargement **Cloud Storage** dédié (`gcs-freescout<tenant-prefix>-freescout-uploads`) est provisionné automatiquement. Des buckets supplémentaires peuvent être déclarés via `storage_buckets`.
 
 - **Console :** Cloud Storage → Buckets.
 - **CLI :**
@@ -153,14 +163,11 @@ automatiquement. Des buckets supplémentaires peuvent être déclarés via `stor
   gcloud storage ls gs://<bucket-name>/        # bucket name is in the Outputs
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
+Voir [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
 
-### E. Redis (cache d'objets facultatif) {#e-redis-optional-object-cache}
+### E. Redis (cache d'objets optionnel) {#e-redis-optional-object-cache}
 
-Redis est **désactivé par défaut**. Lorsque `enable_redis = true`, `REDIS_HOST`/`REDIS_PORT`
-sont injectés dans le conteneur comme backend de cache d'objets. Lorsque `redis_host`
-est laissé vide et que `enable_nfs` vaut true, l'IP de la VM du serveur NFS sert
-d'endpoint Redis.
+Redis est **désactivé par défaut**. Lorsque `enable_redis = true`, `REDIS_HOST`/`REDIS_PORT` sont injectés dans le conteneur en tant que backend de cache d'objets. Lorsque `redis_host` est laissé vide et `enable_nfs` est vrai, l'IP de la VM du serveur NFS est utilisée comme point de terminaison Redis.
 
 - **Console :** Memorystore → Redis (si vous utilisez une instance gérée).
 - **CLI :**
@@ -172,43 +179,35 @@ d'endpoint Redis.
 
 ### F. Secret Manager {#f-secret-manager}
 
-Deux secrets sont générés automatiquement et stockés dans Secret Manager : l'`APP_KEY`
-Laravel (qui chiffre les données de session et les colonnes chiffrées de la base) et
-`ADMIN_PASS` (le mot de passe de l'administrateur initial). Le mot de passe de la base
-de données est géré séparément par le socle.
+Deux secrets sont générés automatiquement et stockés dans Secret Manager : la `APP_KEY` Laravel (chiffre les données de session et les colonnes de base de données chiffrées) et `ADMIN_PASS` (le mot de passe administrateur de première exécution). Le mot de passe de la base de données est géré séparément par la fondation.
 
-- **Console :** Security → Secret Manager.
+- **Console :** Sécurité → Secret Manager.
 - **CLI :**
   ```bash
   gcloud secrets list --project "$PROJECT" --filter="name~freescout"
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
+Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### G. Réseau et entrée {#g-networking--ingress}
+### G. Réseau et ingress {#g-networking--ingress}
 
-Le service est joignable par défaut à son URL `run.app` (`ingress_settings = "all"`),
-ce qui permet l'accès public à l'interface du helpdesk. Un équilibreur de charge HTTPS
-externe avec domaine personnalisé, Cloud CDN et Cloud Armor peut y être ajouté ; les
-paramètres d'ingress et la sortie VPC contrôlent la connectivité.
+Le service est accessible par son URL `run.app` par défaut (`ingress_settings = "all"`), ce qui permet un accès public à l'interface utilisateur du service d'assistance. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peuvent être superposés ; les paramètres d'ingress et le contrôle d'égresse VPC contrôlent la connectivité.
 
-- **Console :** Cloud Run (URL du service) ; Network services → Load balancing.
+- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Consultez [App_CloudRun](App_CloudRun.md).
+Voir [App_CloudRun](App_CloudRun.md).
 
 ### H. Cloud Logging et Monitoring {#h-cloud-logging--monitoring}
 
-Les journaux des conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run et
-Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité et des
-règles d'alerte facultatifs.
+Les journaux des conteneurs sont acheminés vers Cloud Logging ; les métriques Cloud Run et Cloud SQL sont acheminées vers Cloud Monitoring, avec des vérifications de disponibilité et des politiques d'alerte optionnelles.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -218,39 +217,17 @@ règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application FreeScout {#3-freescout-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un Job
-  d'initialisation exécute `db-init.sh` avec `mysql:8.0-debian`. Il se connecte à
-  Cloud SQL (par socket s'il est monté, sinon en TCP via `DB_IP`), crée de manière
-  idempotente la base de données applicative et l'utilisateur, accorde les privilèges
-  et vérifie que l'utilisateur applicatif peut se connecter. Le job s'exécute à chaque
-  apply et peut être relancé sans risque.
-- **Les migrations s'exécutent au démarrage du conteneur.** Il n'y a pas de job de
-  migration distinct — l'image tiredofit exécute `php artisan migrate --force` à chaque
-  démarrage du conteneur, de sorte que la mise à niveau d'`application_version`
-  applique les changements de schéma au démarrage suivant.
-- **Un administrateur initial est créé.** Au premier démarrage, l'image crée
-  l'administrateur défini par `ADMIN_EMAIL` / `ADMIN_FIRST_NAME` / `ADMIN_LAST_NAME`
-  avec le secret `ADMIN_PASS`. Connectez-vous et modifiez immédiatement le mot de passe.
-- **L'`APP_KEY` est immuable après le premier démarrage.** La clé Laravel est générée
-  une seule fois et écrite dans Secret Manager. La modifier invalide définitivement
-  toutes les données chiffrées auparavant (identifiants de boîtes aux lettres chiffrés,
-  jetons OAuth, cookies chiffrés). Ne la renouvelez que lors d'une fenêtre de
-  maintenance planifiée, avec une reconfiguration complète.
-- **`APP_URL` doit correspondre à l'hôte du navigateur.** FreeScout construit les liens
-  absolus et son routage `/` à partir d'`APP_URL` ; le point d'entrée le définit à
-  partir du `CLOUDRUN_SERVICE_URL` injecté. Si vous placez un domaine personnalisé
-  devant le service, définissez `APP_URL`/`SITE_URL` (via `environment_variables`) sur
-  cet hôte afin que les liens et les redirections soient résolus correctement.
-  Inspectez la révision en cours d'exécution :
+- **Configuration de la base de données au premier déploiement.** Un Job d'initialisation exécute `db-init.sh` en utilisant `mysql:8.0-debian`. Il se connecte à Cloud SQL (socket si monté, sinon TCP via `DB_IP`), crée de manière idempotente la base de données et l'utilisateur de l'application, accorde les privilèges et vérifie que l'utilisateur de l'application peut se connecter. Le job s'exécute lors de l'apply et peut être réexécuté en toute sécurité.
+- **Les migrations s'exécutent au démarrage du conteneur.** Il n'y a pas de job de migration séparé — l'image tiredofit exécute `php artisan migrate --force` à chaque démarrage de conteneur, donc la mise à niveau `application_version` applique les modifications de schéma au prochain démarrage.
+- **L'administrateur de première exécution est créé.** Au premier démarrage, l'image crée l'administrateur défini par `ADMIN_EMAIL` / `ADMIN_FIRST_NAME` / `ADMIN_LAST_NAME` avec le secret `ADMIN_PASS`. Connectez-vous et changez le mot de passe immédiatement.
+- **`APP_KEY` est immuable après le premier démarrage.** La clé Laravel est générée une fois et écrite dans Secret Manager. La modifier invalide de manière permanente toutes les données précédemment chiffrées (informations d'identification de boîte aux lettres chiffrées, jetons OAuth, cookies chiffrés). Ne la faites pivoter que lors d'une fenêtre de maintenance planifiée avec une reconfiguration complète.
+- **`APP_URL` doit correspondre à l'hôte du navigateur.** FreeScout construit des liens absolus et son routage `/` à partir de `APP_URL` ; le point d'entrée le définit à partir de l'`CLOUDRUN_SERVICE_URL` injecté. Si vous mettez le service en façade avec un domaine personnalisé, définissez `APP_URL`/`SITE_URL` (via `environment_variables`) sur cet hôte afin que les liens et les redirections se résolvent correctement. Inspectez la révision en cours d'exécution :
   ```bash
   gcloud run services describe <service-name> \
     --region "$REGION" --project "$PROJECT" --format='value(status.url)'
   ```
-- **Chemin de santé.** La sonde de démarrage est TCP sur le port du conteneur (délai de
-  30 s, 20 échecs) et la sonde de vivacité est HTTP `GET /` (délai initial de 300 s).
-  Prévoyez plusieurs minutes au premier démarrage, pendant l'exécution des migrations,
-  avant que le service ne soit signalé comme sain.
-- **Inspecter l'exécution des jobs :**
+- **Chemin de santé.** La sonde de démarrage est TCP sur le port du conteneur (délai de 30 s, 20 échecs) et la sonde de vivacité est HTTP `GET /` (délai initial de 300 s). Attendez plusieurs minutes au premier démarrage pendant que les migrations s'exécutent avant que le service ne signale son état de santé.
+- **Inspecter l'exécution du job :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
   gcloud run jobs executions list --job <job-name> --project "$PROJECT" --region "$REGION"
@@ -260,158 +237,150 @@ règles d'alerte facultatifs.
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme sur la plateforme de déploiement. Seuls
-les paramètres propres à FreeScout ou notables pour lui sont listés ; toutes les autres
-entrées sont héritées d'[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour FreeScout sont listés ; toutes les autres entrées sont héritées de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `application_name` | `freescout` | Nom de base des ressources. Ne le modifiez pas après le premier déploiement. |
-| `display_name` | `FreeScout` | Nom lisible affiché dans la console. |
-| `application_version` | `latest` | Tag de l'image de base pour le build léger (`latest` correspond à `php8.3-1.17.159`) ; fixez un tag explicite tel que `1.8.170` en production. |
-| `php_memory_limit` | `512M` | Limite de mémoire PHP ; augmentez-la pour un traitement intensif des pièces jointes. |
-| `upload_max_filesize` / `post_max_size` | `64M` | Taille maximale de téléversement des pièces jointes / des requêtes POST. |
+| `application_name` | `freescout` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
+| `display_name` | `FreeScout` | Nom lisible par l'homme affiché dans la console. |
+| `application_version` | `latest` | Tag de l'image de base pour le build léger (`latest` épingle à `php8.3-1.17.159`) ; définissez un tag explicite tel que `1.8.170` en production. |
+| `php_memory_limit` | `512M` | Limite de mémoire PHP ; augmentez-la pour le traitement de pièces jointes volumineuses. |
+| `upload_max_filesize` / `post_max_size` | `64M` | Taille maximale de téléchargement de pièces jointes / POST. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définissez `false` pour ne provisionner que l'infrastructure. |
-| `container_image_source` | `custom` | FreeScout se déploie sous forme de build personnalisé léger ; laissez `custom`. |
+| `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
+| `container_image_source` | `custom` | FreeScout se déploie comme un build personnalisé léger ; laissez comme `custom`. |
 | `cpu_limit` | `1000m` | CPU par instance ; minimum 1 vCPU. |
-| `memory_limit` | `2Gi` | Mémoire par instance ; minimum 512 Mi (plancher gen2), 2 GiB recommandés. |
-| `min_instance_count` | `0` | `0` active le scale-to-zero ; définissez `1` pour éviter les démarrages à froid. |
-| `max_instance_count` | `1` | Conservez 1 tant qu'il n'est pas confirmé que le NFS partagé et la gestion des sessions supportent plusieurs instances. |
+| `memory_limit` | `2Gi` | Mémoire par instance ; minimum 512 Mio (plancher gen2), 2 Gio recommandés. |
+| `min_instance_count` | `0` | `0` active la mise à l'échelle à zéro ; définissez `1` pour éviter les démarrages à froid. |
+| `max_instance_count` | `1` | Gardez à 1 sauf si le NFS partagé et la gestion de session sont confirmés comme étant sûrs pour plusieurs instances. |
 | `container_port` | `80` | FreeScout (nginx/php-fpm) écoute sur le port 80. |
-| `execution_environment` | `gen2` | Gen2 est requis pour les montages NFS et GCS Fuse. |
-| `enable_cloudsql_volume` | `false` | Cloud Run se connecte à MySQL en TCP (IP privée) ; laissez `false`. |
+| `execution_environment` | `gen2` | Gen2 requis pour les montages NFS et GCS Fuse. |
+| `enable_cloudsql_volume` | `false` | Cloud Run se connecte à MySQL via TCP (IP privée) ; laissez `false`. |
 
-### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Accès et contrôle d'ingress {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `ingress_settings` | `all` | Accès public à l'interface du helpdesk. |
-| `enable_iap` | `false` | Exige une connexion Google devant FreeScout (IAP natif de Cloud Run). |
-| `iap_authorized_users` / `iap_authorized_groups` | `[]` | Personnes autorisées à accéder via IAP. |
+| `ingress_settings` | `all` | Accès public à l'interface utilisateur du service d'assistance. |
+| `enable_iap` | `false` | Exiger la connexion Google devant FreeScout (IAP natif de Cloud Run). |
+| `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder via IAP. |
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres non secrets supplémentaires (par ex. `MAIL_*`, ou un `APP_URL` personnalisé pour un domaine personnalisé). Les valeurs essentielles de base de données et d'administration sont définies automatiquement. |
-| `secret_environment_variables` | `{}` | Correspondance variable d'environnement → nom de secret Secret Manager. `APP_KEY` et `ADMIN_PASS` sont câblés automatiquement — ne les définissez pas ici. |
-| `secret_propagation_delay` | `30` | Secondes d'attente après la création d'un secret. |
+| `environment_variables` | `{}` | Paramètres supplémentaires non secrets (par exemple `MAIL_*`, ou un `APP_URL` personnalisé pour un domaine personnalisé). Les valeurs de base de données et d'administrateur sont définies automatiquement. |
+| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. `APP_KEY` et `ADMIN_PASS` sont câblés automatiquement — ne les définissez pas ici. |
+| `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret. |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `true` | NFS est **activé** par défaut — il conserve les pièces jointes et les fichiers d'exécution. |
-| `nfs_mount_path` | `/var/lib/freescout` | Chemin de montage dans le conteneur. |
+| `enable_nfs` | `true` | NFS est **activé** par défaut — persiste les pièces jointes/fichiers d'exécution. |
+| `nfs_mount_path` | `/var/lib/freescout` | Chemin de montage à l'intérieur du conteneur. |
 | `create_cloud_storage` | `true` | Crée les buckets GCS déclarés. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets GCS supplémentaires en plus du bucket de téléversements provisionné automatiquement. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets GCS supplémentaires au-delà du bucket de téléchargement auto-provisionné. |
 | `gcs_volumes` | `[]` | Montages de volumes GCS Fuse (nécessite gen2). |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `database_type` | `MYSQL_8_0` | MySQL 8.0 fixé ; ne changez pas de moteur. |
-| `db_name` | `freescout` | Nom de la base de données MySQL (injecté sous `DB_DATABASE`). Immuable après le premier déploiement. |
-| `db_user` | `freescout` | Utilisateur applicatif de la base (injecté sous `DB_USERNAME`). Immuable après le premier déploiement. |
-| `database_password_length` | `32` | Longueur du mot de passe généré (16 à 64). |
+| `database_type` | `MYSQL_8_0` | MySQL 8.0 fixe ; ne pas changer de moteur. |
+| `db_name` | `freescout` | Nom de la base de données MySQL (injecté comme `DB_DATABASE`). Immuable après le premier déploiement. |
+| `db_user` | `freescout` | Utilisateur de la base de données de l'application (injecté comme `DB_USERNAME`). Immuable après le premier déploiement. |
+| `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | TCP `/`, délai de 30 s, 20 échecs | Fenêtre généreuse pour les migrations du premier démarrage. |
-| `liveness_probe` | HTTP `GET /`, délai de 300 s | `GET /` renvoie 200 une fois l'application démarrée ; pas d'endpoint de santé dédié. |
-| `uptime_check_config` | `{ enabled = false, path = "/" }` | Test de disponibilité Cloud Monitoring facultatif. |
-| `alert_policies` | `[]` | Règles d'alerte sur les métriques. |
+| `startup_probe` | TCP `/` 30 s de délai, 20 échecs | Fenêtre généreuse pour les migrations au premier démarrage. |
+| `liveness_probe` | HTTP `GET /` 300 s de délai | `GET /` renvoie 200 une fois démarré ; pas de point de terminaison de santé dédié. |
+| `uptime_check_config` | `{ enabled = false, path = "/" }` | Vérification de disponibilité Cloud Monitoring optionnelle. |
+| `alert_policies` | `[]` | Politiques d'alerte métriques. |
 
 ### Groupe 21 — Cache Redis {#group-21--redis-cache}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Active un cache d'objets Redis. |
-| `redis_host` | `""` | Endpoint Redis. Laissez vide pour utiliser l'IP du serveur NFS (nécessite `enable_nfs = true`). |
+| `redis_host` | `""` | Point de terminaison Redis. Laissez vide pour utiliser l'IP du serveur NFS (nécessite `enable_nfs = true`). |
 | `redis_port` | `6379` | Port Redis. |
 
-Toutes les autres entrées suivent le comportement standard d'[App_CloudRun](App_CloudRun.md).
+Toutes les autres entrées suivent le comportement standard de [App_CloudRun](App_CloudRun.md).
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Renvoyées lors d'un déploiement réussi — le moyen le plus rapide de localiser et
-d'explorer les ressources en cours d'exécution.
+Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
 | `service_location` | Région dans laquelle le service s'exécute. |
-| `stage_services` | URL des services propres à chaque étape (Cloud Deploy). |
+| `stage_services` | URL de service spécifiques à l'étape (Cloud Deploy). |
 | `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
-| `database_name` / `database_user` | Nom / utilisateur de la base de données applicative. |
+| `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
 | `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
-| `database_host` / `database_port` | Endpoint / port de la base de données. |
+| `database_host` / `database_port` | Point de terminaison / port de la base de données. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, tests de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, vérifications de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration (`db-init`). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants du projet. |
-| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails de la CI/CD. |
+| `project_id` / `project_number` | Identifiants de projet. |
+| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État de la journalisation d'audit et de CMEK. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
-> (service dégradé) — **Moyen** (coût ou dégradation partielle) —
-> **Faible** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur du socle [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et leurs combinaisons* au moment du plan — un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à l'application, un `container_port`/`backup_retention_days` hors plage, IAP sans identité autorisée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource ; la plupart des erreurs ci-dessous sont donc détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et les combinaisons* au moment de la planification — un environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à l'application, un `container_port`/`backup_retention_days` hors de portée, IAP sans identités autorisées. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au moment de l'application ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (généré automatiquement) | Ne jamais le renouveler après le premier démarrage | Critique | Le renouveler invalide définitivement toutes les données chiffrées auparavant — les identifiants de boîtes aux lettres chiffrés et les jetons OAuth ne peuvent plus être déchiffrés. |
-| `database_type` | `MYSQL_8_0` | Critique | FreeScout ne fonctionne qu'avec MySQL ; un moteur Postgres ou autre empêche le démarrage. |
-| `db_name` / `db_user` | À définir une seule fois | Critique | Immuables après le premier déploiement ; les renommer recrée la base/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activer sans `backup_uri` valide fait échouer le job d'import. |
-| `APP_URL` / `SITE_URL` | URL réelle du service/domaine | Élevé | Un hôte erroné casse les liens absolus, le routage `/` et les liens de réinitialisation de mot de passe / d'e-mail. |
-| `enable_nfs` | `true` | Élevé | Le désactiver fait perdre toutes les pièces jointes et les fichiers d'exécution lors du recyclage des conteneurs / du scale-to-zero. |
-| `enable_cloudsql_volume` | `false` (Cloud Run) | Élevé | Forcer le socket sans véritable fichier de socket prive l'application d'hôte TCP — la connexion échoue. |
-| `memory_limit` | `2Gi` (≥512Mi) | Élevé | Une valeur inférieure au plancher gen2 de 512 Mi est rejetée au moment du plan ; une valeur trop basse provoque des arrêts OOM sous charge. |
-| `max_instance_count` | `1` | Élevé | Dépasser 1 sans gestion confirmée du stockage partagé et des sessions peut entraîner un état incohérent entre les instances. |
-| `enable_iap` | uniquement pour les déploiements privés | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les intégrations entrantes de type webhook d'e-mail. |
-| `ADMIN_PASS` (généré automatiquement) | À modifier dans l'interface après la première connexion | Moyen | Le mot de passe généré se trouve dans Secret Manager ; renouvelez-le dans l'application pour obtenir un identifiant détenu par une personne. |
-| `min_instance_count` | `1` en production | Moyen | Le scale-to-zero (`0`) ajoute un délai de démarrage à froid à la première requête après une période d'inactivité. |
-| `application_version` | À fixer en production | Moyen | `latest` peut changer l'image de base à votre insu entre deux déploiements. |
-| `backup_retention_days` | `7` (à augmenter en production) | Moyen | Trop court pour les exigences de conservation réglementaires. |
+| `APP_KEY` (auto-généré) | Ne jamais faire pivoter après le premier démarrage | Critique | Le faire pivoter invalide de manière permanente toutes les données précédemment chiffrées — les informations d'identification de boîte aux lettres chiffrées et les jetons OAuth ne peuvent plus être déchiffrés. |
+| `database_type` | `MYSQL_8_0` | Critique | FreeScout est uniquement MySQL ; un moteur Postgres/autre empêche le démarrage. |
+| `db_name` / `db_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans un `backup_uri` valide fait échouer le job d'importation. |
+| `APP_URL` / `SITE_URL` | URL réelle du service/domaine | Élevé | Un hôte incorrect rompt les liens absolus, le routage `/` et les liens de réinitialisation de mot de passe/e-mail. |
+| `enable_nfs` | `true` | Élevé | La désactivation entraîne la perte de toutes les pièces jointes et des fichiers d'exécution lors du recyclage du conteneur / de la mise à l'échelle à zéro. |
+| `enable_cloudsql_volume` | `false` (Cloud Run) | Élevé | Forcer le socket sans un fichier socket réel laisse l'application sans hôte TCP — la connexion échoue. |
+| `memory_limit` | `2Gi` (≥512 Mio) | Élevé | En dessous du plancher de 512 Mio de gen2 est rejeté au moment de la planification ; trop faible, cela provoque des OOM-kills sous charge. |
+| `max_instance_count` | `1` | Élevé | La mise à l'échelle au-delà de 1 sans gestion confirmée du stockage partagé/des sessions peut entraîner un état incohérent entre les instances. |
+| `enable_iap` | uniquement pour les déploiements privés | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les intégrations de type webhook d'e-mail entrant. |
+| `ADMIN_PASS` (auto-généré) | Changer dans l'interface utilisateur après la première connexion | Moyen | Le mot de passe généré se trouve dans Secret Manager ; faites-le pivoter dans l'application pour une information d'identification détenue par un humain. |
+| `min_instance_count` | `1` pour la production | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après l'inactivité. |
+| `application_version` | Épingler en production | Moyen | `latest` peut déplacer l'image de base sous vous entre les déploiements. |
+| `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la conformité de la rétention. |
 
 ---
 
-Pour le comportement du socle évoqué tout au long de ce guide — identité du service,
-mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir des images — consultez
-**[App_CloudRun](App_CloudRun.md)**. La configuration applicative propre à FreeScout,
-partagée avec la variante GKE, est décrite dans **[FreeScout_Common](FreeScout_Common.md)**.
+Pour le comportement de la fondation référencé tout au long — identité de service, mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir **[App_CloudRun](App_CloudRun.md)**. La configuration d'application spécifique à FreeScout partagée avec la variante GKE est décrite dans **[FreeScout_Common](FreeScout_Common.md)**.
 
 <!-- related-guides -->
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : FreeScout sur Cloud Run](../labs/FreeScout_CloudRun.md) — déployez-le pas à pas, avec les écrans de la console et les commandes à chaque étape.
+- [Lab pratique : FreeScout sur Cloud Run](../labs/FreeScout_CloudRun.md) — déployez-le étape par étape, avec les écrans de console et les commandes à chaque étape.
 - [FreeScout sur GKE Autopilot](FreeScout_GKE.md) — la même application sur Kubernetes, lorsque vous avez besoin de l'autre cible de déploiement.
-- [FreeScout Common — Configuration applicative partagée](FreeScout_Common.md) — la configuration partagée par les deux cibles de déploiement.
-- Déployé aux côtés de [Chatwoot sur Google Cloud Run](Chatwoot_CloudRun.md), [BookStack sur Google Cloud Run](BookStack_CloudRun.md), [Fider sur Google Cloud Run](Fider_CloudRun.md), [Gotify sur Google Cloud Run](Gotify_CloudRun.md) dans la solution **Customer Support Desk**.
+- [FreeScout Common — Configuration d'application partagée](FreeScout_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- Déployé aux côtés de [Chatwoot sur Google Cloud Run](Chatwoot_CloudRun.md), [BookStack sur Google Cloud Run](BookStack_CloudRun.md), [Fider sur Google Cloud Run](Fider_CloudRun.md), [Gotify sur Google Cloud Run](Gotify_CloudRun.md) dans la solution **Service client**.
