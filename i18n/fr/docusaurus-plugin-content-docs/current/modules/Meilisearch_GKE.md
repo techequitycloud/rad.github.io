@@ -3,7 +3,7 @@ title: "Meilisearch sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Meilisearch sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Meilisearch_GKE.md @ 15fd4c7 sha256:0681b37dc01a -->
+<!-- translated-from: docs/modules/Meilisearch_GKE.md @ e69407af sha256:ed0d3db96cf1 -->
 
 # Meilisearch sur GKE Autopilot {#meilisearch-on-gke-autopilot}
 
@@ -12,19 +12,126 @@ description: "Référence de configuration pour le déploiement de Meilisearch s
 Meilisearch est un moteur de recherche rapide et open source — un binaire Rust
 unique qui offre une recherche instantanée, tolérante aux fautes de frappe et
 à facettes derrière une API REST simple. Il est largement utilisé comme
-alternative auto-hébergeable à Algolia. Ce module déploie Meilisearch sur **GKE
-Autopilot** en s'appuyant sur la fondation [App_GKE](App_GKE.md), qui
-provisionne et gère l'infrastructure partagée de Google Cloud et Kubernetes.
+alternative auto-hébergeable à Algolia. Ce module déploie Meilisearch sur
+**GKE Autopilot** en s'appuyant sur le socle [App_GKE](App_GKE.md), qui
+provisionne et gère l'infrastructure partagée Google Cloud et Kubernetes.
 
 Ce guide se concentre sur les services cloud utilisés par Meilisearch et sur la
-manière de les explorer et de les opérer depuis la console Google Cloud et la
+manière de les explorer et de les exploiter depuis la console Google Cloud et la
 ligne de commande. Pour les mécanismes communs à toutes les applications GKE —
 Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC Service Controls, sauvegardes et cycle de vie du
-déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md)
-plutôt que de les répéter ici.
+Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement
+— veuillez vous référer au [guide du socle App_GKE](App_GKE.md) plutôt que de
+les répéter ici.
 
 ---
+
+## Ce que coûte Meilisearch sur RAD, et comment cela se compare {#what-meilisearch-costs-on-rad-and-how-that-compares}
+
+**L'exécution de Meilisearch dans votre propre projet GCP coûte environ 42,08 $/mois en frais Google Cloud ; les frais de module de RAD sont de 75 crédits uniques (ou 67,5 crédits dans un projet géré par RAD), couvrant la configuration et le support — pas la facture cloud continue, que Google vous facture directement dans votre propre projet ou que RAD facture à l'heure en crédits dans un projet géré par RAD.**
+Si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement lorsque vous ne l'utilisez pas — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous.
+
+### Ce que vous payez sur RAD {#what-you-pay-on-rad}
+
+| | Votre propre projet | Projet géré par RAD |
+|---|---|---|
+| Frais de module | 75 crédits, une fois | 67,5 crédits, une fois (10 % de moins) |
+| Temps de build | facturé en crédits pendant l'exécution du build (quelques crédits, généralement) | idem |
+| Coût d'exécution Google Cloud | ~42,08 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~67 crédits/jour, facturé à l'heure par RAD au prix catalogue majoré d'une marge |
+
+**Coût d'exécution par défaut dans votre propre projet**
+
+| Ressource | US$/mois (prix catalogue Google, us-central1) |
+|---|---|
+| Pod GKE Autopilot, 1x vCPU / 1 GiB | 36,08 $ |
+| Cloud NAT et réseau | 5,00 $ |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1,00 $ |
+| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 $ |
+| **Total** | **42,08 $** |
+
+### Comment cela se compare {#how-it-compares}
+
+- Le cloud géré officiel de Meilisearch commence à **20 $/mois** (source : https://www.meilisearch.com/pricing), géré par le projet lui-même sans infrastructure à exploiter — la comparaison qui importe ici est moins le prix affiché que de savoir si vous voulez le cloud du fournisseur ou votre propre projet GCP géré par RAD.
+- L'exécuter vous-même sur un VPS nu dimensionné pour cette charge de travail (une machine plus petite suffit — Hetzner CX11-class ou un Droplet DigitalOcean 1 vCPU/1-2 Go coûte **6-12 $/mois** — mais il faut toujours quelqu'un pour le patcher, le sauvegarder et le surveiller, ce que le Cloud SQL, Secret Manager et la surveillance gérés par RAD couvrent pour vous) est l'option la moins chère en termes de coûts, puisque l'empreinte de ce module est faible — mais vous devez à nouveau le patcher et le sauvegarder vous-même.
+- Dans les deux cas, il s'agit d'une couche de recherche placée devant un catalogue ou un site de contenu, de sorte que le coût d'exécution ci-dessus est ce qui génère réellement la facture, et non les frais de module — et ce coût d'exécution est celui que vous pouvez mettre en pause (voir ci-dessous).
+
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+
+**C'est le titre pour un projet géré par RAD.** La suppression d'un projet géré par RAD
+délie d'abord sa facturation, puis demande à Google de supprimer purement et
+simplement le projet — la suppression logique récupérable de 30 jours de Google.
+Contrairement à la suppression d'un module, cela ne supprime pas Cloud SQL,
+aucune VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête
+simplement, et rien n'est facturé pendant qu'il attend, car la facturation est
+déjà déliée.
+
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet,
+demande à Google d'annuler la suppression du projet et de rattacher son compte
+de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement
+pour confirmer que tout est revenu. Comme rien n'a été détruit
+individuellement, cette **Update** trouve les mêmes ressources déjà présentes
+— c'est une vérification, pas une reconstruction, et une **Update** ne facture
+jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits
+(moins de 1 $ US) au total pour une chaîne typique de 2-3 déploiements.
+
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet que RAD
+gère uniquement pour la facturation), vous devez le restaurer vous-même dans
+les 30 jours — après cela, Google le supprime définitivement — et la
+restauration est admise comme la création d'un nouveau projet, de sorte que
+votre solde de crédits achetés doit toujours dépasser le seuil du palier (100
+crédits pour le palier sandbox qui convient à la plupart des utilisations
+d'étude/démo). Google indique que la plupart des services fonctionnent à nouveau
+pleinement dans les 36 heures suivant une restauration.
+
+**Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket
+à l'intérieur du projet, et la suppression logique de Cloud Storage est
+explicitement désactivée pour ce bucket, il est donc très probable qu'il
+disparaisse dès que vous supprimez le projet — même si le projet lui-même est
+récupérable pendant 30 jours. Si vous avez personnalisé l'application et que
+vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive
+ou un bucket en dehors du projet) avant de supprimer. Pour une installation par
+défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+
+### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+
+Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de
+restauration de 30 jours ci-dessus), l'alternative est de supprimer
+Meilisearch purement et simplement et de le redéployer plus tard. Un
+redéploiement coûte à nouveau les frais de module, plus les builds — environ 75
++ 3-6 crédits de temps de build.
+
+La suppression ne permet d'économiser de l'argent que si Meilisearch restait
+inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par
+rapport à son propre coût d'exécution quotidien — par rapport au total du
+projet ci-dessus, cela représente environ 6 jours ou plus. Il n'y a pas de
+base de données séparée ou de VM partagée ici, donc la ressource de calcul
+elle-même (et les frais de gestion de cluster GKE partagés, si ce projet
+n'exécute aucune autre application GKE) représente la majeure partie du coût
+d'exécution — ce qui s'arrête exactement au moment où vous supprimez le
+déploiement.
+
+**Conserver les données en premier :** les sauvegardes nocturnes vont dans un
+bucket à l'intérieur du déploiement et sont supprimées avec lui, donc copiez la
+dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+
+### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
+
+- **Sessions de lab, pour la formation :** un formateur anime une session pour
+  une classe. Chaque participant dispose de l'application dans son propre projet
+  Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
+  définie par le formateur. Soit le formateur finance toutes les places, soit
+  chaque participant paie la sienne. Tout est supprimé à la fin de la session
+  et les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les cabinets de conseil :** un partenaire exécute
+  l'application pour un client à partir d'un portefeuille cloisonné qu'il
+  finance, et règle directement avec le client. Si le portefeuille est faible,
+  la facturation est interrompue et les données sont conservées, de sorte que
+  personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le
+  projet et les déploiements deviennent la propriété du client.
+- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF,
+  NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les frais propres à RAD et les estimations de crédits quotidiens ; https://cloud.google.com/resource-manager/docs/delete-restore-projects pour les mécanismes de pause/restauration ; https://www.meilisearch.com/pricing pour le prix du concurrent nommé.
 
 ## 1. Vue d'ensemble {#1-overview}
 
@@ -34,34 +141,34 @@ relie un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | GKE Autopilot | Binaire Rust, 1 vCPU / 1 Gio par défaut, réplica unique (écriture unique) |
-| Stockage persistant | PVC Persistent Disk ou Cloud Storage (GCS FUSE) | `MEILI_DB_PATH` est fixé à `/meili_data` ; le PVC StatefulSet (activé par défaut) s'y monte (`stateful_pvc_mount_path` par défaut), et GCS FUSE est utilisé uniquement lorsque le PVC est désactivé |
+| Calcul | GKE Autopilot | Binaire Rust, 1 vCPU / 1 GiB par défaut, réplica unique (écriture unique) |
+| Stockage persistant | PVC Persistent Disk ou Cloud Storage (GCS FUSE) | `MEILI_DB_PATH` est fixé à `/meili_data` ; le PVC StatefulSet (activé par défaut) y est monté (valeur par défaut `stateful_pvc_mount_path`), et GCS FUSE n'est utilisé que lorsque le PVC est désactivé |
 | Base de données | Aucune | Meilisearch est autonome — pas de Cloud SQL, pas de base de données externe |
 | Cache et file d'attente | Aucun | Meilisearch n'a pas de dépendance Redis ou de file d'attente |
-| Secrets | Secret Manager → Secret K8s natif | `MEILI_MASTER_KEY` généré automatiquement (le credential d'administration de recherche) |
+| Secrets | Secret Manager → Secret K8s natif | `MEILI_MASTER_KEY` auto-généré (le credential d'administration de recherche) |
 | Ingress | Cloud Load Balancing (facultatif) | Service LoadBalancer par défaut ; Gateway externe facultative + certificat géré |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Pas de base de données, pas de Redis.** Meilisearch persiste tout — index,
   documents, paramètres, tâches — dans le répertoire `/meili_data`. Il n'y a pas
-  d'instance Cloud SQL ni de Redis à opérer.
+  d'instance Cloud SQL ni de Redis à exploiter.
 - **La clé principale est obligatoire.** Meilisearch s'exécute en mode
-  production (`MEILI_ENV = production`), qui refuse de démarrer sans une
+  production (`MEILI_ENV = production`), qui refuse de démarrer sans une clé
   `MEILI_MASTER_KEY` d'au moins 16 octets. Le module génère une clé de 32
-  caractères, la stocke dans Secret Manager et l'injecte en tant que **Secret
-  Kubernetes natif** (`explicit_secret_values`).
+  caractères, la stocke dans Secret Manager et l'injecte en tant que
+  **Secret Kubernetes natif** (`explicit_secret_values`).
 - **PVC StatefulSet par défaut.** `stateful_pvc_enabled = true` fournit un PVC
-  Persistent Disk (`stateful_pvc_size = "20Gi"` par défaut) — requis en pratique,
-  car le magasin LMDB de Meilisearch écrit à des offsets arbitraires que GCS
+  Persistent Disk (valeur par défaut `stateful_pvc_size = "20Gi"`) — requis en pratique,
+  car le stockage LMDB de Meilisearch écrit à des offsets arbitraires que GCS
   FUSE ne prend pas en charge. Son chemin de montage est par défaut
   `/meili_data`, le `MEILI_DB_PATH` fixe — conservez
   `stateful_pvc_mount_path = "/meili_data"` explicitement pour que le PVC sauvegarde
   effectivement le répertoire de données de Meilisearch. Sans le PVC, le bucket
   de stockage est monté via GCS FUSE à `/meili_data`. La
-  configuration du PVC ignore le montage FUSE pour éviter un double montage.
+  définition du PVC ignore le montage FUSE pour éviter un double montage.
 - **LoadBalancer par défaut.** `service_type = "LoadBalancer"` expose l'API de
-  recherche en externe. Définissez `service_type = "ClusterIP"` pour la maintenir à
+  recherche en externe. Définissez `service_type = "ClusterIP"` pour la conserver à
   l'intérieur du cluster, ou utilisez la Gateway (`enable_custom_domain`,
   également activée par défaut) pour un domaine personnalisé avec un certificat
   géré.
@@ -69,11 +176,11 @@ relie un ensemble ciblé de services Google Cloud :
   unique ; plusieurs pods partageant un PVC (RWO) ou un bucket corrompent
   l'index. Mettez à l'échelle verticalement.
 - **L'image est épinglée à `v1.11`.** La valeur par défaut
-  `application_version = "latest"` correspond à la build `getmeili/meilisearch:v1.11` ;
-  épinglez une version spécifique en production.
+  `application_version = "latest"` correspond au build `getmeili/meilisearch:v1.11` ; épinglez une
+  version spécifique en production.
 - **Santé à `/health`.** Les sondes de démarrage et de vivacité
-  ciblent toutes deux `/health`, qui renvoie
-  `{"status":"available"}` une fois le moteur prêt.
+  ciblent toutes deux `/health`, qui renvoie `{"status":"available"}` une fois
+  que le moteur est prêt.
 
 ---
 
@@ -87,7 +194,7 @@ identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 ### A. GKE Autopilot — la charge de travail Meilisearch {#a-gke-autopilot--the-meilisearch-workload}
 
 Meilisearch s'exécute en tant que StatefulSet (ou Deployment) à réplica unique
-sur Autopilot, qui facture le CPU/la mémoire réellement demandés par le pod.
+sur Autopilot, qui facture le CPU/la mémoire que le pod demande réellement.
 Comme Meilisearch est à écriture unique, la charge de travail est épinglée à un
 seul réplica.
 
@@ -109,9 +216,9 @@ et du type de charge de travail (Deployment vs StatefulSet).
 Les données Meilisearch se trouvent à `/meili_data` (`MEILI_DB_PATH`, fixe). Avec
 `stateful_pvc_enabled = true` (la valeur par défaut), il s'agit d'un PVC Persistent Disk
 (`standard-rwo` par défaut) monté à `stateful_pvc_mount_path`, qui est par défaut
-`/meili_data` — ne le modifiez pas. Avec le PVC désactivé, il s'agit du bucket
-Cloud Storage `storage` monté via GCS FUSE, qui utilise
-automatiquement `/meili_data`. Dans tous les cas, ce volume est la source de
+`/meili_data` — ne le modifiez pas. Avec le PVC désactivé, il s'agit du
+bucket Cloud Storage `storage` monté via GCS FUSE, qui utilise
+automatiquement `/meili_data`. Dans les deux cas, ce volume est la source de
 vérité pour tous les index et documents — il n'y a pas de base de données
 séparée.
 
@@ -127,13 +234,13 @@ montages GCS FUSE.
 
 ### C. Secret Manager — la clé principale {#c-secret-manager--the-master-key}
 
-Un seul secret cryptographique est généré automatiquement et stocké dans
+Un secret cryptographique unique est généré automatiquement et stocké dans
 Secret Manager : `MEILI_MASTER_KEY`, le credential d'administration de recherche.
 Sur GKE, il est matérialisé en tant que **Secret Kubernetes natif** et injecté
-comme variable d'environnement. La clé principale peut créer/supprimer des
-index et émettre des clés API à portée limitée, il faut donc la traiter comme
-un credential racine et émettre des clés à portée limitée (`POST /keys`)
-aux applications.
+en tant que variable d'environnement. La clé principale peut créer/supprimer
+des index et créer des clés API à portée limitée, traitez-la donc comme un
+credential racine et émettez des clés à portée limitée (`POST /keys`) aux
+applications.
 
 - **Console :** Security → Secret Manager.
 - **CLI :**
@@ -144,8 +251,8 @@ aux applications.
   ```
 
 L'ID du secret de la clé principale se trouve dans les [Sorties](#5-outputs)
-(`meilisearch_api_key_secret_id`). Voir [App_GKE](App_GKE.md) pour le modèle
-d'injection et de rotation des secrets.
+(`meilisearch_api_key_secret_id`). Voir [App_GKE](App_GKE.md) pour le modèle d'injection de
+secrets et la rotation.
 
 ### D. Réseau et ingress {#d-networking--ingress}
 
@@ -153,8 +260,8 @@ Par défaut, la charge de travail est exposée en tant que service LoadBalancer,
 accessible en externe. Définissez `service_type = "ClusterIP"` pour la restreindre à
 l'intérieur du cluster. Un domaine personnalisé avec un certificat géré par
 Google peut être activé via l'API Gateway (`enable_custom_domain`, activée par
-défaut), et une IP statique est réservée par défaut (`reserve_static_ip = true`)
-afin que l'adresse survive aux redéploiements.
+défaut), et une IP statique est réservée par défaut (`reserve_static_ip = true`) afin
+que l'adresse survive aux redéploiements.
 
 - **Console :** Network services → Load balancing ; VPC network → IP addresses.
 - **CLI :**
@@ -168,9 +275,9 @@ détails des IP statiques.
 
 ### E. Cloud Logging et Monitoring {#e-cloud-logging--monitoring}
 
-Les flux stdout/stderr des pods vers Cloud Logging ; les métriques GKE vers
-Cloud Monitoring. Des tests de disponibilité et des politiques d'alerte
-facultatifs sont disponibles pour `/health`.
+Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les
+métriques GKE sont acheminées vers Cloud Monitoring. Des tests de disponibilité
+et des politiques d'alerte facultatifs sont disponibles pour `/health`.
 
 - **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
 - **CLI :**
@@ -184,14 +291,13 @@ facultatifs sont disponibles pour `/health`.
 ## 3. Comportement de l'application Meilisearch {#3-meilisearch-application-behaviour}
 
 - **Pas de job d'initialisation.** Meilisearch gère son propre stockage et n'a
-  pas besoin de bootstrap de base de données, donc aucun job
-  `db-init` ne s'exécute. La première requête qui crée un index
-  initialise paresseusement le répertoire `/meili_data`.
-- **Le mode production nécessite la clé principale.** Avec
-  `MEILI_ENV = production`, Meilisearch ne démarrera pas à moins que
-  `MEILI_MASTER_KEY` ne fasse au moins 16 octets. Le mode production
-  désactive également le mini-tableau de bord web intégré — interagissez via
-  l'API REST.
+  pas besoin de bootstrap de base de données, donc aucun job `db-init` ne
+  s'exécute. La première requête qui crée un index initialise paresseusement le
+  répertoire `/meili_data`.
+- **Le mode production nécessite la clé principale.** Avec `MEILI_ENV = production`,
+  Meilisearch ne démarrera pas à moins que `MEILI_MASTER_KEY` ne fasse au moins
+  16 octets. Le mode production désactive également le mini-tableau de bord web
+  intégré — interagissez via l'API REST.
 - **Tout est un appel API.** Depuis l'intérieur du cluster (ou via un
   port-forward), créez un index, ajoutez des documents et recherchez avec la
   clé principale comme jeton Bearer :
@@ -210,17 +316,15 @@ facultatifs sont disponibles pour `/health`.
     --data '{"q":"interstellr"}'
   ```
 - **Clés API à portée limitée.** Ne transmettez pas la clé principale aux
-  navigateurs ou aux applications. Émettez des clés à portée limitée et
-  expirables avec `POST /keys` (en utilisant la clé principale) limitées
-  à des index et des actions spécifiques (par exemple, recherche uniquement), et
+  navigateurs ou aux applications. Créez des clés à portée limitée et
+  expirables avec `POST /keys` (en utilisant la clé principale) limitées à
+  des index et des actions spécifiques (par exemple, recherche uniquement), et
   distribuez-les.
-- **Le chemin du PVC doit correspondre à `MEILI_DB_PATH`.**
-  `stateful_pvc_mount_path` est par défaut `/meili_data`, le
-  `MEILI_DB_PATH` fixe. Ne le modifiez pas, sinon les écritures
-  atterrissent sur un volume que Meilisearch ne lit jamais.
+- **Le chemin du PVC doit correspondre à `MEILI_DB_PATH`.** `stateful_pvc_mount_path` est
+  par défaut `/meili_data`, le `MEILI_DB_PATH` fixe. Ne le modifiez pas,
+  sinon les écritures atterrissent sur un volume que Meilisearch ne lit jamais.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent
-  `/health`, qui renvoie `{"status":"available"}` lorsque le
-  moteur est prêt :
+  `/health`, qui renvoie `{"status":"available"}` lorsque le moteur est prêt :
   ```bash
   kubectl exec -n "$NAMESPACE" statefulset/<service-name> -- \
     wget -qO- http://localhost:7700/health
@@ -233,14 +337,14 @@ facultatifs sont disponibles pour `/health`.
 Les variables sont regroupées exactement comme elles apparaissent sur la
 plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
 Meilisearch sont listés ; toutes les autres entrées sont héritées de
-[App_GKE](App_GKE.md) avec son comportement et ses valeurs par défaut
-standards.
+[App_GKE](App_GKE.md) avec leur comportement standard et leurs valeurs par
+défaut.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(requis)_ | Projet Google Cloud cible. |
+| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région pour la charge de travail et les ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
@@ -249,14 +353,14 @@ standards.
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails autorisés à accéder au projet et aux alertes de surveillance. |
-| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources pour le suivi des coûts/de la propriété. |
+| `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts/de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `meilisearch` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
-| `application_version` | `latest` | Tag de l'image Meilisearch ; `latest` correspond à la build `v1.11` épinglée. Épinglez une version en production. |
+| `application_version` | `latest` | Tag de l'image Meilisearch ; `latest` correspond au build `v1.11` épinglé. Épinglez une version en production. |
 | `enable_api_key` | `true` | Génère le `MEILI_MASTER_KEY` dans Secret Manager et l'injecte en tant que Secret K8s natif. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
@@ -267,8 +371,8 @@ standards.
 | `cpu_limit` | `1000m` | CPU par pod. |
 | `memory_limit` | `1Gi` | Mémoire par pod ; Meilisearch conserve les structures d'index chaudes en mémoire — augmentez pour les grands index. |
 | `min_instance_count` | `1` | GKE maintient au moins un réplica chaud. |
-| `max_instance_count` | `1` | **Maintenez à 1.** Meilisearch est à écriture unique ; plusieurs pods corrompent l'index. |
-| `timeout_seconds` | `300` | Durée maximale de la requête (0 à 3600 secondes). |
+| `max_instance_count` | `1` | **Gardez à 1.** Meilisearch est à écriture unique ; plusieurs pods corrompent l'index. |
+| `timeout_seconds` | `300` | Durée maximale de la requête (0–3600 secondes). |
 | `enable_vertical_pod_autoscaling` | `false` | Activez VPA pour dimensionner correctement le CPU/la mémoire. |
 | `enable_image_mirroring` | `true` | Mettez en miroir l'image Meilisearch dans Artifact Registry. |
 
@@ -276,8 +380,8 @@ standards.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres `MEILI_*` supplémentaires. Les valeurs de base sont définies automatiquement. |
-| `secret_environment_variables` | `{}` | Carte des variables d'environnement → nom du secret Secret Manager. |
+| `environment_variables` | `{}` | Paramètres `MEILI_*` supplémentaires. Les valeurs principales sont définies automatiquement. |
+| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. |
 
@@ -285,7 +389,7 @@ standards.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `gke_cluster_name` | `""` | Nom du cluster ; vide auto-découvre. |
+| `gke_cluster_name` | `""` | Nom du cluster ; vide pour la découverte automatique. |
 | `service_type` | `LoadBalancer` | Comment le service Kubernetes est exposé. |
 | `workload_type` | `null` | Se résout automatiquement en `StatefulSet` lorsque `stateful_pvc_enabled = true`. |
 | `session_affinity` | `None` | Mode d'affinité de session. |
@@ -300,8 +404,8 @@ standards.
 | `stateful_pvc_size` | `20Gi` | Taille du PVC par pod ; ne peut pas être diminuée après la création. |
 | `stateful_pvc_mount_path` | `/meili_data` | Chemin du système de fichiers à l'intérieur du conteneur Meilisearch où le PVC par pod est monté. Doit correspondre à MEILI_DB_PATH (/meili_data) ; Meilisearch y stocke son index entier et le monter ailleurs laisse l'index sur un stockage éphémère. |
 | `stateful_pvc_storage_class` | `standard-rwo` | `standard-rwo` (PD équilibré) ou `premium-rwo` (IOPS plus élevés). |
-| `stateful_fs_group` | `3000` | GID fsGroup pour l'accès en écriture au PVC. |
-| `stateful_headless_service` / `stateful_pod_management_policy` / `stateful_update_strategy` | `null` | Valeurs par défaut de la fondation pour les identités stables, les redémarrages ordonnés, les mises à jour progressives. |
+| `stateful_fs_group` | `3000` | GID du fsGroup pour l'accès en écriture au PVC. |
+| `stateful_headless_service` / `stateful_pod_management_policy` / `stateful_update_strategy` | `null` | Valeurs par défaut du socle pour les identités stables, les redémarrages ordonnés, les mises à jour continues. |
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
@@ -322,7 +426,7 @@ standards.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/health` 15s de délai | Sonde de démarrage ; renvoie `{"status":"available"}` lorsqu'elle est prête. |
+| `startup_probe` | HTTP `/health` 15s de délai | Sonde de démarrage ; renvoie `{"status":"available"}` lorsque prêt. |
 | `liveness_probe` | HTTP `/health` 30s de délai | Sonde de vivacité (même endpoint). |
 | `startup_probe_config` | HTTP `/health` | Sonde de démarrage structurée au niveau App_GKE. |
 | `health_check_config` | HTTP `/health` | Sonde de vivacité structurée au niveau App_GKE. |
@@ -337,7 +441,7 @@ standards.
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés (par exemple, des instantanés de dump). |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés avec Meilisearch. |
 
-### Groupe 12 — CI/CD et Binary Authorization {#group-12--cicd--binary-authorization}
+### Groupe 12 — CI/CD et autorisation binaire {#group-12--cicd--binary-authorization}
 
 Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 [App_GKE](App_GKE.md). Entrées clés : `enable_cicd_trigger`, `github_repository_url`,
@@ -366,24 +470,24 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
-| `backup_retention_days` | `7` | Rétention ; augmentez à 30-90 pour la production/conformité. |
-| `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaure à partir d'une sauvegarde/dump lors du déploiement (`backup_format` par défaut à `tar`). |
+| `backup_retention_days` | `7` | Rétention ; augmentez à 30–90 pour la production/conformité. |
+| `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde/dump lors du déploiement (`backup_format` par défaut à `tar`). |
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_custom_domain` | `true` | Provisionne la Gateway pour les noms d'hôtes personnalisés + certificat géré. Ne prend effet que lorsque `application_domains` n'est pas vide. |
-| `application_domains` | `[]` | Noms d'hôtes à servir. |
+| `enable_custom_domain` | `true` | Provisionne la Gateway pour les noms d'hôte personnalisés + certificat géré. Ne prend effet que lorsque `application_domains` n'est pas vide. |
+| `application_domains` | `[]` | Noms d'hôte à servir. |
 | `reserve_static_ip` / `static_ip_name` | `true` / `""` | IP externe stable sur les redéploiements. |
 
-### Groupe 20 — Identity-Aware Proxy (IAP) {#group-20--identity-aware-proxy-iap}
+### Groupe 20 — Proxy conscient de l'identité (IAP) {#group-20--identity-aware-proxy-iap}
 
 > **Attention :** IAP exige une authentification d'identité Google pour
-> **toutes** les requêtes entrantes, y compris les appels des applications
-> interrogeant l'API de recherche. Activez-le pour un endpoint sécurisé et
-> destiné aux humains ; émettez des clés API à portée limitée pour l'accès
-> programmatique.
+> **toutes** les requêtes entrantes, y compris les appels provenant
+> d'applications interrogeant l'API de recherche. Activez-le pour un endpoint
+> verrouillé et destiné aux humains ; créez des clés API à portée limitée pour
+> l'accès programmatique.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -400,12 +504,12 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la politique. |
 | `enable_cdn` | `false` | Active Cloud CDN sur le backend GKE Ingress. |
 
-### Groupe 22 — VPC Service Controls et Audit Logging {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — Contrôles de service VPC et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode dry-run. |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode de simulation (dry-run). |
 | `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 ---
@@ -413,15 +517,14 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 ## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen
-le plus rapide de localiser et d'explorer les ressources en cours
-d'exécution.
+le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Kubernetes. |
 | `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
 | `service_cluster_ip` | ClusterIP intra-cluster. |
-| `stage_service_cluster_ips` | Carte des ClusterIP pour les services spécifiques à l'étape. |
+| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à l'étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `api_url` | URL pour atteindre l'API REST Meilisearch. |
 | `meilisearch_api_key_secret_id` | ID du secret Secret Manager pour la clé principale. Vide lorsque `enable_api_key = false`. |
@@ -429,16 +532,16 @@ d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | Statut et canaux de surveillance. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
 | `initialization_jobs` | Noms des jobs de configuration personnalisés. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants de projet. |
-| `cicd_enabled` / `cicd_configuration` | Statut et détails CI/CD (dépôt, déclencheur, registre). |
+| `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `kubernetes_ready` | Si le cluster/la charge de travail est prêt. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | Statut VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Statut de l'audit logging et CMEK. |
+| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
@@ -449,42 +552,41 @@ d'exécution.
 > (mineur).
 
 > **Validation héritée au moment de la planification.** Ce module transmet sa
-> configuration via le moteur de fondation [App_GKE](App_GKE.md), qui valide
-> les valeurs *et les combinaisons* au moment de la planification — une charge
-> de travail `Deployment` avec un PVC activé, IAP sans identités
-> autorisées ou client OAuth, des quotas de mémoire sans suffixes binaires, un
-> `backup_retention_days` hors de portée. Une configuration invalide fait
-> échouer la **planification** avec une erreur claire et nommée avant la
-> création de toute ressource, de sorte que la plupart des erreurs ci-dessous
-> sont détectées en amont plutôt qu'au moment de l'application ou de
-> l'exécution.
+> configuration via le moteur de socle [App_GKE](App_GKE.md), qui valide les
+> valeurs *et les combinaisons* au moment de la planification — une charge de
+> travail `Deployment` avec un PVC activé, IAP sans identités autorisées ou
+> client OAuth, des quotas de mémoire sans suffixes binaires, un
+> `backup_retention_days` hors plage. Une configuration invalide fait échouer la
+> **planification** avec une erreur claire et nommée avant la création de
+> toute ressource, de sorte que la plupart des erreurs ci-dessous sont
+> détectées en amont plutôt qu'au moment de l'application ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_api_key` | `true` | Critique | Le désactiver supprime la clé principale ; en mode production, Meilisearch refuse de démarrer, et s'il s'exécutait, toute personne atteignant le Service pourrait lire ou supprimer chaque index. |
+| `enable_api_key` | `true` | Critique | Le désactiver supprime la clé principale ; en mode production, Meilisearch refuse de démarrer, et s'il s'exécutait, quiconque atteignant le service pourrait lire ou supprimer chaque index. |
 | `max_instance_count` | `1` | Critique | Plus d'un pod partageant le PVC RWO ou le bucket GCS corrompt l'index. |
-| `stateful_pvc_mount_path` | laisser à `/meili_data` | Critique | Doit correspondre au `MEILI_DB_PATH` fixe ; monté ailleurs, le PVC ne reçoit jamais les données de l'index et apparaît vide. |
-| `stateful_pvc_size` | taille du jeu de données | Critique | Ne peut pas être diminué après la création ; trop petit, le PVC se remplit, arrêtant les écritures. |
-| `workload_type` vs `stateful_pvc_enabled` | laisser `stateful_pvc_enabled` le gérer | Critique | `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` est rejeté au moment de la planification ; le PVC a besoin d'un StatefulSet. |
-| `MEILI_MASTER_KEY` (auto-généré) | Rotation uniquement avec les mises à jour client | Élevé | La rotation de la clé sans mise à jour des clients interrompt toutes les recherches authentifiées et les appels d'administration. |
-| `stateful_pvc_enabled` | `true` pour la production | Élevé | GCS FUSE a une latence plus élevée qu'un PVC PD ; un index occupé fonctionne nettement mieux sur un PVC. |
+| `stateful_pvc_mount_path` | laisser à `/meili_data` | Critique | Doit correspondre au `MEILI_DB_PATH` fixe ; monté ailleurs, le PVC ne reçoit jamais les données d'index et apparaît vide. |
+| `stateful_pvc_size` | dimensionner au jeu de données | Critique | Ne peut pas être diminué après la création ; trop petit, le PVC se remplit, arrêtant les écritures. |
+| `workload_type` vs `stateful_pvc_enabled` | laisser `stateful_pvc_enabled` le piloter | Critique | `workload_type = "Deployment"` avec `stateful_pvc_enabled = true` est rejeté au moment de la planification ; le PVC a besoin d'un StatefulSet. |
+| `MEILI_MASTER_KEY` (auto-généré) | Ne faire pivoter qu'avec les mises à jour client | Élevé | La rotation de la clé sans mise à jour des clients interrompt toutes les recherches authentifiées et les appels d'administration. |
+| `stateful_pvc_enabled` | `true` pour la production | Élevé | GCS FUSE a une latence plus élevée qu'un PVC PD ; un index très sollicité fonctionne nettement mieux sur un PVC. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pod dans l'espace de noms. |
 | `memory_limit` | `1Gi`+ | Élevé | Trop peu de mémoire pour un grand index provoque des OOM kills sous charge de requête. |
-| `enable_iap` | pour un endpoint privé, destiné aux humains | Moyen | IAP exige une identité Google pour chaque requête ; il bloque également les appels d'applications/services non authentifiés — utilisez des clés API à portée limitée pour ceux-ci. |
+| `enable_iap` | pour un endpoint privé et humain | Moyen | IAP nécessite une identité Google pour chaque requête ; il bloque également les appels d'application/service non authentifiés — utilisez des clés API à portée limitée pour ceux-ci. |
 | `enable_pod_disruption_budget` | `true` | Moyen | Le désactiver permet à GKE d'expulser le pod unique pendant la maintenance, provoquant une panne de recherche. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour récupérer d'une suppression accidentelle d'index découverte tardivement. |
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — IAM et Workload
-Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
+Pour le comportement du socle référencé tout au long — IAM et Workload Identity,
+autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
-**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à
-Meilisearch est décrite dans **[Meilisearch_Common](Meilisearch_Common.md)**.
+**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Meilisearch est décrite dans
+**[Meilisearch_Common](Meilisearch_Common.md)**.
 
 <!-- related-guides -->
 
-## Guides associés {#related-guides}
+## Guides associées {#related-guides}
 
 - [Lab pratique : Meilisearch sur GKE Autopilot](../labs/Meilisearch_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
-- [Meilisearch Common — Configuration d'application partagée](Meilisearch_Common.md) — la configuration d'application Meilisearch sur laquelle ce module s'appuie.
+- [Meilisearch Common — Configuration d'application partagée](Meilisearch_Common.md) — la configuration d'application Meilisearch sur laquelle ce module est basé.

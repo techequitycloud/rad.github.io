@@ -1,53 +1,111 @@
 ---
 title: "Bank of Anthos multi-cluster sur GKE"
-description: "Référence de configuration pour déployer Bank of Anthos multi-cluster sur GKE Autopilot avec le module RAD — variables, architecture, réseau et exploitation."
+description: "Référence de configuration pour le déploiement de Bank of Anthos multi-cluster sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/MC_Bank_GKE.md @ 3055034 sha256:6042a43f4e63 -->
+<!-- translated-from: docs/modules/MC_Bank_GKE.md @ e69407af sha256:02e5ab81a8e3 -->
 
 # Bank of Anthos multi-cluster sur GKE {#multi-cluster-bank-of-anthos-on-gke}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/MC_Bank_GKE.png" alt="Bank of Anthos multi-cluster sur GKE" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Ce module déploie **Bank of Anthos** — la démo bancaire open source à base de microservices de Google — sur **plusieurs clusters GKE répartis dans plusieurs régions**, reliés entre eux pour former une seule plateforme applicative. Il s'agit d'un module autonome et indépendant : il construit son propre VPC, crée chaque cluster GKE, les enregistre tous dans une **GKE Fleet**, les réunit dans un seul **Cloud Service Mesh multi-primaire** et place devant eux une **passerelle multi-cluster / un équilibreur de charge externe global**, de sorte qu'une seule adresse publique serve la région saine la plus proche.
+Ce module déploie **Bank of Anthos** — la démo bancaire de microservices open source de Google — sur **plusieurs clusters GKE dans plusieurs régions**, connectés ensemble en une seule plateforme d'application. C'est un module autonome et indépendant : il construit son propre VPC, crée chaque cluster GKE, les enregistre tous dans une **Fleet GKE**, les joint en un seul **Cloud Service Mesh multi-primaire**, et les met en façade avec une **passerelle multi-cluster / équilibreur de charge externe global** afin qu'une seule adresse publique serve la région saine la plus proche.
 
-Il est conçu comme une référence pédagogique de l'architecture active-active et géo-redondante qu'utilisent les plateformes financières réglementées et les plateformes de paiement mondiales pour satisfaire aux exigences de haute disponibilité et de résidence des données. Ce n'est pas un système bancaire de production.
+Il est conçu comme une référence éducative pour l'architecture active-active et géo-redondante que les plateformes financières réglementées et de paiement mondiales utilisent pour répondre aux exigences de haute disponibilité et de résidence des données. Ce n'est pas un système bancaire de production.
 
-Ce guide se concentre sur les services Google Cloud que le module met en œuvre et sur la manière de les explorer et de les exploiter depuis la console Cloud et la ligne de commande — en accordant une attention particulière au travail **sur plusieurs clusters à la fois**.
+Ce guide se concentre sur les services Google Cloud que le module utilise et sur la manière de les explorer et de les opérer depuis la console Cloud et la ligne de commande — avec une attention particulière au travail **sur plus d'un cluster à la fois**.
 
 ---
 
+## Ce que coûte Bank of Anthos sur RAD, et comment cela se compare {#what-bank-of-anthos-costs-on-rad-and-how-that-compares}
+
+**Bank of Anthos multi-cluster sur le module GKE de RAD coûte environ 24 $ US par mois dans votre propre projet, et RAD ne facture aucun frais de module pour cela.** Bank of Anthos n'a pas de frais de module — vous ne payez que le coût de l'infrastructure de Google et quelques crédits de temps de build. Si vous n'en avez besoin qu'occasionnellement, un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour quelques crédits, de sorte que ce chiffre mensuel devient quelques dollars à la place — voir **Mettre en pause gratuitement**, ci-dessous.
+
+### Ce que vous payez sur RAD {#what-you-pay-on-rad}
+
+| | Dans un projet Google Cloud que vous possédez | Dans un projet que RAD gère pour vous |
+|---|---|---|
+| Frais de module, une fois par déploiement | Gratuit (0 crédit) | Gratuit (0 crédit) |
+| Temps de build | Quelques crédits par build | Idem |
+| Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **24 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **43 crédits par jour**, environ 1 290 par mois (environ 129,00 $ US au prix de la recharge, moins sur un plan) |
+| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est détenu en réserve |
+
+10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins sur un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas de deuxième base de données.
+
+**Coût de fonctionnement par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
+
+| Ressource (par défaut du module) | Par mois |
+|---|---|
+| Pod GKE Autopilot, 0,5 vCPU / 0,5 Gio | 18 $ US |
+| Cloud NAT et réseau | 5 $ US |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
+| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ US si c'est votre seul cluster, sinon ~73 $ US |
+| **Total** | **environ 24 $ US** |
+
+### Comment cela se compare {#how-it-compares}
+
+- Bank of Anthos est l'**architecture de référence** open source de Google pour une plateforme bancaire active-active et géo-redondante — ce n'est pas un produit commercial, et il n'y a pas d'équivalent SaaS pour le comparer.
+- La comparaison honnête est la **complexité opérationnelle, pas une facture mensuelle** : répliquer ce que ce module automatise — plusieurs clusters GKE à travers les régions, une Fleet, un maillage de services multi-primaire et une passerelle multi-cluster — à la main nécessite une véritable expertise Kubernetes multi-cluster et de réseau inter-régions. Un seul VPS (même bien spécifié) ne peut pas remplacer cette architecture, ce qui est l'intérêt de l'exécuter ici plutôt que sur une seule machine.
+- Le coût de RAD est d'environ 24 $ US par mois dans votre propre projet **sans aucun frais de module** — ce module existe pour enseigner le modèle, pas pour vendre un déploiement, donc RAD ne le facture pas au-delà du coût de l'infrastructure de Google et des builds.
+
+### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+
+Si Bank of Anthos s'exécute dans **un projet que RAD gère pour vous**, vous avez une deuxième option qui va bien au-delà de la mise à l'échelle à zéro : **supprimer l'ensemble du projet, et le restaurer dans les 30 jours pour presque rien.** Cela convient bien mieux à Bank of Anthos dont vous n'avez besoin qu'occasionnellement — évaluation, environnement de démonstration, charge de travail saisonnière ou intermittente — que de l'exécuter en continu.
+
+- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable, pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un module, cela ne détruit pas la base de données, aucune VM ou la ressource de calcul une par une — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
+- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Pour Bank of Anthos, cela représente environ **5 crédits (moins de 1 $ US)**, le même coût qu'un redéploiement complet, car il n'y a pas de frais de module au départ.
+- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 24 $ US.** Déployez Bank of Anthos, utilisez-le un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre à jour, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, les builds, et le temps pendant lequel il a été réellement actif.
+- **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont RAD gère uniquement la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox que la plupart des évaluations utilisent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
+- **Une lacune réelle : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes et autres fichiers générés sont écrits dans un bucket à l'intérieur du projet, et ce bucket n'est **pas** protégé par la suppression logicielle de Cloud Storage, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé Bank of Anthos et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+
+### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+
+L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le déploiement et de le déployer à nouveau lorsque vous en avez besoin.**
+
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les builds — environ 5 crédits (0,50 $ US) au total. La suppression ne permet d'économiser de l'argent que si Bank of Anthos reste inutilisée assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût de fonctionnement — environ **1 jour ou plus**, à la fois dans votre propre projet (environ 0,80 $ US par jour) et dans un projet géré par RAD (43 crédits par jour).
+- **La majeure partie du coût de fonctionnement est généralement partagée.** Pour Bank of Anthos, c'est la base de données. Ils ne s'arrêtent que si rien d'autre dans le projet ne les utilise, donc la suppression de cette application alors que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
+- **Conservez d'abord vos données.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+
+### Sessions de labo et environnements gérés {#lab-sessions-and-managed-environments}
+
+- **Sessions de labo, pour la formation.** Un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés retournent au formateur.
+- **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+
+Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+
+**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais RAD et estimation des crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration et ce qu'il dit sur les objets Cloud Storage sans suppression logicielle. Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
+
 ## 1. Vue d'ensemble {#1-overview}
 
-Le module met en place une plateforme multi-cluster complète à partir de rien, puis y déploie l'application bancaire :
+Le module met en place une plateforme multi-cluster complète à partir de zéro, puis y déploie l'application bancaire :
 
-| Fonctionnalité | Service Google Cloud | Remarques |
+| Capacité | Service Google Cloud | Notes |
 |---|---|---|
 | Calcul | GKE Autopilot (Standard en option) | Un cluster par région ; `cluster_size` clusters, 2 par défaut |
-| Gestion multi-cluster | GKE Fleet (Hub) | Chaque cluster est enregistré comme membre de la Fleet |
-| Maillage de services | Cloud Service Mesh (Istio géré) | Multi-primaire, activé à l'échelle de la Fleet en mode de gestion automatique |
-| Découverte inter-clusters | Multi-Cluster Services (MCS) | Fonctionnalité de la Fleet pour des backends de services répartis entre clusters |
-| Ingress global | Multi-Cluster Ingress + équilibreur de charge d'application externe global | Une seule IP anycast achemine vers le cluster sain le plus proche |
+| Gestion multi-cluster | GKE Fleet (Hub) | Chaque cluster enregistré comme membre de la Fleet |
+| Maillage de services | Cloud Service Mesh (Istio géré) | Multi-primaire, activé à l'échelle de la flotte en mode de gestion automatique |
+| Découverte inter-cluster | Multi-Cluster Services (MCS) | Fonctionnalité de la Fleet pour les backends de services inter-clusters |
+| Ingress global | Multi-Cluster Ingress + équilibreur de charge d'application externe global | Une adresse IP anycast achemine vers le cluster sain le plus proche |
 | TLS | Certificat géré par Google | Provisionné automatiquement pour un domaine `sslip.io` dérivé de l'IP globale |
-| Réseau | VPC partagé, sous-réseaux par cluster, Cloud Router + Cloud NAT, règles de pare-feu | VPC à routage global ; un Cloud Router + Cloud NAT par région de cluster. Les clusters ne sont **pas** privés — le module ne déclare aucun `private_cluster_config`, si bien que les nœuds et le point de terminaison du plan de contrôle utilisent la configuration publique par défaut de GKE |
-| Observabilité | Cloud Logging, Cloud Monitoring, Managed Service for Prometheus, Cloud Trace | Agrégée sur l'ensemble de la Fleet |
-| Application | Bank of Anthos (v0.6.10) | 9 microservices (Python + Java) plus deux bases de données PostgreSQL dans le cluster |
+| Réseau | VPC partagé, sous-réseaux par cluster, Cloud Router + Cloud NAT, règles de pare-feu | VPC à routage global ; un Cloud Router + Cloud NAT par région de cluster. Les clusters ne sont **pas** privés — le module ne déclare aucun `private_cluster_config`, donc les nœuds et le point de terminaison du plan de contrôle utilisent la configuration publique par défaut de GKE |
+| Observabilité | Cloud Logging, Cloud Monitoring, Managed Service for Prometheus, Cloud Trace | Agrégé sur l'ensemble de la flotte |
+| Application | Bank of Anthos (v0.6.10) | 9 microservices (Python + Java) plus deux bases de données PostgreSQL intra-cluster |
 
 **À savoir d'emblée :**
 
-- **Il s'agit réellement d'un déploiement multi-cluster.** `cluster_size` clusters (par défaut `2`) sont créés et chacun est placé dans une région de `available_regions` selon un ordre circulaire (round-robin). Avec les valeurs par défaut, vous obtenez deux clusters : `gke-cluster-1` dans `us-west1` et `gke-cluster-2` dans `us-east1`. Ajouter des régions ou augmenter `cluster_size` étend la répartition (par ex. 2 régions + 4 clusters parcourent cycliquement `us-west1`, `us-east1`, `us-west1`, `us-east1`).
-- **Les noms de clusters sont numérotés à partir de 1** — `gke-cluster-1`, `gke-cluster-2`, …, `gke-cluster-N`. `cluster1` est toujours le **cluster principal / de configuration**, situé dans `available_regions[0]`.
-- **Les bases de données résident uniquement sur le cluster principal.** Les StatefulSets PostgreSQL `accounts-db` et `ledger-db` ne sont déployés que sur `gke-cluster-1`. Les clusters non principaux exécutent les services sans état ainsi que les *Services* et *ConfigMaps* des bases de données, mais pas les pods de bases de données — ils sont conçus pour atteindre les bases du cluster principal à travers la Fleet. Perdre le cluster principal met la couche de données hors ligne.
-- **Une IP globale, un domaine.** Une seule adresse globale est réservée et l'application est publiée à l'adresse `https://boa.<GLOBAL_IP>.sslip.io`, avec un certificat TLS émis automatiquement. `sslip.io` résout tout nom `<ip>.sslip.io` vers cette IP ; aucune zone DNS n'est donc nécessaire.
-- **Le maillage est multi-primaire.** Cloud Service Mesh est activé au niveau de la Fleet avec gestion automatique ; chaque cluster exécute un plan de contrôle géré et partage un même domaine de confiance (`<project>.svc.id.goog`), si bien que les sidecars de n'importe quel cluster s'authentifient mutuellement.
-- **L'application n'utilise ni Cloud SQL, ni Memorystore, ni Secret Manager.** Bank of Anthos exécute son propre PostgreSQL dans le cluster et une paire de clés JWT stockée dans un Secret Kubernetes. (Certaines API de projet associées sont activées, mais l'application ne dépend pas de ces services gérés.)
-- **Le premier déploiement est long.** Créer plusieurs clusters, enregistrer la Fleet, provisionner le maillage géré et mettre en service l'équilibreur de charge global avec un certificat géré prend généralement **40 à 60 minutes**.
+- **Ceci est véritablement multi-cluster.** `cluster_size` (par défaut `2`) clusters sont créés et chacun est placé dans une région de `available_regions` en mode round-robin. Avec les valeurs par défaut, vous obtenez deux clusters : `gke-cluster-1` dans `us-west1` et `gke-cluster-2` dans `us-east1`. L'ajout de régions ou l'augmentation de `cluster_size` permet une répartition plus large (par exemple, 2 régions + 4 clusters cycle `us-west1`, `us-east1`, `us-west1`, `us-east1`).
+- **Les noms de cluster sont indexés à partir de 1** — `gke-cluster-1`, `gke-cluster-2`, …, `gke-cluster-N`. `cluster1` est toujours le **cluster primaire / de configuration** dans `available_regions[0]`.
+- **Les bases de données ne résident que sur le cluster primaire.** Les StatefulSets PostgreSQL `accounts-db` et `ledger-db` sont déployés uniquement sur `gke-cluster-1`. Les clusters non primaires exécutent les services sans état ainsi que les *Services* et *ConfigMaps* de la base de données, mais pas les pods de base de données — ils sont conçus pour atteindre les bases de données du cluster primaire via la flotte. La perte du cluster primaire met hors ligne la couche de données.
+- **Une IP globale, un domaine.** Une seule adresse globale est réservée et l'application est publiée à `https://boa.<GLOBAL_IP>.sslip.io`, avec TLS émis automatiquement. `sslip.io` résout tout nom `<ip>.sslip.io` vers cette IP, donc aucune zone DNS n'est requise.
+- **Le maillage est multi-primaire.** Cloud Service Mesh est activé au niveau de la flotte avec une gestion automatique ; chaque cluster exécute un plan de contrôle géré et partage un domaine de confiance (`<project>.svc.id.goog`), de sorte que les sidecars de n'importe quel cluster s'authentifient mutuellement.
+- **Aucun Cloud SQL, Memorystore ou Secret Manager n'est utilisé par l'application.** Bank of Anthos exécute son propre PostgreSQL intra-cluster et une paire de clés JWT Kubernetes-Secret. (Certaines API de projet connexes sont activées, mais l'application ne dépend pas de ces services gérés.)
+- **Le premier déploiement est long.** La création de plusieurs clusters, l'enregistrement de la flotte, le provisionnement du maillage géré et la mise en place de l'équilibreur de charge global avec un certificat géré prend généralement **40 à 60 minutes**.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Comme il s'agit d'un déploiement multi-cluster, l'essentiel de l'exploration consiste à **passer d'un contexte de cluster à l'autre**. Configurez un contexte par cluster et réutilisez-les tout au long :
+Comme il s'agit d'un déploiement multi-cluster, la plupart des explorations impliquent de **basculer entre les contextes de cluster**. Configurez un contexte par cluster et réutilisez-les tout au long :
 
 ```bash
 export PROJECT="<your-project-id>"
@@ -65,11 +123,11 @@ kubectl config get-contexts
 
 L'espace de noms de l'application est `bank-of-anthos` sur chaque cluster.
 
-### A. Clusters GKE — la trame de calcul {#a-gke-clusters--the-compute-fabric}
+### A. Clusters GKE — le tissu de calcul {#a-gke-clusters--the-compute-fabric}
 
-Chaque cluster exécute les charges de travail bancaires sur Autopilot (Standard est facultatif). Les clusters sont VPC-native, inscrits dans la release channel choisie, et GKE Security Posture, Managed Prometheus, le pilote CSI GCS FUSE, la Gateway API et la gestion des coûts y sont activés.
+Chaque cluster exécute les charges de travail bancaires sur Autopilot (Standard est facultatif). Les clusters sont natifs du VPC, inscrits dans le canal de publication choisi, et ont GKE Security Posture, Managed Prometheus, le pilote CSI GCS FUSE, l'API Gateway et la gestion des coûts activés.
 
-- **Console :** Kubernetes Engine → Clusters liste chaque cluster avec son mode, sa région, sa version et son nombre de nœuds.
+- **Console :** Kubernetes Engine → Clusters liste chaque cluster avec son mode, sa région, sa version et le nombre de nœuds.
 - **CLI :**
   ```bash
   gcloud container clusters list --project "$PROJECT" \
@@ -80,20 +138,20 @@ Chaque cluster exécute les charges de travail bancaires sur Autopilot (Standard
 
 ### B. GKE Fleet (Hub) {#b-gke-fleet-hub}
 
-Chaque cluster est enregistré comme membre de la Fleet (ID de membre = nom du cluster) au sein d'une Fleet unique au niveau du projet. C'est la Fleet qui permet au maillage, à MCS et à Multi-Cluster Ingress de s'étendre sur plusieurs clusters.
+Chaque cluster est enregistré comme membre de la Fleet (ID de membre = nom du cluster) sous une seule flotte au niveau du projet. La flotte est ce qui permet au maillage, à MCS et à Multi-Cluster Ingress de s'étendre sur plusieurs clusters.
 
-- **Console :** Kubernetes Engine → Fleets affiche tous les membres et les fonctionnalités de la Fleet activées pour chaque cluster.
+- **Console :** Kubernetes Engine → Fleets affiche tous les membres et les fonctionnalités de la flotte activées par cluster.
 - **CLI :**
   ```bash
   gcloud container fleet memberships list --project "$PROJECT"
   gcloud container fleet features list --project "$PROJECT"
   ```
 
-### C. Multi-Cluster Services (MCS) {#c-multi-cluster-services-mcs}
+### C. Services multi-clusters (MCS) {#c-multi-cluster-services-mcs}
 
-MCS est activé en tant que fonctionnalité de la Fleet afin que les services puissent avoir des backends répartis entre clusters. Le frontend est publié à l'échelle de la Fleet via un `MultiClusterService` (`bank-of-anthos-mcs`) sur le cluster de configuration.
+MCS est activé en tant que fonctionnalité de la flotte afin que les services puissent avoir des backends sur plusieurs clusters. Le frontend est publié à l'échelle de la flotte via un `MultiClusterService` (`bank-of-anthos-mcs`) sur le cluster de configuration.
 
-- **Console :** Kubernetes Engine → Services & Ingress (sur le cluster de configuration) affiche le Service multi-cluster.
+- **Console :** Kubernetes Engine → Services & Ingress (sur le cluster de configuration) affiche le service multi-cluster.
 - **CLI :**
   ```bash
   kubectl --context cluster1 get multiclusterservice -n bank-of-anthos
@@ -104,9 +162,9 @@ MCS est activé en tant que fonctionnalité de la Fleet afin que les services pu
 
 ### D. Cloud Service Mesh (multi-primaire) {#d-cloud-service-mesh-multi-primary}
 
-Le maillage est activé à l'échelle de la Fleet avec gestion automatique — Google exécute le plan de contrôle Istio de chaque cluster. L'espace de noms `bank-of-anthos` porte le label de révision CSM correspondant à la release channel du cluster — `istio.io/rev=asm-managed` pour `REGULAR`, `-rapid`/`-stable` pour les deux autres — si bien que chaque pod reçoit un sidecar Envoy (chaque pod applicatif affiche `2/2` prêts). Un label désignant une révision que la channel ne sert pas ne provoque aucune erreur ; l'injection est silencieusement ignorée et les pods démarrent sans sidecar. Tous les clusters partagent un même domaine de confiance : le maillage est donc multi-primaire et le trafic entre clusters est mutuellement authentifié.
+Le maillage est activé à l'échelle de la flotte avec une gestion automatique — Google exécute le plan de contrôle Istio pour chaque cluster. L'espace de noms `bank-of-anthos` porte l'étiquette de révision CSM correspondant au canal de publication du cluster — `istio.io/rev=asm-managed` pour `REGULAR`, `-rapid`/`-stable` pour les deux autres — de sorte que chaque pod reçoit un sidecar Envoy (chaque pod d'application affiche `2/2` prêt). Une étiquette nommant une révision que le canal ne sert pas ne provoque pas d'erreur ; l'injection est silencieusement ignorée et les pods démarrent sans sidecar. Tous les clusters partagent un domaine de confiance, de sorte que le maillage est multi-primaire et que le trafic entre les clusters est mutuellement authentifié.
 
-- **Console :** Kubernetes Engine → Service Mesh affiche la topologie combinée, les signaux clés (golden signals) et l'état mTLS de tous les clusters.
+- **Console :** Kubernetes Engine → Service Mesh affiche la topologie combinée, les signaux d'or et l'état mTLS sur tous les clusters.
 - **CLI :**
   ```bash
   gcloud container fleet mesh describe --project "$PROJECT"   # per-membership control/data plane state
@@ -122,9 +180,9 @@ Le maillage est activé à l'échelle de la Fleet avec gestion automatique — G
 
 ### E. Passerelle multi-cluster et équilibrage de charge global {#e-multi-cluster-gateway--global-load-balancing}
 
-Une seule IP globale (`bank-of-anthos`) est réservée et un `MultiClusterIngress` (`bank-of-anthos-mci`) sur le cluster de configuration provisionne un équilibreur de charge d'application externe global dont les backends couvrent tous les clusters. Le réseau de Google achemine chaque utilisateur vers le cluster sain le plus proche. Notez que le manifeste `MultiClusterIngress` ne comporte aucune annotation `networking.gke.io/static-ip` ni `networking.gke.io/pre-shared-certs` : l'équilibreur de charge **n'adopte donc pas** l'adresse globale réservée, et les objets `ManagedCertificate` et `FrontendConfig` (HTTP→HTTPS 301) appliqués au cluster de configuration ne sont pas référencés par lui — le manifeste `Ingress` mono-cluster qui les lierait (`manifests/ingress.yaml`) est généré mais jamais appliqué. Lisez l'adresse réelle de l'équilibreur de charge dans l'état du `MultiClusterIngress` (`kubectl get mci -n bank-of-anthos -o jsonpath='{.items[0].status.VIP}'`).
+Une seule IP globale (`bank-of-anthos`) est réservée et un `MultiClusterIngress` (`bank-of-anthos-mci`) sur le cluster de configuration provisionne un équilibreur de charge d'application externe global dont les backends s'étendent sur chaque cluster. Le réseau de Google achemine chaque utilisateur vers le cluster sain le plus proche. Notez que le manifeste `MultiClusterIngress` ne contient aucune annotation `networking.gke.io/static-ip` ou `networking.gke.io/pre-shared-certs`, de sorte que l'équilibreur de charge n'adopte **pas** l'adresse globale réservée, et les objets `ManagedCertificate` et `FrontendConfig` (HTTP→HTTPS 301) appliqués au cluster de configuration ne sont pas référencés par celui-ci — le manifeste `Ingress` à cluster unique qui les lierait (`manifests/ingress.yaml`) est généré mais jamais appliqué. Lisez l'adresse réelle de l'équilibreur de charge à partir de l'état `MultiClusterIngress` (`kubectl get mci -n bank-of-anthos -o jsonpath='{.items[0].status.VIP}'`).
 
-- **Console :** Network Services → Load balancing affiche l'équilibreur de charge global, ses frontends, le service de backend et l'état de santé de chaque Network Endpoint Group par cluster.
+- **Console :** Services réseau → Équilibrage de charge affiche l'équilibreur de charge global, ses frontends, le service backend et l'état de chaque groupe de points de terminaison réseau par cluster.
 - **CLI :**
   ```bash
   gcloud compute addresses list --global --project "$PROJECT" --filter="name~bank"
@@ -139,9 +197,9 @@ Une seule IP globale (`bank-of-anthos`) est réservée et un `MultiClusterIngres
 
 ### F. Réseau (VPC, NAT, pare-feu) {#f-networking-vpc-nat-firewall}
 
-Tous les clusters partagent un même VPC à routage global. Chaque cluster reçoit son propre sous-réseau avec des plages secondaires pour les pods et les services, un Cloud Router + Cloud NAT pour la sortie privée, une IP externe statique réservée et un ensemble de règles de pare-feu (trafic interne, plan de contrôle GKE, vérifications d'état de l'équilibreur de charge et ports du webhook ASM). Notez que le module crée aussi une règle `allow-ssh-<deployment_id>` ouvrant **TCP/22 à l'ensemble du VPC depuis `0.0.0.0/0`** — restreignez-la ou supprimez-la si vous conservez le déploiement au-delà d'une démo.
+Tous les clusters partagent un VPC à routage global. Chaque cluster obtient son propre sous-réseau avec des plages secondaires pour les pods et les services, un Cloud Router + Cloud NAT pour la sortie privée, une IP externe statique réservée et un ensemble de règles de pare-feu (trafic interne, le plan de contrôle GKE, les vérifications de santé de l'équilibreur de charge et les ports webhook ASM). Notez que le module crée également une règle `allow-ssh-<deployment_id>` ouvrant **TCP/22 à l'ensemble du VPC depuis `0.0.0.0/0`** — réduisez-la ou supprimez-la si vous conservez le déploiement au-delà d'une démo.
 
-- **Console :** VPC network → VPC networks → le réseau du déploiement ; VPC network → Firewall.
+- **Console :** Réseau VPC → Réseaux VPC → le réseau du déploiement ; Réseau VPC → Pare-feu.
 - **CLI :**
   ```bash
   gcloud compute networks subnets list --project "$PROJECT" \
@@ -152,9 +210,9 @@ Tous les clusters partagent un même VPC à routage global. Chaque cluster reço
 
 ### G. Observabilité (Logging, Monitoring, Prometheus, Trace) {#g-observability-logging-monitoring-prometheus-trace}
 
-Les journaux des pods sont acheminés vers Cloud Logging ; les métriques GKE et du maillage vers Cloud Monitoring et Managed Prometheus ; le maillage envoie les traces distribuées à Cloud Trace. Le tout est agrégé sur l'ensemble de la Fleet, ce qui permet de comparer les clusters côte à côte.
+Les journaux des pods sont acheminés vers Cloud Logging ; les métriques GKE et du maillage sont acheminées vers Cloud Monitoring et Managed Prometheus ; le maillage envoie des traces distribuées vers Cloud Trace. Tout cela est agrégé à travers la flotte, de sorte que vous pouvez comparer les clusters côte à côte.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards (groupe GKE) ; Kubernetes Engine → Service Mesh pour les signaux clés.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord (groupe GKE) ; Kubernetes Engine → Service Mesh pour les signaux d'or.
 - **CLI :**
   ```bash
   gcloud logging read \
@@ -167,9 +225,9 @@ Les journaux des pods sont acheminés vers Cloud Logging ; les métriques GKE et
 
 ### H. L'application Bank of Anthos {#h-the-bank-of-anthos-application}
 
-Bank of Anthos est une simulation de banque de détail : inscription, connexion, consultation des soldes et virements. Elle comprend un `frontend`, `userservice`, `contacts`, `ledgerwriter`, `balancereader`, `transactionhistory`, un `loadgenerator` (trafic synthétique continu) et les bases de données PostgreSQL `accounts-db` / `ledger-db`. Le générateur de charge maintient un flux de trafic constant, si bien que les tableaux de bord et les traces du maillage affichent immédiatement des données en direct. L'authentification utilise une paire de clés JWT stockée dans le Secret Kubernetes `jwt-key`.
+Bank of Anthos est une simulation de banque de détail : inscrivez-vous, connectez-vous, consultez les soldes et transférez des fonds. Elle comprend un `frontend`, `userservice`, `contacts`, `ledgerwriter`, `balancereader`, `transactionhistory`, un `loadgenerator` (trafic synthétique continu), et les bases de données PostgreSQL `accounts-db` / `ledger-db`. Le générateur de charge maintient le trafic afin que les tableaux de bord et les traces du maillage affichent immédiatement des données en direct. L'authentification utilise une paire de clés JWT stockée comme Secret Kubernetes `jwt-key`.
 
-- **Console :** Kubernetes Engine → Workloads (filtré sur l'espace de noms `bank-of-anthos`), pour chaque cluster.
+- **Console :** Kubernetes Engine → Charges de travail (filtrer par l'espace de noms `bank-of-anthos`), par cluster.
 - **CLI :**
   ```bash
   kubectl --context cluster1 get deploy,statefulset,svc -n bank-of-anthos
@@ -180,22 +238,22 @@ Bank of Anthos est une simulation de banque de détail : inscription, connexion,
 
 ## 3. Comportement {#3-behaviour}
 
-**Ce qui est déployé à l'apply.** Le module active les API de projet requises, crée (ou réutilise) le VPC partagé et les sous-réseaux/NAT/pare-feu par cluster, puis crée `cluster_size` clusters GKE dans les régions choisies. Chaque cluster est enregistré dans la Fleet et le module attend que chaque membre atteigne l'état `READY` (interrogé pendant environ 10 minutes au maximum) avant de poursuivre. Si le maillage est activé, il l'est au niveau de la Fleet et pour chaque membre en mode de gestion automatique, et le module attend que le maillage soit configuré sur chaque cluster.
+**Ce qui est déployé lors de l'apply.** Le module active les API de projet requises, crée (ou réutilise) le VPC partagé et les sous-réseaux/NAT/pare-feu par cluster, puis crée `cluster_size` clusters GKE dans les régions choisies. Chaque cluster est enregistré dans la flotte et le module attend que chaque membre atteigne `READY` (interrogé jusqu'à ~10 minutes) avant de continuer. Si le maillage est activé, il est activé au niveau de la flotte et par membre en mode de gestion automatique, et le module attend que le maillage se configure sur chaque cluster.
 
-**Déploiement de l'application sur les clusters.** Avec `deploy_application = true`, le module télécharge la version épinglée de Bank of Anthos (v0.6.10), crée l'espace de noms `bank-of-anthos` (labellisé pour l'injection de sidecar) sur chaque cluster, applique le secret JWT, puis applique les manifestes des charges de travail :
+**Déploiement de l'application sur les clusters.** Avec `deploy_application = true`, le module télécharge la version épinglée de Bank of Anthos (v0.6.10), crée l'espace de noms `bank-of-anthos` (étiqueté pour l'injection de sidecar) sur chaque cluster, applique le secret JWT et applique les manifestes de charge de travail :
 
-- Sur le **cluster principal** (`cluster1`), l'ensemble complet des manifestes est appliqué, **y compris** les StatefulSets `accounts-db` et `ledger-db`.
-- Sur **tous les autres clusters**, les mêmes manifestes sont appliqués mais les StatefulSets de bases de données en sont retirés — les services sans état ainsi que les Services/ConfigMaps des bases de données sont tout de même créés pour que les autres pods puissent les résoudre, et ils sont conçus pour utiliser les bases de données du cluster principal à travers la Fleet. Tout StatefulSet de base de données préexistant sur un cluster non principal est supprimé.
+- Sur le **cluster primaire** (`cluster1`), l'ensemble complet des manifestes est appliqué, **y compris** les StatefulSets `accounts-db` et `ledger-db`.
+- Sur **tous les autres clusters**, les mêmes manifestes sont appliqués, mais les StatefulSets de base de données sont supprimés — les services sans état et les Services/ConfigMaps de base de données sont toujours créés afin que d'autres pods puissent les résoudre, et ils sont conçus pour utiliser les bases de données du cluster primaire à travers la flotte. Tout StatefulSet de base de données préexistant sur des clusters non primaires est supprimé.
 
-Le module attend que les déploiements soient disponibles sur chaque cluster avant de signaler la réussite.
+Le module attend que les déploiements deviennent disponibles sur chaque cluster avant de signaler le succès.
 
-**Ingress global.** Une fois l'application en cours d'exécution, le module active la fonctionnalité Multi-Cluster Ingress de la Fleet (cluster de configuration = `cluster1`) et applique, sur le cluster de configuration, le `MultiClusterService` (backends du frontend répartis entre clusters), le `MultiClusterIngress` (l'équilibreur de charge global), un service NodePort + BackendConfig (vérifications d'état de l'équilibreur de charge), le certificat géré pour `boa.<GLOBAL_IP>.sslip.io`, le FrontendConfig (redirection HTTPS) et une ConfigMap de télémétrie du maillage dans `istio-system`. Le trafic circule alors ainsi : utilisateur → IP anycast globale → NEG du cluster sain le plus proche → pod frontend (sidecar Envoy) → services en aval via le mTLS du maillage.
+**Ingress global.** Une fois l'application en cours d'exécution, le module active la fonctionnalité de flotte Multi-Cluster Ingress (cluster de configuration = `cluster1`) et applique, sur le cluster de configuration, le `MultiClusterService` (backends frontend sur plusieurs clusters), le `MultiClusterIngress` (l'équilibreur de charge global), un service NodePort + BackendConfig (vérifications de santé de l'équilibreur de charge), le certificat géré pour `boa.<GLOBAL_IP>.sslip.io`, le FrontendConfig (redirection HTTPS) et une ConfigMap de télémétrie de maillage dans `istio-system`. Le trafic circule ensuite : utilisateur → IP anycast globale → NEG du cluster sain le plus proche → pod frontend (sidecar Envoy) → services en aval via mTLS du maillage.
 
-**Suivi manuel.** Le certificat géré par Google est provisionné de manière asynchrone et peut mettre **10 à 60 minutes** à devenir `Active` ; d'ici là, HTTPS peut afficher un avertissement ou échouer. Utilisez les identifiants de démonstration affichés sur la page de connexion de Bank of Anthos pour vous connecter. Pour activer le CDN, des domaines personnalisés, IAP ou des politiques de trafic inter-clusters (VirtualService/DestinationRule), appliquez les ressources Kubernetes correspondantes après le déploiement.
+**Suivi manuel.** Le certificat géré par Google est provisionné de manière asynchrone et peut prendre **10 à 60 minutes** pour devenir `Active` ; jusque-là, HTTPS peut avertir ou échouer. Utilisez les identifiants de démonstration affichés sur la page de connexion de Bank of Anthos pour vous connecter. Pour activer le CDN, les domaines personnalisés, l'IAP ou les politiques de trafic inter-clusters (VirtualService/DestinationRule), appliquez les ressources Kubernetes pertinentes après le déploiement.
 
-**Remarques sur l'exécution.** Chaque pod applicatif s'exécute en `2/2` (application + sidecar). Le maillage partage un même domaine de confiance : les appels inter-clusters sont donc mutuellement authentifiés. Comme la couche de données réside uniquement sur le cluster principal, réduire le principal à zéro ou perdre sa région affecte les bases de données — les frontends sans état des autres clusters restent accessibles via l'équilibreur de charge global, mais dépendent du principal pour les données.
+**Notes d'exécution.** Chaque pod d'application exécute `2/2` (application + sidecar). Le maillage partage un domaine de confiance, de sorte que les appels inter-clusters sont mutuellement authentifiés. Étant donné que la couche de données ne réside que sur le cluster primaire, la mise à l'échelle du primaire à zéro ou la perte de sa région affecte les bases de données — les frontends sans état sur d'autres clusters restent accessibles via l'équilibreur de charge global mais dépendent du primaire pour les données.
 
-**Destruction.** Le démantèlement exécute des étapes de nettoyage ordonnées qui suppriment les ressources Multi-Cluster Ingress/Service, désactivent les fonctionnalités de maillage et de Multi-Cluster Ingress de la Fleet, désenregistrent les membres de la Fleet et suppriment les règles de pare-feu MCS et les NEG résiduels avant de supprimer les clusters et le VPC. Les API activées par le module restent activées pour ne pas perturber d'autres charges de travail.
+**Destroy.** La suppression exécute des étapes de nettoyage ordonnées qui suppriment les ressources Multi-Cluster Ingress/Service, désactivent les fonctionnalités de flotte du maillage et de Multi-Cluster Ingress, désenregistrent les membres de la flotte et suppriment les règles de pare-feu MCS et les NEG restants avant de supprimer les clusters et le VPC. Les API activées par le module restent activées pour éviter de perturber d'autres charges de travail.
 
 ---
 
@@ -207,37 +265,37 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. Il doit déjà exister. |
-| `tenant_id` | `demo` | Identifiant du tenant. Doit comporter de 1 à 20 lettres minuscules, chiffres et tirets — toute autre valeur échoue à la validation. Présent dans le formulaire, mais référencé par aucune ressource de ce module. |
-| `available_regions` | `["us-west1", "us-east1"]` | Régions dans lesquelles les clusters sont placés, de manière circulaire selon l'index du cluster. S'il y a moins de régions que de clusters, les régions sont réutilisées en boucle. Doit comporter au moins une entrée. |
+| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. Doit déjà exister. |
+| `tenant_id` | `demo` | Identifiant du locataire. Doit être composé de 1 à 20 lettres minuscules, chiffres et tirets — d'autres valeurs échouent à la validation. Présent sur le formulaire mais non référencé par aucune ressource dans ce module. |
+| `available_regions` | `["us-west1", "us-east1"]` | Régions dans lesquelles les clusters sont placés, en mode round-robin par index de cluster. Si moins de régions que de clusters, les régions sont cyclées. Doit avoir au moins une entrée. |
 
 ### Groupe 2 — Réseau {#group-2--network}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `create_network` | `true` | Crée un nouveau VPC partagé pour tous les clusters. Définissez `false` pour utiliser un réseau existant désigné par `network_name`. |
+| `create_network` | `true` | Crée un nouveau VPC partagé pour tous les clusters. Définissez `false` pour utiliser un réseau existant nommé par `network_name`. |
 | `network_name` | `vpc-network` | Nom du VPC partagé. Lors de la création, un suffixe unique est ajouté automatiquement. |
-| `subnet_name` | `vpc-subnet` | Nom de base des sous-réseaux par cluster (`<subnet_name>-cluster<N>`). Utilisé uniquement lorsque `create_network = true`. |
+| `subnet_name` | `vpc-subnet` | Nom de base pour les sous-réseaux par cluster (`<subnet_name>-cluster<N>`). Utilisé uniquement lorsque `create_network = true`. |
 
 ### Groupe 3 — Clusters GKE {#group-3--gke-clusters}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `create_autopilot_cluster` | `true` | Crée des clusters Autopilot (nœuds entièrement gérés). Définissez `false` pour des clusters Standard avec des pools de nœuds gérés. S'applique à tous les clusters. |
-| `release_channel` | `REGULAR` | Release channel GKE de tous les clusters : `RAPID`, `REGULAR`, `STABLE` ou `NONE`. |
-| `cluster_size` | `2` | Nombre de clusters GKE à créer. Minimum 2 pour une démo multi-cluster pertinente ; limite supérieure fixée par le quota régional. |
+| `create_autopilot_cluster` | `true` | Crée des clusters Autopilot (nœuds entièrement gérés). Définissez `false` pour les clusters Standard avec des pools de nœuds gérés. S'applique à tous les clusters. |
+| `release_channel` | `REGULAR` | Canal de publication GKE pour tous les clusters : `RAPID`, `REGULAR`, `STABLE`, ou `NONE`. |
+| `cluster_size` | `2` | Nombre de clusters GKE à créer. Minimum 2 pour une démo multi-cluster significative ; la limite supérieure est limitée par le quota régional. |
 
 ### Groupe 4 — Maillage de services {#group-4--service-mesh}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_service_mesh` | `true` | Installe et configure Cloud Service Mesh (Istio géré) à l'échelle de la Fleet pour le mTLS, le trafic inter-clusters et une observabilité unifiée. Google choisit la version du maillage à partir du `release_channel` des clusters ; il n'existe aucune entrée de version. |
+| `enable_cloud_service_mesh` | `true` | Installe et configure Cloud Service Mesh (Istio géré) à l'échelle de la flotte pour mTLS, le trafic inter-cluster et l'observabilité unifiée. Google sélectionne la version du maillage à partir du `release_channel` des clusters ; il n'y a pas d'entrée de version. |
 
 ### Groupe 5 — Application {#group-5--application}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Déploie Bank of Anthos sur tous les clusters après leur création. Définissez `false` pour ne provisionner que l'infrastructure des clusters. |
+| `deploy_application` | `true` | Déploie Bank of Anthos sur tous les clusters après leur création. Définissez `false` pour provisionner uniquement l'infrastructure du cluster. |
 
 ---
 
@@ -245,31 +303,31 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Sortie | Description |
 |---|---|
-| `deployment_id` | L'ID de déploiement (fourni ou généré automatiquement) utilisé comme suffixe des noms de ressources. |
+| `deployment_id` | L'ID de déploiement (fourni ou auto-généré) utilisé pour suffixer les noms de ressources. |
 | `project_id` | L'ID du projet cible. |
 
-> L'adresse publique de l'application n'est pas exposée en tant que sortie Terraform. Récupérez l'IP globale depuis l'adresse globale réservée (`gcloud compute addresses list --global --filter="name~bank"`) ou depuis l'état du `MultiClusterIngress`, puis ouvrez `https://boa.<GLOBAL_IP>.sslip.io`.
+> L'adresse publique de l'application n'est pas exposée en tant que sortie Terraform. Récupérez l'IP globale à partir de l'adresse globale réservée (`gcloud compute addresses list --global --filter="name~bank"`) ou de l'état `MultiClusterIngress`, puis naviguez vers `https://boa.<GLOBAL_IP>.sslip.io`.
 
 ---
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service
-> dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `cluster_size` | `2` (ou plus) | Élevé | La valeur `1` va à l'encontre de l'objectif — ni ingress multi-cluster, ni maillage étendu, ni basculement. Des valeurs très élevées peuvent épuiser le quota régional et faire échouer l'apply en cours de route. |
-| `available_regions` | ≥ 2 régions distinctes | Élevé | Une seule région supprime la géo-redondance ; tous les clusters partagent le domaine de défaillance d'une même région. |
-| Cluster principal (`cluster1`) | à traiter comme la couche de données | Critique | Les bases de données `accounts-db` / `ledger-db` ne s'exécutent que sur le cluster principal. Perdre sa région, ou le réduire à zéro, met la couche de données hors ligne pour tous les clusters. |
-| `deployment_id` | à définir une fois, puis à ne plus toucher | Critique | Le modifier après le premier déploiement force la recréation des ressources nommées (VPC, clusters), ce qui détruit l'état en cours d'exécution. |
-| `release_channel` | laisser `REGULAR` sauf raison particulière | Élevé | Le label de révision CSM géré (`asm-managed`/`-rapid`/`-stable`) et la ConfigMap de configuration du maillage `istio-<revision>` en dérivent tous deux. Changer de channel après le premier déploiement ne déplace **pas** le maillage — CSM conserve la channel avec laquelle il a été provisionné. |
-| `create_network` / `network_name` | `true` pour un nouveau projet | Moyen | Pointer (avec `false`) vers un réseau existant inexistant ou dont les plages se chevauchent casse la création des sous-réseaux et des clusters. |
-| Attente du certificat géré | prévoir 10 à 60 min | Moyen | Ouvrir `https://boa.<IP>.sslip.io` avant que le certificat soit `Active` affiche des avertissements ou des échecs TLS — c'est attendu pendant le provisionnement et ne constitue pas une erreur de déploiement. |
-| `create_autopilot_cluster` | `true` | Faible | Les clusters Standard ajoutent la gestion des pools de nœuds et un coût par nœud ; Autopilot est plus simple et moins coûteux pour cette démo. |
-| `enable_cloud_service_mesh` | `true` | Moyen | Le désactiver supprime le mTLS, la gestion du trafic inter-clusters et l'observabilité Service Mesh que le module est conçu pour démontrer. |
-| Durée du premier déploiement | prévoir 40 à 60 min | Faible | Le provisionnement multi-cluster + Fleet + maillage géré + équilibreur de charge global est intrinsèquement lent ; ne concluez pas à un blocage. |
+| `cluster_size` | `2` (ou plus) | Élevé | Définir `1` annule l'objectif — pas d'ingress multi-cluster, d'étendue de maillage ou de basculement. Des valeurs très élevées peuvent épuiser le quota régional et échouer en cours d'apply. |
+| `available_regions` | ≥ 2 régions distinctes | Élevé | Une seule région supprime la géo-redondance ; tous les clusters partagent le domaine de défaillance d'une seule région. |
+| Cluster primaire (`cluster1`) | traiter comme la couche de données | Critique | Les bases de données `accounts-db` / `ledger-db` ne s'exécutent que sur le cluster primaire. La perte de sa région, ou sa mise à l'échelle à zéro, met hors ligne la couche de données pour tous les clusters. |
+| `deployment_id` | définir une fois, puis laisser | Critique | Le modifier après le premier déploiement force la recréation des ressources nommées (VPC, clusters), détruisant l'état d'exécution. |
+| `release_channel` | laisser à `REGULAR` sauf raison | Élevé | L'étiquette de révision CSM gérée (`asm-managed`/`-rapid`/`-stable`) et la ConfigMap de configuration de maillage `istio-<revision>` sont toutes deux dérivées de cela. Changer le canal après le premier déploiement ne déplace **pas** le maillage — CSM conserve le canal avec lequel il a été provisionné. |
+| `create_network` / `network_name` | `true` pour un nouveau projet | Moyen | Pointer vers un réseau existant non existant ou chevauchant (lorsque `false`) interrompt la création de sous-réseaux et de clusters. |
+| Attente du certificat géré | prévoir 10 à 60 min | Moyen | Naviguer vers `https://boa.<IP>.sslip.io` avant que le certificat ne soit `Active` affiche des avertissements ou des échecs TLS — attendu pendant le provisionnement, pas une erreur de déploiement. |
+| `create_autopilot_cluster` | `true` | Faible | Les clusters Standard ajoutent la gestion des pools de nœuds et un coût par nœud ; Autopilot est plus simple et moins cher pour cette démo. |
+| `enable_cloud_service_mesh` | `true` | Moyen | Le désactiver supprime mTLS, la gestion du trafic inter-cluster et l'observabilité du maillage de services que le module est conçu pour démontrer. |
+| Temps de premier déploiement | prévoir 40 à 60 min | Faible | Le provisionnement multi-cluster + flotte + maillage géré + équilibreur de charge global est intrinsèquement lent ; ne supposez pas un blocage. |
 
 ---
 
-Il s'agit d'un module pédagogique autonome qui construit son propre VPC, ses clusters, sa Fleet, son maillage et son équilibreur de charge global — il ne dépend d'aucun module socle distinct. Pour l'application amont, consultez le [dépôt Bank of Anthos](https://github.com/GoogleCloudPlatform/bank-of-anthos).
+Ceci est un module autonome et éducatif qui construit son propre VPC, ses clusters, sa flotte, son maillage et son équilibreur de charge global — il ne dépend pas d'un module de base séparé. Pour l'application en amont, consultez le [référentiel Bank of Anthos](https://github.com/GoogleCloudPlatform/bank-of-anthos).
