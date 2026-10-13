@@ -43,7 +43,7 @@ Select **Save** to apply your changes.
 
 **Activate or deactivate.** Toggle a user's active status to grant or revoke access. Deactivating clears every non-admin role the account held (User, Partner, Agent, Finance, Support, Trainer) and its monthly partner allotment; reactivating turns only **User** back on, so re-grant any other role by hand. Safeguards apply: you cannot deactivate an account that holds the Admin role.
 
-**Delete a user.** Deleting a user permanently deletes their modules and deployments, then deletes the account. A user with any live (not yet destroyed) deployment can't be deleted — destroy those first. A minimal record is kept only to stop the same email re-registering, and credit-transaction history is preserved for audits.
+**Delete a user.** Deleting a user permanently deletes their published modules, then the account. It is refused — for you as for them — while any of their deployments is still live (destroy those first), or while the account owes RAD or is responsible for something RAD is paying for: unpaid usage or build costs, a purchased balance below zero, a client project they run that isn't ended and settled, a linked project RAD is still paying for or detaching, or a lab session they run that isn't settled. The refusal lists the reasons. Their deployment records are kept (marked as belonging to a deleted account) so late Google Cloud usage is still billed to the right payer. A minimal record stops the same email re-registering, and credit-transaction history is preserved for audits.
 
 **Safeguards to know.**
 
@@ -87,7 +87,7 @@ A trainer creates a session on **Solutions → Managed Environments** (**Lab ses
 
 Each participant gets **one environment** on the **lab** tier, which has its own folder, org policies and budget. The lab tier is never offered as a manual choice on any deploy form. Unused credits settle back to the trainer once Google has reported the session's costs.
 
-You can see and manage every trainer's sessions, and you alone can force a teardown. Finance can see every session and end one, but can't change it. Only you can deploy on someone else's behalf from the ordinary deploy form, and only into a RAD-managed project: each participant's deployment goes into their own project and is paid for by that participant.
+You can see and manage every trainer's sessions, and you alone can force a teardown. Finance can see every session and end one, but can't change it. Only you can deploy on someone else's behalf from the ordinary deploy form, and only into a RAD-managed project: each participant's deployment goes into their own project and is paid for by that participant. The purchased-credit floor is the participant's, not yours, so you can pick a funded participant even if you hold no purchased credits. There is no administrator exemption from the floor: deploying into a RAD-managed project for yourself needs the same purchased credits as anyone else, because RAD would otherwise switch that project off within minutes.
 
 ## Bulk credit awards and messaging users
 
@@ -130,6 +130,19 @@ The **Setup Requests** tab on the **Help** page is where managed-setup requests 
 ## Support Tickets
 
 The **Support Tickets** tab on the **Help** page lists tickets raised through the **Help** form. Triage each ticket: update its status (new, in progress, resolved, closed), add notes, and assign it. Support-role users also work this queue; as an admin you see all tickets. The customer follows their ticket on their own **My Tickets** tab, which shows the status you set but never your notes or who the ticket is assigned to.
+
+### Agent performance (the Agents view)
+
+As an admin you also see a **Tickets | Agents** switch at the top of the tab. **Agents** uses the same **From**/**To** dates and shows one row per agent for that period:
+
+- **Assigned**, **Resolved**, **Closed**, **Released / reassigned** and **Reopened** (a ticket the agent finished that came back) count what happened in the range. **Withdrawn** counts tickets the customer withdrew while the agent held them — shown separately, never as a resolution. **Open now** is the agent's current open tickets.
+- **Time to resolve** runs from the start of the agent's own assignment to the moment they resolved or closed the ticket (calendar time): the median, with the 90th percentile and the mean beneath it. A reassignment restarts the clock for the new holder.
+- **Within SLA** is the share of those resolutions that met the target for the ticket's priority, coloured green (90% or more), amber (70% or more) or red. Click a row for the split by priority and the finished tickets by priority and category.
+- The summary card above the table gives the team's **time to first assignment** (from submission to the first agent picking the ticket up).
+
+RAD records every assignment and status change on a ticket from this release onwards. Tickets finished before that have no assignment history: they count in the totals but not in the times, and the report says how many were **not recorded**. **Export CSV** downloads the rows, with durations as plain numbers of hours. Support and Finance users do not see the Agents view.
+
+The SLA targets are settings on the **Setup** page (with the other support settings): **Support SLA: Urgent**, **High**, **Medium** and **Low**, in hours — by default 4, 24, 72 and 120, each a whole number from 1 to 2160.
 
 ## Visibility into revenue, costs, invoices, and payouts
 
