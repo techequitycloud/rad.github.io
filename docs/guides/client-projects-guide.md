@@ -56,7 +56,7 @@ That one deployment is for your client:
 
 The confirmation dialog names the client wallet that pays, so check it before you confirm. **Deploy** covers one deployment: once it is submitted, your next deploy is your own again. To deploy something else for the client, deploy from their project's page again. Coming back to **Managed Environments** without deploying also cancels it.
 
-Your client's Google Cloud project gives you the same Console access your client has, so you can operate the service. You can view, update and delete the project's deployments, but you can't read the secret values in them, such as passwords and API keys. Those are your client's.
+Your client's Google Cloud project gives you the same Console access your client has, so you can operate the service. You can view, update and delete the project's deployments, but you can't read the secret values in them, such as passwords and API keys. Those are your client's. An update is accepted only while the project is running and its wallet still holds credits: a paused or ending project, one with a handover requested, or an empty wallet, is refused — top up or resume first.
 
 Your client can see what you deploy for them, but can't change or delete it while you manage it.
 
@@ -89,7 +89,7 @@ If a paused project isn't topped up within the **pause period** (set by RAD, 7 d
 
 - the day before, you're emailed a final warning;
 - once it's deleted, you and your client are both told;
-- a couple of days later, when Google's final costs are in, the wallet is settled with you. Unused credits go back to your top-up credits, and any shortfall is charged to your purchased credits.
+- once Google has reported the final costs (usually within a day), the wallet is settled with you. If they haven't arrived after a week, RAD alerts its team and keeps waiting — it never settles on a guess. Unused credits go back to your top-up credits, and any shortfall is charged to your purchased credits.
 
 If you've switched off deployment notifications, RAD holds the deletion rather than deleting without warning you.
 

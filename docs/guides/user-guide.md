@@ -159,6 +159,8 @@ Whether credits can be bought at all is a single platform switch. While it is of
 
 **To buy credits:** open the **Buy Credits** tab, pick a payment provider, choose a currency and amount, and complete checkout on the provider's secure page. The form shows the minimum top-up (set by RAD's finance team, in USD) converted into your currency, and the form tells you how many credits the amount will buy before you pay. Your credits are added automatically once the payment confirms.
 
+**Refunds and chargebacks.** If a payment is refunded, or you dispute it with your card issuer (a chargeback), RAD takes back the credits that payment added, from the balance they went into — in proportion, for a partial refund. Your history shows it as a negative purchase line. That balance can go below zero, and then RAD switches off the Google Cloud projects it pays for on your behalf until you top up. If a dispute is decided in your favour, the credits are put back.
+
 Some deployments require *purchased* credits (subscription or top-up, not awards or event credits) before you can start them — in that case, buy credits first even if you have a free balance.
 
 **Event codes.** A RAD partner event may give you a code for free credits. Type it into the event-code box at the top of the **Credit Transactions** tab on **Credits** and choose **Claim credits**, or open the link the event gave you, which fills the code in for you (you still choose **Claim credits**). Each code can be claimed once per account and needs a verified email address; some codes are limited to particular attendees or email domains, and every code has a closing date. Event credits pay for module fees and build time, but not for Google Cloud usage in a RAD-managed project, and they do not count toward the purchased-credit minimum a RAD-managed project asks for.
@@ -202,6 +204,14 @@ While a project is linked:
 - If your purchased balance falls below the floor, RAD **pauses** the project by detaching billing: its services stop, but your data is kept. RAD emails you before this happens, and buying credits back above the floor resumes it automatically.
 - **Withdraw** cancels a request that has not been approved. **Stop** (behind a confirmation, **Stop RAD paying**) detaches RAD's billing account. If no other billing account is linked, the project's services stop — link your own billing account first if it must keep running. Linking your own billing account to the project also ends RAD's part.
 - Usage up to the moment billing is detached is still charged once Google reports it.
+- **Stop** finishes only once RAD has confirmed its billing account is off the project. If RAD can't detach it — for example because RAD's billing role was removed from the project — the project stays **Unlinking**, its usage is still charged to you, and RAD keeps retrying. You can't request a new link for it until that completes.
+- Keep RAD's two roles on the project while it is linked. If RAD can no longer read the project's billing, it can't pause it, so until the roles are restored RAD won't resume any of your paused linked projects and can't approve a new link for you.
+
+Approval checks the floor against your recent spend across all your linked projects, not only the fixed minimum, and checks you are still the project's verified owner. A project that RAD itself created or runs for you (a RAD-managed, lab or client project) can't be linked.
+
+## Deleting your account
+
+**Delete Account** at the bottom of your **Profile** page removes your account permanently. It is refused, with the reasons listed, while your account still owes RAD or is responsible for something RAD is paying for: unpaid Google Cloud usage or build costs, a purchased-credit balance below zero, a client project you run that hasn't been ended and settled, a linked project RAD is still paying for or detaching, or a lab session you run that hasn't ended and settled. Settle those first. You must also delete any deployment that is still running. Your deployment records are kept after your account is deleted, so that late usage is still billed correctly; your credit history is kept for audits.
 
 ## Email notifications
 
