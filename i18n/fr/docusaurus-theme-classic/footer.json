@@ -42,5 +42,9 @@
   "copyright": {
     "message": "© 2026 Tech Equity Cloud. Tous droits réservés.",
     "description": "The footer copyright"
+  },
+  "link.item.label.Blog": {
+    "message": "Blog",
+    "description": "The label of footer link with label=Blog linking to https://blog.radmodules.dev"
   }
 }
