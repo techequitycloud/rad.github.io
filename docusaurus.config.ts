@@ -124,11 +124,11 @@ const config: Config = {
         process.env.DOCUSAURUS_CURRENT_LOCALE === 'fr'
           ? 'Sessions Google Cloud pratiques en direct &mdash; déployez un module de bout en bout ou ' +
             'préparez une certification lors d’un lab en direct. Soixante minutes, participation gratuite. ' +
-            '<a target="_blank" rel="noopener" href="https://ghost.radbusiness.dev/sessions/' +
+            '<a target="_blank" rel="noopener" href="https://blog.radmodules.dev/sessions/' +
             '?utm_source=docs&utm_medium=announcement&utm_campaign=live-sessions"><b>S’inscrire</b></a>'
           : 'Live, hands-on Google Cloud sessions &mdash; deploy a module end to end, or work a ' +
             'certification as a live lab. Sixty minutes, free to attend. ' +
-            '<a target="_blank" rel="noopener" href="https://ghost.radbusiness.dev/sessions/' +
+            '<a target="_blank" rel="noopener" href="https://blog.radmodules.dev/sessions/' +
             '?utm_source=docs&utm_medium=announcement&utm_campaign=live-sessions"><b>Register</b></a>',
       backgroundColor: '#1d4ed8',
       textColor: '#ffffff',
