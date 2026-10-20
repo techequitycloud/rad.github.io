@@ -45,7 +45,7 @@ La barre de navigation supérieure n'affiche que les éléments pertinents pour 
 - Un **profile dropdown** (menu déroulant du profil) (en haut à droite) avec **Your Profile** et **Sign Out**.
 - Un **sélecteur de langue** dans la barre supérieure, à côté du contrôle du thème clair/sombre.
 - **Pricing** (Tarification), juste avant **Help** (Aide) dans la navigation supérieure — les prix de RAD, affichés dans la console.
-- Dans le pied de page : **Contact Us** (vers la page **Help**), **Feedback** (le tableau de feedback public de RAD, sur fider.radbusiness.dev, où vous pouvez suggérer et voter des améliorations), les documents Conditions et Confidentialité, **Cookie settings** (Paramètres des cookies), et **Pricing** (Tarification) à nouveau.
+- Dans le pied de page : **Contact Us** (vers la page **Help**), **Feedback** (le tableau de feedback public de RAD, sur fider.radmodules.dev, où vous pouvez suggérer et voter des améliorations), les documents Conditions et Confidentialité, **Cookie settings** (Paramètres des cookies), et **Pricing** (Tarification) à nouveau.
 
 Il n'y a pas de tableau de bord combiné séparé — chaque élément de la navigation supérieure est sa propre page.
 
