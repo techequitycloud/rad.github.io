@@ -177,6 +177,11 @@ const config: Config = {
           label: 'RAD Guide',
         },
         {
+          href: 'https://blog.radmodules.dev',
+          label: 'Blog',
+          position: 'left',
+        },
+        {
           href: 'https://radmodules.dev',
           label: 'RAD Console',
           position: 'left',
@@ -197,6 +202,7 @@ const config: Config = {
           items: [
             {label: 'About', to: '/about'},
             {label: 'Contact', to: '/contact'},
+            {label: 'Blog', href: 'https://blog.radmodules.dev'},
             {label: 'RAD Console', href: 'https://radmodules.dev'},
           ],
         },
