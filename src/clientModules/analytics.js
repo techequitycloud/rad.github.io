@@ -44,11 +44,19 @@
 
 // ---------------------------------------------------------------------------
 // SET THIS to the GA4 Measurement ID. Empty = analytics off and no banner.
-// Kept as the same stream as the marketing sites on purpose: a reader arriving
-// on a module guide and moving to techequity.company is one journey, and two
-// streams could only ever report it as two.
 // ---------------------------------------------------------------------------
 const MEASUREMENT_ID = 'G-91S62S6H0Q';
+
+// Also report every view to these properties. radmodules.dev has its own GA4
+// property, so a reader who arrives from a social post, lands on the site and
+// moves on to a module guide used to show up there as a visit that simply
+// ended. Sending the docs views to the site's property too lets it report
+// that path as one journey, while the docs property above keeps its own
+// history. Both hosts share the registrable domain radmodules.dev, so gtag's
+// automatic cookie domain gives them the same client id.
+const ALSO_MEASURE = ['G-PSTXRG26RS'];
+
+const MEASUREMENT_IDS = [MEASUREMENT_ID, ...ALSO_MEASURE].filter((id) => /^G-[A-Z0-9]+$/i.test(id));
 
 const COOKIE = 'cookie_consent';
 const COOKIE_DAYS = 365;
@@ -122,18 +130,20 @@ function enable() {
   document.head.appendChild(s);
 
   window.gtag('js', new Date());
-  window.gtag('config', MEASUREMENT_ID, {
+  // One gtag.js serves every property; an event without send_to goes to each
+  // one configured here.
+  MEASUREMENT_IDS.forEach((id) => window.gtag('config', id, {
     // Off because Docusaurus routes client-side; see the note at the top.
     // Views are sent by onRouteDidUpdate instead.
     send_page_view: false,
     allow_google_signals: false,
     allow_ad_personalization_signals: false,
-  });
+  }));
   sendPageView(location.pathname + location.search);
 }
 
 function disable() {
-  if (configured()) window['ga-disable-' + MEASUREMENT_ID] = true;
+  MEASUREMENT_IDS.forEach((id) => { window['ga-disable-' + id] = true; });
   clearGaCookies();
 }
 
