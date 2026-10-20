@@ -43,7 +43,7 @@ The top navigation bar shows only the items relevant to your role (or roles). Wh
 - A **profile dropdown** (top-right) with **Your Profile** and **Sign Out**.
 - A **language selector** in the top bar, beside the light/dark theme control.
 - **Pricing**, just before **Help** in the top navigation — RAD's prices, shown inside the console.
-- In the footer: **Contact Us** (to the **Help** page), **Feedback** (RAD's public feedback board, at fider.radbusiness.dev, where you can suggest and vote on improvements), the Terms and Privacy documents, **Cookie settings**, and **Pricing** again.
+- In the footer: **Contact Us** (to the **Help** page), **Feedback** (RAD's public feedback board, at fider.radmodules.dev, where you can suggest and vote on improvements), the Terms and Privacy documents, **Cookie settings**, and **Pricing** again.
 
 There is no separate combined dashboard — each item in the top nav is its own page.
 

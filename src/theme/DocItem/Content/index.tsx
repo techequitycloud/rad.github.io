@@ -68,7 +68,7 @@ function RelatedLabs({permalink}: {permalink: string}) {
 // they have a request. Deliberately a quiet line rather than a card: it should be
 // available to the person who wants it and invisible to the person who does not.
 const ROADMAP_URL =
-  'https://fider.radbusiness.dev/?utm_source=docs&utm_medium=doc-footer&utm_campaign=roadmap';
+  'https://fider.radmodules.dev/?utm_source=docs&utm_medium=doc-footer&utm_campaign=roadmap';
 
 function RoadmapAsk(): React.JSX.Element {
   return (
