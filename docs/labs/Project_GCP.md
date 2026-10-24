@@ -300,6 +300,8 @@ Simply run `tofu destroy` (or delete the deployment from the RAD platform). This
 
 **Expected teardown time:** 2–5 minutes for the guardrail resources; project deletion itself is asynchronous and the project enters GCP's own soft-delete state rather than disappearing immediately.
 
+> **Do not rely on the soft-delete to get the project back.** Google Cloud's terms do not guarantee that a restored project, or the resources in it, will be usable after a restore. Take appropriate backups of anything you need from the project before you delete it; if a restore fails, the fall-back is to redeploy and restore the configuration from those backups.
+
 ---
 
 ## Summary

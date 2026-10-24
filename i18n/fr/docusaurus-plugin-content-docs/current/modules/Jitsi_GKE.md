@@ -63,6 +63,8 @@ Si Jitsi fonctionne dans un projet géré par RAD pour vous et que vous prévoye
 entre les cours, un creux saisonnier, ou simplement ne sachant pas encore si vous en aurez besoin le mois
 prochain — c'est la meilleure option, et cela ne coûte presque rien.
 
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+
 La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le
 projet purement et simplement : la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression de Jitsi en tant que
 module unique, cela ne démantèle pas le cluster GKE, le videobridge, le serveur de fichiers NFS et le réseau un par un — l'ensemble du projet

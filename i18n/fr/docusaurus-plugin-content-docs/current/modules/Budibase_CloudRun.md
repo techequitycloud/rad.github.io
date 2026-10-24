@@ -101,6 +101,8 @@ attend. Contrairement à la suppression d'un module, cela ne détruit pas Cloud
 SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du projet
 s'arrête simplement.
 
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+
 - **La restauration est une vérification, pas une reconstruction.** Dans les 30
   jours, le propriétaire du projet peut demander à Google de restaurer le projet
   et de rattacher son compte de facturation, puis d'exécuter **Mettre à jour**

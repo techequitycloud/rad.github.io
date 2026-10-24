@@ -70,6 +70,8 @@ rien facturer côté GCP pendant l'attente. La restauration (par le propriétair
 annule la suppression du projet, rattache la facturation, et une **Mise à jour** sur le déploiement
 reconfirme l'enregistrement de la flotte — une vérification, pas une reconstruction, pour **une poignée de crédits (moins de 1 US$)**.
 
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+
 - **Ceci ne touche pas à AWS.** La suppression du projet GCP ne supprime **pas**, n'arrête pas, ni ne met en pause le
   cluster EKS lui-même, et n'empêche **pas** AWS de vous le facturer. La seule chose mise en pause est
   le petit Agent Connect côté GCP et l'enregistrement de la flotte. Si vous voulez arrêter de payer AWS aussi,

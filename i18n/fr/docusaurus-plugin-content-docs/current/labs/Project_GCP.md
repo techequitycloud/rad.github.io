@@ -302,6 +302,8 @@ Exécutez simplement `tofu destroy` (ou supprimez le déploiement depuis la plat
 
 **Durée de suppression attendue :** 2–5 minutes pour les ressources de garde-fous ; la suppression du projet elle-même est asynchrone et le projet passe dans l'état de suppression réversible propre à GCP plutôt que de disparaître immédiatement.
 
+> **Ne comptez pas sur la suppression réversible pour récupérer le projet.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après une restauration. Effectuez des sauvegardes appropriées de tout ce dont vous avez besoin dans le projet avant de le supprimer ; si une restauration échoue, la solution de repli consiste à redéployer et à restaurer la configuration à partir de ces sauvegardes.
+
 ---
 
 ## Récapitulatif {#summary}

@@ -67,6 +67,8 @@ cela ne détruit **pas** Cloud SQL, une VM ou la ressource de calcul un par un :
 du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà
 déliée.
 
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+
 La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le
 projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour
 confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve

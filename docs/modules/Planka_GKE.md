@@ -62,6 +62,8 @@ Google's own 30-day recoverable soft delete. Unlike deleting a single module, th
 down the database, any VM, or the compute resource one at a time: the whole project simply
 stops, and because billing is already unlinked, nothing is charged while it waits.
 
+> **A restore is not guaranteed — keep your own backups.** Google Cloud's terms do not guarantee that a restored project, or the resources in it, will be usable after it is restored, so restoring cannot be relied on as a way to recover a deleted project. Before you delete, make sure you have taken appropriate backups of the application's data and configuration and stored them outside the project. If a restore fails, or the restored project does not work, the fall-back is to redeploy the application (see the next section) and restore its configuration and data from those backups.
+
 Restoring — within 30 days, and only by the project's owner — asks Google to undelete the
 project and reattaches its billing account, then asks you to run Update on each deployment to
 confirm everything came back. Because nothing was individually destroyed, that Update finds the
