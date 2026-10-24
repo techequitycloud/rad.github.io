@@ -3,7 +3,7 @@ title: "Healthchecks sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Healthchecks sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Healthchecks_GKE.md @ e69407af sha256:aff8732b216f -->
+<!-- translated-from: docs/modules/Healthchecks_GKE.md @ 1665a43e sha256:1c83659c9f39 -->
 
 # Healthchecks sur GKE Autopilot {#healthchecks-on-gke-autopilot}
 

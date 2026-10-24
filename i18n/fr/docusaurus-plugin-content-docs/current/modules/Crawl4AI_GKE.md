@@ -3,7 +3,7 @@ title: "Crawl4AI sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Crawl4AI sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Crawl4AI_GKE.md @ e69407af sha256:80d356efef0b -->
+<!-- translated-from: docs/modules/Crawl4AI_GKE.md @ 1665a43e sha256:8252f4eecd49 -->
 
 # Crawl4AI sur GKE Autopilot {#crawl4ai-on-gke-autopilot}
 

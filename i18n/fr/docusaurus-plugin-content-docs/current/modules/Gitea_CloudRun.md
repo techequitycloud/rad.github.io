@@ -3,7 +3,7 @@ title: "Gitea sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Gitea sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gitea_CloudRun.md @ e69407af sha256:960ad8362c2c -->
+<!-- translated-from: docs/modules/Gitea_CloudRun.md @ 1665a43e sha256:865a38e1eca7 -->
 
 # Gitea sur Google Cloud Run {#gitea-on-google-cloud-run}
 

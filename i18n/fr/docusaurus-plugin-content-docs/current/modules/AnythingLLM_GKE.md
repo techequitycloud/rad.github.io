@@ -3,7 +3,7 @@ title: "AnythingLLM sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'AnythingLLM sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/AnythingLLM_GKE.md @ e69407af sha256:b80c395cd338 -->
+<!-- translated-from: docs/modules/AnythingLLM_GKE.md @ 1665a43e sha256:d16ae96a5c24 -->
 
 # AnythingLLM sur GKE Autopilot {#anythingllm-on-gke-autopilot}
 

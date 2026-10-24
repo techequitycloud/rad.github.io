@@ -3,7 +3,7 @@ title: "Ghost sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Ghost sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ghost_CloudRun.md @ e69407af sha256:346d2ba92073 -->
+<!-- translated-from: docs/modules/Ghost_CloudRun.md @ 1665a43e sha256:83fd9e393c0d -->
 
 # Ghost sur Google Cloud Run {#ghost-on-google-cloud-run}
 

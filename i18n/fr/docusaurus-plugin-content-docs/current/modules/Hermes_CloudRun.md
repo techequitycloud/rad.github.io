@@ -3,7 +3,7 @@ title: "Agent Hermes sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de l'agent Hermes sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Hermes_CloudRun.md @ e69407af sha256:f6dde86a332a -->
+<!-- translated-from: docs/modules/Hermes_CloudRun.md @ 1665a43e sha256:d08e0ac0ee62 -->
 
 # Agent Hermes sur Google Cloud Run {#hermes-agent-on-google-cloud-run}
 

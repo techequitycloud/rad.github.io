@@ -3,7 +3,7 @@ title: "Authentik sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Authentik sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Authentik_CloudRun.md @ e69407af sha256:183dc265f985 -->
+<!-- translated-from: docs/modules/Authentik_CloudRun.md @ 1665a43e sha256:a283f64d68b0 -->
 
 # Authentik sur Google Cloud Run {#authentik-on-google-cloud-run}
 

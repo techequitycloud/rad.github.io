@@ -3,7 +3,7 @@ title: "Mealie sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Mealie sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Mealie_CloudRun.md @ e69407af sha256:489a78dc056f -->
+<!-- translated-from: docs/modules/Mealie_CloudRun.md @ 1665a43e sha256:9f86aa794703 -->
 
 # Mealie sur Google Cloud Run {#mealie-on-google-cloud-run}
 

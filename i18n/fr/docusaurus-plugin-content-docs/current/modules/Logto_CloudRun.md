@@ -3,7 +3,7 @@ title: "Logto sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Logto sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Logto_CloudRun.md @ e69407af sha256:4b2580955582 -->
+<!-- translated-from: docs/modules/Logto_CloudRun.md @ 1665a43e sha256:28e5b224c36e -->
 
 # Logto sur Google Cloud Run {#logto-on-google-cloud-run}
 

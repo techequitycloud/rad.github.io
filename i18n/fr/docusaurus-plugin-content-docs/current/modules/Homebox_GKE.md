@@ -3,7 +3,7 @@ title: "Homebox sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Homebox sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Homebox_GKE.md @ e69407af sha256:fe1d5d59e8df -->
+<!-- translated-from: docs/modules/Homebox_GKE.md @ 1665a43e sha256:b9e8d1e7c109 -->
 
 # Homebox sur GKE Autopilot {#homebox-on-gke-autopilot}
 

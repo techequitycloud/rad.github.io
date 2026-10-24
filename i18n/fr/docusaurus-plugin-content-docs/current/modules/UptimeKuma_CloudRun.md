@@ -3,7 +3,7 @@ title: "Uptime Kuma sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Uptime Kuma sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/UptimeKuma_CloudRun.md @ e69407af sha256:e0f8fec33f1c -->
+<!-- translated-from: docs/modules/UptimeKuma_CloudRun.md @ 1665a43e sha256:e9baf1b6f409 -->
 
 # Uptime Kuma sur Google Cloud Run {#uptime-kuma-on-google-cloud-run}
 

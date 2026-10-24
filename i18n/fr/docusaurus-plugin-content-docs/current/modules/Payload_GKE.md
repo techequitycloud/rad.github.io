@@ -3,7 +3,7 @@ title: "Payload CMS sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Payload CMS sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Payload_GKE.md @ e69407af sha256:9658fbcbe6a3 -->
+<!-- translated-from: docs/modules/Payload_GKE.md @ 1665a43e sha256:98df14999ea4 -->
 
 # Payload CMS sur GKE Autopilot {#payload-cms-on-gke-autopilot}
 

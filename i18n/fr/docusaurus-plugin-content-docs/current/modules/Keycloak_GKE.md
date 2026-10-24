@@ -3,7 +3,7 @@ title: "Keycloak sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Keycloak sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Keycloak_GKE.md @ e69407af sha256:bc82368b01a9 -->
+<!-- translated-from: docs/modules/Keycloak_GKE.md @ 1665a43e sha256:66ee625f42e8 -->
 
 # Keycloak sur GKE Autopilot {#keycloak-on-gke-autopilot}
 

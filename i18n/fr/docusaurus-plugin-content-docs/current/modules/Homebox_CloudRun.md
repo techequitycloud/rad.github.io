@@ -3,7 +3,7 @@ title: "Homebox sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Homebox sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Homebox_CloudRun.md @ e69407af sha256:3ecdd58df316 -->
+<!-- translated-from: docs/modules/Homebox_CloudRun.md @ 1665a43e sha256:8fa348efbc05 -->
 
 # Homebox sur Google Cloud Run {#homebox-on-google-cloud-run}
 

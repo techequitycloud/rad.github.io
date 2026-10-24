@@ -3,7 +3,7 @@ title: "FreshRSS sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de FreshRSS sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/FreshRSS_GKE.md @ e69407af sha256:18d00990fede -->
+<!-- translated-from: docs/modules/FreshRSS_GKE.md @ 1665a43e sha256:704074d2b4f7 -->
 
 # FreshRSS sur GKE Autopilot {#freshrss-on-gke-autopilot}
 

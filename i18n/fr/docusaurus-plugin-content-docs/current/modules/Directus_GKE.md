@@ -3,7 +3,7 @@ title: "Directus sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Directus sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Directus_GKE.md @ e69407af sha256:55cb3022b832 -->
+<!-- translated-from: docs/modules/Directus_GKE.md @ 1665a43e sha256:087d582ef300 -->
 
 # Directus sur GKE Autopilot {#directus-on-gke-autopilot}
 

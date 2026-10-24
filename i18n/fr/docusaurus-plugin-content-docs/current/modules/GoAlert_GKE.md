@@ -3,7 +3,7 @@ title: "GoAlert sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de GoAlert sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/GoAlert_GKE.md @ e69407af sha256:ce61a4899e11 -->
+<!-- translated-from: docs/modules/GoAlert_GKE.md @ 1665a43e sha256:e97dd3d45d9c -->
 
 # GoAlert sur GKE Autopilot {#goalert-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "Beszel sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Beszel sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Beszel_GKE.md @ e69407af sha256:8e93bc757630 -->
+<!-- translated-from: docs/modules/Beszel_GKE.md @ 1665a43e sha256:6ae55bb68975 -->
 
 # Beszel sur GKE Autopilot {#beszel-on-gke-autopilot}
 

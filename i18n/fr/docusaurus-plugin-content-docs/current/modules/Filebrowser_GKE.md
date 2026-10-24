@@ -3,7 +3,7 @@ title: "Filebrowser sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Filebrowser sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Filebrowser_GKE.md @ e69407af sha256:8a74e39d4064 -->
+<!-- translated-from: docs/modules/Filebrowser_GKE.md @ 1665a43e sha256:6d170ecdb862 -->
 
 # Filebrowser sur GKE Autopilot {#filebrowser-on-gke-autopilot}
 

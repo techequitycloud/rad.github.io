@@ -3,7 +3,7 @@ title: "Forgejo sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Forgejo sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Forgejo_CloudRun.md @ e69407af sha256:6ffc56515fa4 -->
+<!-- translated-from: docs/modules/Forgejo_CloudRun.md @ 1665a43e sha256:43f0bd278c22 -->
 
 # Forgejo sur Google Cloud Run {#forgejo-on-google-cloud-run}
 

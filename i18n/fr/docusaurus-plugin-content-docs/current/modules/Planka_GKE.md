@@ -3,7 +3,7 @@ title: "Planka sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Planka sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Planka_GKE.md @ e69407af sha256:79aca83f7956 -->
+<!-- translated-from: docs/modules/Planka_GKE.md @ 1665a43e sha256:4188bf4da43b -->
 
 # Planka sur GKE Autopilot {#planka-on-gke-autopilot}
 

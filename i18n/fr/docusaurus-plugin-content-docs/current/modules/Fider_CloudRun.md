@@ -3,7 +3,7 @@ title: "Fider sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Fider sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Fider_CloudRun.md @ e69407af sha256:d016408801ef -->
+<!-- translated-from: docs/modules/Fider_CloudRun.md @ 1665a43e sha256:5ee0be640609 -->
 
 # Fider sur Google Cloud Run {#fider-on-google-cloud-run}
 

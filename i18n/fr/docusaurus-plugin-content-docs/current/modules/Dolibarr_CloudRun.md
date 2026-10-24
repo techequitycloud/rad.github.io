@@ -3,7 +3,7 @@ title: "Dolibarr sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Dolibarr sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Dolibarr_CloudRun.md @ e69407af sha256:74b74a3c2566 -->
+<!-- translated-from: docs/modules/Dolibarr_CloudRun.md @ 1665a43e sha256:a60b83c2a101 -->
 
 # Dolibarr sur Google Cloud Run {#dolibarr-on-google-cloud-run}
 

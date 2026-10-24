@@ -3,7 +3,7 @@ title: "Planka sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Planka sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Planka_CloudRun.md @ e69407af sha256:079c180ec725 -->
+<!-- translated-from: docs/modules/Planka_CloudRun.md @ 1665a43e sha256:f04178d3ce50 -->
 
 # Planka sur Google Cloud Run {#planka-on-google-cloud-run}
 

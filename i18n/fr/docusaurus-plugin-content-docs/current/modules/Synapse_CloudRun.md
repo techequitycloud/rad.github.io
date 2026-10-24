@@ -3,7 +3,7 @@ title: "Synapse sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Synapse sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Synapse_CloudRun.md @ e69407af sha256:2ee150396096 -->
+<!-- translated-from: docs/modules/Synapse_CloudRun.md @ 1665a43e sha256:085f9bbaa2f0 -->
 
 # Synapse sur Google Cloud Run {#synapse-on-google-cloud-run}
 

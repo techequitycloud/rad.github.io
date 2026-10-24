@@ -3,7 +3,7 @@ title: "Navidrome sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Navidrome sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Navidrome_CloudRun.md @ e69407af sha256:c6a91f555c45 -->
+<!-- translated-from: docs/modules/Navidrome_CloudRun.md @ 1665a43e sha256:4f502eade6b9 -->
 
 # Navidrome sur Google Cloud Run {#navidrome-on-google-cloud-run}
 

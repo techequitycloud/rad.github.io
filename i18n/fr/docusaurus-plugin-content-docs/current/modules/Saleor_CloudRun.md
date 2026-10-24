@@ -3,7 +3,7 @@ title: "Saleor sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Saleor sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Saleor_CloudRun.md @ e69407af sha256:368495c1514b -->
+<!-- translated-from: docs/modules/Saleor_CloudRun.md @ 1665a43e sha256:f25942f67b99 -->
 
 # Saleor sur Google Cloud Run {#saleor-on-google-cloud-run}
 

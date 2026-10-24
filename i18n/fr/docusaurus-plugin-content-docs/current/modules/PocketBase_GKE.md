@@ -3,7 +3,7 @@ title: "PocketBase sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de PocketBase sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/PocketBase_GKE.md @ e69407af sha256:65bc7eb225b2 -->
+<!-- translated-from: docs/modules/PocketBase_GKE.md @ 1665a43e sha256:910e4c7bbc2e -->
 
 # PocketBase sur GKE Autopilot {#pocketbase-on-gke-autopilot}
 

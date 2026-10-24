@@ -3,7 +3,7 @@ title: "Forgejo sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Forgejo sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Forgejo_GKE.md @ e69407af sha256:cdbe4c9e121c -->
+<!-- translated-from: docs/modules/Forgejo_GKE.md @ 1665a43e sha256:9b9ce62c7f58 -->
 
 # Forgejo sur GKE Autopilot {#forgejo-on-gke-autopilot}
 

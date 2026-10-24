@@ -3,7 +3,7 @@ title: "Speedtest Tracker sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Speedtest Tracker sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SpeedtestTracker_CloudRun.md @ e69407af sha256:f96fd299be52 -->
+<!-- translated-from: docs/modules/SpeedtestTracker_CloudRun.md @ 1665a43e sha256:8abec5fa2667 -->
 
 # Speedtest Tracker sur Google Cloud Run {#speedtest-tracker-on-google-cloud-run}
 

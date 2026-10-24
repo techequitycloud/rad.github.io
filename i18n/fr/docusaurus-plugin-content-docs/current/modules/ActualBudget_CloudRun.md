@@ -3,7 +3,7 @@ title: "ActualBudget sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'ActualBudget sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/ActualBudget_CloudRun.md @ e69407af sha256:4abac0ad4c65 -->
+<!-- translated-from: docs/modules/ActualBudget_CloudRun.md @ 1665a43e sha256:fffa64dbbe81 -->
 
 # ActualBudget sur Google Cloud Run {#actualbudget-on-google-cloud-run}
 

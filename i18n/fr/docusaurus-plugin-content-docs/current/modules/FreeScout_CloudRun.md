@@ -3,7 +3,7 @@ title: "FreeScout sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de FreeScout sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/FreeScout_CloudRun.md @ e69407af sha256:5c73abbf6354 -->
+<!-- translated-from: docs/modules/FreeScout_CloudRun.md @ 1665a43e sha256:e534a42a5675 -->
 
 # FreeScout sur Google Cloud Run {#freescout-on-google-cloud-run}
 

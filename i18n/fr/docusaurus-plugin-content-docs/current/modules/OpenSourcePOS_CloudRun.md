@@ -3,7 +3,7 @@ title: "OpenSourcePOS sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Open Source POS sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenSourcePOS_CloudRun.md @ e69407af sha256:a4be3c4b2227 -->
+<!-- translated-from: docs/modules/OpenSourcePOS_CloudRun.md @ 1665a43e sha256:27704ff9969f -->
 
 # OpenSourcePOS sur Google Cloud Run {#opensourcepos-on-google-cloud-run}
 

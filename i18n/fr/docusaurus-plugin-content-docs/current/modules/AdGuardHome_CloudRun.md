@@ -3,7 +3,7 @@ title: "AdGuard Home sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'AdGuard Home sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/AdGuardHome_CloudRun.md @ e69407af sha256:8b9a01ea1842 -->
+<!-- translated-from: docs/modules/AdGuardHome_CloudRun.md @ 1665a43e sha256:92e33f0eddfb -->
 
 # AdGuard Home sur Google Cloud Run {#adguard-home-on-google-cloud-run}
 

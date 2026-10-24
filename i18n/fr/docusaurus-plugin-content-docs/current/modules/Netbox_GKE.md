@@ -3,7 +3,7 @@ title: "NetBox sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de NetBox sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Netbox_GKE.md @ e69407af sha256:dbb43b73beba -->
+<!-- translated-from: docs/modules/Netbox_GKE.md @ 1665a43e sha256:df32f46828f3 -->
 
 # NetBox sur GKE Autopilot {#netbox-on-gke-autopilot}
 

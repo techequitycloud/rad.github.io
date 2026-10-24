@@ -3,7 +3,7 @@ title: "Speedtest Tracker sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Speedtest Tracker sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SpeedtestTracker_GKE.md @ e69407af sha256:fb81e76dc392 -->
+<!-- translated-from: docs/modules/SpeedtestTracker_GKE.md @ 1665a43e sha256:556e81071158 -->
 
 # Speedtest Tracker sur GKE Autopilot {#speedtest-tracker-on-gke-autopilot}
 

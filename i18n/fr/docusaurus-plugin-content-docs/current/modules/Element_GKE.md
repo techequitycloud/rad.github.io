@@ -3,7 +3,7 @@ title: "Element sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Element sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Element_GKE.md @ e69407af sha256:959741f46566 -->
+<!-- translated-from: docs/modules/Element_GKE.md @ 1665a43e sha256:86c708fae741 -->
 
 # Element sur GKE Autopilot {#element-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "Jellyfin sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Jellyfin sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Jellyfin_CloudRun.md @ e69407af sha256:647b51d95916 -->
+<!-- translated-from: docs/modules/Jellyfin_CloudRun.md @ 1665a43e sha256:36689e6dc9ff -->
 
 # Jellyfin sur Google Cloud Run {#jellyfin-on-google-cloud-run}
 

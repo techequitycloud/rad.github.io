@@ -3,7 +3,7 @@ title: "Woodpecker CI sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Woodpecker CI sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Woodpecker_GKE.md @ e69407af sha256:70ab0c675f11 -->
+<!-- translated-from: docs/modules/Woodpecker_GKE.md @ 1665a43e sha256:482e2e97abb6 -->
 
 # Woodpecker CI sur GKE Autopilot {#woodpecker-ci-on-gke-autopilot}
 

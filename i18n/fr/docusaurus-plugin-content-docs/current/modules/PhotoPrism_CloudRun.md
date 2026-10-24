@@ -3,7 +3,7 @@ title: "PhotoPrism sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de PhotoPrism sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/PhotoPrism_CloudRun.md @ e69407af sha256:c633675ab8ce -->
+<!-- translated-from: docs/modules/PhotoPrism_CloudRun.md @ 1665a43e sha256:8cb091e17c4f -->
 
 # PhotoPrism sur Google Cloud Run {#photoprism-on-google-cloud-run}
 

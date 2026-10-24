@@ -3,7 +3,7 @@ title: "Plane sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Plane sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Plane_GKE.md @ e69407af sha256:437329ed4992 -->
+<!-- translated-from: docs/modules/Plane_GKE.md @ 1665a43e sha256:f82fe3d04a71 -->
 
 # Plane sur GKE Autopilot {#plane-on-gke-autopilot}
 

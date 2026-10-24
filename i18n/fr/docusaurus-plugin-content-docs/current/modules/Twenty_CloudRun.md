@@ -3,7 +3,7 @@ title: "Twenty CRM sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Twenty CRM sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Twenty_CloudRun.md @ e69407af sha256:99dc9ba86a57 -->
+<!-- translated-from: docs/modules/Twenty_CloudRun.md @ 1665a43e sha256:85eea31a747d -->
 
 # Twenty CRM sur Google Cloud Run {#twenty-crm-on-google-cloud-run}
 

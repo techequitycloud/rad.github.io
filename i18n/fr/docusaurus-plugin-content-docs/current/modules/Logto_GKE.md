@@ -3,7 +3,7 @@ title: "Logto sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Logto sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Logto_GKE.md @ e69407af sha256:5b44bea74d05 -->
+<!-- translated-from: docs/modules/Logto_GKE.md @ 1665a43e sha256:19b15aedf884 -->
 
 # Logto sur GKE Autopilot {#logto-on-gke-autopilot}
 

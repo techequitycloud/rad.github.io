@@ -3,7 +3,7 @@ title: "Bank of Anthos multi-cluster sur GKE"
 description: "Référence de configuration pour le déploiement de Bank of Anthos multi-cluster sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/MC_Bank_GKE.md @ e69407af sha256:02e5ab81a8e3 -->
+<!-- translated-from: docs/modules/MC_Bank_GKE.md @ 1665a43e sha256:393cad2f0278 -->
 
 # Bank of Anthos multi-cluster sur GKE {#multi-cluster-bank-of-anthos-on-gke}
 

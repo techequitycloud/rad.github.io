@@ -3,7 +3,7 @@ title: "Invoice Ninja sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Invoice Ninja sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/InvoiceNinja_CloudRun.md @ e69407af sha256:09ec40729c05 -->
+<!-- translated-from: docs/modules/InvoiceNinja_CloudRun.md @ 1665a43e sha256:f2c07d5ed032 -->
 
 # Invoice Ninja sur Google Cloud Run {#invoice-ninja-on-google-cloud-run}
 

@@ -3,7 +3,7 @@ title: "Directus sur Cloud Run"
 description: "Référence de configuration pour le déploiement de Directus sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Directus_CloudRun.md @ e69407af sha256:0d6f810f262f -->
+<!-- translated-from: docs/modules/Directus_CloudRun.md @ 1665a43e sha256:d0777294b4c9 -->
 
 # Directus sur Cloud Run {#directus-on-cloud-run}
 

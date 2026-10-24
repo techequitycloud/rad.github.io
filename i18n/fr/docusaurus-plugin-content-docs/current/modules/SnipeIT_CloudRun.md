@@ -3,7 +3,7 @@ title: "Snipe-IT sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Snipe-IT sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SnipeIT_CloudRun.md @ e69407af sha256:105f3234fe05 -->
+<!-- translated-from: docs/modules/SnipeIT_CloudRun.md @ 1665a43e sha256:ee93d2a79e6b -->
 
 # Snipe-IT sur Google Cloud Run {#snipe-it-on-google-cloud-run}
 

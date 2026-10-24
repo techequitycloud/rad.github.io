@@ -3,7 +3,7 @@ title: "Qdrant sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Qdrant sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Qdrant_GKE.md @ e69407af sha256:fa97c9575a12 -->
+<!-- translated-from: docs/modules/Qdrant_GKE.md @ 1665a43e sha256:eecbd158abed -->
 
 # Qdrant sur GKE Autopilot {#qdrant-on-gke-autopilot}
 

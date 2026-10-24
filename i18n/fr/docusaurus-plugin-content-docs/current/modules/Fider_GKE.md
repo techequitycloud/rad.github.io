@@ -3,7 +3,7 @@ title: "Fider sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Fider sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Fider_GKE.md @ e69407af sha256:09faddd79d85 -->
+<!-- translated-from: docs/modules/Fider_GKE.md @ 1665a43e sha256:c3088600af8f -->
 
 # Fider sur GKE Autopilot {#fider-on-gke-autopilot}
 

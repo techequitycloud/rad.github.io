@@ -3,7 +3,7 @@ title: "Ghostfolio sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Ghostfolio sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ghostfolio_CloudRun.md @ e69407af sha256:29317b4580ec -->
+<!-- translated-from: docs/modules/Ghostfolio_CloudRun.md @ 1665a43e sha256:a006fb702c3e -->
 
 # Ghostfolio sur Google Cloud Run {#ghostfolio-on-google-cloud-run}
 

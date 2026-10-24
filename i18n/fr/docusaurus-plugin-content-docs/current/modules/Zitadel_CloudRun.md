@@ -3,7 +3,7 @@ title: "Zitadel sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Zitadel sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Zitadel_CloudRun.md @ e69407af sha256:6496318b8fde -->
+<!-- translated-from: docs/modules/Zitadel_CloudRun.md @ 1665a43e sha256:0f01afcfc20c -->
 
 # Zitadel sur Google Cloud Run {#zitadel-on-google-cloud-run}
 

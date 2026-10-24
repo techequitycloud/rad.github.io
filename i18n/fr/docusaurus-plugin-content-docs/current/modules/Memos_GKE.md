@@ -3,7 +3,7 @@ title: "Memos sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Memos sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Memos_GKE.md @ e69407af sha256:2e6710115054 -->
+<!-- translated-from: docs/modules/Memos_GKE.md @ 1665a43e sha256:8acbca7076be -->
 
 # Memos sur GKE Autopilot {#memos-on-gke-autopilot}
 

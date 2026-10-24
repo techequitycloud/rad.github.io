@@ -3,7 +3,7 @@ title: "Chibisafe sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Chibisafe sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Chibisafe_CloudRun.md @ e69407af sha256:8fdce4466276 -->
+<!-- translated-from: docs/modules/Chibisafe_CloudRun.md @ 1665a43e sha256:e25445f1bfca -->
 
 # Chibisafe sur Google Cloud Run {#chibisafe-on-google-cloud-run}
 

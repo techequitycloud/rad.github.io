@@ -3,7 +3,7 @@ title: "Payload CMS sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Payload CMS sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Payload_CloudRun.md @ e69407af sha256:fdf779ceb7df -->
+<!-- translated-from: docs/modules/Payload_CloudRun.md @ 1665a43e sha256:9962d011aaff -->
 
 # Payload CMS sur Google Cloud Run {#payload-cms-on-google-cloud-run}
 

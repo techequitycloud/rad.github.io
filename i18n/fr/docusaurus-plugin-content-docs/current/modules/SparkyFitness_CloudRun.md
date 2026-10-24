@@ -3,7 +3,7 @@ title: "SparkyFitness sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de SparkyFitness sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SparkyFitness_CloudRun.md @ e69407af sha256:b9e676d0a721 -->
+<!-- translated-from: docs/modules/SparkyFitness_CloudRun.md @ 1665a43e sha256:d084f9aa0e03 -->
 
 # SparkyFitness sur Google Cloud Run {#sparkyfitness-on-google-cloud-run}
 

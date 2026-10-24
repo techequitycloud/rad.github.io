@@ -3,7 +3,7 @@ title: "PocketBase sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de PocketBase sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/PocketBase_CloudRun.md @ e69407af sha256:43b37da2a253 -->
+<!-- translated-from: docs/modules/PocketBase_CloudRun.md @ 1665a43e sha256:aa9bb5a014ac -->
 
 # PocketBase sur Google Cloud Run {#pocketbase-on-google-cloud-run}
 

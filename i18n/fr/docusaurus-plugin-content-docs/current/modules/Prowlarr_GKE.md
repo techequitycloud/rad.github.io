@@ -3,7 +3,7 @@ title: "Prowlarr sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Prowlarr sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Prowlarr_GKE.md @ e69407af sha256:957507214906 -->
+<!-- translated-from: docs/modules/Prowlarr_GKE.md @ 1665a43e sha256:a2cfd8da26bf -->
 
 # Prowlarr sur GKE Autopilot {#prowlarr-on-gke-autopilot}
 

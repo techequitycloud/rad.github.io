@@ -3,7 +3,7 @@ title: "Wallos sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Wallos sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Wallos_GKE.md @ e69407af sha256:0da36d8afec0 -->
+<!-- translated-from: docs/modules/Wallos_GKE.md @ 1665a43e sha256:a4b148460dac -->
 
 # Wallos sur GKE Autopilot {#wallos-on-gke-autopilot}
 

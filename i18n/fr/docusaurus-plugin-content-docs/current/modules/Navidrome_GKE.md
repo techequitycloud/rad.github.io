@@ -3,7 +3,7 @@ title: "Navidrome sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Navidrome sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Navidrome_GKE.md @ e69407af sha256:508906c8f1ac -->
+<!-- translated-from: docs/modules/Navidrome_GKE.md @ 1665a43e sha256:4a8e12081e6c -->
 
 # Navidrome sur GKE Autopilot {#navidrome-on-gke-autopilot}
 

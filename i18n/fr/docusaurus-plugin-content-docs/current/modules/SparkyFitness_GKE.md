@@ -3,7 +3,7 @@ title: "SparkyFitness sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de SparkyFitness sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SparkyFitness_GKE.md @ e69407af sha256:10f391ca16e8 -->
+<!-- translated-from: docs/modules/SparkyFitness_GKE.md @ 1665a43e sha256:ef2623654c13 -->
 
 # SparkyFitness sur GKE Autopilot {#sparkyfitness-on-gke-autopilot}
 

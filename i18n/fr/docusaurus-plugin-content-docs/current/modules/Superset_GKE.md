@@ -3,7 +3,7 @@ title: "Apache Superset sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Apache Superset sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Superset_GKE.md @ e69407af sha256:067cc4e740c8 -->
+<!-- translated-from: docs/modules/Superset_GKE.md @ 1665a43e sha256:e49752f99364 -->
 
 # Apache Superset sur GKE Autopilot {#apache-superset-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "Calibre-Web sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Calibre-Web sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CalibreWeb_GKE.md @ e69407af sha256:fed83789e3b6 -->
+<!-- translated-from: docs/modules/CalibreWeb_GKE.md @ 1665a43e sha256:24b3610b1982 -->
 
 # Calibre-Web sur GKE Autopilot {#calibre-web-on-gke-autopilot}
 

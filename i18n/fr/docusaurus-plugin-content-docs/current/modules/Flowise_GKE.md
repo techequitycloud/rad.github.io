@@ -3,7 +3,7 @@ title: "Flowise sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Flowise sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Flowise_GKE.md @ e69407af sha256:7c000549539c -->
+<!-- translated-from: docs/modules/Flowise_GKE.md @ 1665a43e sha256:394db26a3f69 -->
 
 # Flowise sur GKE Autopilot {#flowise-on-gke-autopilot}
 

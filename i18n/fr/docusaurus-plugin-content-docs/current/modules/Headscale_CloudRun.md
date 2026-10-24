@@ -3,7 +3,7 @@ title: "Headscale sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Headscale sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Headscale_CloudRun.md @ e69407af sha256:697d05414c4c -->
+<!-- translated-from: docs/modules/Headscale_CloudRun.md @ 1665a43e sha256:a423a3b344b9 -->
 
 # Headscale sur Google Cloud Run {#headscale-on-google-cloud-run}
 

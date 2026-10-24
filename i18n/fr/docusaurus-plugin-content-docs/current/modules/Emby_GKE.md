@@ -3,7 +3,7 @@ title: "Emby sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Emby sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Emby_GKE.md @ e69407af sha256:29615f7122eb -->
+<!-- translated-from: docs/modules/Emby_GKE.md @ 1665a43e sha256:27cc899e8569 -->
 
 # Emby sur GKE Autopilot {#emby-on-gke-autopilot}
 

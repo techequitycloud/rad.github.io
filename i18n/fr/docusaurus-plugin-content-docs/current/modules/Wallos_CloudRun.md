@@ -3,7 +3,7 @@ title: "Wallos sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Wallos sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Wallos_CloudRun.md @ e69407af sha256:3dcf92185bc7 -->
+<!-- translated-from: docs/modules/Wallos_CloudRun.md @ 1665a43e sha256:52cadfc37a46 -->
 
 # Wallos sur Google Cloud Run {#wallos-on-google-cloud-run}
 

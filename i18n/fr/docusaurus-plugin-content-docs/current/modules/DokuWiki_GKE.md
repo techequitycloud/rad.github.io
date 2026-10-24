@@ -3,7 +3,7 @@ title: "DokuWiki sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de DokuWiki sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/DokuWiki_GKE.md @ e69407af sha256:b23521258657 -->
+<!-- translated-from: docs/modules/DokuWiki_GKE.md @ 1665a43e sha256:5946db740d3e -->
 
 # DokuWiki sur GKE Autopilot {#dokuwiki-on-gke-autopilot}
 

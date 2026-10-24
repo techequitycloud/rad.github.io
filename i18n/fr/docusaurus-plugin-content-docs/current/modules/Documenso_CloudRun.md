@@ -3,7 +3,7 @@ title: "Documenso sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Documenso sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Documenso_CloudRun.md @ e69407af sha256:67fa38e7679a -->
+<!-- translated-from: docs/modules/Documenso_CloudRun.md @ 1665a43e sha256:455e71fff378 -->
 
 # Documenso sur Google Cloud Run {#documenso-on-google-cloud-run}
 

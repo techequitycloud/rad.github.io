@@ -3,7 +3,7 @@ title: "Homepage sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Homepage sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Homepage_CloudRun.md @ e69407af sha256:6dbbae726907 -->
+<!-- translated-from: docs/modules/Homepage_CloudRun.md @ 1665a43e sha256:68bcbde8367f -->
 
 # Homepage sur Google Cloud Run {#homepage-on-google-cloud-run}
 

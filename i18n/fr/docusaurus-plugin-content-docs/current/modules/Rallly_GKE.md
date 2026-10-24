@@ -3,7 +3,7 @@ title: "Rallly sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Rallly sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Rallly_GKE.md @ e69407af sha256:e3f73080fdab -->
+<!-- translated-from: docs/modules/Rallly_GKE.md @ 1665a43e sha256:5d7940cda4a9 -->
 
 # Rallly sur GKE Autopilot {#rallly-on-gke-autopilot}
 

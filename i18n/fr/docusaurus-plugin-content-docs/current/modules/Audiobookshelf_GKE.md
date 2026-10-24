@@ -3,7 +3,7 @@ title: "Audiobookshelf sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Audiobookshelf sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Audiobookshelf_GKE.md @ e69407af sha256:b7e19e30b0ed -->
+<!-- translated-from: docs/modules/Audiobookshelf_GKE.md @ 1665a43e sha256:e11b655b9b06 -->
 
 # Audiobookshelf sur GKE Autopilot {#audiobookshelf-on-gke-autopilot}
 

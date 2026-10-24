@@ -3,7 +3,7 @@ title: "OpenEMR sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'OpenEMR sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenEMR_GKE.md @ e69407af sha256:afa989221cac -->
+<!-- translated-from: docs/modules/OpenEMR_GKE.md @ 1665a43e sha256:58f631cd98b9 -->
 
 # OpenEMR sur GKE Autopilot {#openemr-on-gke-autopilot}
 

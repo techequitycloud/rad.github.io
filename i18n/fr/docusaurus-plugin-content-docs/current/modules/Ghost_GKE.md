@@ -3,7 +3,7 @@ title: "Ghost sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Ghost sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ghost_GKE.md @ e69407af sha256:b58fa1fabcfe -->
+<!-- translated-from: docs/modules/Ghost_GKE.md @ 1665a43e sha256:c5676a68b000 -->
 
 # Ghost sur GKE Autopilot {#ghost-on-gke-autopilot}
 

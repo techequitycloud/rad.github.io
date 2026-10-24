@@ -3,7 +3,7 @@ title: "Radicale sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Radicale sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Radicale_CloudRun.md @ e69407af sha256:2f39c1de8676 -->
+<!-- translated-from: docs/modules/Radicale_CloudRun.md @ 1665a43e sha256:4248c7ca7e6d -->
 
 # Radicale sur Google Cloud Run {#radicale-on-google-cloud-run}
 

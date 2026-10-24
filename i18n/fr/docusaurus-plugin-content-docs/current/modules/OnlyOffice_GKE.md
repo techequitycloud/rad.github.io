@@ -3,7 +3,7 @@ title: "OnlyOffice sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'OnlyOffice sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OnlyOffice_GKE.md @ e69407af sha256:e239b78d7e4a -->
+<!-- translated-from: docs/modules/OnlyOffice_GKE.md @ 1665a43e sha256:33451f2aa1dd -->
 
 # OnlyOffice sur GKE Autopilot {#onlyoffice-on-gke-autopilot}
 

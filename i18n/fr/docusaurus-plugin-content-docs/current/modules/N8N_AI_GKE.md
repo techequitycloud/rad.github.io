@@ -3,7 +3,7 @@ title: "N8N AI sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de N8N AI sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/N8N_AI_GKE.md @ e69407af sha256:0d4216c09555 -->
+<!-- translated-from: docs/modules/N8N_AI_GKE.md @ 1665a43e sha256:c5e7e5aa333a -->
 
 # N8N AI sur GKE Autopilot {#n8n-ai-on-gke-autopilot}
 

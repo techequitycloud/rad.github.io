@@ -3,7 +3,7 @@ title: "Strapi sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Strapi sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Strapi_GKE.md @ e69407af sha256:fb3bc0f05da8 -->
+<!-- translated-from: docs/modules/Strapi_GKE.md @ 1665a43e sha256:83c93aadf968 -->
 
 # Strapi sur GKE Autopilot {#strapi-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "Strapi sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Strapi sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Strapi_CloudRun.md @ e69407af sha256:1afcfbd9b42c -->
+<!-- translated-from: docs/modules/Strapi_CloudRun.md @ 1665a43e sha256:fa770638b86a -->
 
 # Strapi sur Google Cloud Run {#strapi-on-google-cloud-run}
 

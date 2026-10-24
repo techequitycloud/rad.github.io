@@ -3,7 +3,7 @@ title: "AdGuard Home sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'AdGuard Home sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/AdGuardHome_GKE.md @ e69407af sha256:30509729266d -->
+<!-- translated-from: docs/modules/AdGuardHome_GKE.md @ 1665a43e sha256:94cba1482d94 -->
 
 # AdGuard Home sur GKE Autopilot {#adguard-home-on-gke-autopilot}
 

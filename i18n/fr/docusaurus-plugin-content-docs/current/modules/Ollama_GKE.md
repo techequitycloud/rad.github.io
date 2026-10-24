@@ -3,7 +3,7 @@ title: "Ollama sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Ollama sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ollama_GKE.md @ e69407af sha256:92759126ad5a -->
+<!-- translated-from: docs/modules/Ollama_GKE.md @ 1665a43e sha256:269c3825a214 -->
 
 # Ollama sur GKE Autopilot {#ollama-on-gke-autopilot}
 

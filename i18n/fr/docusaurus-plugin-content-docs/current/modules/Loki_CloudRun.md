@@ -3,7 +3,7 @@ title: "Loki sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Loki sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Loki_CloudRun.md @ e69407af sha256:482470ef426a -->
+<!-- translated-from: docs/modules/Loki_CloudRun.md @ 1665a43e sha256:4368c4a7ba75 -->
 
 # Loki sur Google Cloud Run {#loki-on-google-cloud-run}
 

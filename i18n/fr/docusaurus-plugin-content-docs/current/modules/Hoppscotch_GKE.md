@@ -3,7 +3,7 @@ title: "Hoppscotch sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Hoppscotch sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Hoppscotch_GKE.md @ e69407af sha256:7888dd9abbfb -->
+<!-- translated-from: docs/modules/Hoppscotch_GKE.md @ 1665a43e sha256:516f4849aa52 -->
 
 # Hoppscotch sur GKE Autopilot {#hoppscotch-on-gke-autopilot}
 

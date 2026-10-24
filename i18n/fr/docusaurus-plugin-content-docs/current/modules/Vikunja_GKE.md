@@ -3,7 +3,7 @@ title: "Vikunja sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Vikunja sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Vikunja_GKE.md @ e69407af sha256:2741f3db6ab2 -->
+<!-- translated-from: docs/modules/Vikunja_GKE.md @ 1665a43e sha256:8837e728ef09 -->
 
 # Vikunja sur GKE Autopilot {#vikunja-on-gke-autopilot}
 

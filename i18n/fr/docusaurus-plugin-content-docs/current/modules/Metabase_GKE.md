@@ -3,7 +3,7 @@ title: "Metabase sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Metabase sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Metabase_GKE.md @ e69407af sha256:a56c36b811e7 -->
+<!-- translated-from: docs/modules/Metabase_GKE.md @ 1665a43e sha256:487194c63352 -->
 
 # Metabase sur GKE Autopilot {#metabase-on-gke-autopilot}
 

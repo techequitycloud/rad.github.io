@@ -3,7 +3,7 @@ title: "Budibase sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Budibase sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Budibase_CloudRun.md @ e69407af sha256:5edf6295f7d9 -->
+<!-- translated-from: docs/modules/Budibase_CloudRun.md @ 1665a43e sha256:30ea78c7b06c -->
 
 # Budibase sur Google Cloud Run {#budibase-on-google-cloud-run}
 

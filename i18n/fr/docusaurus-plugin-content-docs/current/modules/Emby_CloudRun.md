@@ -3,7 +3,7 @@ title: "Emby sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Emby sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Emby_CloudRun.md @ e69407af sha256:aa0df7345fea -->
+<!-- translated-from: docs/modules/Emby_CloudRun.md @ 1665a43e sha256:d004cee82ffb -->
 
 # Emby sur Google Cloud Run {#emby-on-google-cloud-run}
 

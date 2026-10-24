@@ -3,7 +3,7 @@ title: "Matomo sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Matomo sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Matomo_CloudRun.md @ e69407af sha256:3d302a5a9c7a -->
+<!-- translated-from: docs/modules/Matomo_CloudRun.md @ 1665a43e sha256:5913ec9f4416 -->
 
 # Matomo sur Google Cloud Run {#matomo-on-google-cloud-run}
 

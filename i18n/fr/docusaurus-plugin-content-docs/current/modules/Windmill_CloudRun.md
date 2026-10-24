@@ -3,7 +3,7 @@ title: "Windmill sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Windmill sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Windmill_CloudRun.md @ e69407af sha256:39db71949b3e -->
+<!-- translated-from: docs/modules/Windmill_CloudRun.md @ 1665a43e sha256:3a86b1ce90a3 -->
 
 # Windmill sur Google Cloud Run {#windmill-on-google-cloud-run}
 

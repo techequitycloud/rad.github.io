@@ -3,7 +3,7 @@ title: "Grafana sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Grafana sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Grafana_GKE.md @ e69407af sha256:a14f46a60fa5 -->
+<!-- translated-from: docs/modules/Grafana_GKE.md @ 1665a43e sha256:4b7bce56eb74 -->
 
 # Grafana sur GKE Autopilot {#grafana-on-gke-autopilot}
 

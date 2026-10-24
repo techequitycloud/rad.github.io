@@ -3,7 +3,7 @@ title: "Grocy sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Grocy sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Grocy_GKE.md @ e69407af sha256:474a892ae285 -->
+<!-- translated-from: docs/modules/Grocy_GKE.md @ 1665a43e sha256:d5779786f642 -->
 
 # Grocy sur GKE Autopilot {#grocy-on-gke-autopilot}
 

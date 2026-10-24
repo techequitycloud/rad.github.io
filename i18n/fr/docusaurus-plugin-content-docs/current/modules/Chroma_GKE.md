@@ -3,7 +3,7 @@ title: "Chroma sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Chroma sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Chroma_GKE.md @ e69407af sha256:7982405295af -->
+<!-- translated-from: docs/modules/Chroma_GKE.md @ 1665a43e sha256:16593a521a18 -->
 
 # Chroma sur GKE Autopilot {#chroma-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "ClassicPress sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de ClassicPress sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/ClassicPress_GKE.md @ e69407af sha256:25c342312593 -->
+<!-- translated-from: docs/modules/ClassicPress_GKE.md @ 1665a43e sha256:9f7fba1d2473 -->
 
 # ClassicPress sur GKE Autopilot {#classicpress-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "Kestra sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Kestra sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Kestra_GKE.md @ e69407af sha256:901a7ea9f06c -->
+<!-- translated-from: docs/modules/Kestra_GKE.md @ 1665a43e sha256:8c5e5f35b080 -->
 
 # Kestra sur GKE Autopilot {#kestra-on-gke-autopilot}
 

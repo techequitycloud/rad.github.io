@@ -3,7 +3,7 @@ title: "SimpleRisk sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de SimpleRisk sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SimpleRisk_CloudRun.md @ e69407af sha256:846ffea9d663 -->
+<!-- translated-from: docs/modules/SimpleRisk_CloudRun.md @ 1665a43e sha256:a02b137a5523 -->
 
 # SimpleRisk sur Google Cloud Run {#simplerisk-on-google-cloud-run}
 

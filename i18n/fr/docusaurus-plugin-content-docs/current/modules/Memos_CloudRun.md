@@ -3,7 +3,7 @@ title: "Memos sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Memos sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Memos_CloudRun.md @ e69407af sha256:860ad7cb9216 -->
+<!-- translated-from: docs/modules/Memos_CloudRun.md @ 1665a43e sha256:d3df300b6d2a -->
 
 # Memos sur Google Cloud Run {#memos-on-google-cloud-run}
 

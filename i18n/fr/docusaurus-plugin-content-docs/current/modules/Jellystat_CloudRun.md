@@ -3,7 +3,7 @@ title: "Jellystat sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Jellystat sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Jellystat_CloudRun.md @ e69407af sha256:4757955f0dcb -->
+<!-- translated-from: docs/modules/Jellystat_CloudRun.md @ 1665a43e sha256:52594c58bc86 -->
 
 # Jellystat sur Google Cloud Run {#jellystat-on-google-cloud-run}
 

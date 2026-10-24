@@ -3,7 +3,7 @@ title: "Stirling-PDF sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Stirling-PDF sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/StirlingPDF_CloudRun.md @ e69407af sha256:cbd48baca860 -->
+<!-- translated-from: docs/modules/StirlingPDF_CloudRun.md @ 1665a43e sha256:d4ca0dddb609 -->
 
 # Stirling-PDF sur Google Cloud Run {#stirling-pdf-on-google-cloud-run}
 

@@ -3,7 +3,7 @@ title: "Azimutt sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Azimutt sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Azimutt_GKE.md @ e69407af sha256:4a6d6024dbec -->
+<!-- translated-from: docs/modules/Azimutt_GKE.md @ 1665a43e sha256:17e2f7f33a35 -->
 
 # Azimutt sur GKE Autopilot {#azimutt-on-gke-autopilot}
 

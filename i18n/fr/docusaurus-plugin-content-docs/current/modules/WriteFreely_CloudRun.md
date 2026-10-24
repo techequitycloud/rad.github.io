@@ -3,7 +3,7 @@ title: "WriteFreely sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de WriteFreely sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/WriteFreely_CloudRun.md @ e69407af sha256:c53b34fc255c -->
+<!-- translated-from: docs/modules/WriteFreely_CloudRun.md @ 1665a43e sha256:6a5214215483 -->
 
 # WriteFreely sur Google Cloud Run {#writefreely-on-google-cloud-run}
 

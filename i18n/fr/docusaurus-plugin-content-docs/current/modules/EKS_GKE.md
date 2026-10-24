@@ -3,7 +3,7 @@ title: "EKS AWS attaché à une flotte Google Cloud"
 description: "Référence de configuration pour le déploiement d'EKS sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/EKS_GKE.md @ e69407af sha256:910329c6b222 -->
+<!-- translated-from: docs/modules/EKS_GKE.md @ 1665a43e sha256:9c43b6fb45f9 -->
 
 # EKS AWS attaché à une flotte Google Cloud {#aws-eks-attached-to-a-google-cloud-fleet}
 

@@ -3,7 +3,7 @@ title: "ClickHouse sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de ClickHouse sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/ClickHouse_GKE.md @ e69407af sha256:b5d950df9461 -->
+<!-- translated-from: docs/modules/ClickHouse_GKE.md @ 1665a43e sha256:6e799105391b -->
 
 # ClickHouse sur GKE Autopilot {#clickhouse-on-gke-autopilot}
 

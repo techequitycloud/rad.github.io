@@ -3,7 +3,7 @@ title: "Cal.diy sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Cal.diy sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CalDiy_GKE.md @ e69407af sha256:f6c7c9bbea4e -->
+<!-- translated-from: docs/modules/CalDiy_GKE.md @ 1665a43e sha256:5b2ab7be1189 -->
 
 # Cal.diy sur GKE Autopilot {#caldiy-on-gke-autopilot}
 

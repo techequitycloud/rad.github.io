@@ -3,7 +3,7 @@ title: "OpenEMR sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'OpenEMR sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenEMR_CloudRun.md @ e69407af sha256:5ceefb3269d7 -->
+<!-- translated-from: docs/modules/OpenEMR_CloudRun.md @ 1665a43e sha256:1cda32142820 -->
 
 # OpenEMR sur Google Cloud Run {#openemr-on-google-cloud-run}
 

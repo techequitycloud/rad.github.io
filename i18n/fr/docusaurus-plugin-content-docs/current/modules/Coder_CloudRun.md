@@ -3,7 +3,7 @@ title: "Coder sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Coder sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Coder_CloudRun.md @ e69407af sha256:03951d62ffdb -->
+<!-- translated-from: docs/modules/Coder_CloudRun.md @ 1665a43e sha256:4abd39b2d7cb -->
 
 # Coder sur Google Cloud Run {#coder-on-google-cloud-run}
 

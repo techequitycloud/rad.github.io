@@ -3,7 +3,7 @@ title: "Flarum sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Flarum sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Flarum_GKE.md @ e69407af sha256:2b2661a32824 -->
+<!-- translated-from: docs/modules/Flarum_GKE.md @ 1665a43e sha256:88a0942b9883 -->
 
 # Flarum sur GKE Autopilot {#flarum-on-gke-autopilot}
 

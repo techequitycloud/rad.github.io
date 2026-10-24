@@ -3,7 +3,7 @@ title: "Cal.com sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Cal.com sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CalCom_GKE.md @ e69407af sha256:fdc0e062b070 -->
+<!-- translated-from: docs/modules/CalCom_GKE.md @ 1665a43e sha256:9050fd8bb939 -->
 
 # Cal.com sur GKE Autopilot {#calcom-on-gke-autopilot}
 

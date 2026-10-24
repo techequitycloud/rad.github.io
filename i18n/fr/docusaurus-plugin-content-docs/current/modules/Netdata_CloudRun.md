@@ -3,7 +3,7 @@ title: "Netdata sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Netdata sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Netdata_CloudRun.md @ e69407af sha256:19169c741639 -->
+<!-- translated-from: docs/modules/Netdata_CloudRun.md @ 1665a43e sha256:21c2e27da138 -->
 
 # Netdata sur Google Cloud Run {#netdata-on-google-cloud-run}
 

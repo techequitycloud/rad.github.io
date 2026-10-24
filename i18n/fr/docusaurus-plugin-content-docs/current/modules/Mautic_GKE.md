@@ -3,7 +3,7 @@ title: "Mautic sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Mautic sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Mautic_GKE.md @ e69407af sha256:f5ee7372c342 -->
+<!-- translated-from: docs/modules/Mautic_GKE.md @ 1665a43e sha256:a58566a0c737 -->
 
 # Mautic sur GKE Autopilot {#mautic-on-gke-autopilot}
 

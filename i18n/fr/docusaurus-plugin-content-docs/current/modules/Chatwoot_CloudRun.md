@@ -3,7 +3,7 @@ title: "Chatwoot sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Chatwoot sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Chatwoot_CloudRun.md @ e69407af sha256:f4d45e4dcfcf -->
+<!-- translated-from: docs/modules/Chatwoot_CloudRun.md @ 1665a43e sha256:f6aebc07e997 -->
 
 # Chatwoot sur Google Cloud Run {#chatwoot-on-google-cloud-run}
 

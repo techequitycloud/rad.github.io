@@ -3,7 +3,7 @@ title: "Project GCP — Garde-fous de bac à sable de niveau 0"
 description: "Référence de configuration pour le module RAD Project GCP — le module de niveau 0 qui définit la liste blanche des API, les plafonds de quota et la création facultative de projets de bac à sable, appliqué avant Services GCP."
 ---
 
-<!-- translated-from: docs/modules/Project_GCP.md @ 15fd4c7 sha256:c41b653af2ee -->
+<!-- translated-from: docs/modules/Project_GCP.md @ 1665a43e sha256:054d8a5a08c5 -->
 
 # Project GCP — Garde-fous de bac à sable de niveau 0 {#project-gcp--tier-0-sandbox-guardrails}
 

@@ -3,7 +3,7 @@ title: "PeerTube sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de PeerTube sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/PeerTube_CloudRun.md @ e69407af sha256:9fa6c17864da -->
+<!-- translated-from: docs/modules/PeerTube_CloudRun.md @ 1665a43e sha256:2cfd9b796480 -->
 
 # PeerTube sur Google Cloud Run {#peertube-on-google-cloud-run}
 

@@ -3,7 +3,7 @@ title: "Docmost sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Docmost sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Docmost_CloudRun.md @ e69407af sha256:913689cadec5 -->
+<!-- translated-from: docs/modules/Docmost_CloudRun.md @ 1665a43e sha256:bb3ca8bb5457 -->
 
 # Docmost sur Google Cloud Run {#docmost-on-google-cloud-run}
 

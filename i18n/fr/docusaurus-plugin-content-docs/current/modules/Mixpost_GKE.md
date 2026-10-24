@@ -3,7 +3,7 @@ title: "Mixpost sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Mixpost sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Mixpost_GKE.md @ e69407af sha256:0ad3242f016f -->
+<!-- translated-from: docs/modules/Mixpost_GKE.md @ 1665a43e sha256:8f04298c1fd5 -->
 
 # Mixpost sur GKE Autopilot {#mixpost-on-gke-autopilot}
 

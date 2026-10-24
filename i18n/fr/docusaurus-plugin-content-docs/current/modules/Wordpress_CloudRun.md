@@ -3,7 +3,7 @@ title: "WordPress sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de WordPress sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Wordpress_CloudRun.md @ e69407af sha256:425b10e96bde -->
+<!-- translated-from: docs/modules/Wordpress_CloudRun.md @ 1665a43e sha256:28cdd91c2ee0 -->
 
 # WordPress sur Google Cloud Run {#wordpress-on-google-cloud-run}
 

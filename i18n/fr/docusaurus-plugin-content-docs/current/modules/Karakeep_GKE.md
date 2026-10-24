@@ -3,7 +3,7 @@ title: "Karakeep sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Karakeep sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Karakeep_GKE.md @ e69407af sha256:10e4310b4f18 -->
+<!-- translated-from: docs/modules/Karakeep_GKE.md @ 1665a43e sha256:f53f5c5ae052 -->
 
 # Karakeep sur GKE Autopilot {#karakeep-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "Hasura sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Hasura sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Hasura_GKE.md @ e69407af sha256:ae7ad262bd0c -->
+<!-- translated-from: docs/modules/Hasura_GKE.md @ 1665a43e sha256:937cd0a2d9e1 -->
 
 # Hasura sur GKE Autopilot {#hasura-on-gke-autopilot}
 

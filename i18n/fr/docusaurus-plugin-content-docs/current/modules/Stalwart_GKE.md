@@ -3,7 +3,7 @@ title: "Module Stalwart GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Stalwart sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Stalwart_GKE.md @ e69407af sha256:9cb561b166cb -->
+<!-- translated-from: docs/modules/Stalwart_GKE.md @ 1665a43e sha256:02e55a404a34 -->
 
 # Module Stalwart GKE — Guide de configuration {#stalwart-gke-module--configuration-guide}
 

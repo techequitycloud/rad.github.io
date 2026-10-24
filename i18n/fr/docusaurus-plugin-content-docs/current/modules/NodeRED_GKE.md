@@ -3,7 +3,7 @@ title: "Node-RED sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Node-RED sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/NodeRED_GKE.md @ e69407af sha256:4232361b2440 -->
+<!-- translated-from: docs/modules/NodeRED_GKE.md @ 1665a43e sha256:fb81ab2f64cd -->
 
 # Node-RED sur GKE Autopilot {#node-red-on-gke-autopilot}
 

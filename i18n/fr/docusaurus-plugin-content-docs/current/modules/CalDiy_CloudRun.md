@@ -3,7 +3,7 @@ title: "Cal.diy sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Cal.diy sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CalDiy_CloudRun.md @ e69407af sha256:22fb05fbf14c -->
+<!-- translated-from: docs/modules/CalDiy_CloudRun.md @ 1665a43e sha256:8440106519ac -->
 
 # Cal.diy sur Google Cloud Run {#caldiy-on-google-cloud-run}
 

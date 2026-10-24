@@ -3,7 +3,7 @@ title: "OnlyOffice sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'OnlyOffice sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OnlyOffice_CloudRun.md @ e69407af sha256:ba3137501956 -->
+<!-- translated-from: docs/modules/OnlyOffice_CloudRun.md @ 1665a43e sha256:1eee9e566735 -->
 
 # OnlyOffice sur Google Cloud Run {#onlyoffice-on-google-cloud-run}
 

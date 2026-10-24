@@ -3,7 +3,7 @@ title: "Wallabag sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Wallabag sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Wallabag_GKE.md @ e69407af sha256:7a04fbf61e80 -->
+<!-- translated-from: docs/modules/Wallabag_GKE.md @ 1665a43e sha256:0ef91be00585 -->
 
 # Wallabag sur GKE Autopilot {#wallabag-on-gke-autopilot}
 

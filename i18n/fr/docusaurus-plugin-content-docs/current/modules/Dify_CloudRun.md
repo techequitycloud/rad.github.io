@@ -3,7 +3,7 @@ title: "Dify sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Dify sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Dify_CloudRun.md @ e69407af sha256:043ed0780c38 -->
+<!-- translated-from: docs/modules/Dify_CloudRun.md @ 1665a43e sha256:aad81c44382a -->
 
 # Dify sur Google Cloud Run {#dify-on-google-cloud-run}
 

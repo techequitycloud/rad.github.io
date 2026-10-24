@@ -3,7 +3,7 @@ title: "Kimai sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Kimai sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Kimai_GKE.md @ e69407af sha256:3cb8c7a3bea5 -->
+<!-- translated-from: docs/modules/Kimai_GKE.md @ 1665a43e sha256:66f3b60774e5 -->
 
 # Kimai sur GKE Autopilot {#kimai-on-gke-autopilot}
 

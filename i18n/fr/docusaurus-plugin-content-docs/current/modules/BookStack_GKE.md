@@ -3,7 +3,7 @@ title: "BookStack sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de BookStack sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/BookStack_GKE.md @ e69407af sha256:49bf32786081 -->
+<!-- translated-from: docs/modules/BookStack_GKE.md @ 1665a43e sha256:25b7ff2085a6 -->
 
 # BookStack sur GKE Autopilot {#bookstack-on-gke-autopilot}
 

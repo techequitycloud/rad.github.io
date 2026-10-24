@@ -3,7 +3,7 @@ title: "LangFlow sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de LangFlow sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LangFlow_CloudRun.md @ e69407af sha256:8251be4ee4b5 -->
+<!-- translated-from: docs/modules/LangFlow_CloudRun.md @ 1665a43e sha256:c77c1ed215ff -->
 
 # LangFlow sur Google Cloud Run {#langflow-on-google-cloud-run}
 

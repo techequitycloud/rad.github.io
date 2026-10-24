@@ -3,7 +3,7 @@ title: "Matomo sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Matomo sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Matomo_GKE.md @ e69407af sha256:ea24824f63df -->
+<!-- translated-from: docs/modules/Matomo_GKE.md @ 1665a43e sha256:83df40135fd7 -->
 
 # Matomo sur GKE Autopilot {#matomo-on-gke-autopilot}
 

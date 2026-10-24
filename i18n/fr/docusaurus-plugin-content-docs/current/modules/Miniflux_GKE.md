@@ -3,7 +3,7 @@ title: "Miniflux sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Miniflux sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Miniflux_GKE.md @ e69407af sha256:70459e49591b -->
+<!-- translated-from: docs/modules/Miniflux_GKE.md @ 1665a43e sha256:f244b0fe4b12 -->
 
 # Miniflux sur GKE Autopilot {#miniflux-on-gke-autopilot}
 

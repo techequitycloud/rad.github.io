@@ -3,7 +3,7 @@ title: "Crawl4AI sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Crawl4AI sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Crawl4AI_CloudRun.md @ e69407af sha256:733e353a223b -->
+<!-- translated-from: docs/modules/Crawl4AI_CloudRun.md @ 1665a43e sha256:4fce22a81784 -->
 
 # Crawl4AI sur Google Cloud Run {#crawl4ai-on-google-cloud-run}
 

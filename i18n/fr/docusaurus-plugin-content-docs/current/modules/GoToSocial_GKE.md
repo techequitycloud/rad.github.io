@@ -3,7 +3,7 @@ title: "GoToSocial sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de GoToSocial sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/GoToSocial_GKE.md @ e69407af sha256:3a85997550d1 -->
+<!-- translated-from: docs/modules/GoToSocial_GKE.md @ 1665a43e sha256:3984829251cd -->
 
 # GoToSocial sur GKE Autopilot {#gotosocial-on-gke-autopilot}
 

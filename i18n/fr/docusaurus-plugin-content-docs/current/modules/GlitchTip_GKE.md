@@ -3,7 +3,7 @@ title: "GlitchTip sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de GlitchTip sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/GlitchTip_GKE.md @ e69407af sha256:de497a677d51 -->
+<!-- translated-from: docs/modules/GlitchTip_GKE.md @ 1665a43e sha256:0dc740cc2254 -->
 
 # GlitchTip sur GKE Autopilot {#glitchtip-on-gke-autopilot}
 

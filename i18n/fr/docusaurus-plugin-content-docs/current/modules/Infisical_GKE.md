@@ -3,7 +3,7 @@ title: "Infisical sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Infisical sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Infisical_GKE.md @ e69407af sha256:33dcf5a91444 -->
+<!-- translated-from: docs/modules/Infisical_GKE.md @ 1665a43e sha256:11828ee1a26a -->
 
 # Infisical sur GKE Autopilot {#infisical-on-gke-autopilot}
 

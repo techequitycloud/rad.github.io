@@ -3,7 +3,7 @@ title: "Tandoor sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Tandoor sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Tandoor_CloudRun.md @ e69407af sha256:538b5143fe0f -->
+<!-- translated-from: docs/modules/Tandoor_CloudRun.md @ 1665a43e sha256:d9a5cfbcd7e2 -->
 
 # Tandoor sur Google Cloud Run {#tandoor-on-google-cloud-run}
 

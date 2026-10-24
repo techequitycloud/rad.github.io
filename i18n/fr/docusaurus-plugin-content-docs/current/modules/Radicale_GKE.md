@@ -3,7 +3,7 @@ title: "Radicale sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Radicale sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Radicale_GKE.md @ e69407af sha256:3bc9ab399b31 -->
+<!-- translated-from: docs/modules/Radicale_GKE.md @ 1665a43e sha256:6ff0446dabf6 -->
 
 # Radicale sur GKE Autopilot {#radicale-on-gke-autopilot}
 

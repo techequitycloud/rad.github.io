@@ -3,7 +3,7 @@ title: "Netdata sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Netdata sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Netdata_GKE.md @ e69407af sha256:b6ea296f57b4 -->
+<!-- translated-from: docs/modules/Netdata_GKE.md @ 1665a43e sha256:ad0f7844caa3 -->
 
 # Netdata sur GKE Autopilot {#netdata-on-gke-autopilot}
 

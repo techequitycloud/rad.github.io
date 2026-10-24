@@ -3,7 +3,7 @@ title: "Module Jitsi GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Jitsi sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Jitsi_GKE.md @ e69407af sha256:c1c185bc4263 -->
+<!-- translated-from: docs/modules/Jitsi_GKE.md @ 1665a43e sha256:28dbc7748da2 -->
 
 # Module Jitsi GKE — Guide de configuration {#jitsi-gke-module--configuration-guide}
 

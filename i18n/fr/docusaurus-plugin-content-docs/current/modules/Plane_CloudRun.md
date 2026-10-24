@@ -3,7 +3,7 @@ title: "Plane sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Plane sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Plane_CloudRun.md @ e69407af sha256:0e321e7e775b -->
+<!-- translated-from: docs/modules/Plane_CloudRun.md @ 1665a43e sha256:2e078acd8eab -->
 
 # Plane sur Google Cloud Run {#plane-on-google-cloud-run}
 

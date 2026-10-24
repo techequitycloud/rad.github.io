@@ -3,7 +3,7 @@ title: "Gitea sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Gitea sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gitea_GKE.md @ e69407af sha256:fe6ee5a97073 -->
+<!-- translated-from: docs/modules/Gitea_GKE.md @ 1665a43e sha256:f9ce5a98ab2b -->
 
 # Gitea sur GKE Autopilot {#gitea-on-gke-autopilot}
 

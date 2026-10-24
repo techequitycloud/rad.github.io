@@ -3,7 +3,7 @@ title: "Miniflux sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Miniflux sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Miniflux_CloudRun.md @ e69407af sha256:c984b6c3f06d -->
+<!-- translated-from: docs/modules/Miniflux_CloudRun.md @ 1665a43e sha256:ae9463340617 -->
 
 # Miniflux sur Google Cloud Run {#miniflux-on-google-cloud-run}
 

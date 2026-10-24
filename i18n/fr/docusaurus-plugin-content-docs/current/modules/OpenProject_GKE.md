@@ -3,7 +3,7 @@ title: "OpenProject sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'OpenProject sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenProject_GKE.md @ e69407af sha256:ee249214936f -->
+<!-- translated-from: docs/modules/OpenProject_GKE.md @ 1665a43e sha256:d32a0f78f11b -->
 
 # OpenProject sur GKE Autopilot {#openproject-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "AFFiNE sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'AFFiNE sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Affine_CloudRun.md @ e69407af sha256:86567161abb0 -->
+<!-- translated-from: docs/modules/Affine_CloudRun.md @ 1665a43e sha256:8556645baf74 -->
 
 # AFFiNE sur Google Cloud Run {#affine-on-google-cloud-run}
 

@@ -3,7 +3,7 @@ title: "Coder sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Coder sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Coder_GKE.md @ e69407af sha256:b40dcad8d4d3 -->
+<!-- translated-from: docs/modules/Coder_GKE.md @ 1665a43e sha256:e89ef864e228 -->
 
 # Coder sur GKE Autopilot {#coder-on-gke-autopilot}
 

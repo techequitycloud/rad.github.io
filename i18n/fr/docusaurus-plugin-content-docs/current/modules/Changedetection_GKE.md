@@ -3,7 +3,7 @@ title: "Changedetection sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Changedetection sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Changedetection_GKE.md @ e69407af sha256:6fcfb1a39994 -->
+<!-- translated-from: docs/modules/Changedetection_GKE.md @ 1665a43e sha256:2f3e0d08b6e0 -->
 
 # Changedetection sur GKE Autopilot {#changedetection-on-gke-autopilot}
 

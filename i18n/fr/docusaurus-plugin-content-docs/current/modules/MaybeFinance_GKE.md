@@ -3,7 +3,7 @@ title: "Maybe Finance sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Maybe Finance sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/MaybeFinance_GKE.md @ e69407af sha256:7067830a485d -->
+<!-- translated-from: docs/modules/MaybeFinance_GKE.md @ 1665a43e sha256:a8911dc0f2c4 -->
 
 # Maybe Finance sur GKE Autopilot {#maybe-finance-on-gke-autopilot}
 

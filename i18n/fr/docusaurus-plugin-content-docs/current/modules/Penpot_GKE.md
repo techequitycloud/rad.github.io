@@ -3,7 +3,7 @@ title: "Module Penpot GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Penpot sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Penpot_GKE.md @ e69407af sha256:cd1d2d059ce8 -->
+<!-- translated-from: docs/modules/Penpot_GKE.md @ 1665a43e sha256:db2f5b119446 -->
 
 # Module Penpot GKE — Guide de configuration {#penpot-gke-module--configuration-guide}
 

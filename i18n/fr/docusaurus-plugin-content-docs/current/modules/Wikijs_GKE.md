@@ -3,7 +3,7 @@ title: "Wiki.js sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Wiki.js sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Wikijs_GKE.md @ e69407af sha256:1b75a43f1c24 -->
+<!-- translated-from: docs/modules/Wikijs_GKE.md @ 1665a43e sha256:49c53495faa4 -->
 
 # Wiki.js sur GKE Autopilot {#wikijs-on-gke-autopilot}
 

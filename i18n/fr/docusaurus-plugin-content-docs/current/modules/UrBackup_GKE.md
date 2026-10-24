@@ -3,7 +3,7 @@ title: "UrBackup sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'UrBackup sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/UrBackup_GKE.md @ e69407af sha256:f479a6843804 -->
+<!-- translated-from: docs/modules/UrBackup_GKE.md @ 1665a43e sha256:2a0d7b62ca63 -->
 
 # UrBackup sur GKE Autopilot {#urbackup-on-gke-autopilot}
 

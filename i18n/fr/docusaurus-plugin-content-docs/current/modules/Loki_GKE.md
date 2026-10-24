@@ -3,7 +3,7 @@ title: "Loki sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Loki sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Loki_GKE.md @ e69407af sha256:2a7cbb851a88 -->
+<!-- translated-from: docs/modules/Loki_GKE.md @ 1665a43e sha256:f8c9acee4891 -->
 
 # Loki sur GKE Autopilot {#loki-on-gke-autopilot}
 

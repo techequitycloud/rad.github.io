@@ -3,7 +3,7 @@ title: "Passbolt sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Passbolt sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Passbolt_CloudRun.md @ e69407af sha256:789d28a7b7cf -->
+<!-- translated-from: docs/modules/Passbolt_CloudRun.md @ 1665a43e sha256:8844d9853dc3 -->
 
 # Passbolt sur Google Cloud Run {#passbolt-on-google-cloud-run}
 

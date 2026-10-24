@@ -3,7 +3,7 @@ title: "Komga sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Komga sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Komga_CloudRun.md @ e69407af sha256:02a3f13590f5 -->
+<!-- translated-from: docs/modules/Komga_CloudRun.md @ 1665a43e sha256:7cbf7bf88bc2 -->
 
 # Komga sur Google Cloud Run {#komga-on-google-cloud-run}
 

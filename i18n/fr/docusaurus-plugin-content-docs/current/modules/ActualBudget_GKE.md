@@ -3,7 +3,7 @@ title: "ActualBudget sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'ActualBudget sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/ActualBudget_GKE.md @ e69407af sha256:9debad22ca20 -->
+<!-- translated-from: docs/modules/ActualBudget_GKE.md @ 1665a43e sha256:53e7b2544181 -->
 
 # ActualBudget sur GKE Autopilot {#actualbudget-on-gke-autopilot}
 

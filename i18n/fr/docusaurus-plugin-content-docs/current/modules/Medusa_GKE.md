@@ -3,7 +3,7 @@ title: "Medusa sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Medusa sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Medusa_GKE.md @ e69407af sha256:c527c8163985 -->
+<!-- translated-from: docs/modules/Medusa_GKE.md @ 1665a43e sha256:37d3eb57c256 -->
 
 # Medusa sur GKE Autopilot {#medusa-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "EspoCRM sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'EspoCRM sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/EspoCRM_GKE.md @ e69407af sha256:b066fb1ca16a -->
+<!-- translated-from: docs/modules/EspoCRM_GKE.md @ 1665a43e sha256:48e4d439a445 -->
 
 # EspoCRM sur GKE Autopilot {#espocrm-on-gke-autopilot}
 

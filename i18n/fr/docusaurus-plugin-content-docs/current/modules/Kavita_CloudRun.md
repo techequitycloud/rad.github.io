@@ -3,7 +3,7 @@ title: "Kavita sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Kavita sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Kavita_CloudRun.md @ e69407af sha256:e026d4c3c720 -->
+<!-- translated-from: docs/modules/Kavita_CloudRun.md @ 1665a43e sha256:d4f20e0651b0 -->
 
 # Kavita sur Google Cloud Run {#kavita-on-google-cloud-run}
 

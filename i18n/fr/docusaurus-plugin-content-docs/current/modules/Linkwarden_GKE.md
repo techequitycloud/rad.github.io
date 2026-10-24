@@ -3,7 +3,7 @@ title: "Linkwarden sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Linkwarden sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Linkwarden_GKE.md @ e69407af sha256:88cb64774bae -->
+<!-- translated-from: docs/modules/Linkwarden_GKE.md @ 1665a43e sha256:bfd8c29a011c -->
 
 # Linkwarden sur GKE Autopilot {#linkwarden-on-gke-autopilot}
 

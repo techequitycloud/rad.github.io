@@ -3,7 +3,7 @@ title: "RAGFlow sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de RAGFlow sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/RAGFlow_CloudRun.md @ e69407af sha256:fed1526ab6c7 -->
+<!-- translated-from: docs/modules/RAGFlow_CloudRun.md @ 1665a43e sha256:e8c8b55c38cb -->
 
 # RAGFlow sur Google Cloud Run {#ragflow-on-google-cloud-run}
 

@@ -3,7 +3,7 @@ title: "Nextcloud sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Nextcloud sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Nextcloud_GKE.md @ e69407af sha256:106052aaf9f0 -->
+<!-- translated-from: docs/modules/Nextcloud_GKE.md @ 1665a43e sha256:f1df68789ce8 -->
 
 # Nextcloud sur GKE Autopilot {#nextcloud-on-gke-autopilot}
 

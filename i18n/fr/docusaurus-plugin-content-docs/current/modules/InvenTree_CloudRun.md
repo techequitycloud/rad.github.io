@@ -3,7 +3,7 @@ title: "InvenTree sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'InvenTree sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/InvenTree_CloudRun.md @ e69407af sha256:cec7c997e0ed -->
+<!-- translated-from: docs/modules/InvenTree_CloudRun.md @ 1665a43e sha256:2ca04cc0a5dc -->
 
 # InvenTree sur Google Cloud Run {#inventree-on-google-cloud-run}
 

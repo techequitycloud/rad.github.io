@@ -3,7 +3,7 @@ title: "Medusa sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Medusa sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Medusa_CloudRun.md @ e69407af sha256:375125ff2e5a -->
+<!-- translated-from: docs/modules/Medusa_CloudRun.md @ 1665a43e sha256:29ad95a42333 -->
 
 # Medusa sur Google Cloud Run {#medusa-on-google-cloud-run}
 

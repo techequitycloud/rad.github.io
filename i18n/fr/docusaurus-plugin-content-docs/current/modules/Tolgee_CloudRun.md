@@ -3,7 +3,7 @@ title: "Tolgee sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Tolgee sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Tolgee_CloudRun.md @ e69407af sha256:be44c4c05939 -->
+<!-- translated-from: docs/modules/Tolgee_CloudRun.md @ 1665a43e sha256:1fa95efe0198 -->
 
 # Tolgee sur Google Cloud Run {#tolgee-on-google-cloud-run}
 

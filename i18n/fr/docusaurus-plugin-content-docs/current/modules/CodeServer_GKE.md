@@ -3,7 +3,7 @@ title: "code-server sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de code-server sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CodeServer_GKE.md @ e69407af sha256:da0a57cdb424 -->
+<!-- translated-from: docs/modules/CodeServer_GKE.md @ 1665a43e sha256:922aa5be12e1 -->
 
 # code-server sur GKE Autopilot {#code-server-on-gke-autopilot}
 

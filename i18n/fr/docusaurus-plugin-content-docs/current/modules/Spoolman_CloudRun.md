@@ -3,7 +3,7 @@ title: "Spoolman sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Spoolman sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Spoolman_CloudRun.md @ e69407af sha256:4b2d9a1dff2a -->
+<!-- translated-from: docs/modules/Spoolman_CloudRun.md @ 1665a43e sha256:705f9b9ca9d9 -->
 
 # Spoolman sur Google Cloud Run {#spoolman-on-google-cloud-run}
 

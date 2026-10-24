@@ -3,7 +3,7 @@ title: "Mealie sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Mealie sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Mealie_GKE.md @ e69407af sha256:a8e87e2da94e -->
+<!-- translated-from: docs/modules/Mealie_GKE.md @ 1665a43e sha256:b4364f389856 -->
 
 # Mealie sur GKE Autopilot {#mealie-on-gke-autopilot}
 

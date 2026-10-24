@@ -3,7 +3,7 @@ title: "Ntfy sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Ntfy sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ntfy_CloudRun.md @ e69407af sha256:ef01fa526821 -->
+<!-- translated-from: docs/modules/Ntfy_CloudRun.md @ 1665a43e sha256:886fe18c08d1 -->
 
 # Ntfy sur Google Cloud Run {#ntfy-on-google-cloud-run}
 

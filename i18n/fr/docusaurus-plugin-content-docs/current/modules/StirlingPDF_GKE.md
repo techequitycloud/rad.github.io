@@ -3,7 +3,7 @@ title: "Stirling-PDF sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Stirling-PDF sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/StirlingPDF_GKE.md @ e69407af sha256:077d13dd6e80 -->
+<!-- translated-from: docs/modules/StirlingPDF_GKE.md @ 1665a43e sha256:2da61cdc2c2d -->
 
 # Stirling-PDF sur GKE Autopilot {#stirling-pdf-on-gke-autopilot}
 

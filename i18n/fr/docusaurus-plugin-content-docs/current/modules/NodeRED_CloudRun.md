@@ -3,7 +3,7 @@ title: "Node-RED sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Node-RED sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/NodeRED_CloudRun.md @ e69407af sha256:ea189d5c1405 -->
+<!-- translated-from: docs/modules/NodeRED_CloudRun.md @ 1665a43e sha256:b65c83d23c2e -->
 
 # Node-RED sur Google Cloud Run {#node-red-on-google-cloud-run}
 

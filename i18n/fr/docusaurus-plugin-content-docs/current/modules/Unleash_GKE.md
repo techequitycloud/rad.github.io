@@ -3,7 +3,7 @@ title: "Unleash sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Unleash sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Unleash_GKE.md @ e69407af sha256:34cb3021fabd -->
+<!-- translated-from: docs/modules/Unleash_GKE.md @ 1665a43e sha256:77634c7cdcbc -->
 
 # Unleash sur GKE Autopilot {#unleash-on-gke-autopilot}
 

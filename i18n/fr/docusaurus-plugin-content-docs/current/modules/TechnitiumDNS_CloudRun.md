@@ -3,7 +3,7 @@ title: "TechnitiumDNS sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de TechnitiumDNS sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/TechnitiumDNS_CloudRun.md @ e69407af sha256:e61e9f963973 -->
+<!-- translated-from: docs/modules/TechnitiumDNS_CloudRun.md @ 1665a43e sha256:f57dc8bc88f0 -->
 
 # TechnitiumDNS sur Google Cloud Run {#technitiumdns-on-google-cloud-run}
 

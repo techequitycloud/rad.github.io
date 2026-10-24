@@ -3,7 +3,7 @@ title: "LiteLLM sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de LiteLLM sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LiteLLM_GKE.md @ e69407af sha256:6f06324adafe -->
+<!-- translated-from: docs/modules/LiteLLM_GKE.md @ 1665a43e sha256:3a0479952254 -->
 
 # LiteLLM sur GKE Autopilot {#litellm-on-gke-autopilot}
 

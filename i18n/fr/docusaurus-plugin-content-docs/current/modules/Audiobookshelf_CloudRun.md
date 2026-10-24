@@ -3,7 +3,7 @@ title: "Audiobookshelf sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Audiobookshelf sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Audiobookshelf_CloudRun.md @ e69407af sha256:6211c3eea0b4 -->
+<!-- translated-from: docs/modules/Audiobookshelf_CloudRun.md @ 1665a43e sha256:58e987d5224e -->
 
 # Audiobookshelf sur Google Cloud Run {#audiobookshelf-on-google-cloud-run}
 

@@ -3,7 +3,7 @@ title: "Metabase sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Metabase sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Metabase_CloudRun.md @ e69407af sha256:2468d2e9ef2e -->
+<!-- translated-from: docs/modules/Metabase_CloudRun.md @ 1665a43e sha256:2b3b840c2c21 -->
 
 # Metabase sur Google Cloud Run {#metabase-on-google-cloud-run}
 

@@ -3,7 +3,7 @@ title: "LimeSurvey sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de LimeSurvey sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LimeSurvey_GKE.md @ e69407af sha256:a85aae69fb5e -->
+<!-- translated-from: docs/modules/LimeSurvey_GKE.md @ 1665a43e sha256:de2e0cadd8fd -->
 
 # LimeSurvey sur GKE Autopilot {#limesurvey-on-gke-autopilot}
 

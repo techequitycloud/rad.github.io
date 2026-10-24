@@ -3,7 +3,7 @@ title: "LiteLLM sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de LiteLLM sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LiteLLM_CloudRun.md @ e69407af sha256:a35fd658319b -->
+<!-- translated-from: docs/modules/LiteLLM_CloudRun.md @ 1665a43e sha256:411dc1bccd2e -->
 # LiteLLM sur Google Cloud Run {#litellm-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/LiteLLM_CloudRun.png" alt="LiteLLM sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />

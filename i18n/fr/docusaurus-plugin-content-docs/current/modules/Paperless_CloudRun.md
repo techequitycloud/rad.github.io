@@ -3,7 +3,7 @@ title: "Paperless-ngx sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Paperless-ngx sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Paperless_CloudRun.md @ e69407af sha256:2d2bdd81062b -->
+<!-- translated-from: docs/modules/Paperless_CloudRun.md @ 1665a43e sha256:5b7fc17aabaa -->
 
 # Paperless-ngx sur Google Cloud Run {#paperless-ngx-on-google-cloud-run}
 

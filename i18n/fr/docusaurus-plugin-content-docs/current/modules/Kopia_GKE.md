@@ -3,7 +3,7 @@ title: "Kopia sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Kopia sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Kopia_GKE.md @ e69407af sha256:04073d31d91d -->
+<!-- translated-from: docs/modules/Kopia_GKE.md @ 1665a43e sha256:cdb4c5ac1a9a -->
 
 # Kopia sur GKE Autopilot {#kopia-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "LangFlow sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de LangFlow sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LangFlow_GKE.md @ e69407af sha256:1808476a0489 -->
+<!-- translated-from: docs/modules/LangFlow_GKE.md @ 1665a43e sha256:28fc2744b2fb -->
 
 # LangFlow sur GKE Autopilot {#langflow-on-gke-autopilot}
 

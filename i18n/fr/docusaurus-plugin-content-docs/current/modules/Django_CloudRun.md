@@ -3,7 +3,7 @@ title: "Django sur Cloud Run"
 description: "Référence de configuration pour le déploiement de Django sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Django_CloudRun.md @ e69407af sha256:646c443d68d3 -->
+<!-- translated-from: docs/modules/Django_CloudRun.md @ 1665a43e sha256:3d2ebd31b6a0 -->
 
 # Django sur Cloud Run {#django-on-cloud-run}
 

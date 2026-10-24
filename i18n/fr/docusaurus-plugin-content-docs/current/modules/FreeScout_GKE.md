@@ -3,7 +3,7 @@ title: "FreeScout sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de FreeScout sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/FreeScout_GKE.md @ e69407af sha256:f81116f1a3a6 -->
+<!-- translated-from: docs/modules/FreeScout_GKE.md @ 1665a43e sha256:6d043b43fe65 -->
 
 # FreeScout sur GKE Autopilot {#freescout-on-gke-autopilot}
 

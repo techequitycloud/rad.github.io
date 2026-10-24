@@ -3,7 +3,7 @@ title: "Windmill sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Windmill sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Windmill_GKE.md @ e69407af sha256:8c7e583c15fd -->
+<!-- translated-from: docs/modules/Windmill_GKE.md @ 1665a43e sha256:40817c6c8aba -->
 
 # Windmill sur GKE Autopilot {#windmill-on-gke-autopilot}
 

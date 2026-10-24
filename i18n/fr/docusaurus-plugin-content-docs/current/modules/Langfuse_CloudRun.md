@@ -3,7 +3,7 @@ title: "Langfuse sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Langfuse sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Langfuse_CloudRun.md @ e69407af sha256:201202559dca -->
+<!-- translated-from: docs/modules/Langfuse_CloudRun.md @ 1665a43e sha256:076d209ea205 -->
 
 # Langfuse sur Google Cloud Run {#langfuse-on-google-cloud-run}
 

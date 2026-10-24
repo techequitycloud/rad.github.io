@@ -3,7 +3,7 @@ title: "Dify sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Dify sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Dify_GKE.md @ e69407af sha256:ab8a0ac143f1 -->
+<!-- translated-from: docs/modules/Dify_GKE.md @ 1665a43e sha256:b64101abb548 -->
 
 # Dify sur GKE Autopilot {#dify-on-gke-autopilot}
 

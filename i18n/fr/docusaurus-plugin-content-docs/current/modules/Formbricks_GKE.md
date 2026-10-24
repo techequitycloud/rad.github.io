@@ -3,7 +3,7 @@ title: "Module Formbricks GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Formbricks sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Formbricks_GKE.md @ e69407af sha256:3e590d51f49c -->
+<!-- translated-from: docs/modules/Formbricks_GKE.md @ 1665a43e sha256:db59dc051caf -->
 
 # Module Formbricks GKE — Guide de configuration {#formbricks-gke-module--configuration-guide}
 

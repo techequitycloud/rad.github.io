@@ -3,7 +3,7 @@ title: "Project GCP — Guide de lab"
 description: "Lab pratique : déployez le module de garde-fous de niveau 0 Project GCP — listes d'API autorisées, plafonds de quota et création facultative d'un projet sandbox, appliqués avant Services GCP."
 ---
 
-<!-- translated-from: docs/labs/Project_GCP.md @ 3055034 sha256:f514e094f8f6 -->
+<!-- translated-from: docs/labs/Project_GCP.md @ 1665a43e sha256:2b80dc25c14d -->
 
 # Project GCP — Guide de lab {#project-gcp--lab-guide}
 

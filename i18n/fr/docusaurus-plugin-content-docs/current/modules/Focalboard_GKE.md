@@ -3,7 +3,7 @@ title: "Focalboard sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Focalboard sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Focalboard_GKE.md @ e69407af sha256:9cc016c1ad31 -->
+<!-- translated-from: docs/modules/Focalboard_GKE.md @ 1665a43e sha256:8bca42d26645 -->
 
 # Focalboard sur GKE Autopilot {#focalboard-on-gke-autopilot}
 

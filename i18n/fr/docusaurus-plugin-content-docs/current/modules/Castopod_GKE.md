@@ -3,7 +3,7 @@ title: "Castopod sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Castopod sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Castopod_GKE.md @ e69407af sha256:cc473be9dd34 -->
+<!-- translated-from: docs/modules/Castopod_GKE.md @ 1665a43e sha256:9bad70d40136 -->
 
 # Castopod sur GKE Autopilot {#castopod-on-gke-autopilot}
 

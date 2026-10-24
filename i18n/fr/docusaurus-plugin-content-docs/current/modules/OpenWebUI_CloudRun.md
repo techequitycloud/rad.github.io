@@ -3,7 +3,7 @@ title: "Open WebUI sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Open WebUI sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenWebUI_CloudRun.md @ e69407af sha256:7e3e3718a28e -->
+<!-- translated-from: docs/modules/OpenWebUI_CloudRun.md @ 1665a43e sha256:6a0060522864 -->
 
 # Open WebUI sur Google Cloud Run {#open-webui-on-google-cloud-run}
 

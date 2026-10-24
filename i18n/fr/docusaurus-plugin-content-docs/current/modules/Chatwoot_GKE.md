@@ -3,7 +3,7 @@ title: "Chatwoot sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Chatwoot sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Chatwoot_GKE.md @ e69407af sha256:7cd9e524d794 -->
+<!-- translated-from: docs/modules/Chatwoot_GKE.md @ 1665a43e sha256:f82d19f045ae -->
 
 # Chatwoot sur GKE Autopilot {#chatwoot-on-gke-autopilot}
 

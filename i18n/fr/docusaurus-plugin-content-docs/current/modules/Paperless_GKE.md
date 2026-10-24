@@ -3,7 +3,7 @@ title: "Module Paperless-ngx GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Paperless sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Paperless_GKE.md @ e69407af sha256:a5dfe9d7be20 -->
+<!-- translated-from: docs/modules/Paperless_GKE.md @ 1665a43e sha256:c2857c5cd162 -->
 
 # Module Paperless-ngx GKE — Guide de configuration {#paperless-ngx-gke-module--configuration-guide}
 

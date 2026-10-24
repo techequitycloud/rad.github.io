@@ -3,7 +3,7 @@ title: "Activepieces sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Activepieces sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Activepieces_GKE.md @ e69407af sha256:0f8a891731eb -->
+<!-- translated-from: docs/modules/Activepieces_GKE.md @ 1665a43e sha256:7f639aaa6637 -->
 
 # Activepieces sur GKE Autopilot {#activepieces-on-gke-autopilot}
 

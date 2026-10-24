@@ -3,7 +3,7 @@ title: "AFFiNE sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'AFFiNE sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Affine_GKE.md @ e69407af sha256:fe650bb3801a -->
+<!-- translated-from: docs/modules/Affine_GKE.md @ 1665a43e sha256:9e258edafbbf -->
 
 # AFFiNE sur GKE Autopilot {#affine-on-gke-autopilot}
 

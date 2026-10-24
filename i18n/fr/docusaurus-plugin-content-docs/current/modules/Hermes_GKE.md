@@ -3,7 +3,7 @@ title: "Agent Hermes sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de l'Agent Hermes sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Hermes_GKE.md @ e69407af sha256:4e8bf7e15c98 -->
+<!-- translated-from: docs/modules/Hermes_GKE.md @ 1665a43e sha256:17d418f040ef -->
 
 # Agent Hermes sur GKE Autopilot {#hermes-agent-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "Focalboard sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Focalboard sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Focalboard_CloudRun.md @ e69407af sha256:de9bd6d7d9e0 -->
+<!-- translated-from: docs/modules/Focalboard_CloudRun.md @ 1665a43e sha256:5865298b0351 -->
 
 # Focalboard sur Google Cloud Run {#focalboard-on-google-cloud-run}
 

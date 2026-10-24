@@ -3,7 +3,7 @@ title: "CloudBeaver sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de CloudBeaver sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CloudBeaver_GKE.md @ e69407af sha256:935a3b3a949b -->
+<!-- translated-from: docs/modules/CloudBeaver_GKE.md @ 1665a43e sha256:514d449ec9f3 -->
 
 # CloudBeaver sur GKE Autopilot {#cloudbeaver-on-gke-autopilot}
 

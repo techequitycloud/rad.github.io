@@ -3,7 +3,7 @@ title: "Wallabag sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Wallabag sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Wallabag_CloudRun.md @ e69407af sha256:31df927be9b8 -->
+<!-- translated-from: docs/modules/Wallabag_CloudRun.md @ 1665a43e sha256:313a592fc958 -->
 
 # Wallabag sur Google Cloud Run {#wallabag-on-google-cloud-run}
 

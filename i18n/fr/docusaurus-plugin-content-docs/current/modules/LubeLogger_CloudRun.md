@@ -3,7 +3,7 @@ title: "LubeLogger sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de LubeLogger sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LubeLogger_CloudRun.md @ e69407af sha256:2115fa9f3e14 -->
+<!-- translated-from: docs/modules/LubeLogger_CloudRun.md @ 1665a43e sha256:8b7bea4de294 -->
 
 # LubeLogger sur Google Cloud Run {#lubelogger-on-google-cloud-run}
 

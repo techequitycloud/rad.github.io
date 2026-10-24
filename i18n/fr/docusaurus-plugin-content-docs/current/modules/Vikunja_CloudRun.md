@@ -3,7 +3,7 @@ title: "Vikunja sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Vikunja sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Vikunja_CloudRun.md @ e69407af sha256:eeb61ce95f92 -->
+<!-- translated-from: docs/modules/Vikunja_CloudRun.md @ 1665a43e sha256:5ac3a0760bf3 -->
 
 # Vikunja sur Google Cloud Run {#vikunja-on-google-cloud-run}
 

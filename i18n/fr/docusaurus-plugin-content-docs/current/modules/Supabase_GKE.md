@@ -3,7 +3,7 @@ title: "Supabase sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Supabase sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Supabase_GKE.md @ e69407af sha256:edfacd5c33e3 -->
+<!-- translated-from: docs/modules/Supabase_GKE.md @ 1665a43e sha256:b21624dcae35 -->
 
 # Supabase sur GKE Autopilot {#supabase-on-gke-autopilot}
 

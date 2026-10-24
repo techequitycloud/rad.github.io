@@ -3,7 +3,7 @@ title: "Azimutt sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Azimutt sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Azimutt_CloudRun.md @ e69407af sha256:4eababe6b308 -->
+<!-- translated-from: docs/modules/Azimutt_CloudRun.md @ 1665a43e sha256:94a95456a2b0 -->
 
 # Azimutt sur Google Cloud Run {#azimutt-on-google-cloud-run}
 

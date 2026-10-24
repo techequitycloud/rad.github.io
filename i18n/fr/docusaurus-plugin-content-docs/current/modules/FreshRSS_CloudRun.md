@@ -3,7 +3,7 @@ title: "FreshRSS sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de FreshRSS sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/FreshRSS_CloudRun.md @ e69407af sha256:dc47dd177846 -->
+<!-- translated-from: docs/modules/FreshRSS_CloudRun.md @ 1665a43e sha256:354020e8612d -->
 
 # FreshRSS sur Google Cloud Run {#freshrss-on-google-cloud-run}
 

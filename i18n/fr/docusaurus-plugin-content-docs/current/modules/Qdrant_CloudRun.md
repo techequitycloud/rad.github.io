@@ -3,7 +3,7 @@ title: "Qdrant sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Qdrant sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Qdrant_CloudRun.md @ e69407af sha256:3325a457f323 -->
+<!-- translated-from: docs/modules/Qdrant_CloudRun.md @ 1665a43e sha256:610542804e71 -->
 
 # Qdrant sur Google Cloud Run {#qdrant-on-google-cloud-run}
 

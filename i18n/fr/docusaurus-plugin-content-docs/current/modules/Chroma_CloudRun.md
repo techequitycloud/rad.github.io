@@ -3,7 +3,7 @@ title: "Chroma sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Chroma sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Chroma_CloudRun.md @ e69407af sha256:a6b38e216810 -->
+<!-- translated-from: docs/modules/Chroma_CloudRun.md @ 1665a43e sha256:d6c8fbc56d00 -->
 
 # Chroma sur Google Cloud Run {#chroma-on-google-cloud-run}
 

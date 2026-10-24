@@ -3,7 +3,7 @@ title: "Kavita sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Kavita sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Kavita_GKE.md @ e69407af sha256:048b103f57b2 -->
+<!-- translated-from: docs/modules/Kavita_GKE.md @ 1665a43e sha256:51201b6dc28f -->
 
 # Kavita sur GKE Autopilot {#kavita-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "Ntfy sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Ntfy sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ntfy_GKE.md @ e69407af sha256:ab3d402293a6 -->
+<!-- translated-from: docs/modules/Ntfy_GKE.md @ 1665a43e sha256:c7219d9a0031 -->
 
 # Ntfy sur GKE Autopilot {#ntfy-on-gke-autopilot}
 

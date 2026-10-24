@@ -3,7 +3,7 @@ title: "Moodle sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Moodle sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Moodle_CloudRun.md @ e69407af sha256:29014c16c4e9 -->
+<!-- translated-from: docs/modules/Moodle_CloudRun.md @ 1665a43e sha256:fe18813270e4 -->
 
 # Moodle sur Google Cloud Run {#moodle-on-google-cloud-run}
 

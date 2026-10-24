@@ -3,7 +3,7 @@ title: "Flarum sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Flarum sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Flarum_CloudRun.md @ e69407af sha256:6e9bb15fa431 -->
+<!-- translated-from: docs/modules/Flarum_CloudRun.md @ 1665a43e sha256:c60d95c9562f -->
 
 # Flarum sur Google Cloud Run {#flarum-on-google-cloud-run}
 

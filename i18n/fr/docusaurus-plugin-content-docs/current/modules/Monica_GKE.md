@@ -3,7 +3,7 @@ title: "Monica sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Monica sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Monica_GKE.md @ e69407af sha256:91b6c4db192c -->
+<!-- translated-from: docs/modules/Monica_GKE.md @ 1665a43e sha256:fd04483ee44f -->
 
 # Monica sur GKE Autopilot {#monica-on-gke-autopilot}
 

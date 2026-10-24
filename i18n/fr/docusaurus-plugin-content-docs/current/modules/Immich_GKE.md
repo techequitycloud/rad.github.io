@@ -3,7 +3,7 @@ title: "Immich sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Immich sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Immich_GKE.md @ e69407af sha256:be8633db9ee8 -->
+<!-- translated-from: docs/modules/Immich_GKE.md @ 1665a43e sha256:21c92d8f9422 -->
 
 # Immich sur GKE Autopilot {#immich-on-gke-autopilot}
 

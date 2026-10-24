@@ -3,7 +3,7 @@ title: "Module Invoice Ninja GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement d'InvoiceNinja sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/InvoiceNinja_GKE.md @ e69407af sha256:a5be3fa634d0 -->
+<!-- translated-from: docs/modules/InvoiceNinja_GKE.md @ 1665a43e sha256:3e57659a1f8d -->
 
 # Module Invoice Ninja GKE — Guide de configuration {#invoice-ninja-gke-module--configuration-guide}
 

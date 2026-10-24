@@ -3,7 +3,7 @@ title: "BookStack sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de BookStack sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/BookStack_CloudRun.md @ e69407af sha256:b3fd23588ea1 -->
+<!-- translated-from: docs/modules/BookStack_CloudRun.md @ 1665a43e sha256:0c28494c31b2 -->
 
 # BookStack sur Google Cloud Run {#bookstack-on-google-cloud-run}
 

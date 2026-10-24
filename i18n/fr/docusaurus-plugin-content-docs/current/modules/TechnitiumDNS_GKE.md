@@ -3,7 +3,7 @@ title: "TechnitiumDNS sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de TechnitiumDNS sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/TechnitiumDNS_GKE.md @ e69407af sha256:57a5342ae670 -->
+<!-- translated-from: docs/modules/TechnitiumDNS_GKE.md @ 1665a43e sha256:86dc5f634ff7 -->
 
 # TechnitiumDNS sur GKE Autopilot {#technitiumdns-on-gke-autopilot}
 

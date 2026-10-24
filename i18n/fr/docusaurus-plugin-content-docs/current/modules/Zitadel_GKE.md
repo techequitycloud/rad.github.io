@@ -3,7 +3,7 @@ title: "Zitadel sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Zitadel sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Zitadel_GKE.md @ e69407af sha256:9f41a1805b22 -->
+<!-- translated-from: docs/modules/Zitadel_GKE.md @ 1665a43e sha256:b9366d7327f0 -->
 
 # Zitadel sur GKE Autopilot {#zitadel-on-gke-autopilot}
 

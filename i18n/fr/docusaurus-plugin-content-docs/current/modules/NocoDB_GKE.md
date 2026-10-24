@@ -3,7 +3,7 @@ title: "NocoDB sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de NocoDB sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/NocoDB_GKE.md @ e69407af sha256:ce939a63e5e2 -->
+<!-- translated-from: docs/modules/NocoDB_GKE.md @ 1665a43e sha256:4086ad59d52b -->
 
 # NocoDB sur GKE Autopilot {#nocodb-on-gke-autopilot}
 

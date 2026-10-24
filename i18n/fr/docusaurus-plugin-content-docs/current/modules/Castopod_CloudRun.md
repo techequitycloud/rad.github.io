@@ -3,7 +3,7 @@ title: "Castopod sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Castopod sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Castopod_CloudRun.md @ e69407af sha256:aea6d8b1d75c -->
+<!-- translated-from: docs/modules/Castopod_CloudRun.md @ 1665a43e sha256:29318d12b80b -->
 
 # Castopod sur Google Cloud Run {#castopod-on-google-cloud-run}
 

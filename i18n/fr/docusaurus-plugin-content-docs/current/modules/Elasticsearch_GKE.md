@@ -3,7 +3,7 @@ title: "Elasticsearch sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Elasticsearch sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Elasticsearch_GKE.md @ e69407af sha256:0e43ea4dacd6 -->
+<!-- translated-from: docs/modules/Elasticsearch_GKE.md @ 1665a43e sha256:47a609338e7e -->
 
 # Elasticsearch sur GKE Autopilot {#elasticsearch-on-gke-autopilot}
 

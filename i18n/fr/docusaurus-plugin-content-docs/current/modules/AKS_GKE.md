@@ -3,7 +3,7 @@ title: "Azure AKS attaché à une flotte Google Cloud"
 description: "Référence de configuration pour le déploiement d'AKS sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/AKS_GKE.md @ e69407af sha256:745a4c18cbae -->
+<!-- translated-from: docs/modules/AKS_GKE.md @ 1665a43e sha256:59ec809e5bb7 -->
 
 # Azure AKS attaché à une flotte Google Cloud {#azure-aks-attached-to-a-google-cloud-fleet}
 

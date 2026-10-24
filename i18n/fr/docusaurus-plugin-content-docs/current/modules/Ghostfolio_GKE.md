@@ -3,7 +3,7 @@ title: "Ghostfolio sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Ghostfolio sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ghostfolio_GKE.md @ e69407af sha256:df9d816e20c4 -->
+<!-- translated-from: docs/modules/Ghostfolio_GKE.md @ 1665a43e sha256:5df3432c4f4e -->
 
 # Ghostfolio sur GKE Autopilot {#ghostfolio-on-gke-autopilot}
 

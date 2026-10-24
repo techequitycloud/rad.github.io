@@ -3,7 +3,7 @@ title: "Gotify sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Gotify sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gotify_GKE.md @ e69407af sha256:9c92789d9cc9 -->
+<!-- translated-from: docs/modules/Gotify_GKE.md @ 1665a43e sha256:ed336b7cea6f -->
 
 # Gotify sur GKE Autopilot {#gotify-on-gke-autopilot}
 

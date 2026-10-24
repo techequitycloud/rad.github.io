@@ -3,7 +3,7 @@ title: "Jellystat sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Jellystat sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Jellystat_GKE.md @ e69407af sha256:b3752add2ae3 -->
+<!-- translated-from: docs/modules/Jellystat_GKE.md @ 1665a43e sha256:09fddf6c55c3 -->
 
 # Jellystat sur GKE Autopilot {#jellystat-on-gke-autopilot}
 

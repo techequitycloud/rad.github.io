@@ -3,7 +3,7 @@ title: "Temporal sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Temporal sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Temporal_GKE.md @ e69407af sha256:06c8e05c3570 -->
+<!-- translated-from: docs/modules/Temporal_GKE.md @ 1665a43e sha256:41b024d17276 -->
 
 # Temporal sur GKE Autopilot {#temporal-on-gke-autopilot}
 

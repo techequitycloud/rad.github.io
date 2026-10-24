@@ -3,7 +3,7 @@ title: "Komga sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Komga sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Komga_GKE.md @ e69407af sha256:b6a41d3ba910 -->
+<!-- translated-from: docs/modules/Komga_GKE.md @ 1665a43e sha256:6fd9457e606b -->
 
 # Komga sur GKE Autopilot {#komga-on-gke-autopilot}
 

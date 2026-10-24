@@ -3,7 +3,7 @@ title: "SearXNG sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de SearXNG sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SearXNG_GKE.md @ e69407af sha256:b0c593bdf2cc -->
+<!-- translated-from: docs/modules/SearXNG_GKE.md @ 1665a43e sha256:d3f9becbee58 -->
 
 # SearXNG sur GKE Autopilot {#searxng-on-gke-autopilot}
 

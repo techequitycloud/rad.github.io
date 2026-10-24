@@ -3,7 +3,7 @@ title: "Plausible Analytics sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Plausible Analytics sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Plausible_GKE.md @ e69407af sha256:328ed778209b -->
+<!-- translated-from: docs/modules/Plausible_GKE.md @ 1665a43e sha256:f5b5b5e715ba -->
 
 # Plausible Analytics sur GKE Autopilot {#plausible-analytics-on-gke-autopilot}
 

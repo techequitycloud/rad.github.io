@@ -3,7 +3,7 @@ title: "PostHog sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de PostHog sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/PostHog_GKE.md @ e69407af sha256:b9112ecd8a0f -->
+<!-- translated-from: docs/modules/PostHog_GKE.md @ 1665a43e sha256:b7a68d2e8e89 -->
 
 # PostHog sur GKE Autopilot {#posthog-on-gke-autopilot}
 

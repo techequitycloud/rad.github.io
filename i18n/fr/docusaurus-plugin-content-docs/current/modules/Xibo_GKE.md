@@ -3,7 +3,7 @@ title: "Module Xibo GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Xibo sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Xibo_GKE.md @ e69407af sha256:ce21461012d9 -->
+<!-- translated-from: docs/modules/Xibo_GKE.md @ 1665a43e sha256:e16a97a25fff -->
 
 # Module Xibo GKE — Guide de configuration {#xibo-gke-module--configuration-guide}
 

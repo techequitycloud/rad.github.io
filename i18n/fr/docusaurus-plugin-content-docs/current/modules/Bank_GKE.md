@@ -3,7 +3,7 @@ title: "Bank of Anthos sur GKE"
 description: "Référence de configuration pour le déploiement de Bank of Anthos sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Bank_GKE.md @ e69407af sha256:fccd462292c0 -->
+<!-- translated-from: docs/modules/Bank_GKE.md @ 1665a43e sha256:5f41f8a8c6fd -->
 
 # Bank of Anthos sur GKE {#bank-of-anthos-on-gke}
 

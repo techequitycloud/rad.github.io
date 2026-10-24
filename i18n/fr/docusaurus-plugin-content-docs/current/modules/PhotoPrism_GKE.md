@@ -3,7 +3,7 @@ title: "PhotoPrism sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de PhotoPrism sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/PhotoPrism_GKE.md @ e69407af sha256:a6598aeb13b8 -->
+<!-- translated-from: docs/modules/PhotoPrism_GKE.md @ 1665a43e sha256:fa795a8fba9f -->
 
 # PhotoPrism sur GKE Autopilot {#photoprism-on-gke-autopilot}
 

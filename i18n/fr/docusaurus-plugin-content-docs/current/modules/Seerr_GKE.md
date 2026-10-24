@@ -3,7 +3,7 @@ title: "Seerr sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Seerr sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Seerr_GKE.md @ e69407af sha256:2feafe317521 -->
+<!-- translated-from: docs/modules/Seerr_GKE.md @ 1665a43e sha256:d713a6d7dc1b -->
 
 # Seerr sur GKE Autopilot {#seerr-on-gke-autopilot}
 

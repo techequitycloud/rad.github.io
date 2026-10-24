@@ -3,7 +3,7 @@ title: "Shlink sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Shlink sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Shlink_GKE.md @ e69407af sha256:01a9d22c092a -->
+<!-- translated-from: docs/modules/Shlink_GKE.md @ 1665a43e sha256:8ec53c259333 -->
 
 # Shlink sur GKE Autopilot {#shlink-on-gke-autopilot}
 

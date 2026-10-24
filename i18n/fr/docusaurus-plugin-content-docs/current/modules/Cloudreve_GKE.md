@@ -3,7 +3,7 @@ title: "Cloudreve sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Cloudreve sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Cloudreve_GKE.md @ e69407af sha256:5b151e39b65a -->
+<!-- translated-from: docs/modules/Cloudreve_GKE.md @ 1665a43e sha256:3ebc22851d6c -->
 
 # Cloudreve sur GKE Autopilot {#cloudreve-on-gke-autopilot}
 

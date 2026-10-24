@@ -3,7 +3,7 @@ title: "Infisical sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Infisical sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Infisical_CloudRun.md @ e69407af sha256:32c60ce31c17 -->
+<!-- translated-from: docs/modules/Infisical_CloudRun.md @ 1665a43e sha256:5826a58693a1 -->
 
 # Infisical sur Google Cloud Run {#infisical-on-google-cloud-run}
 

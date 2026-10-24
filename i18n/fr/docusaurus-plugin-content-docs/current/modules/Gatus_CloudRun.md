@@ -3,7 +3,7 @@ title: "Gatus sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Gatus sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gatus_CloudRun.md @ e69407af sha256:a9d93ac7bc3f -->
+<!-- translated-from: docs/modules/Gatus_CloudRun.md @ 1665a43e sha256:42ee99526f46 -->
 
 # Gatus sur Google Cloud Run {#gatus-on-google-cloud-run}
 

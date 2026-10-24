@@ -3,7 +3,7 @@ title: "Jellyfin sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Jellyfin sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Jellyfin_GKE.md @ e69407af sha256:f45d032224de -->
+<!-- translated-from: docs/modules/Jellyfin_GKE.md @ 1665a43e sha256:dd83a346dbff -->
 
 # Jellyfin sur GKE Autopilot {#jellyfin-on-gke-autopilot}
 

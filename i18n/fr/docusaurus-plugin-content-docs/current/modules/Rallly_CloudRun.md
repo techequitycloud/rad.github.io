@@ -3,7 +3,7 @@ title: "Rallly sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Rallly sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Rallly_CloudRun.md @ e69407af sha256:c5212f84f48a -->
+<!-- translated-from: docs/modules/Rallly_CloudRun.md @ 1665a43e sha256:74932fa4a364 -->
 
 # Rallly sur Google Cloud Run {#rallly-on-google-cloud-run}
 

@@ -3,7 +3,7 @@ title: "GoToSocial sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de GoToSocial sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/GoToSocial_CloudRun.md @ e69407af sha256:ce7940a83587 -->
+<!-- translated-from: docs/modules/GoToSocial_CloudRun.md @ 1665a43e sha256:0e768360db19 -->
 
 # GoToSocial sur Google Cloud Run {#gotosocial-on-google-cloud-run}
 

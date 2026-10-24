@@ -3,7 +3,7 @@ title: "OpenProject sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'OpenProject sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenProject_CloudRun.md @ e69407af sha256:7dc509ac860f -->
+<!-- translated-from: docs/modules/OpenProject_CloudRun.md @ 1665a43e sha256:6bb82c1934ea -->
 
 # OpenProject sur Google Cloud Run {#openproject-on-google-cloud-run}
 

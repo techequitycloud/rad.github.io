@@ -3,7 +3,7 @@ title: "Penpot sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Penpot sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Penpot_CloudRun.md @ e69407af sha256:0bb8a64d2075 -->
+<!-- translated-from: docs/modules/Penpot_CloudRun.md @ 1665a43e sha256:1e11169cef00 -->
 
 # Penpot sur Google Cloud Run {#penpot-on-google-cloud-run}
 

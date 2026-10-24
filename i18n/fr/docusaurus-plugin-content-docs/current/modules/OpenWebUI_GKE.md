@@ -3,7 +3,7 @@ title: "Open WebUI sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Open WebUI sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenWebUI_GKE.md @ e69407af sha256:9178c97215de -->
+<!-- translated-from: docs/modules/OpenWebUI_GKE.md @ 1665a43e sha256:1a166f99a635 -->
 
 # Open WebUI sur GKE Autopilot {#open-webui-on-gke-autopilot}
 

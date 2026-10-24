@@ -3,7 +3,7 @@ title: "RAGFlow sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de RAGFlow sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/RAGFlow_GKE.md @ e69407af sha256:02f853468f14 -->
+<!-- translated-from: docs/modules/RAGFlow_GKE.md @ 1665a43e sha256:322ff5e88585 -->
 
 # RAGFlow sur GKE Autopilot {#ragflow-on-gke-autopilot}
 

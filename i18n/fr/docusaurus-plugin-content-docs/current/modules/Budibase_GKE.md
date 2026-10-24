@@ -3,7 +3,7 @@ title: "Budibase sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Budibase sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Budibase_GKE.md @ e69407af sha256:42f58442a152 -->
+<!-- translated-from: docs/modules/Budibase_GKE.md @ 1665a43e sha256:42f1337af17f -->
 
 # Budibase sur GKE Autopilot {#budibase-on-gke-autopilot}
 

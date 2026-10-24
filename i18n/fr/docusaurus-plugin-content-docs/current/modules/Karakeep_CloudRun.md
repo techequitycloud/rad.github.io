@@ -3,7 +3,7 @@ title: "Karakeep sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Karakeep sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Karakeep_CloudRun.md @ e69407af sha256:d92f59955d45 -->
+<!-- translated-from: docs/modules/Karakeep_CloudRun.md @ 1665a43e sha256:1f6184d9e3a7 -->
 
 # Karakeep sur Google Cloud Run {#karakeep-on-google-cloud-run}
 

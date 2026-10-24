@@ -3,7 +3,7 @@ title: "Tolgee sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Tolgee sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Tolgee_GKE.md @ e69407af sha256:bae73d168394 -->
+<!-- translated-from: docs/modules/Tolgee_GKE.md @ 1665a43e sha256:86d711c535a7 -->
 
 # Tolgee sur GKE Autopilot {#tolgee-on-gke-autopilot}
 

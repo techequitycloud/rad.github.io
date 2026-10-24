@@ -3,7 +3,7 @@ title: "EvolutionAPI sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'EvolutionAPI sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/EvolutionAPI_GKE.md @ e69407af sha256:becf586bd515 -->
+<!-- translated-from: docs/modules/EvolutionAPI_GKE.md @ 1665a43e sha256:d3e494e51ba0 -->
 
 # EvolutionAPI sur GKE Autopilot {#evolutionapi-on-gke-autopilot}
 

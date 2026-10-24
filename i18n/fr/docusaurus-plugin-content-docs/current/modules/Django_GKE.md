@@ -3,7 +3,7 @@ title: "Django sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Django sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Django_GKE.md @ e69407af sha256:9aa42a39b7e2 -->
+<!-- translated-from: docs/modules/Django_GKE.md @ 1665a43e sha256:0b4c492550af -->
 
 # Django sur GKE Autopilot {#django-on-gke-autopilot}
 

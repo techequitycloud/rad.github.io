@@ -3,7 +3,7 @@ title: "Passbolt sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Passbolt sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Passbolt_GKE.md @ e69407af sha256:76c204ec7266 -->
+<!-- translated-from: docs/modules/Passbolt_GKE.md @ 1665a43e sha256:ca42c3fde5b8 -->
 
 # Passbolt sur GKE Autopilot {#passbolt-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "Synapse sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Synapse sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Synapse_GKE.md @ e69407af sha256:4f55b3ce517d -->
+<!-- translated-from: docs/modules/Synapse_GKE.md @ 1665a43e sha256:a87f3f6744e0 -->
 
 # Synapse sur GKE Autopilot {#synapse-on-gke-autopilot}
 

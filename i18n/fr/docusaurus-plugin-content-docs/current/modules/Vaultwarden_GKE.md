@@ -3,7 +3,7 @@ title: "Vaultwarden sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Vaultwarden sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Vaultwarden_GKE.md @ e69407af sha256:37e18307ff38 -->
+<!-- translated-from: docs/modules/Vaultwarden_GKE.md @ 1665a43e sha256:65a33ad822f7 -->
 
 # Vaultwarden sur GKE Autopilot {#vaultwarden-on-gke-autopilot}
 

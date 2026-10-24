@@ -3,7 +3,7 @@ title: "Chibisafe sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Chibisafe sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Chibisafe_GKE.md @ e69407af sha256:545eb56fc6f5 -->
+<!-- translated-from: docs/modules/Chibisafe_GKE.md @ 1665a43e sha256:f9f51cc4c662 -->
 
 # Chibisafe sur GKE Autopilot {#chibisafe-on-gke-autopilot}
 

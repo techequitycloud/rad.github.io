@@ -3,7 +3,7 @@ title: "Zammad sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Zammad sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Zammad_GKE.md @ e69407af sha256:ecd07e69834f -->
+<!-- translated-from: docs/modules/Zammad_GKE.md @ 1665a43e sha256:04efcc4df68a -->
 
 # Zammad sur GKE Autopilot {#zammad-on-gke-autopilot}
 

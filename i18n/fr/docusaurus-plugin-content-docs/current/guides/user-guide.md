@@ -3,7 +3,7 @@ title: "Guide de l'utilisateur"
 description: "Guide de l'utilisateur de la plateforme RAD — créer une solution à partir d'une description simple, déployer des modules et des solutions sur Google Cloud, gérer vos déploiements, et les crédits et abonnements."
 ---
 
-<!-- translated-from: docs/guides/user-guide.md @ e69407af sha256:b00f86a9649a -->
+<!-- translated-from: docs/guides/user-guide.md @ 1665a43e sha256:07c1af41014b -->
 
 # Guide de l'utilisateur {#user-guide}
 

@@ -3,7 +3,7 @@ title: "Beszel sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Beszel sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Beszel_CloudRun.md @ e69407af sha256:b42581ce8087 -->
+<!-- translated-from: docs/modules/Beszel_CloudRun.md @ 1665a43e sha256:4f499fdb408f -->
 
 # Beszel sur Google Cloud Run {#beszel-on-google-cloud-run}
 

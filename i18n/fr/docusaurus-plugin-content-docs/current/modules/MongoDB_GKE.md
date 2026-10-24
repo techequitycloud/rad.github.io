@@ -3,7 +3,7 @@ title: "MongoDB sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de MongoDB sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/MongoDB_GKE.md @ e69407af sha256:4ab75ab7b965 -->
+<!-- translated-from: docs/modules/MongoDB_GKE.md @ 1665a43e sha256:35049ed11e88 -->
 
 # MongoDB sur GKE Autopilot {#mongodb-on-gke-autopilot}
 

@@ -3,7 +3,7 @@ title: "Calibre-Web sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Calibre-Web sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CalibreWeb_CloudRun.md @ e69407af sha256:3ba796c68baa -->
+<!-- translated-from: docs/modules/CalibreWeb_CloudRun.md @ 1665a43e sha256:921cbc75f53b -->
 
 # Calibre-Web sur Google Cloud Run {#calibre-web-on-google-cloud-run}
 

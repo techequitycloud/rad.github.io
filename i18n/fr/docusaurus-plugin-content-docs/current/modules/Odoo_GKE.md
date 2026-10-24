@@ -3,7 +3,7 @@ title: "Odoo sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Odoo sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Odoo_GKE.md @ e69407af sha256:c698880551eb -->
+<!-- translated-from: docs/modules/Odoo_GKE.md @ 1665a43e sha256:dd114c930143 -->
 
 # Odoo sur GKE Autopilot {#odoo-on-gke-autopilot}
 

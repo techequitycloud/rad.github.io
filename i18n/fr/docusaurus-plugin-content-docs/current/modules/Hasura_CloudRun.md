@@ -3,7 +3,7 @@ title: "Hasura sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Hasura sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Hasura_CloudRun.md @ e69407af sha256:5565524ea889 -->
+<!-- translated-from: docs/modules/Hasura_CloudRun.md @ 1665a43e sha256:e8245d75fa2c -->
 
 # Hasura sur Google Cloud Run {#hasura-on-google-cloud-run}
 

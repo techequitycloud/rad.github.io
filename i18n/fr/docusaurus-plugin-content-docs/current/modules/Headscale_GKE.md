@@ -3,7 +3,7 @@ title: "Headscale sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Headscale sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Headscale_GKE.md @ e69407af sha256:b4cf4365984d -->
+<!-- translated-from: docs/modules/Headscale_GKE.md @ 1665a43e sha256:c743610de167 -->
 
 # Headscale sur GKE Autopilot {#headscale-on-gke-autopilot}
 

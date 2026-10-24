@@ -3,7 +3,7 @@ title: "Spoolman sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Spoolman sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Spoolman_GKE.md @ e69407af sha256:abe66d063e16 -->
+<!-- translated-from: docs/modules/Spoolman_GKE.md @ 1665a43e sha256:c0feacf0e144 -->
 
 # Spoolman sur GKE Autopilot {#spoolman-on-gke-autopilot}
 

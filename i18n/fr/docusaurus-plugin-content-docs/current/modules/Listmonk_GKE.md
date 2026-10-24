@@ -3,7 +3,7 @@ title: "Module Listmonk GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Listmonk sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Listmonk_GKE.md @ e69407af sha256:7c389846d166 -->
+<!-- translated-from: docs/modules/Listmonk_GKE.md @ 1665a43e sha256:eff0aabe3afe -->
 
 # Module Listmonk GKE — Guide de configuration {#listmonk-gke-module--configuration-guide}
 

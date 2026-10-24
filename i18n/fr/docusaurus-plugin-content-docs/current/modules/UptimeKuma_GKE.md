@@ -3,7 +3,7 @@ title: "Uptime Kuma sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Uptime Kuma sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/UptimeKuma_GKE.md @ e69407af sha256:aefb19a87d99 -->
+<!-- translated-from: docs/modules/UptimeKuma_GKE.md @ 1665a43e sha256:129b89a19a4d -->
 
 # Uptime Kuma sur GKE Autopilot {#uptime-kuma-on-gke-autopilot}
 

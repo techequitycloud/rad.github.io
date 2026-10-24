@@ -3,7 +3,7 @@ title: "LubeLogger sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de LubeLogger sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LubeLogger_GKE.md @ e69407af sha256:cab2e324427c -->
+<!-- translated-from: docs/modules/LubeLogger_GKE.md @ 1665a43e sha256:3af3faa3958d -->
 
 # LubeLogger sur GKE Autopilot {#lubelogger-on-gke-autopilot}
 

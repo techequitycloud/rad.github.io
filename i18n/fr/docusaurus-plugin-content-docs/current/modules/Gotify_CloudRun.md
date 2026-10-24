@@ -3,7 +3,7 @@ title: "Gotify sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Gotify sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gotify_CloudRun.md @ e69407af sha256:0f77074db2b0 -->
+<!-- translated-from: docs/modules/Gotify_CloudRun.md @ 1665a43e sha256:322f53bd5725 -->
 
 # Gotify sur Google Cloud Run {#gotify-on-google-cloud-run}
 

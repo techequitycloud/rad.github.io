@@ -3,7 +3,7 @@ title: "ClassicPress sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de ClassicPress sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/ClassicPress_CloudRun.md @ e69407af sha256:a535c417acdb -->
+<!-- translated-from: docs/modules/ClassicPress_CloudRun.md @ 1665a43e sha256:0b5d09d1f829 -->
 
 # ClassicPress sur Google Cloud Run {#classicpress-on-google-cloud-run}
 

@@ -3,7 +3,7 @@ title: "Apache Superset sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Apache Superset sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Superset_CloudRun.md @ e69407af sha256:4d127b387e95 -->
+<!-- translated-from: docs/modules/Superset_CloudRun.md @ 1665a43e sha256:4011e6d0acf6 -->
 
 # Apache Superset sur Google Cloud Run {#apache-superset-on-google-cloud-run}
 

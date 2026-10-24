@@ -3,7 +3,7 @@ title: "OpenClaw sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'OpenClaw sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenClaw_GKE.md @ e69407af sha256:0e7fa80c1ab2 -->
+<!-- translated-from: docs/modules/OpenClaw_GKE.md @ 1665a43e sha256:eb783fab1c94 -->
 
 # OpenClaw sur GKE Autopilot {#openclaw-on-gke-autopilot}
 

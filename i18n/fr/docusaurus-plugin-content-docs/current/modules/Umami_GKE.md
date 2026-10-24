@@ -3,7 +3,7 @@ title: "Module Umami GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement d'Umami sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Umami_GKE.md @ e69407af sha256:c7da357a7ef7 -->
+<!-- translated-from: docs/modules/Umami_GKE.md @ 1665a43e sha256:2f5bd432d0d0 -->
 
 # Module Umami GKE — Guide de configuration {#umami-gke-module--configuration-guide}
 

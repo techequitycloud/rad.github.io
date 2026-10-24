@@ -3,7 +3,7 @@ title: "LibreChat sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de LibreChat sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LibreChat_GKE.md @ e69407af sha256:41974899d3c2 -->
+<!-- translated-from: docs/modules/LibreChat_GKE.md @ 1665a43e sha256:521f68e1e59b -->
 
 # LibreChat sur GKE Autopilot {#librechat-on-gke-autopilot}
 

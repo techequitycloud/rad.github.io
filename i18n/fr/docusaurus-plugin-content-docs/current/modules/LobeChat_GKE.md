@@ -3,7 +3,7 @@ title: "LobeChat sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de LobeChat sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LobeChat_GKE.md @ e69407af sha256:3176a8df656e -->
+<!-- translated-from: docs/modules/LobeChat_GKE.md @ 1665a43e sha256:3c5009b9af4a -->
 
 # LobeChat sur GKE Autopilot {#lobechat-on-gke-autopilot}
 

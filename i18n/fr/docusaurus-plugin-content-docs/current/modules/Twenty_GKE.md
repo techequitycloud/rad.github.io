@@ -3,7 +3,7 @@ title: "Twenty CRM sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Twenty CRM sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Twenty_GKE.md @ e69407af sha256:c3666942a47f -->
+<!-- translated-from: docs/modules/Twenty_GKE.md @ 1665a43e sha256:521b831835b1 -->
 
 # Twenty CRM sur GKE Autopilot {#twenty-crm-on-gke-autopilot}
 

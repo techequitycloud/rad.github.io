@@ -3,7 +3,7 @@ title: "Cyclos sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Cyclos sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Cyclos_GKE.md @ e69407af sha256:0859f4aba15d -->
+<!-- translated-from: docs/modules/Cyclos_GKE.md @ 1665a43e sha256:dcb46252f1f5 -->
 
 # Cyclos sur GKE Autopilot {#cyclos-on-gke-autopilot}
 

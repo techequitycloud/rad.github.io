@@ -3,7 +3,7 @@ title: "Tandoor sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Tandoor sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Tandoor_GKE.md @ e69407af sha256:77652af0ff77 -->
+<!-- translated-from: docs/modules/Tandoor_GKE.md @ 1665a43e sha256:b28331ee05fa -->
 
 # Tandoor sur GKE Autopilot {#tandoor-on-gke-autopilot}
 

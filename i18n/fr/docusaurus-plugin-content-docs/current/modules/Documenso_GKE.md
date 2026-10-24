@@ -3,7 +3,7 @@ title: "Documenso sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Documenso sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Documenso_GKE.md @ e69407af sha256:3f7315019755 -->
+<!-- translated-from: docs/modules/Documenso_GKE.md @ 1665a43e sha256:c3b11f1cb01f -->
 
 # Documenso sur GKE Autopilot {#documenso-on-gke-autopilot}
 

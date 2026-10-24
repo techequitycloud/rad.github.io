@@ -3,7 +3,7 @@ title: "code-server sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de code-server sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CodeServer_CloudRun.md @ e69407af sha256:57ebf09d006c -->
+<!-- translated-from: docs/modules/CodeServer_CloudRun.md @ 1665a43e sha256:a7b669c3f7b6 -->
 
 # code-server sur Google Cloud Run {#code-server-on-google-cloud-run}
 

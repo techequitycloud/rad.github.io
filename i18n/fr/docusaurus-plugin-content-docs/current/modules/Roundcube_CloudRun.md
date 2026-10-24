@@ -3,7 +3,7 @@ title: "Roundcube sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Roundcube sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Roundcube_CloudRun.md @ e69407af sha256:39e926e24258 -->
+<!-- translated-from: docs/modules/Roundcube_CloudRun.md @ 1665a43e sha256:79a58d868f04 -->
 
 # Roundcube sur Google Cloud Run {#roundcube-on-google-cloud-run}
 

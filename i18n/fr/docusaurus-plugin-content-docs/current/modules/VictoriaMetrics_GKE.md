@@ -3,7 +3,7 @@ title: "VictoriaMetrics sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de VictoriaMetrics sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/VictoriaMetrics_GKE.md @ e69407af sha256:15e95294a897 -->
+<!-- translated-from: docs/modules/VictoriaMetrics_GKE.md @ 1665a43e sha256:2e3643348a0f -->
 
 # VictoriaMetrics sur GKE Autopilot {#victoriametrics-on-gke-autopilot}
 
