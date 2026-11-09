@@ -150,4 +150,5 @@ Participants can't deploy anything themselves in a lab. Every lab deployment is 
 ## Getting help
 
 - For platform basics — signing in, navigation, credits, and how deployments work — see [Using RAD](using-rad.md).
-- For the Trainer role, access to lab sessions, the participant ceiling or a participant's credits, use the **Help** page's **Send Message** tab, and follow your ticket on **My Tickets**. Support staff, administrators and finance work that queue.
+- For the Trainer role, access to lab sessions, the participant ceiling or a participant's credits, use the **Help** page's **Send Message** tab, and follow your ticket on **My Tickets**. Trainer is a staff role, so you can raise a ticket without purchased credits.
+- A lab deployment you provisioned that has sat in **Queued**, **Pending**, **Working** or **Deleting** for 30 minutes with nothing changing offers **Check status** to you, as it does to its owner: RAD asks Cloud Build whether anything is still running and corrects the status if not, so the environment can be deleted. Participants are not offered it on a lab environment. Support staff, administrators and finance work that queue.

@@ -89,4 +89,4 @@ These work exactly as described in [Using RAD](using-rad.md):
 
 ## Getting help
 
-Open the **Help** page and use the **Send Message** tab to contact the support team; your tickets are on the **My Tickets** tab beside it. The **ROI** calculator, for estimating your savings, is a tab on the **Credits** page. The **Contact Us** link in the footer also goes to Help.
+Open the **Help** page and use the **Send Message** tab to contact the support team; your tickets are on the **My Tickets** tab beside it. As a partner you hold a staff role, so you can raise a ticket without purchased credits. The **ROI** calculator, for estimating your savings, is a tab on the **Credits** page. The **Contact Us** link in the footer also goes to Help.

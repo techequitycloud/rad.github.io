@@ -88,4 +88,4 @@ The Agent role is deliberately narrow. As an agent you cannot:
 
 ## Getting help
 
-Visit the **Help** page and use the **Send Message** tab to raise a support ticket; the **My Tickets** tab lists the tickets you have raised and their status. While credits can be bought on the platform, raising a ticket needs purchased credits on your account; when purchases are switched off, anyone may raise one. You can raise up to 5 tickets in any 24 hours. You can also reach Help from the **Contact Us** link in the footer.
+Visit the **Help** page and use the **Send Message** tab to raise a support ticket; the **My Tickets** tab lists the tickets you have raised and their status. As an agent you hold a staff role, so you can raise a ticket whether or not you have purchased credits. You can raise up to 5 tickets in any 24 hours. You can also reach Help from the **Contact Us** link in the footer.

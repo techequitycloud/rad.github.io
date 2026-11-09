@@ -40,11 +40,19 @@ Tickets are created from the **Help** page.
 - On the **Help** page, the **Send Message** tab is a contact form. When a user fills it in and submits, RAD raises a support ticket and emails the support team.
 - The **Contact Us** link in the footer also goes to the Help page.
 
-When a user asks how to reach you, point them to **Help → Send Message** (or the **Contact Us** footer link). Anything they submit there shows up for you on the **Support Tickets** tab. Raising a ticket needs purchased credits (a subscription or a top-up) only while credits are on sale — a user without any is shown a prompt to buy credits instead. While purchases are switched off, anyone may raise a ticket. Each user can raise up to 5 tickets in 24 hours.
+When a user asks how to reach you, point them to **Help → Send Message** (or the **Contact Us** footer link). Anything they submit there shows up for you on the **Support Tickets** tab. Raising a ticket needs purchased credits (a subscription or a top-up) only while credits are on sale — a user without any is shown a prompt to buy credits instead. While purchases are switched off, anyone may raise a ticket. Staff accounts — administrators, partners, finance, support, agents and trainers — are exempt and can always raise one, which includes you. Each user can raise up to 5 tickets in 24 hours.
+
+A ticket raised from a failed deployment's **Ask for help** carries that deployment's ID, status and project tier, and **What the platform already found**: the known-failure explanation the customer was shown, any AI suggestion already generated for that build, and whether they saw it before filing. Such a ticket is filed as **Technical** unless the customer chose another category, and is raised to at least **High** priority when the deployment is in a production-tier project. Start from that diagnosis: the customer has already seen it and judged that it did not solve their problem, so repeating it back to them rarely helps. A deployment is attached only when the customer could see it themselves.
+
+Many failures never reach you. When RAD recognises a failure it explains the cause on the failed step and in the failure email, AI **Suggested fixes** cover many of the rest, and before a ticket is sent the customer is shown what RAD already knows and asked whether it solves the problem. A customer whose deployment is stuck in progress can use **Check status** to correct it themselves, without a ticket.
 
 Users can follow up on their own tickets: the **My Tickets** tab on the Help page shows each ticket they raised, newest first, with its status (**New**, **In progress**, **Resolved** or **Closed**). So the status you set is what the customer sees. Your **notes** are internal and are never shown to the customer, and neither is who the ticket is assigned to.
 
 A user can also **withdraw** a ticket that isn't closed, to say no further work is needed. It closes straight away, and in **Support Tickets** the expanded ticket shows **Withdrawn by the customer** and when. Closing it ends the assigned agent's access to that customer's deployments, just as any close does.
+
+## Your ticket history is recorded
+
+Every claim, release, reassignment and status change you make on a ticket is now recorded, with the time and who made it. Administrators use that history for a per-agent report: tickets assigned to you, resolved and closed, reopened, released, and how long you took from picking a ticket up to resolving it, against a target time for each priority. The clock starts when the ticket is assigned to you, not when the customer raised it, and restarts if the ticket moves to another agent. A ticket the customer withdraws while you hold it is counted separately — it is never held against you as unresolved, nor counted as a resolution. Editing notes alone records nothing.
 
 ## Viewing deployments
 
@@ -78,7 +86,7 @@ To set expectations clearly, the Support role does **not** include:
 - Viewing or editing user accounts.
 - Changing anyone's credits or roles.
 - Connecting a GitHub repository or syncing modules.
-- Updating, deleting, purging, cancelling or re-deploying anyone else's deployment, or reading its configuration variables, outputs or generated credentials — those stay with the deployment's owner and administrators. Restoring is limited to configurations the retention policy marked for removal (see above); a **purged** deployment can be restored only by an administrator.
+- Updating, deleting, purging, cancelling, re-deploying or using **Check status** on anyone else's deployment, or reading its configuration variables, outputs or generated credentials — those stay with the deployment's owner and administrators. Restoring is limited to configurations the retention policy marked for removal (see above); a **purged** deployment can be restored only by an administrator.
 - Seeing deployments platform-wide — only those of the customers whose open tickets are assigned to you.
 - **Setup Requests** — administrators and Finance handle those.
 - Acting on another user's behalf — there is no impersonation anywhere in RAD.

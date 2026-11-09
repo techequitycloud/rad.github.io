@@ -232,7 +232,7 @@ The log is read-only.
 
 Click **Help** in the navigation bar:
 
-- **Send Message** tab — a contact form that raises a support ticket and emails the support team. The **My Tickets** tab beside it lists the tickets you have raised and their status. While purchases are switched on, raising a ticket needs purchased credits on your account; with purchases off anyone may raise one. Each account can raise up to 5 tickets in any 24 hours.
+- **Send Message** tab — a contact form that raises a support ticket and emails the support team. The **My Tickets** tab beside it lists the tickets you have raised and their status. Finance is a staff role, so you can raise a ticket without purchased credits on your account (ordinary users need them while purchases are switched on). Each account can raise up to 5 tickets in any 24 hours.
 - **Setup Requests** tab — described above.
 - **Support Tickets** tab — the shared ticket queue. Because billing is one of its categories, you can triage it: Finance and admins may assign, reassign or clear a ticket's assignee to anyone, where support agents may only claim an unassigned ticket or release one they hold.
 
