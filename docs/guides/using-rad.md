@@ -42,6 +42,7 @@ The top navigation bar shows only the items relevant to your role (or roles). Wh
 
 - A **profile dropdown** (top-right) with **Your Profile** and **Sign Out**.
 - A **language selector** in the top bar, beside the light/dark theme control.
+- **Ask AI** in the top bar (in the menu on a phone): ask RAD's AI assistant about modules, pricing or deployments in plain language. It is also on the sign-in, pricing and guide pages. Its answers can be wrong, so check anything important; each time you open it, the conversation starts afresh.
 - **Pricing**, just before **Help** in the top navigation — RAD's prices, shown inside the console.
 - In the footer: **Contact Us** (to the **Help** page), **Feedback** (RAD's public feedback board, at fider.radmodules.dev, where you can suggest and vote on improvements), the Terms and Privacy documents, **Cookie settings**, and **Pricing** again.
 
@@ -107,7 +108,7 @@ On the **Deployments** page each row shows the module, the deployment ID, an edi
 Click a deployment to open its details, which has three tabs:
 
 - **Outputs** — the non-sensitive results (such as URLs and endpoints), shown once the deployment succeeds and has outputs to show.
-- **Build Status** — live logs as the deployment runs. Once it succeeds, **Explain this** opens a plain-English summary of what was created in your Google Cloud project; on a step that failed, **Search for a fix** and **Ask for help** both work from the error that step printed. **Download** saves the whole log as a text file, with secrets masked.
+- **Build Status** — live logs as the deployment runs. Once it succeeds, **Explain this** opens a plain-English summary of what was created in your Google Cloud project; on a step that failed, RAD explains the cause when it recognises it, **Suggest fixes** offers AI-suggested causes and steps when it does not (and, where a simple setting change would help, **Apply suggested fix** opens the update form with it filled in for you to review), and **Search for a fix** and **Ask for help** both work from the error that step printed. See [When a deployment fails](user-guide.md#when-a-deployment-fails). **Download** saves the whole log as a text file, with secrets masked.
 - **Builds** — the build history for that deployment.
 
 From the details view you can:
@@ -115,6 +116,7 @@ From the details view you can:
 - **Update** — re-open the configuration form (pre-filled) and re-apply changes. Available once a deployment has finished.
 - **Delete** — choose **Delete** to tear down the cloud resources, or **Purge** to remove the deployment from RAD *without* destroying the cloud resources (useful when a deployment is stuck or was changed outside RAD). A deployment that belongs to a solution can be deleted or purged only from the solution's page. A RAD-managed GCP project ("GCP Project on RAD") is torn down the same way, but because that takes the whole project with it, RAD refuses while any other deployment is still running in that project and lists the ones to delete first. Google keeps a deleted project recoverable for about 30 days. Google Cloud's terms do not guarantee that a restored project will be usable, so a restore cannot be relied on to get a deleted project back: take appropriate backups of your data and configuration before you delete, and if a restore fails, redeploy the application and restore its configuration from those backups.
 - **Cancel** — releases a deployment that is still Queued or Waiting and has not started building, or a purge that has stalled.
+- **Check status** — offered when a deployment has shown Queued, Pending, Working or Deleting for 30 minutes with nothing changing. RAD asks Cloud Build whether a build is still running; if none is, the status is corrected so you can delete or update it, and if one is, it tells you when it will finish. See [When a deployment seems stuck](user-guide.md#when-a-deployment-seems-stuck).
 
 Deployment statuses you may see include Queued, Pending, Working, Waiting (on a prerequisite deployment to finish), Success, Failure, Internal Error, Deleting, Deleted, Cancelled, Timeout, and Expire.
 

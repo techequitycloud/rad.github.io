@@ -56,7 +56,7 @@ That one deployment is for your client:
 
 The confirmation dialog names the client wallet that pays, so check it before you confirm. **Deploy** covers one deployment: once it is submitted, your next deploy is your own again. To deploy something else for the client, deploy from their project's page again. Coming back to **Managed Environments** without deploying also cancels it.
 
-Your client's Google Cloud project gives you the same Console access your client has, so you can operate the service. You can view, update and delete the project's deployments, but you can't read the secret values in them, such as passwords and API keys. Those are your client's. An update is accepted only while the project is running and its wallet still holds credits: a paused or ending project, one with a handover requested, or an empty wallet, is refused — top up or resume first.
+Your client's Google Cloud project gives you the same Console access your client has, so you can operate the service. You can view, update and delete the project's deployments, and use **Check status** on one that seems stuck, but you can't read the secret values in them, such as passwords and API keys. Those are your client's. An update is accepted only while the project is running and its wallet still holds credits: a paused or ending project, one with a handover requested, or an empty wallet, is refused — top up or resume first.
 
 Your client can see what you deploy for them, but can't change or delete it while you manage it.
 

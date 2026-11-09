@@ -131,6 +131,8 @@ The **Setup Requests** tab on the **Help** page is where managed-setup requests 
 
 The **Support Tickets** tab on the **Help** page lists tickets raised through the **Help** form. Triage each ticket: update its status (new, in progress, resolved, closed), add notes, and assign it. Support-role users also work this queue; as an admin you see all tickets. The customer follows their ticket on their own **My Tickets** tab, which shows the status you set but never your notes or who the ticket is assigned to.
 
+A ticket raised from a failed deployment's **Ask for help** arrives already triaged: it carries the deployment, its status and project tier, and the diagnosis RAD showed the customer before they chose to send it. It is filed as **Technical** unless the customer picked another category, and raised to at least **High** priority when the deployment is in a production-tier project. Raising a ticket needs purchased credits while credits are on sale, but staff — administrators, partners, finance, support, agents and trainers — are always exempt; the same rule is enforced by the platform, not only by the form.
+
 ### Agent performance (the Agents view)
 
 As an admin you also see a **Tickets | Agents** switch at the top of the tab. **Agents** uses the same **From**/**To** dates and shows one row per agent for that period:
@@ -153,6 +155,20 @@ You have platform-wide financial visibility:
 - **Payouts** — **Payout Summary**, per-payee totals for agents and partners. **Mark paid** there records a partner's payout for an ended period, once, at the rate in force; agents are paid through Agent Revenue instead.
 
 Apart from Module Costs, these reports are tabs of the **Billing** page. Two things to know before you go looking for them: your admin navigation has no Billing entry, so either grant yourself the Finance role as well (which adds it) or go to `/billing` directly; and every Billing tab except **Event Codes** requires **Enable Subscription** in **Setup**, so with that switched off the page opens on Event Codes and shows nothing else. Three Billing tabs are Finance's alone and are not shown to administrators: **Linked Projects** (approving customers' requests for RAD to pay for their own Google Cloud projects), **Customer Billing** (each customer's VAT rate, tax details and billing sub-account) and **VAT Report** — see the [Finance Guide](finance-guide.md#linked-projects-customer-billing-and-vat). Use them to monitor platform health, reconcile partner and agent earnings, and review project spending.
+
+## Failed and stuck deployments
+
+Most deployment problems are now resolved without a ticket, and you can see how well that works:
+
+- **Known failures are explained** on the failed step and in the failure email. A pipeline check also stops a deploy or update into an existing project before anything changes when the project is inactive, billing is off, or RAD's deploy identity lacks access, and says how to fix it. Failures Google reports as temporary are retried once automatically.
+- **Suggested fixes** (AI) cover failures RAD does not recognise, for customers with purchased credits and for staff. They are prepared in the background shortly after a failure, a few at a time, and may include a setting change the customer applies through the ordinary update form. Only simple, update-safe settings can be suggested (sizes, counts, timeouts, a value from the setting's own list), never images, addresses, commands, network ranges, secrets, regions, or project, billing or access settings — a build log can contain text written by whoever controls the application, so the list of what may be suggested is deliberately narrow. Applying one writes a `DEPLOYMENT_FAILURE_ADVICE_APPLIED` audit entry with the setting names, never the values.
+- **Deflection is measured.** Each time the diagnosis is shown before a ticket, and each time the customer answers **Yes, I'll try this** or sends the ticket anyway, a `SUPPORT_DEFLECTION` audit entry is written (`shown`, `resolved` or `filed`).
+- **Check status.** You can use **Check status** on any deployment that has shown Queued, Pending, Working or Deleting for longer than the stuck threshold (30 minutes by default, the same setting the automatic sweep uses). It corrects the status only when Cloud Build confirms no build is running for it, never stops a running build, and writes a `DEPLOYMENT_STATUS_RECHECKED` audit entry. Owners can do the same for their own deployments, so a stuck deployment no longer needs you to force a delete.
+- **Shared services teardown.** When deleting **Services_GCP** fails because Google has not yet released Cloud Run's network addresses, RAD retries the delete itself after at least 30 minutes, at most twice, and emails the owner.
+
+### Module failure monitoring
+
+RAD also watches for a module that fails for many customers. Every failed customer build is fingerprinted from its error, with project ids, email addresses, bucket names, hosts and other identifying values removed, so the same defect from different customers counts as one signature. Once a signature has been seen on three different deployments, an issue is opened in the platform's GitHub repository, labelled `build-failure` and `module:<name>`; it carries the module, the counts and an anonymised signature, never a deployment, project or email. Separately, an alert fires (at its default thresholds) for a module that has five or more failed creates or updates from at least three different users within six hours, so a module that has started failing for everyone is noticed quickly. Failed teardowns are not counted towards the alert, because some shared-services teardowns fail by design.
 
 ## Audit log
 
