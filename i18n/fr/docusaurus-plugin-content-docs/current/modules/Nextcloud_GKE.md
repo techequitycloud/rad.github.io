@@ -3,21 +3,21 @@ title: "Nextcloud sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Nextcloud sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Nextcloud_GKE.md @ 60462a86 sha256:cf1b4c896a2c -->
+<!-- translated-from: docs/modules/Nextcloud_GKE.md @ 40c83c3f sha256:2f3588792fc8 -->
 
 # Nextcloud sur GKE Autopilot {#nextcloud-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Nextcloud_GKE.png" alt="Nextcloud sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Nextcloud est la principale plateforme auto-hébergée de synchronisation de fichiers et de collaboration, utilisée par 400 millions d'utilisateurs dans plus de 100 000 organisations — y compris des gouvernements et des prestataires de soins de santé recherchant une alternative conforme au RGPD à Google Drive et OneDrive. Ce module déploie Nextcloud sur **GKE Autopilot** en s'appuyant sur le module [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée de Google Cloud et Kubernetes.
+Nextcloud est la principale plateforme auto-hébergée de synchronisation de fichiers et de collaboration, utilisée par 400 millions d'utilisateurs dans plus de 100 000 organisations — y compris des gouvernements et des prestataires de soins de santé à la recherche d'une alternative conforme au RGPD à Google Drive et OneDrive. Ce module déploie Nextcloud sur **GKE Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée Google Cloud et Kubernetes.
 
-Ce guide se concentre sur les services cloud utilisés par Nextcloud et sur la manière de les explorer et de les opérer depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les applications GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et le cycle de vie du déploiement — veuillez vous référer au [guide du module App_GKE](App_GKE.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud utilisés par Nextcloud et sur la manière de les explorer et de les opérer depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à chaque application GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et le cycle de vie du déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
-## Ce que coûte Nextcloud sur RAD et comment cela se compare {#what-nextcloud-costs-on-rad-and-how-that-compares}
+## Ce que coûte Nextcloud sur RAD, et comment cela se compare {#what-nextcloud-costs-on-rad-and-how-that-compares}
 
-**Le module Nextcloud sur GKE Autopilot de RAD coûte environ 150 à 223 $ US par mois, les frais de module étant facturés une seule fois en crédits RAD.** GKE Autopilot convient à Nextcloud qui doit rester opérationnel, s'adapter à travers les pods ou fonctionner aux côtés d'autres charges de travail Kubernetes ; pour le coût le plus bas, le [module Cloud Run](Nextcloud_CloudRun.md) exécute le même Nextcloud pour environ 102 $ US par mois. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettre en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Le module Nextcloud sur GKE Autopilot de RAD coûte environ 150 à 223 $ US par mois, les frais de module étant facturés une seule fois en crédits RAD.** GKE Autopilot convient à Nextcloud qui doit rester opérationnel, s'adapter à travers les pods ou fonctionner à côté d'autres charges de travail Kubernetes ; pour le coût le plus bas, le [module Cloud Run](Nextcloud_CloudRun.md) exécute le même Nextcloud pour environ 102 $ US par mois. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -26,17 +26,17 @@ RAD déploie **Nextcloud**, qui est open source, il n'y a donc pas de frais de l
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 300 crédits (30 $ US au prix de la recharge) | 270 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **150 $ US par mois** pour la configuration par défaut (tableau ci-dessous) — plus si ce n'est pas votre seul cluster Autopilot | Mesuré à l'heure en crédits ; RAD publie **115 crédits par jour**, environ 3 450 par mois (environ 345 $ US au prix de la recharge, 276 $ US au tarif du plan Scale) |
-| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien à supprimer ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **150 $ US par mois** pour la configuration par défaut (tableau ci-dessous) — plus si ce n'est pas votre seul cluster Autopilot | Mesuré à l'heure en crédits ; RAD publie **145 crédits par jour**, environ 4 350 par mois (environ 435 $ US au prix de la recharge ; estimé à partir des prix catalogue de Google, et incluant les frais de cluster) |
+| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est maintenu en réserve |
 
-10 crédits coûtent 1 $ US pour une recharge unique, et moins avec un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas un deuxième ensemble de ces éléments.
+10 crédits coûtent 1 $ US en recharge unique, et moins avec un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par chaque application du projet, de sorte qu'une deuxième application n'ajoute pas un deuxième ensemble de ceux-ci.
 
 **Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
 
 | Ressource (module par défaut) | Par mois |
 |---|---|
-| Pod GKE Autopilot, 2x vCPU / 4 Gio | 79,35 $ US |
+| Pod GKE Autopilot, 2x vCPU / 4 GiB | 79,35 $ US |
 | Cloud SQL pour MySQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
 | Serveur de fichiers NFS/cache (petite VM) | 13,43 $ US |
 | Cloud NAT et réseau | 5 $ US |
@@ -46,57 +46,57 @@ RAD déploie **Nextcloud**, qui est open source, il n'y a donc pas de frais de l
 
 ### Comment cela se compare {#how-it-compares}
 
-- **Aucun SaaS géré clé en main n'a été vérifié pour Nextcloud lui-même**, la comparaison honnête est donc un serveur auto-géré : un Hetzner CPX22 (2 vCPU/4 Go) coûte environ 24 $/mois, un DigitalOcean 2 vCPU/4 Go Droplet environ 24 $/mois, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) environ 49 $/mois.
-- Aucune offre SaaS gérée pour ce projet open source exact n'avait de prix publié qui correspondait à un déploiement typique pour une petite équipe, donc aucun chiffre n'est donné ici. La comparaison réaliste pour la plupart des utilisateurs de Nextcloud est un abonnement commercial de stockage cloud par rapport à une copie auto-hébergée que vous contrôlez entièrement, ce qui est l'argument de conformité au RGPD pour lequel le module existe en premier lieu.
-- **Le prix du VPS n'est pas le coût total.** Sur un VPS nu, c'est aussi vous qui corrigez le système d'exploitation, faites tourner les sauvegardes et maintenez la base de données (le cas échéant) en bonne santé. Cloud SQL, Secret Manager et la surveillance gérés par RAD couvrent cela pour vous, ce qui est le véritable argument en faveur de RAD par rapport à une machine moins chère — pas le prix affiché.
+- **Aucun SaaS géré clé en main n'a été vérifié pour Nextcloud lui-même**, donc la comparaison honnête est un serveur auto-géré : un Hetzner CPX22 (2 vCPU/4 Go) coûte environ 24 $/mois, un DigitalOcean 2 vCPU/4 Go Droplet environ 24 $/mois, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) environ 49 $/mois.
+- Aucune offre SaaS gérée pour ce projet open-source exact n'avait de prix publié qui correspondait à un déploiement typique pour une petite équipe, donc aucun chiffre n'est donné ici. La comparaison réaliste pour la plupart des utilisateurs de Nextcloud est un abonnement commercial au stockage cloud par rapport à une copie auto-hébergée que vous contrôlez entièrement, ce qui est l'argument de conformité au RGPD pour lequel le module existe en premier lieu.
+- **Le prix du VPS n'est pas le coût total.** Sur un VPS nu, c'est aussi vous qui mettez à jour le système d'exploitation, faites tourner les sauvegardes et maintenez la base de données (le cas échéant) en bonne santé. Cloud SQL géré par RAD, Secret Manager et la surveillance couvrent cela pour vous, ce qui est le véritable argument en faveur de RAD par rapport à une machine moins chère — pas le prix affiché.
 
-### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-Si Nextcloud s'exécute dans **un projet géré par RAD pour vous**, vous avez une deuxième option qui va bien au-delà de la mise à l'échelle à zéro : **supprimer l'ensemble du projet et le restaurer dans les 30 jours pour presque rien.** Cela convient bien mieux à Nextcloud dont vous n'avez besoin qu'occasionnellement — une démo, une évaluation, un projet saisonnier — que de le faire fonctionner en continu.
+Si Nextcloud s'exécute dans **un projet géré par RAD pour vous**, vous avez une deuxième option qui va bien au-delà de la mise à l'échelle à zéro : **supprimez l'ensemble du projet et restaurez-le dans les 30 jours pour presque rien.** Cela convient bien mieux à Nextcloud dont vous n'avez besoin qu'occasionnellement — une démo, une évaluation, un projet saisonnier — que de le faire fonctionner en continu.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, sera utilisable après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli est de redéployer l'application (voir la section suivante) et de restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-- **Comment ça marche.** La suppression d'un projet géré par RAD dissocie d'abord sa facturation, puis demande à Google de supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable, pendant 30 jours. Comme la facturation est déjà dissociée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un module, cela ne détruit pas la base de données, la VM, le cluster ou la ressource de calcul un par un — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture plus jamais les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
-- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 150 $ US.** Déployez Nextcloud, utilisez-le pendant un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre à jour, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez que les frais de module une seule fois, et le temps pendant lequel Nextcloud était réellement actif.
-- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que vous apportez et que RAD ne gère que pour la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude et de démo). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
+- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable, pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend. Contrairement à la suppression d'un module, cela ne détruit pas la base de données, la VM, le cluster ou la ressource de calcul un par un — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
+- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, et non les 435 $ US par mois pour le maintenir en fonctionnement.** Déployez Nextcloud, utilisez-le pendant un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre à jour, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois et le temps pendant lequel Nextcloud était réellement actif.
+- **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet que vous apportez et dont RAD ne gère que la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox que la plupart des utilisations d'étude et de démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 - **Une lacune réelle : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes sont écrites dans un bucket à l'intérieur du projet, et ce bucket n'est **pas** protégé par la suppression logicielle de Cloud Storage, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé Nextcloud et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
-### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payez uniquement pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
+L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours passée, le moyen d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 300 crédits (30,00 $ US) dans votre propre projet, ou 270 crédits dans un projet géré par RAD. La suppression permet d'économiser de l'argent une fois que Nextcloud resterait inutilisé pendant environ 6 jours ou plus dans votre propre projet (environ 4,99 $ US par jour), ou environ 2 jours ou plus dans un projet géré par RAD (115 crédits par jour).
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 300 crédits (30,00 $ US) dans votre propre projet, ou 270 crédits dans un projet géré par RAD. La suppression permet d'économiser de l'argent une fois que Nextcloud resterait inutilisé pendant environ 6 jours ou plus dans votre propre projet (environ 4,99 $ US par jour), ou environ 2 jours ou plus dans un projet géré par RAD (145 crédits par jour).
 - **La majeure partie du coût d'exécution est généralement la base de données et toute VM de fichier/cache partagée.** Elles ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de Nextcloud alors que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
-- **Conservez d'abord vos données.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
+- **Gardez vos données en premier.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant reçoit Nextcloud dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits non utilisés sont reversés au formateur.
-- **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute Nextcloud pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est interrompue et les données sont conservées, afin que personne ne reçoive de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant reçoit Nextcloud dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute Nextcloud pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est interrompue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 - Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
 **Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour la fenêtre de récupération de 30 jours et ce qu'elle dit sur les objets Cloud Storage sans suppression logicielle ; frais RAD et estimations de crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing). Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Nextcloud s'exécute comme une charge de travail PHP/Apache. Le déploiement connecte un ensemble ciblé de services Google Cloud :
+Nextcloud s'exécute comme une charge de travail PHP/Apache. Le déploiement relie un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | GKE Autopilot | Pods PHP/Apache, 2 vCPU / 4 Gio par défaut, mise à l'échelle horizontale automatique |
+| Calcul | GKE Autopilot | Pods PHP/Apache, 2 vCPU / 4 GiB par défaut, autoscalés horizontalement |
 | Base de données | Cloud SQL pour MySQL 8.0 | Requis — Nextcloud ne prend pas en charge PostgreSQL dans ce déploiement |
-| Fichiers partagés | Filestore (NFS) | Répertoires `config/` et `data/` partagés entre toutes les répliques |
+| Fichiers partagés | Filestore (NFS) | Répertoires `config/` et `data/` partagés entre tous les réplicas |
 | Stockage d'objets | Cloud Storage | Un bucket `nc-data` provisionné par déploiement |
-| Cache et verrouillage | Redis | Activé par défaut ; empêche les conflits de verrouillage de fichiers entre les répliques |
+| Cache et verrouillage | Redis | Activé par défaut ; empêche les conflits de verrouillage de fichiers entre les réplicas |
 | Secrets | Secret Manager | Mot de passe administrateur auto-généré ; secrets de configuration post-installation |
 | Ingress | Cloud Load Balancing | Équilibreur de charge externe, domaine personnalisé optionnel + certificat géré |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Le moteur de base de données est fixe ; la sélection de PostgreSQL ou `NONE` empêche le démarrage.
-- **NFS est activé par défaut.** Toutes les répliques doivent partager `config.php` et le répertoire de données utilisateur. Sans NFS, chaque redémarrage de pod supprime les fichiers.
-- **Redis est activé par défaut.** Sans un cache partagé et un backend de verrouillage, les écritures concurrentes entre les répliques provoquent des erreurs "File is locked".
+- **NFS est activé par défaut.** Tous les réplicas doivent partager `config.php` et le répertoire de données utilisateur. Sans NFS, chaque redémarrage de pod supprime les fichiers.
+- **Redis est activé par défaut.** Sans un cache partagé et un backend de verrouillage, les écritures concurrentes entre les réplicas provoquent des erreurs "File is locked" (Fichier verrouillé) HTTP 503.
 - **Les limites PHP sont intégrées à l'image du conteneur** au moment de la build. La modification de `php_memory_limit`, `upload_max_filesize` ou `post_max_size` nécessite une nouvelle exécution de Cloud Build.
 - **Le mot de passe administrateur est généré automatiquement** et stocké dans Secret Manager ; vous ne le définissez jamais en texte clair.
 - **Le premier démarrage est intentionnellement lent.** Nextcloud exécute `occ maintenance:install` de manière synchrone avant le démarrage d'Apache. La sonde de démarrage autorise jusqu'à 10 minutes pour que la première installation se termine.
@@ -109,7 +109,7 @@ Toutes les commandes supposent que vous avez exécuté `gcloud container cluster
 
 ### A. GKE Autopilot — la charge de travail Nextcloud {#a-gke-autopilot--the-nextcloud-workload}
 
-Les pods Nextcloud sont planifiés sur Autopilot, qui facture le CPU/la mémoire que les pods demandent réellement. L'autoscaling horizontal des pods dimensionne le déploiement entre le nombre minimum et maximum de répliques.
+Les pods Nextcloud sont planifiés sur Autopilot, qui facture le CPU/la mémoire que les pods demandent réellement. L'autoscaling horizontal des pods dimensionne le déploiement entre le nombre minimal et maximal de réplicas.
 
 - **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de travail Nextcloud pour voir les pods, les révisions et les événements. Kubernetes Engine → Services et Ingress affiche l'adresse IP externe.
 - **CLI :**
@@ -127,7 +127,7 @@ Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle
 
 ### B. Cloud SQL pour MySQL 8.0 {#b-cloud-sql-for-mysql-80}
 
-Nextcloud stocke toutes les données d'application (métadonnées de fichiers, utilisateurs, partages, calendrier et contacts) dans une instance gérée de Cloud SQL pour MySQL 8.0. Les pods y accèdent en privé via le sidecar **Cloud SQL Auth Proxy** sur un socket Unix à `127.0.0.1:3306` afin qu'aucune IP publique ne soit exposée. Lors du premier déploiement, un job d'initialisation crée la base de données de l'application et l'utilisateur avec la collation `utf8mb4`.
+Nextcloud stocke toutes les données d'application (métadonnées de fichiers, utilisateurs, partages, calendrier et contacts) dans une instance Cloud SQL pour MySQL 8.0 gérée. Les pods l'atteignent en privé via le sidecar **Cloud SQL Auth Proxy** sur un socket Unix à `127.0.0.1:3306` afin qu'aucune IP publique ne soit exposée. Lors du premier déploiement, un job d'initialisation crée la base de données et l'utilisateur de l'application avec le classement `utf8mb4`.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs et les métriques.
 - **CLI :**
@@ -141,7 +141,7 @@ Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret 
 
 ### C. Filestore (NFS) et Cloud Storage {#c-filestore-nfs-and-cloud-storage}
 
-Les données de fichiers utilisateur de Nextcloud sont écrites dans un partage **Filestore (NFS)** monté dans chaque pod. `entrypoint.sh` définit `NEXTCLOUD_DATA_DIR=<nfs_mount_path>/nextcloud-data` (`/mnt/nfs/nextcloud-data` par défaut ; le wrapper passe le même `nfs_mount_path` au point d'entrée que `NFS_MOUNT_PATH`, de sorte que le montage et le répertoire de données ne peuvent pas être en désaccord) afin que toutes les répliques partagent les mêmes fichiers utilisateur. `config.php` n'est **pas** stocké sur NFS — il est reconstruit localement sur chaque pod à partir des secrets Secret Manager (voir §3 "Secrets de configuration post-installation" ci-dessous). Un bucket **Cloud Storage** `nc-data` est également provisionné par déploiement et le compte de service de la charge de travail se voit accorder l'accès automatiquement.
+Les données de fichiers utilisateur de Nextcloud sont écrites sur un partage **Filestore (NFS)** monté dans chaque pod. `entrypoint.sh` définit `NEXTCLOUD_DATA_DIR=<nfs_mount_path>/nextcloud-data` (`/mnt/nfs/nextcloud-data` par défaut ; le wrapper passe le même `nfs_mount_path` au point d'entrée que `NFS_MOUNT_PATH`, de sorte que le montage et le répertoire de données ne peuvent pas être en désaccord) afin que tous les réplicas partagent les mêmes fichiers utilisateur. `config.php` n'est **pas** stocké sur NFS — il est reconstruit localement sur chaque pod à partir des secrets Secret Manager (voir §3 "Secrets de configuration post-installation" ci-dessous). Un bucket `nc-data` **Cloud Storage** est également provisionné par déploiement et le compte de service de la charge de travail se voit accorder un accès automatique.
 
 - **Console :** Filestore → Instances pour le partage NFS ; Cloud Storage → Buckets pour le bucket de données.
 - **CLI :**
@@ -157,7 +157,7 @@ Voir [App_GKE](App_GKE.md) pour le provisionnement NFS, GCS Fuse et les options 
 
 ### D. Cache Redis et verrouillage de fichiers {#d-redis-cache-and-file-locking}
 
-Redis prend en charge le cache distribué de Nextcloud (`memcache.distributed`) et le verrouillage de fichiers (`filelocking.enabled`). Avec plus d'une réplique, c'est obligatoire — sans cela, les écritures concurrentes produisent des erreurs HTTP 503 "File is locked". Lorsqu'aucun hôte Redis externe n'est configuré et que NFS est activé, l'adresse IP du serveur NFS est utilisée comme point de terminaison Redis.
+Redis prend en charge le cache distribué de Nextcloud (`memcache.distributed`) et le verrouillage de fichiers (`filelocking.enabled`). Avec plus d'un réplica, c'est obligatoire — sans cela, les écritures concurrentes produisent des erreurs HTTP 503 "File is locked". Lorsqu'aucun hôte Redis externe n'est configuré et que NFS est activé, l'adresse IP du serveur NFS est utilisée comme point de terminaison Redis.
 
 - **Console :** Memorystore → Redis (si vous utilisez une instance gérée).
 - **CLI :**
@@ -168,7 +168,7 @@ Redis prend en charge le cache distribué de Nextcloud (`memcache.distributed`) 
 
 ### E. Secret Manager {#e-secret-manager}
 
-Le mot de passe administrateur de Nextcloud et quatre secrets de configuration post-installation (ID d'instance, sel de mot de passe, secret d'application et éventuellement le mot de passe d'authentification Redis) sont stockés dans Secret Manager et injectés dans les pods au moment de l'exécution. Les trois secrets de configuration commencent par des valeurs de remplacement `"UNSET"` ; le hook post-installation du conteneur écrit les vraies valeurs après que `occ maintenance:install` soit terminé.
+Le mot de passe administrateur de Nextcloud et quatre secrets de configuration post-installation (ID d'instance, sel de mot de passe, secret d'application et éventuellement le mot de passe d'authentification Redis) sont stockés dans Secret Manager et injectés dans les pods au moment de l'exécution. Les trois secrets de configuration commencent comme des valeurs d'espace réservé `"UNSET"` ; le hook post-installation du conteneur écrit les vraies valeurs après la fin de `occ maintenance:install`.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -181,7 +181,7 @@ Le nom du secret du mot de passe de la base de données se trouve dans les [Sort
 
 ### F. Réseau et ingress {#f-networking--ingress}
 
-Par défaut, la charge de travail est exposée via une IP externe de Cloud Load Balancing. Un domaine personnalisé avec un certificat géré par Google peut être activé, et une IP statique peut être réservée afin que l'adresse survive aux redéploiements. Les domaines personnalisés sont également ajoutés automatiquement à la liste `NEXTCLOUD_TRUSTED_DOMAINS` de Nextcloud.
+Par défaut, la charge de travail est exposée via une adresse IP externe Cloud Load Balancing. Un domaine personnalisé avec un certificat géré par Google peut être activé, et une adresse IP statique peut être réservée afin que l'adresse survive aux redéploiements. Les domaines personnalisés sont également ajoutés automatiquement à la liste `NEXTCLOUD_TRUSTED_DOMAINS` de Nextcloud.
 
 - **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
 - **CLI :**
@@ -190,7 +190,7 @@ Par défaut, la charge de travail est exposée via une IP externe de Cloud Load 
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Voir [App_GKE](App_GKE.md) pour les détails sur les domaines personnalisés, Cloud CDN et les IP statiques.
+Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les détails de l'adresse IP statique.
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
@@ -208,12 +208,12 @@ Les flux stdout/stderr des pods vers Cloud Logging ; les métriques GKE et Cloud
 ## 3. Comportement de l'application Nextcloud {#3-nextcloud-application-behaviour}
 
 - **Configuration de la base de données au premier déploiement.** Un job d'initialisation crée la base de données et l'utilisateur Nextcloud avec le jeu de caractères `utf8mb4` et accorde les privilèges avant le démarrage de l'application. Il est idempotent et peut être réexécuté en toute sécurité.
-- **`occ maintenance:install` au premier démarrage.** Lors du tout premier démarrage, Nextcloud exécute sa routine d'installation de manière synchrone avant que Apache ne commence à servir. Cela peut prendre plusieurs minutes sur une instance Cloud SQL froide. La sonde de démarrage autorise jusqu'à 10 minutes (délai initial de 60 s + 20 échecs × période de 15 s) pour que cela se termine.
-- **Secrets de configuration post-installation.** Une fois `occ maintenance:install` terminé, un hook dans le conteneur écrit les vraies valeurs `instanceid`, `passwordsalt` et `secret` dans Secret Manager. Les démarrages de pods ultérieurs les relisent pour reconstruire `config.php` sans nécessiter NFS.
-- **Mise à niveau PHP au démarrage.** `NEXTCLOUD_UPDATE=1` est défini par défaut, de sorte que Nextcloud exécute `occ upgrade` automatiquement à chaque démarrage de conteneur. C'est intentionnel pour les mises à jour de version mineures. Définissez `NEXTCLOUD_UPDATE=0` dans `environment_variables` et gérez les mises à niveau manuellement lors du passage à des versions majeures.
-- **Domaines de confiance.** Nextcloud applique une liste blanche de domaines de confiance. Le module initialise `NEXTCLOUD_TRUSTED_DOMAINS` avec le nom DNS interne au cluster et tout `application_domains`. Les requêtes provenant d'hôtes non listés reçoivent une erreur "Accès via un domaine non fiable".
-- **Données utilisateur NFS uniquement.** NFS ne prend en charge que le répertoire de données utilisateur partagé (`NEXTCLOUD_DATA_DIR=<nfs_mount_path>/nextcloud-data`). `config.php` n'est pas stocké sur NFS ou partagé via un lien symbolique — chaque réplique le reconstruit localement à partir des valeurs Secret Manager décrites ci-dessus, ce qui permet à toutes les répliques de converger sur la même configuration sans dépendance NFS pour l'état de la configuration.
-- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/status.php`, qui renvoie un HTTP 200 avec un objet de statut JSON quel que soit l'état de configuration de Nextcloud — ce qui en fait le point de terminaison de santé canonique.
+- **`occ maintenance:install` au premier démarrage.** Lors du tout premier démarrage, Nextcloud exécute sa routine d'installation de manière synchrone avant que Apache ne commence à servir. Cela peut prendre plusieurs minutes sur une instance Cloud SQL froide. La sonde de démarrage autorise jusqu'à 10 minutes (60 s de délai initial + 20 échecs × 15 s de période) pour que cela se termine.
+- **Secrets de configuration post-installation.** Une fois `occ maintenance:install` terminé, un hook dans le conteneur écrit les vraies valeurs `instanceid`, `passwordsalt` et `secret` dans Secret Manager. Les démarrages de pods ultérieurs les relisent pour reconstruire `config.php` sans nécessiter de dépendance NFS pour l'état de la configuration.
+- **Mise à niveau PHP au démarrage.** `NEXTCLOUD_UPDATE=1` est défini par défaut, de sorte que Nextcloud exécute `occ upgrade` automatiquement à chaque démarrage de conteneur. C'est intentionnel pour les mises à jour de versions mineures. Définissez `NEXTCLOUD_UPDATE=0` dans `environment_variables` et gérez les mises à niveau manuellement lors du passage à des versions majeures.
+- **Domaines de confiance.** Nextcloud applique une liste blanche de domaines de confiance. Le module initialise `NEXTCLOUD_TRUSTED_DOMAINS` avec le nom DNS interne du cluster et tout `application_domains`. Les requêtes provenant d'hôtes non listés reçoivent une erreur "Accès via un domaine non fiable".
+- **Données utilisateur NFS uniquement.** NFS prend en charge uniquement le répertoire de données utilisateur partagé (`NEXTCLOUD_DATA_DIR=<nfs_mount_path>/nextcloud-data`). `config.php` n'est pas stocké sur NFS ou partagé via un lien symbolique — chaque réplica le reconstruit localement à partir des valeurs Secret Manager décrites ci-dessus, ce qui permet à tous les réplicas de converger vers la même configuration sans dépendance NFS pour l'état de la configuration.
+- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/status.php`, qui renvoie un HTTP 200 avec un objet d'état JSON quelle que soit l'état de configuration de Nextcloud — ce qui en fait le point de terminaison de santé canonique.
 - **Connexion administrateur.** Le nom d'utilisateur administrateur initial est configurable ; le mot de passe est récupéré de Secret Manager (voir §2.E).
 
 ---
@@ -233,8 +233,8 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail autorisées à accéder au projet et aux alertes de surveillance. |
+| `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
+| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
 | `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources pour le suivi des coûts/de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -250,12 +250,12 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
+| `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `2000m` | CPU par pod ; 2 vCPU recommandés. |
-| `memory_limit` | `4Gi` | Mémoire par pod ; 4 Gio recommandés. |
+| `memory_limit` | `4Gi` | Mémoire par pod ; 4 GiB recommandés. |
 | `container_resources` | `{ cpu_limit="1000m", memory_limit="512Mi" }` | Objet de ressource structuré ; remplace `cpu_limit`/`memory_limit` lorsqu'il est défini. |
-| `min_instance_count` | `1` | Répliques minimales. Garder ≥ 1 pour les clients WebDAV qui maintiennent des connexions persistantes. |
-| `max_instance_count` | `5` | Répliques maximales. Nécessite Redis + NFS lorsque > 1. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas. Garder ≥ 1 pour les clients WebDAV qui maintiennent des connexions persistantes. |
+| `max_instance_count` | `5` | Nombre maximal de réplicas. Nécessite Redis + NFS lorsque > 1. |
 | `container_port` | `80` | Nextcloud/Apache écoute sur le port 80. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions socket. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisser Autopilot ajuster automatiquement les requêtes de ressources. |
@@ -273,8 +273,8 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `gke_cluster_name` | `""` | Cluster GKE cible. Découvert automatiquement s'il est vide. |
-| `namespace_name` | `""` | Espace de noms Kubernetes. Auto-généré s'il est vide. |
+| `gke_cluster_name` | `""` | Cluster GKE cible. Auto-découvert si vide. |
+| `namespace_name` | `""` | Espace de noms Kubernetes. Auto-généré si vide. |
 | `workload_type` | `null` | Se résout automatiquement en `StatefulSet` lorsque `stateful_pvc_enabled = true`. |
 | `service_type` | `LoadBalancer` | Comment le service est exposé. |
 | `session_affinity` | `ClientIP` | Routage persistant ; recommandé pour les opérations de fichiers avec état. |
@@ -288,7 +288,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `stateful_pvc_enabled` | `null` | Active les modèles de PVC par pod ; sélectionne automatiquement StatefulSet lorsque `true`. |
 | `stateful_pvc_size` | `10Gi` | Taille de stockage pour chaque PVC par pod. |
 | `stateful_pvc_mount_path` | `/data` | Chemin du conteneur pour le PVC par pod. |
-| `stateful_pvc_storage_class` | `standard-rwo` | Kubernetes StorageClass pour le provisionnement de PVC. |
+| `stateful_pvc_storage_class` | `standard-rwo` | StorageClass Kubernetes pour le provisionnement de PVC. |
 | `stateful_headless_service` | `null` | Crée un service sans tête pour des entrées DNS de pod stables. |
 | `stateful_pod_management_policy` | `null` | `OrderedReady` ou `Parallel`. |
 | `stateful_update_strategy` | `null` | `RollingUpdate` ou `OnDelete`. |
@@ -298,7 +298,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Limite les comptes de CPU/mémoire/objets de l'espace de noms. |
+| `enable_resource_quota` | `false` | Plafonne le nombre de CPU/mémoire/objets de l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doit utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers nus sont lus comme des octets et bloquent la planification. |
 
 ### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
@@ -315,8 +315,8 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 |---|---|---|
 | `startup_probe` | `{ path="/status.php", initial_delay_seconds=60, failure_threshold=20 }` | Permet jusqu'à ~5 minutes pour le premier démarrage `occ maintenance:install`. |
 | `liveness_probe` | `{ path="/status.php", initial_delay_seconds=120, failure_threshold=3 }` | Redémarre le conteneur après 3 échecs consécutifs. |
-| `uptime_check_config` | `{ enabled=false }` | Vérification de disponibilité Cloud Monitoring facultative. |
-| `alert_policies` | `[]` | Politiques d'alerte métrique facultatives. |
+| `uptime_check_config` | `{ enabled=false }` | Vérification de disponibilité Cloud Monitoring optionnelle. |
+| `alert_policies` | `[]` | Politiques d'alerte métrique optionnelles. |
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
@@ -328,23 +328,25 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
 
-Intégration standard App_GKE Cloud Build / Cloud Deploy — voir [App_GKE](App_GKE.md). Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`, `enable_cloud_deploy`.
+Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
+[App_GKE](App_GKE.md). Entrées clés : `enable_cicd_trigger`,
+`github_repository_url`, `github_token`, `enable_cloud_deploy`.
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Volume Filestore partagé pour la configuration et les données Nextcloud. **Requis pour les répliques multiples.** |
+| `enable_nfs` | `true` | Volume Filestore partagé pour la configuration et les données Nextcloud. **Requis pour les réplicas multiples.** |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage à l'intérieur du conteneur. Les données utilisateur vont à `<nfs_mount_path>/nextcloud-data`. |
 | `nfs_volume_name` | `nfs-data-volume` | Nom du volume Kubernetes pour le montage NFS. |
-| `nfs_instance_name` | `""` | Nom de la VM GCE NFS existante. Découvert automatiquement si vide. |
+| `nfs_instance_name` | `""` | Nom de la VM GCE NFS existante. Auto-découvert si vide. |
 | `nfs_instance_base_name` | `app-nfs` | Nom de base pour la VM NFS intégrée si aucune n'existe. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `create_cloud_storage` | `true` | Provisionner les buckets configurés (le bucket `nc-data` provient de `Nextcloud_Common`). |
+| `create_cloud_storage` | `true` | Provisionne les buckets configurés (le bucket `nc-data` provient de `Nextcloud_Common`). |
 | `storage_buckets` | `[]` | Buckets GCS supplémentaires au-delà du bucket `nc-data` auto-provisionné. |
 | `gcs_volumes` | `[]` | Buckets GCS à monter via le pilote CSI GCS Fuse. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
@@ -355,9 +357,9 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir [App_GKE](App_
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `true` | Utiliser Redis pour le cache distribué et le verrouillage de fichiers. |
-| `redis_host` | `""` | Laisser vide pour utiliser l'IP du serveur NFS ; définir explicitement lorsque NFS est désactivé. |
+| `redis_host` | `""` | Laisser vide pour utiliser l'adresse IP du serveur NFS ; définir explicitement lorsque NFS est désactivé. |
 | `redis_port` | `6379` | Port Redis. |
-| `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
+| `redis_auth` | `""` | Mot de passe d'authentification Redis optionnel (sensible). |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
@@ -369,7 +371,7 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir [App_GKE](App_
 | `db_name` | `nextcloud` | Alias de commodité transmis à `Nextcloud_Common` comme `db_name`. |
 | `db_user` | `nextcloud` | Alias de commodité transmis à `Nextcloud_Common` comme `db_user`. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
-| `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption de service. |
+| `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption. |
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
@@ -381,17 +383,19 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir [App_GKE](App_
 
 ### Groupe 18 — Scripts SQL personnalisés {#group-18--custom-sql-scripts}
 
-`enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`, `custom_sql_scripts_use_root` — exécute des scripts SQL à partir d'un bucket GCS après le provisionnement. Voir [App_GKE](App_GKE.md).
+`enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`,
+`custom_sql_scripts_use_root` — exécutez du SQL à partir d'un bucket GCS après le provisionnement. Voir
+[App_GKE](App_GKE.md).
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_custom_domain` | `true` | Provisionner Ingress pour les noms d'hôte personnalisés + certificat géré. |
+| `enable_custom_domain` | `true` | Provisionne Ingress pour les noms d'hôte personnalisés + certificat géré. |
 | `application_domains` | `[]` | Noms d'hôte personnalisés ; également ajoutés à `NEXTCLOUD_TRUSTED_DOMAINS`. |
 | `reserve_static_ip` | `true` | IP externe stable sur les redéploiements. |
 
-### Groupe 20 — Identity-Aware Proxy (IAP) {#group-20--identity-aware-proxy-iap}
+### Groupe 20 — Proxy conscient de l'identité (IAP) {#group-20--identity-aware-proxy-iap}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -414,21 +418,21 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir [App_GKE](App_
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation (dry-run). |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
 | `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 ### Groupe 23 — Paramètres de l'application Nextcloud {#group-23--nextcloud-application-settings}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `nextcloud_admin_user` | `admin` | Nom d'utilisateur de l'administrateur initial. Modifier par rapport à la valeur par défaut pour les déploiements publics. |
+| `nextcloud_admin_user` | `admin` | Nom d'utilisateur de l'administrateur initial. Changer par rapport à la valeur par défaut pour les déploiements publics. |
 | `php_memory_limit` | `512M` | Limite de mémoire PHP — intégrée à l'image du conteneur au moment de la build. Augmenter pour les opérations de fichiers volumineux. |
 | `upload_max_filesize` | `512M` | Taille maximale de fichier à télécharger — intégrée à l'image. Augmenter pour les téléchargements de vidéos ou d'archives. |
 | `post_max_size` | `512M` | Limite de corps de requête POST PHP — doit être ≥ `upload_max_filesize`. |
 
 ### E-mail / SMTP {#email--smtp}
 
-Il n'y a pas de variables SMTP dédiées — l'envoi d'e-mails est configuré via la carte `environment_variables` (Groupe 5), dont la valeur par défaut initialise les espaces réservés `SMTP_HOST` (vide = e-mail désactivé ; les réinitialisations de mot de passe et les notifications de partage ne fonctionneront pas), `SMTP_PORT` (`25`), `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SSL` (`false`), et `EMAIL_FROM`. Définissez-les avec les valeurs de votre relais de messagerie pour activer l'e-mail.
+Il n'y a pas de variables SMTP dédiées — l'envoi d'e-mails est configuré via la carte `environment_variables` (Groupe 5), dont la valeur par défaut initialise les espaces réservés `SMTP_HOST` (vide = e-mail désactivé ; les réinitialisations de mot de passe et les notifications de partage ne fonctionneront pas), `SMTP_PORT` (`25`), `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SSL` (`false`), et `EMAIL_FROM`. Définissez-les sur les valeurs de votre relais de messagerie pour activer l'e-mail.
 
 ---
 
@@ -441,8 +445,8 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 |---|---|
 | `service_name` | Nom du service Kubernetes. |
 | `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
-| `service_cluster_ip` | ClusterIP interne au cluster. |
-| `stage_service_cluster_ips` | Mappage des ClusterIPs pour les services spécifiques à chaque étape. |
+| `service_cluster_ip` | ClusterIP intra-cluster. |
+| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `service_url` | URL pour atteindre Nextcloud (ajoute `/login` à l'URL de base). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
@@ -460,7 +464,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `cicd_enabled` / `cicd_configuration` | Statut et détails CI/CD. |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails du dépôt CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. |
+| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt(e). |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | Statut VPC-SC. |
 | `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et statut CMEK. |
 
@@ -471,35 +475,37 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
 | `database_type` | `MYSQL_8_0` | Critique | Nextcloud nécessite MySQL ; d'autres moteurs bloquent le job d'initialisation et le démarrage. |
 | `enable_nfs` | `true` | Critique | Sans stockage partagé, tous les fichiers utilisateur et `config.php` sont perdus au redémarrage du pod. |
-| `enable_cloudsql_volume` | `true` | Critique | Nextcloud se connecte via un socket Unix ; la suppression du sidecar rompt toutes les connexions à la base de données au démarrage. |
+| `enable_cloudsql_volume` | `true` | Critique | Nextcloud se connecte via un socket Unix ; la suppression du sidecar interrompt toutes les connexions à la base de données au démarrage. |
 | `application_database_name` / `_user` | défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit les données. |
 | `application_domains` | inclure tous les noms d'hôtes d'accès | Critique | Nextcloud bloque les requêtes provenant de domaines non listés avec "Access through untrusted domain". |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans un `backup_uri` valide échoue le job d'importation. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans `backup_uri` valide échoue le job d'importation. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets et bloquent toute planification. |
 | `enable_redis` | `true` | Élevé | Avec > 1 réplica, les verrous de fichiers deviennent obsolètes et les écritures concurrentes renvoient HTTP 503. |
 | `redis_host` | `""` ou IP explicite | Élevé | Pas de point de terminaison Redis valide lorsque NFS est désactivé et qu'aucun hôte n'est défini. |
 | `upload_max_filesize` / `post_max_size` | augmenter pour les fichiers volumineux | Élevé | Intégré à l'image ; les fichiers dépassant la limite échouent silencieusement. `post_max_size` doit être ≥ `upload_max_filesize`. |
-| `memory_limit` | `4Gi` | Élevé | Trop peu de mémoire provoque un OOM PHP lors de téléchargements volumineux ou de la génération de vignettes. |
+| `memory_limit` | `4Gi` | Élevé | Trop peu de mémoire provoque des OOM PHP lors de téléchargements volumineux ou de la génération de vignettes. |
 | `NEXTCLOUD_UPDATE` | `1` (par défaut) ou `0` | Élevé | Laisser `1` lors d'une mise à niveau de version majeure peut corrompre la base de données. Définir sur `0` et exécuter `occ upgrade` manuellement entre les versions majeures. |
 | `min_instance_count` | `1` | Élevé | `0` provoque des déconnexions à froid pour les clients de synchronisation WebDAV. |
 | `max_instance_count > 1` | nécessite Redis + NFS | Élevé | Plusieurs réplicas sans Redis provoquent des erreurs de verrouillage de fichiers et une éventuelle corruption des données. |
 | `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau de nœuds (un seul pod ne peut pas être expulsé). |
 | `nextcloud_admin_user` | changer de `admin` | Moyen | Le `admin` par défaut est une cible courante de force brute sur les déploiements publics. |
-| `enable_iap` / `enable_cloud_armor` | activer pour l'administration | Moyen | Sans cela, le panneau d'administration Nextcloud est accessible publiquement. |
+| `enable_iap` / `enable_cloud_armor` | activer pour l'administration | Moyen | Sans cela, le panneau d'administration de Nextcloud est accessible publiquement. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
 | `php_memory_limit` | `512M` (augmenter pour une utilisation intensive) | Moyen | Intégré à l'image ; nécessite une reconstruction pour être modifié. |
 
 ---
 
-Pour le comportement de la fondation référencé partout — IAM et Workload Identity,
+Pour le comportement du socle référencé partout — IAM et Workload Identity,
 autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
 VPC-SC, sauvegardes et mise en miroir d'images — voir **[App_GKE](App_GKE.md)**. La
-configuration d'application spécifique à Nextcloud partagée avec la variante Cloud Run
-est décrite dans **[Nextcloud_Common](Nextcloud_Common.md)**.
+configuration d'application spécifique à Nextcloud partagée avec la variante Cloud Run est
+décrite dans **[Nextcloud_Common](Nextcloud_Common.md)**.
+
+<!-- related-guides -->
 
 ## Guides associés {#related-guides}
 

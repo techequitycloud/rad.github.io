@@ -26,8 +26,8 @@ Most configuration options in `InvoiceNinja GKE` map directly to the same option
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 175 credits (US$17.50) | 157.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$142.62 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **112 credits a day** |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$142.62 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **142 credits a day**, about 4,260 a month (about US$426 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
 10 credits cost US$1 on a one-off top-up, less on a plan. In a project RAD manages, the

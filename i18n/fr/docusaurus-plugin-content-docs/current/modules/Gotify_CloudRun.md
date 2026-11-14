@@ -3,48 +3,46 @@ title: "Gotify sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Gotify sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gotify_CloudRun.md @ 60462a86 sha256:dac92c218866 -->
+<!-- translated-from: docs/modules/Gotify_CloudRun.md @ 40c83c3f sha256:9d196ccc2793 -->
 
 # Gotify sur Google Cloud Run {#gotify-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Gotify_CloudRun.png" alt="Gotify sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Gotify est un serveur auto-hébergé open-source (licence MIT) pour l'envoi et la
-réception de notifications push en temps réel. Les applications publient des messages
-via une API REST simple et les clients les reçoivent instantanément via des flux
-WebSocket. Ce module déploie Gotify sur **Cloud Run v2** sur la base de la
-fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
-l'infrastructure Google Cloud partagée.
+Gotify est un serveur open-source (licence MIT), auto-hébergé, pour l'envoi et la réception
+de notifications push en temps réel. Les applications publient des messages via une API REST simple et
+les clients les reçoivent instantanément via des flux WebSocket. Ce module déploie Gotify sur
+**Cloud Run v2** sur la base de la fondation [App_CloudRun](App_CloudRun.md), qui
+provisionne et gère l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud utilisés par Gotify et sur la manière
-de les explorer et de les exploiter depuis la console Google Cloud et la ligne de
-commande. Pour les mécanismes communs à toutes les applications Cloud Run — identité
-de service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD,
-Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle
-de vie du déploiement — reportez-vous au
+Ce guide se concentre sur les services cloud utilisés par Gotify et sur la manière de les explorer et de les exploiter
+depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à
+toutes les applications Cloud Run — identité de service, ingress et équilibrage de charge, mise à l'échelle
+et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
+sauvegardes et cycle de vie du déploiement — reportez-vous au
 [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
 ## Ce que coûte Gotify sur RAD, et comment cela se compare {#what-gotify-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Gotify sur Cloud Run dans votre propre projet Google Cloud coûte environ 115,17 $/mois en frais Google Cloud**, en plus d'un frais de module RAD unique de 75 crédits facturé une fois au moment du déploiement. Le travail de Gotify est minime — accepter un webhook, le diffuser via WebSocket — mais ce déploiement nécessite toujours une base de données et un serveur de fichiers derrière lui, ce qui représente la majeure partie des 115,17 $ ci-dessus. Dans un projet géré par RAD, les frais de module tombent à 67,5 crédits (10 % de moins) et le coût d'exécution est mesuré à l'heure en crédits au lieu d'être facturé directement par Google — voir [Mettre en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous pour le seul avantage géré par RAD qu'un VPS auto-hébergé ne peut égaler — ou voir le [guide GKE](Gotify_GKE.md) si vous préférez l'exécuter sur Kubernetes.
+**L'exécution de Gotify sur Cloud Run dans votre propre projet Google Cloud coûte environ 115,17 $/mois en frais Google Cloud**, en plus d'un forfait unique de 75 crédits RAD facturé une fois au moment du déploiement. Le job de Gotify est petit — accepter un webhook, le diffuser via WebSocket — mais ce déploiement nécessite toujours une base de données et un serveur de fichiers derrière lui, ce qui représente la majeure partie des 115,17 $ ci-dessus. Dans un projet géré par RAD, les frais de module tombent à 67,5 crédits (10 % de moins) et le coût d'exécution est mesuré à l'heure en crédits au lieu d'être facturé directement par Google — voir [Mettre en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous pour le seul avantage géré par RAD qu'un VPS auto-hébergé ne peut pas égaler — ou voir le [guide GKE](Gotify_GKE.md) si vous préférez l'exécuter sur Kubernetes.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
-| Frais de module (unique) | 75 crédits | 67,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | 115,17 $/mois, facturé par Google au prix catalogue | ~54 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
+| Frais de module (une seule fois) | 75 crédits | 67,5 crédits (10 % de moins) |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | 115,17 $/mois, facturé par Google au prix catalogue | ~84 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : le premier à réussir ; jamais une session de lab ou un projet client).
 
 **Coût d'exécution par défaut dans votre propre projet**
 
 | Ressource | US$/mois (prix catalogue Google, us-central1) |
 |---|---|
-| Cloud Run, 1x vCPU / 0,5 GiB (alwaysOn) | 44,72 $ |
+| Cloud Run, 1x vCPU / 0,5 Gio (alwaysOn) | 44,72 $ |
 | Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ |
 | Serveur de fichiers NFS/cache (petite VM) | 13,43 $ |
 | Cloud NAT et réseau | 5,00 $ |
@@ -53,31 +51,31 @@ Votre premier déploiement réussi sur RAD est exempté des frais de module lors
 
 ### Comment cela se compare {#how-it-compares}
 
-- Une comparaison auto-gérée : Hetzner CPX22 (2 vCPU/4 Go) coûte environ 24 $/mois, un Droplet DigitalOcean 2 vCPU/4 Go est le même 24 $/mois, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) est environ 49 $/mois — n'importe lequel de ceux-ci est suffisant pour exécuter Gotify et sa base de données Postgres ensemble dans Docker Compose sur une seule machine, à un prix affiché inférieur à la pile gérée de RAD.
-- Ce que ce prix n'inclut pas : les sauvegardes, les correctifs de sécurité, le renouvellement TLS et les pages de disque plein à 2h du matin, tout ce que Cloud SQL, Secret Manager et la surveillance gérés par RAD absorbent pour vous.
-- Gotify n'a pas de version SaaS hébergée officielle — il n'est livré qu'en tant que logiciel auto-hébergé, donc le choix est vraiment "gérer un VPS vous-même" ou "laisser RAD gérer la même pile", pas RAD contre un abonnement.
+- Une comparaison auto-gérée : Hetzner CPX22 (2 vCPU/4 Go) coûte environ 24 $/mois, un Droplet DigitalOcean 2 vCPU/4 Go coûte le même prix de 24 $/mois, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) coûte environ 49 $/mois — n'importe lequel de ces services est suffisant pour exécuter Gotify et sa base de données Postgres ensemble dans Docker Compose sur une seule machine, à un prix affiché inférieur à celui de la pile gérée par RAD.
+- Ce que ce prix n'inclut pas : les sauvegardes, les correctifs de sécurité, le renouvellement TLS et les pages "disque plein" à 2h du matin, tout ce que Cloud SQL, Secret Manager et la surveillance gérés par RAD absorbent pour vous.
+- Gotify n'a pas de version SaaS hébergée officielle — il n'est livré qu'en tant que logiciel auto-hébergé, donc le choix est vraiment "gérer un VPS vous-même" ou "laisser RAD gérer la même pile", et non RAD contre un abonnement.
 
-### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 C'est l'avantage principal d'un projet géré par RAD, et il ne coûte rien lorsqu'il est en pause.
-La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer
-le projet purement et simplement — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression d'un seul module,
-cela ne déconstruit **pas** Cloud SQL, aucune VM, ou la ressource de calcul une par une : l'ensemble
-du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà
+La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le
+projet purement et simplement — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression d'un module,
+cela ne **détruit pas** Cloud SQL, aucune VM, ou la ressource de calcul une par une : l'ensemble du
+projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà
 déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
 La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le
-projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour
-confirmer que tout est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour trouve
+projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour
+confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve
 les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
 
-Ce qu'il faut : vous devez être propriétaire du projet (pas un projet pour lequel RAD ne gère que la facturation), vous devez
+Ce qu'il faut pour cela : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez
 le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est
-admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser
-le seuil du palier (100 crédits pour le palier sandbox que la plupart des utilisations d'étude/démo conviennent). Google dit que la plupart
+admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser
+le seuil du palier (100 crédits pour le palier sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart
 des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
 
 Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a
@@ -94,36 +92,36 @@ la suppression supprime les ressources définitivement, et ramener Gotify signif
 zéro. Cela coûte 75 crédits (les frais de module ; les builds sont inclus).
 
 La suppression ne permet d'économiser de l'argent que si Gotify restait inutilisé assez longtemps pour compenser ce
-coût de redéploiement par rapport à son propre coût d'exécution — pour Gotify, c'est environ 3 jours ou
-plus. La majeure partie de ce coût d'exécution est généralement la base de données (et, lorsque ce module en utilise un, la VM de serveur de fichiers partagée ou le cluster GKE) — ceux-ci ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de cette application pendant que quelque chose d'autre partage le projet n'économise que sa propre part de calcul.
+coût de redéploiement par rapport à son propre coût d'exécution — pour Gotify, cela représente environ 3 jours ou
+plus. La majeure partie de ce coût d'exécution est généralement la base de données (et, lorsque ce module en utilise un, la VM de serveur de fichiers partagé ou le cluster GKE) — ceux-ci ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de cette application alors que quelque chose d'autre partage le projet n'économise que sa propre part de calcul.
 
-Gardez les données en premier : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui,
-donc copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
+Priorité aux données : les sauvegardes nocturnes sont stockées dans un bucket à l'intérieur du déploiement et sont supprimées avec celui-ci.
+Copiez donc la dernière sauvegarde avant de supprimer si vous souhaitez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-Sessions de lab, pour la formation : un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+Sessions de lab, pour la formation : un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits non utilisés sont restitués au formateur.
 
 Environnements gérés, pour les cabinets de conseil : un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les propres frais de RAD et les estimations de crédits quotidiens ; [Documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les affirmations de pause/restauration.
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les frais propres à RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les affirmations de pause/restauration.
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Gotify s'exécute comme un conteneur Go à binaire unique sur Cloud Run v2. Le déploiement relie
+Gotify s'exécute en tant que conteneur Go à binaire unique sur Cloud Run v2. Le déploiement connecte
 un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service Go, 1 vCPU / 512 Mio par défaut, CPU toujours actif pour les flux WebSocket |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Requis — ce module n'utilise jamais le SQLite intégré de Gotify |
+| Base de données | Cloud SQL pour PostgreSQL 15 | Requis — ce module n'utilise jamais SQLite intégré de Gotify |
 | Secrets | Secret Manager | Mot de passe administrateur auto-généré (`GOTIFY_DEFAULTUSER_PASS`) ; mot de passe de la base de données |
-| Build de conteneur | Cloud Build + Artifact Registry | Encapsule `ghcr.io/gotify/server` avec un point d'entrée de mappage de base de données |
-| Ingress | URL Cloud Run / Équilibrage de charge Cloud | URL par défaut `run.app` ; équilibreur de charge HTTPS externe optionnel + domaine personnalisé |
+| Build de conteneur | Cloud Build + Artifact Registry | Enveloppe `ghcr.io/gotify/server` avec un point d'entrée de mappage de base de données |
+| Ingress | URL Cloud Run / Équilibrage de charge Cloud | URL par défaut `run.app` ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
-**Valeurs par défaut judicieuses à connaître à l'avance :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** `database_type = "POSTGRES_15"` est fixé par la
   couche d'application partagée ; le mode SQLite de Gotify n'est pas utilisé, donc aucun disque persistant n'est
@@ -131,12 +129,12 @@ un ensemble ciblé de services Google Cloud :
 - **Le conteneur écoute sur le port 80.** `container_port = 80` et le point d'entrée définit
   `GOTIFY_SERVER_PORT = 80`.
 - **Le CPU est toujours alloué** (`cpu_always_allocated = true`) avec `min = max = 1`.
-  Gotify maintient des flux WebSocket de longue durée et un bus de messages en cours de traitement, donc le CPU ne doit
+  Gotify gère des flux WebSocket de longue durée et un bus de messages en cours de traitement, de sorte que le CPU ne doit
   pas être limité entre les requêtes. Cela annule la mise à l'échelle à zéro ; une instance à faible trafic
-  peut basculer `cpu_always_allocated = false`, acceptant que la livraison des flux
+  peut basculer `cpu_always_allocated = false`, acceptant que la livraison du flux
   soit interrompue en cas d'inactivité.
-- **Une seule instance est la valeur par défaut sûre.** Le bus de messages de Gotify est en cours de traitement, donc un
-  flux client ne reçoit des messages livrés qu'à l'instance à laquelle il est connecté.
+- **Une seule instance est la valeur par défaut sûre.** Le bus de messages de Gotify est en cours de traitement, de sorte qu'un
+  flux client ne reçoit des messages que s'ils sont livrés à l'instance à laquelle il est connecté.
   La mise à l'échelle au-delà d'une instance sans couche de diffusion externe entraîne la perte de messages pour
   certains abonnés.
 - **Le mot de passe administrateur est généré automatiquement** et stocké dans Secret Manager,
@@ -147,26 +145,26 @@ un ensemble ciblé de services Google Cloud :
   les plugins résident sur le partage NFS à `/app/data` (`enable_nfs = true`, qui doit rester
   activé — sinon ils disparaissent à chaque nouvelle révision ou démarrage à froid).
 - **L'image est construite sur mesure.** `container_image_source = "custom"` construit un wrapper
-  autour de `ghcr.io/gotify/server` qui mappe les variables de plateforme `DB_*` sur la
+  autour de `ghcr.io/gotify/server` qui mappe les variables de la plateforme `DB_*` sur la
   configuration `GOTIFY_DATABASE_*` (GORM) de Gotify ; `latest` se fixe à la base `2.9.1`.
-- **L'ingress public est la valeur par défaut.** `ingress_settings = "all"` afin que les
-  applications d'envoi et les clients de réception puissent atteindre l'API REST et le WebSocket.
+- **L'ingress public est la valeur par défaut.** `ingress_settings = "all"` afin que les applications
+  d'envoi et les clients de réception puissent atteindre l'API REST et WebSocket.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de service et de ressource sont
-signalés dans les [Sorties](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de services et de ressources sont
+rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Gotify {#a-cloud-run--the-gotify-service}
 
 Gotify s'exécute en tant que service Cloud Run v2. Chaque déploiement crée une révision immuable ;
-le trafic peut être réparti entre les révisions pour des déploiements sûrs. Étant donné que le CPU est toujours
+le trafic peut être réparti entre les révisions pour des déploiements sécurisés. Étant donné que le CPU est toujours
 alloué et qu'une seule instance est maintenue, les flux WebSocket restent connectés
 entre les envois de messages.
 
-- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les journaux et
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les logs et
   les métriques.
 - **CLI :**
   ```bash
@@ -181,10 +179,10 @@ la répartition du trafic.
 ### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 Gotify stocke toutes les données d'application (messages, applications, clients, utilisateurs) dans une
-instance Cloud SQL pour PostgreSQL 15 gérée. Le service se connecte en privé via
-le **Cloud SQL Auth Proxy** sur un socket Unix ; aucune IP publique n'est exposée. Lors du premier
-déploiement, un Job d'initialisation crée la base de données et le rôle de l'application ; Gotify applique ensuite
-son propre schéma via l'auto-migration GORM au premier démarrage.
+instance gérée de Cloud SQL pour PostgreSQL 15. Le service se connecte en privé via
+le **Cloud SQL Auth Proxy** via un socket Unix ; aucune IP publique n'est exposée. Lors du premier
+déploiement, un job d'initialisation crée la base de données et le rôle de l'application ; Gotify applique ensuite
+son propre schéma via l'auto-migration GORM lors du premier démarrage.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs, les métriques.
 - **CLI :**
@@ -214,7 +212,7 @@ Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotatio
 
 ### D. Build de conteneur et Artifact Registry {#d-container-build--artifact-registry}
 
-L'image personnalisée encapsule `ghcr.io/gotify/server` avec un point d'entrée de mappage de base de données. Cloud
+L'image personnalisée enveloppe `ghcr.io/gotify/server` avec un point d'entrée de mappage de base de données. Cloud
 Build la construit et la pousse vers Artifact Registry ; `enable_image_mirroring = true`
 met en miroir la base amont dans Artifact Registry pour éviter les limites de débit du registre.
 
@@ -227,9 +225,7 @@ met en miroir la base amont dans Artifact Registry pour éviter les limites de d
 
 ### E. Réseau et ingress {#e-networking--ingress}
 
-Le service est accessible à son URL `run.app` par défaut, ce qui permet l'accès public
-requis pour l'envoi d'applications et la réception de clients. Un équilibreur de charge HTTPS externe
-avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être superposé.
+Le service est accessible par son URL `run.app` par défaut, ce qui permet l'accès public requis pour l'envoi d'applications et la réception de clients. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peuvent être superposés.
 
 - **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
 - **CLI :**
@@ -242,11 +238,11 @@ Voir [App_CloudRun](App_CloudRun.md).
 
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
-Les journaux de conteneur sont envoyés à Cloud Logging ; les métriques Cloud Run et Cloud SQL sont envoyées à Cloud
-Monitoring, avec une vérification de disponibilité optionnelle contre `/health` (désactivée par défaut) et
-des politiques d'alerte optionnelles.
+Les logs des conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run et Cloud SQL sont envoyées à Cloud
+Monitoring, avec un test de disponibilité facultatif contre `/health` (désactivé par défaut) et
+des politiques d'alerte facultatives.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Explorateur de logs ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -256,28 +252,28 @@ des politiques d'alerte optionnelles.
 
 ## 3. Comportement de l'application Gotify {#3-gotify-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un Job d'initialisation exécute `create-db-and-user.sh`
+- **Configuration de la base de données lors du premier déploiement.** Un job d'initialisation exécute `create-db-and-user.sh`
   en utilisant `postgres:15-alpine`. Il se connecte via le Cloud SQL Auth Proxy et
   crée de manière idempotente la base de données et le rôle de l'application et accorde les privilèges. Le
   job peut être réexécuté en toute sécurité.
-- **Schéma via auto-migration GORM.** Gotify crée et migre ses propres tables à
+- **Schéma via l'auto-migration GORM.** Gotify crée et migre ses propres tables à
   chaque démarrage — il n'y a pas de job de migration séparé. La mise à niveau de la version de l'application
   applique automatiquement les modifications de schéma.
 - **Le compte administrateur est amorcé une seule fois.** `GOTIFY_DEFAULTUSER_NAME = admin` et
   le secret `GOTIFY_DEFAULTUSER_PASS` créent l'administrateur initial lors de la première
-  initialisation de la base de données uniquement. Récupérez le mot de passe de Secret Manager et changez-le
-  après la première connexion. Changer le secret plus tard ne réinitialise pas le mot de passe administrateur.
+  initialisation de la base de données uniquement. Récupérez le mot de passe de Secret Manager et modifiez-le
+  après la première connexion. La modification du secret ultérieurement ne réinitialise pas le mot de passe administrateur.
 - **L'envoi et la réception sont authentifiés par jeton.** Après vous être connecté, créez une
   *application* (qui génère un jeton d'application) pour envoyer des messages via
-  `POST /message?token=<apptoken>`, et utilisez un jeton *client* pour vous abonner via le
+  `POST /message?token=<apptoken>`, et utilisez un jeton *client* pour vous abonner via
   WebSocket à `/stream?token=<clienttoken>`. Confirmez la santé sans jeton :
   ```bash
   curl -s "$(gcloud run services describe <service-name> --region "$REGION" \
     --project "$PROJECT" --format='value(status.url)')/health"
   ```
 - **Livraison WebSocket à instance unique.** Étant donné que le bus de messages est en cours de traitement, conservez
-  `max_instance_count = 1` à moins que vous n'ajoutiez une couche de diffusion externe — sinon un
-  message envoyé à une instance n'est pas livré aux clients diffusant depuis une autre.
+  `max_instance_count = 1` à moins d'ajouter une couche de diffusion externe — sinon un
+  message envoyé à une instance n'est pas livré aux clients qui diffusent à partir d'une autre.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/health` — le point de terminaison public
   qui renvoie `{"health":"green","database":"green"}` une fois que PostgreSQL est accessible.
   La sonde de démarrage par défaut autorise environ 5 minutes au premier démarrage.
@@ -299,7 +295,7 @@ spécifiques ou notables pour Gotify sont listés ; toutes les autres entrées s
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
+| `project_id` | _(requis)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région pour le service et les ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
@@ -307,7 +303,7 @@ spécifiques ou notables pour Gotify sont listés ; toutes les autres entrées s
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails autorisés à accéder au projet et aux alertes de surveillance. |
+| `support_users` | `[]` | Adresses e-mail autorisées à accéder au projet et aux alertes de surveillance. |
 | `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -317,42 +313,42 @@ spécifiques ou notables pour Gotify sont listés ; toutes les autres entrées s
 | `application_name` | `gotify` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | `Gotify` | Nom lisible par l'homme affiché dans la console. |
 | `application_description` | `Gotify push notification server on Cloud Run` | Description du service. |
-| `application_version` | `latest` | Tag de l'image ; `latest` se résout à la base épinglée `2.9.1`. Épinglez une version en production. |
+| `application_version` | `latest` | Tag d'image ; `latest` se résout à la base épinglée `2.9.1`. Épinglez une version en production. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
-| `container_image_source` | `custom` | `custom` construit l'image wrapper de mappage de base de données ; `prebuilt` déploie un URI d'image que vous configurez. |
+| `container_image_source` | `custom` | `custom` construit l'image wrapper de mappage de base de données ; `prebuilt` déploie une URI d'image que vous configurez. |
 | `cpu_limit` | `1000m` | CPU par instance ; 1 vCPU convient à la plupart des instances. |
-| `memory_limit` | `512Mi` | Mémoire par instance ; 512 Mio est le plancher de la gen2. |
+| `memory_limit` | `512Mi` | Mémoire par instance ; 512 Mio est le plancher de la génération 2. |
 | `min_instance_count` | `1` | Garder à 1 pour que les flux WebSocket restent connectés. |
 | `max_instance_count` | `1` | Garder à 1 — le bus de messages en cours de traitement ne se diffuse pas entre les instances. |
-| `cpu_always_allocated` | `true` | Requis pour les flux WebSocket ; basculer à `false` uniquement pour les instances à faible trafic. |
+| `cpu_always_allocated` | `true` | Requis pour les flux WebSocket ; basculer sur `false` uniquement pour les instances à faible trafic. |
 | `container_port` | `80` | Gotify écoute sur le port 80. |
 | `execution_environment` | `gen2` | Environnement d'exécution Gen2. |
 | `timeout_seconds` | `300` | Durée maximale de la requête ; augmenter pour les flux de longue durée. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions socket. |
 | `enable_image_mirroring` | `true` | Mettre en miroir `ghcr.io/gotify/server` dans Artifact Registry. |
-| `traffic_split` | `[]` | Répartir le trafic entre les révisions pour des déploiements échelonnés. |
-| `max_revisions_to_retain` | `7` | Combien d'anciennes révisions conserver. |
+| `traffic_split` | `[]` | Répartir le trafic entre les révisions pour des déploiements progressifs. |
+| `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Accès et contrôle d'ingress {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | `all` permet aux applications d'envoi et aux clients de réception d'atteindre le service. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Acheminer uniquement le trafic RFC 1918 via VPC. |
-| `enable_iap` | `false` | Exiger la connexion Google. Bloque les appelants d'API basés sur des jetons à moins qu'ils ne portent également une identité. |
+| `enable_iap` | `false` | Exiger la connexion Google. Bloque les appelants d'API basés sur des jetons, sauf s'ils portent également une identité. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder via IAP. |
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres `GOTIFY_*` supplémentaires. La connexion à la base de données et `GOTIFY_DEFAULTUSER_PASS` sont injectés automatiquement — ne les définissez pas ici. |
-| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager. |
+| `environment_variables` | `{}` | Paramètres supplémentaires `GOTIFY_*`. La connexion à la base de données et `GOTIFY_DEFAULTUSER_PASS` sont injectés automatiquement — ne les définissez pas ici. |
+| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. |
 
@@ -366,7 +362,7 @@ spécifiques ou notables pour Gotify sont listés ; toutes les autres entrées s
 
 ### Groupe 8 — CI/CD et autorisation binaire {#group-8--cicd--binary-authorization}
 
-Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
+Intégration standard de Cloud Build / Cloud Deploy d'App_CloudRun — voir
 [App_CloudRun](App_CloudRun.md). Entrées clés : `enable_cicd_trigger`,
 `github_repository_url`, `github_token`, `enable_cloud_deploy`,
 `enable_binary_authorization`.
@@ -374,17 +370,17 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 ### Groupe 9 — Scripts SQL personnalisés {#group-9--custom-sql-scripts}
 
 `enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`,
-`custom_sql_scripts_use_root` — exécuter du SQL à partir d'un bucket GCS après le provisionnement. Voir
+`custom_sql_scripts_use_root` — exécutez du SQL à partir d'un bucket GCS après le provisionnement. Voir
 [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 10 — Équilibreur de charge, CDN et rétention d'images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Provisionner un équilibreur de charge HTTPS global + WAF Cloud Armor. |
+| `enable_cloud_armor` | `false` | Provisionner Global HTTPS LB + Cloud Armor WAF. |
 | `admin_ip_ranges` | `[]` | Plages CIDR exemptées des règles WAF. |
-| `application_domains` | `[]` | Noms de domaine personnalisés pour l'équilibreur de charge HTTPS. |
-| `enable_cdn` | `false` | Activer Cloud CDN sur le backend de l'équilibreur de charge HTTPS (nécessite Cloud Armor). |
+| `application_domains` | `[]` | Noms de domaine personnalisés pour le LB HTTPS. |
+| `enable_cdn` | `false` | Activer Cloud CDN sur le backend du LB HTTPS (nécessite Cloud Armor). |
 | `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | _(défini)_ | Politique de nettoyage d'Artifact Registry. |
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
@@ -393,7 +389,7 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 |---|---|---|
 | `create_cloud_storage` | `true` | Créer des buckets GCS définis dans `storage_buckets`. |
 | `storage_buckets` | `[]` | Vide — Gotify n'a pas besoin de stockage de fichiers. Ajoutez des buckets uniquement pour des besoins personnalisés. |
-| `enable_nfs` | `true` | Doit rester `true` sur Cloud Run : les images d'application et les plugins téléchargés résident sous `/app/data` et disparaissent autrement à chaque nouvelle révision ou démarrage à froid. |
+| `enable_nfs` | `true` | Doit rester `true` sur Cloud Run : les images d'application téléchargées et les plugins résident sous `/app/data` et disparaissent autrement à chaque nouvelle révision ou démarrage à froid. |
 | `gcs_volumes` | `[]` | Montages de volume GCS Fuse (nécessite gen2). |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 
@@ -406,41 +402,41 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 | `application_database_user` | `gotify` | Rôle de l'application. Mot de passe auto-généré dans Secret Manager. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `enable_auto_password_rotation` / `rotation_propagation_delay_sec` | désactivé | Rotation du mot de passe de la base de données. |
-| `enable_postgres_extensions` / `postgres_extensions` | désactivé | Extensions PostgreSQL optionnelles. |
+| `enable_postgres_extensions` / `postgres_extensions` | désactivé | Extensions PostgreSQL facultatives. |
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Laisser vide pour utiliser le job `db-init` intégré. |
-| `cron_jobs` | `[]` | Cloud Scheduler + Cloud Run Jobs optionnels. |
+| `cron_jobs` | `[]` | Cloud Scheduler + Cloud Run Jobs facultatifs. |
 | `additional_services` | `[]` | Services Cloud Run supplémentaires à côté de Gotify. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/health`, délai de 30s, 30 échecs | Sonde de démarrage. Permet ~5 minutes au premier démarrage. |
+| `startup_probe` | HTTP `/health`, délai de 30s, 30 échecs | Sonde de démarrage. Permet environ 5 minutes au premier démarrage. |
 | `liveness_probe` | HTTP `/health`, délai de 30s | Sonde de vivacité. |
-| `startup_probe_config` / `health_check_config` | HTTP `/health` | Sondes au niveau App_CloudRun. |
-| `uptime_check_config` | `{ enabled=false, path="/health" }` | Vérification de disponibilité Cloud Monitoring ; désactivée par défaut. |
-| `alert_policies` | `[]` | Politiques d'alerte métriques. |
+| `startup_probe_config` / `health_check_config` | HTTP `/health` | Sondes au niveau d'App_CloudRun. |
+| `uptime_check_config` | `{ enabled=false, path="/health" }` | Test de disponibilité Cloud Monitoring ; désactivé par défaut. |
+| `alert_policies` | `[]` | Politiques d'alerte métrique. |
 
 ### Groupe 16 — Redis {#group-16--redis}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Gotify n'a pas besoin de Redis ; laisser désactivé à moins d'intégrer une instance externe. |
+| `enable_redis` | `false` | Gotify n'a pas besoin de Redis ; laisser désactivé sauf si vous intégrez une instance externe. |
 | `redis_host` | `""` | Point de terminaison Redis (utilisé uniquement lorsque `enable_redis = true`). |
 | `redis_port` | `6379` | Port Redis. |
 
-### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et Audit Logging {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (découvre automatiquement `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode dry-run. |
-| `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
+| `enable_audit_logging` | `false` | Logs d'audit Cloud détaillés. |
 
 ---
 
@@ -457,8 +453,8 @@ ressources en cours d'exécution.
 | `project_id` / `deployment_id` | ID du projet / suffixe de déploiement. |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom de la base de données de l'application / rôle. |
-| `database_password_secret` | Secret Manager secret contenant le mot de passe de la base de données. |
-| `storage_buckets` | Buckets Cloud Storage créés (vides pour Gotify). |
+| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
+| `storage_buckets` | Buckets Cloud Storage créés (vide pour Gotify). |
 | `container_image` | Image déployée. |
 | `cicd_enabled` / `github_repository_url` | Statut CI/CD et dépôt connecté. |
 
@@ -469,20 +465,20 @@ ressources en cours d'exécution.
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée au moment de la planification.** Ce module transmet sa configuration via le moteur de fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et les combinaisons* au moment de la planification — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, une valeur `redis_port`/`backup_retention_days` hors plage, un `database_type` qui ne correspond pas à une extension activée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
+> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et les combinaisons* au moment de la planification — IAP sans identités autorisées, un environnement d'exécution `gen1` avec des montages NFS/GCS, un `redis_port`/`backup_retention_days` hors plage, un `database_type` qui ne correspond pas à une extension activée. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `max_instance_count` | `1` | Critique | La mise à l'échelle au-delà de 1 sans diffusion externe entraîne la perte de messages pour les clients diffusant depuis d'autres instances (bus de messages en cours de traitement). |
+| `max_instance_count` | `1` | Critique | La mise à l'échelle au-delà de 1 sans diffusion externe entraîne la perte de messages pour les clients diffusant à partir d'autres instances (bus de messages en cours de traitement). |
 | `application_database_name` / `application_database_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/le rôle et détruit tous les messages. |
 | `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans sauvegarde valide fait échouer le job d'importation. |
-| `cpu_always_allocated` | `true` | Élevé | Avec la facturation basée sur les requêtes, le CPU est limité entre les requêtes et la livraison des flux WebSocket est interrompue en cas d'inactivité. |
+| `cpu_always_allocated` | `true` | Élevé | En cas de facturation basée sur les requêtes, le CPU est limité entre les requêtes et la livraison du flux WebSocket est interrompue en cas d'inactivité. |
 | `container_port` | `80` | Élevé | Gotify écoute sur le port 80 ; un port non concordant fait échouer la sonde de démarrage et la révision ne sert jamais. |
-| `memory_limit` | `512Mi` | Élevé | En dessous du plancher de 512 Mio de la gen2, le plan est rejeté. |
-| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro supprime tous les flux WebSocket actifs chaque fois que l'instance est récupérée. |
+| `memory_limit` | `512Mi` | Élevé | En dessous du plancher de 512 Mio de la génération 2, le plan est rejeté. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro interrompt tous les flux WebSocket actifs chaque fois que l'instance est récupérée. |
 | `ingress_settings` | `all` | Élevé | `internal` bloque les expéditeurs et récepteurs externes d'atteindre le service. |
-| `enable_iap` | uniquement lorsque les appelants d'API portent une identité | Élevé | IAP exige une identité Google sur chaque requête, bloquant les appelants d'envoi/réception basés sur des jetons uniquement. |
-| `GOTIFY_DEFAULTUSER_PASS` (auto-généré) | Changer le mot de passe administrateur après la première connexion | Élevé | Le mot de passe d'amorçage ne s'applique qu'à la première initialisation ; laisser le mot de passe administrateur par défaut inchangé est une exposition permanente des informations d'identification. |
+| `enable_iap` | uniquement lorsque les appelants d'API portent une identité | Élevé | IAP exige une identité Google à chaque requête, bloquant les appelants d'envoi/réception basés sur des jetons uniquement. |
+| `GOTIFY_DEFAULTUSER_PASS` (auto-généré) | Changer le mot de passe administrateur après la première connexion | Élevé | Le mot de passe d'amorçage ne s'applique qu'à la première initialisation ; laisser le mot de passe administrateur par défaut inchangé est une exposition permanente des identifiants. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
 | `enable_cloud_armor` | activer pour la production | Moyen | L'API et l'interface utilisateur sont accessibles publiquement sans protection WAF. |
 
@@ -501,4 +497,4 @@ avec la variante GKE est décrite dans **[Gotify_Common](Gotify_Common.md)**.
 - [Lab pratique : Gotify sur Cloud Run](../labs/Gotify_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Gotify sur GKE Autopilot](Gotify_GKE.md) — la même application sur Kubernetes, pour quand vous avez besoin de l'autre cible de déploiement.
 - [Gotify Common — Configuration d'application partagée](Gotify_Common.md) — la configuration partagée par les deux cibles de déploiement.
-- Déployé aux côtés de [Chatwoot sur Google Cloud Run](Chatwoot_CloudRun.md), [FreeScout sur Google Cloud Run](FreeScout_CloudRun.md), [BookStack sur Google Cloud Run](BookStack_CloudRun.md), [Fider sur Google Cloud Run](Fider_CloudRun.md) dans la solution **Service client**.
+- Déployé avec [Chatwoot sur Google Cloud Run](Chatwoot_CloudRun.md), [FreeScout sur Google Cloud Run](FreeScout_CloudRun.md), [BookStack sur Google Cloud Run](BookStack_CloudRun.md), [Fider sur Google Cloud Run](Fider_CloudRun.md) dans la solution **Customer Support Desk**.

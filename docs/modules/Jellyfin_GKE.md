@@ -32,11 +32,13 @@ rather than repeating them here.
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 75 credits (US$7.50) | 67.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$42.08 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **67 credits a day** |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$42.08 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **75 credits a day**, about 2,250 a month (about US$225 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+**Why the two columns differ.** The RAD-managed figure includes the GKE cluster's management fee (about US$73 a month) and the project's shared foundation. In your own project, Google's free tier covers the management fee of one cluster per billing account, which the own-project figure assumes. It is estimated from Google's list prices, because there is not yet enough RAD-managed GKE history to measure it, so the deploy confirmation does not quote it. A second GKE application in the same RAD-managed project shares the cluster and adds only its own pods.
+
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 10 credits cost US$1 on a one-off top-up, less on a plan. In a project RAD manages, the
 database, file server and network are shared by every application in the project, so a second

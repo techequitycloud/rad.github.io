@@ -23,15 +23,15 @@ Authorization, VPC Service Controls, backups, and the deployment lifecycle — r
 
 ## What Kestra costs on RAD, and how that compares
 
-**Kestra on RAD's GKE module costs about US$136 a month in your own project, plus a 175-credit (US$18) module fee once per deployment.** If you only run pipelines on a schedule rather than continuously, see "Pause it for free" below to stop paying without losing your flow definitions. Kestra also ships as a Cloud Run module; in your own project GKE is the cheaper choice here because Cloud Run's standalone mode needs CPU allocated continuously for its scheduler, but in a RAD-managed project the Cloud Run guide's module is actually the lower daily-credit option (77 credits/day against 110 here) — check both before choosing.
+**Kestra on RAD's GKE module costs about US$136 a month in your own project, plus a 175-credit (US$18) module fee once per deployment.** If you only run pipelines on a schedule rather than continuously, see "Pause it for free" below to stop paying without losing your flow definitions. Kestra also ships as a Cloud Run module; in your own project GKE is the cheaper choice here because Cloud Run's standalone mode needs CPU allocated continuously for its scheduler, but in a RAD-managed project the Cloud Run guide's module is actually the lower daily-credit option (140 credits/day against 110 here) — check both before choosing.
 
 ### What you pay on RAD
 
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 175 credits (US$17.50) | 157.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$136.37 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **110 credits a day** |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$136.37 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **140 credits a day**, about 4,200 a month (about US$420 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
 10 credits cost US$1 on a one-off top-up, less on a plan. In a project RAD manages, the

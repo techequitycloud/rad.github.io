@@ -22,10 +22,10 @@ This guide focuses on the cloud services Windmill uses and how to explore and op
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee (one-off) | 75 credits | 67.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | $156.93/month, billed by Google at list price | ~72 credits/day, metered at list price plus RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | $156.93/month, billed by Google at list price | ~102 credits/day, metered at list price plus RAD's margin |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 **Default running cost in your own project**
 
@@ -40,7 +40,7 @@ Your first successful deployment on RAD is free of the module fee when that fee 
 ### How it compares
 
 - Windmill's own team sells a hosted Cloud/Enterprise plan: [windmill.dev/pricing](https://www.windmill.dev/pricing) (checked 8 October 2026) lists a free, unlimited-execution Community tier at $0/mo and an Enterprise tier starting at $120/mo for advanced observability, security and SAML support — its own cost configurator prices a small example workspace (1 developer, 2 standard workers) at roughly $170/mo, in the same range as RAD's $156.93/month own-project running cost above.
-- Choosing self-hosted-on-RAD over Windmill's own cloud mainly trades their managed multi-tenant control plane for full control of your data and Postgres instance, at a broadly comparable price once the module fee and build credits are included.
+- Choosing self-hosted-on-RAD over Windmill's own cloud mainly trades their managed multi-tenant control plane for full control of your data and Postgres instance, at a broadly comparable price once the module fee is included (builds are included in it).
 - A bare-VPS alternative also works: a GCP Compute Engine e2-standard-2 (2 vCPU/8GB) at about $49/mo, or similarly sized Hetzner/DigitalOcean boxes at about $24/mo, can run Windmill and Postgres together — cheaper in cash terms, but without RAD's managed backups, patching and monitoring.
 
 ### Pause it for free: delete a RAD-managed project, restore it when you need it

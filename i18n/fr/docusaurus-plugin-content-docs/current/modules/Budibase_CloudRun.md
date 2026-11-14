@@ -3,41 +3,39 @@ title: "Budibase sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Budibase sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Budibase_CloudRun.md @ 60462a86 sha256:3f8fa5298759 -->
+<!-- translated-from: docs/modules/Budibase_CloudRun.md @ 40c83c3f sha256:3084a9ad5178 -->
 
 # Budibase sur Google Cloud Run {#budibase-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Budibase_CloudRun.png" alt="Budibase sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Budibase est une plateforme low-code open source pour la création d'outils
-internes, d'applications métier et de workflows basés sur vos données. Ce module
-déploie Budibase sur **Cloud Run v2** sur la base de la fondation
-[App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
-partagée de Google Cloud.
+Budibase est une plateforme open source low-code pour créer des outils internes,
+des applications métier et des workflows basés sur vos données. Ce module déploie
+Budibase sur **Cloud Run v2** sur la base [App_CloudRun](App_CloudRun.md), qui
+provisionne et gère l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud utilisés par Budibase et sur la
 manière de les explorer et de les exploiter depuis la console Google Cloud et la
-ligne de commande. Pour les mécanismes communs à toutes les applications Cloud
-Run — identité de service, entrée et équilibrage de charge, mise à l'échelle et
-concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
-Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter
-ici.
+ligne de commande. Pour les mécanismes communs à chaque application Cloud Run —
+identité de service, ingress et équilibrage de charge, mise à l'échelle et
+concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
+sauvegardes et cycle de vie du déploiement — reportez-vous au [guide de la
+fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
 ## Ce que coûte Budibase sur RAD, et comment cela se compare {#what-budibase-costs-on-rad-and-how-that-compares}
 
-**Le module Cloud Run de Budibase sur RAD coûte environ 232 $ US par mois dans
+**Le module Cloud Run de Budibase sur RAD coûte environ 232 US$ par mois dans
 votre propre projet Google Cloud, sans frais de licence supplémentaires** —
 Budibase est open source. Dans un projet géré par RAD pour vous, le même
-déploiement est facturé à **105 crédits par jour** (environ 3 150 par mois,
-environ 315 $ US au prix de la recharge). Ou consultez le [guide GKE](Budibase_GKE.md)
-pour une capacité toujours active sur les pods. Si vous n'avez besoin de Budibase
-qu'occasionnellement — études, démo, projet de courte durée — un projet géré par
-RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de
-sorte que ce chiffre mensuel devient quelques dollars à la place. Voir **Mettez-le
-en pause gratuitement**, ci-dessous.
+déploiement est facturé à **113 crédits par jour** (environ 3 390 par mois,
+environ 339 US$ au prix de la recharge). Ou consultez le [guide
+GKE](Budibase_GKE.md) pour une capacité toujours active sur les pods. Si vous
+n'avez besoin de Budibase qu'occasionnellement — études, démo, projet de courte
+durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours
+sans frais supplémentaires, de sorte que ce chiffre mensuel devient quelques
+dollars. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -46,24 +44,25 @@ trois choses :
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
-| Frais de module, une fois par déploiement | 300 crédits (30 $ US au prix de la recharge) | 270 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **232 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **105 crédits par jour**, environ 3 150 par mois (environ 315 $ US au prix de la recharge) |
-| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde acheté minimum est conservé en réserve |
+| Frais de module, une fois par déploiement | 300 crédits (30 US$ au prix de la recharge) | 270 crédits (10 % de moins) |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **232 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **113 crédits par jour**, environ 3 390 par mois (environ 339 US$ au prix de la recharge) |
+| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
-10 crédits coûtent 1 $ US en recharge unique, et moins sur un plan mensuel. Dans un
-projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont
-partagés par toutes les applications du projet, de sorte qu'une deuxième
-application n'ajoute pas une deuxième base de données.
+10 crédits coûtent 1 US$ pour une recharge ponctuelle, et moins avec un plan
+mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers
+et le réseau sont partagés par chaque application du projet, de sorte qu'une
+deuxième application n'ajoute pas une deuxième base de données.
 
-**Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
+**Coût d'exécution par défaut dans votre propre projet** (us-central1, prix
+catalogue Google) :
 
 | Ressource (module par défaut) | Par mois |
 |---|---|
-| Cloud Run, 4x vCPU / 8 GiB (alwaysOn) | 226,05 $ US |
-| Cloud NAT et réseau | 5 $ US |
-| Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
-| **Total** | **environ 232 $ US** |
+| Cloud Run, 4x vCPU / 8 Gio (alwaysOn) | 226,05 US$ |
+| Cloud NAT et réseau | 5 US$ |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 US$ |
+| **Total** | **environ 232 US$** |
 
 Ces prix sont les mêmes en africa-south1 (Johannesburg).
 
@@ -73,71 +72,83 @@ Ces prix sont les mêmes en africa-south1 (Johannesburg).
 
 ### Comment cela se compare {#how-it-compares}
 
-L'équipe de Budibase vend un **Budibase Cloud** hébergé :
+L'équipe de Budibase vend son propre **Budibase Cloud** hébergé :
 
 | Plan | Par mois | Notes |
 |---|---|---|
-| Pro | 19 $ US | Plan cloud d'entrée de gamme |
-| Premium | 49 $ US | Plus de créateurs, crédits IA, rétention des logs |
-| Business | 299 $ US | Limites plus élevées, plus d'espaces de travail |
+| Pro | 19 US$ | Plan cloud d'entrée de gamme |
+| Premium | 49 US$ | Plus de créateurs, crédits IA, rétention des logs |
+| Business | 299 US$ | Limites plus élevées, plus d'espaces de travail |
 | Enterprise | Personnalisé | Contacter les ventes |
 
 Budibase Cloud facture par niveau de plan (créateurs, crédits IA, espaces de
 travail), et non par la puissance de calcul réellement utilisée par cette
-application, ce n'est donc pas une comparaison directe avec le tableau
-ci-dessus — c'est l'alternative officielle si vous préférez ne pas gérer
-d'infrastructure du tout. Le module de RAD exécute le même Budibase open source
-sur une infrastructure que vous pouvez voir et qui s'adapte à votre propre
-utilisation plutôt qu'aux limites de sièges/créateurs d'un plan.
+application, ce n'est donc pas une comparaison directe avec le tableau ci-dessus
+— c'est l'alternative officielle si vous préférez ne pas gérer du tout
+d'infrastructure. Le module de RAD exécute le même Budibase open source sur une
+infrastructure que vous pouvez voir et qui s'adapte à votre propre utilisation
+plutôt qu'aux limites de sièges/créateurs d'un plan.
 
 ### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 Si Budibase s'exécute dans **un projet géré par RAD pour vous**, la suppression
 de l'ensemble du projet — plutôt que la suppression de ce seul module —
-délie d'abord sa facturation, puis demande à Google de supprimer
-définitivement le projet. Google le conserve, récupérable, pendant 30 jours, et
+délie d'abord sa facturation, puis demande à Google de supprimer le projet
+purement et simplement. Google le conserve, récupérable, pendant 30 jours, et
 parce que la facturation est déjà déliée, rien n'est facturé pendant qu'il
-attend. Contrairement à la suppression d'un module, cela ne détruit pas Cloud
+attend. Contrairement à la suppression d'un module, cela ne supprime pas Cloud
 SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du projet
 s'arrête simplement.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.**
+> Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou
+> les ressources qu'il contient, seront utilisables après sa restauration, de
+> sorte que la restauration ne peut pas être considérée comme un moyen de
+> récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué
+> des sauvegardes appropriées des données et de la configuration de
+> l'application et de les avoir stockées en dehors du projet. Si une
+> restauration échoue, ou si le projet restauré ne fonctionne pas, la solution
+> de repli consiste à redéployer l'application (voir la section suivante) et à
+> restaurer sa configuration et ses données à partir de ces sauvegardes.
 
 - **La restauration est une vérification, pas une reconstruction.** Dans les 30
-  jours, le propriétaire du projet peut demander à Google de restaurer le projet
+  jours, le propriétaire du projet peut demander à Google de récupérer le projet
   et de rattacher son compte de facturation, puis d'exécuter **Mettre à jour**
-  sur chaque déploiement pour confirmer que tout est revenu. Parce que rien n'a
-  été détruit individuellement, cette mise à jour trouve les mêmes ressources
-  déjà présentes, et une mise à jour ne facture plus jamais les frais de module.
-Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+  sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été
+  détruit individuellement, cette mise à jour trouve les mêmes ressources déjà
+  présentes, et une mise à jour ne facture jamais les frais de module à nouveau.
+  Les mises à jour sont incluses dans le prix (5 par mois pour chaque
+  déploiement), donc une restauration ne coûte normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont
   RAD gère uniquement la facturation), le restaurer vous-même dans les 30 jours
-  — après quoi Google le supprime définitivement — et atteindre à nouveau le
-  seuil d'admission du niveau (100 crédits pour le niveau sandbox que la plupart
-  des utilisations d'étude/démo conviennent). Google indique que la plupart des
-  services fonctionnent à nouveau pleinement dans les 36 heures suivant une
+  — après cela, Google le supprime définitivement — et effacer à nouveau le seuil
+  d'admission du niveau (100 crédits pour le niveau sandbox qui convient à la
+  plupart des utilisations d'étude/démo). Google indique que la plupart des
+  services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une
   restauration.
-- **Une lacune réelle : les sauvegardes nocturnes ne survivent pas.** Les
+- **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les
   sauvegardes sont écrites dans un bucket à l'intérieur du projet, et ce bucket
   a la suppression logicielle de Cloud Storage désactivée, il est donc très
   probable qu'il disparaisse dès que le projet est supprimé — même si le projet
   lui-même est récupérable pendant 30 jours. Copiez une sauvegarde (vers Google
-  Drive, ou un bucket en dehors du projet) avant de la supprimer s'il y a
-  quelque chose d'important à conserver ; pour une installation par défaut sans
-  rien d'irremplaçable, cela n'a pas d'importance.
+  Drive, ou un bucket en dehors du projet) avant de supprimer s'il y a quelque
+  chose à conserver ; pour une installation par défaut sans rien
+  d'irremplaçable, cela n'a pas d'importance.
 
-Source : [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects).
+Source : [Supprimer et restaurer des
+projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects).
 
-### Payez uniquement pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
 Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours
 ci-dessus est passée, la façon d'arrêter de payer est de supprimer le
 déploiement et de le redéployer lorsque vous en avez besoin.
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 300 crédits (30,00 $ US) au prix de la recharge. La suppression ne permet d'économiser de l'argent que si Budibase
-  devait rester inutilisé pendant environ **3 jours ou plus** — dans votre
-  propre projet, cela représente environ 7,74 $ US par jour, et dans un projet
-  géré par RAD, c'est 105 crédits par jour.
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds
+  sont inclus) : 300 crédits (30,00 US$) au prix de la recharge. La suppression
+  ne permet d'économiser de l'argent que si Budibase resterait inutilisé pendant
+  environ **3 jours ou plus** — dans votre propre projet, cela représente environ
+  7,74 US$ par jour, et dans un projet géré par RAD, c'est 113 crédits par jour.
 - Le coût d'exécution de ce module est entièrement le sien — rien dans le
   tableau ci-dessus n'est partagé avec d'autres applications du projet, donc la
   suppression de Budibase arrête tout.
@@ -147,17 +158,17 @@ déploiement et de le redéployer lorsque vous en avez besoin.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session pour
-  une classe. Chaque participant obtient l'application dans son propre projet
-  Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
-  définie par le formateur. Soit le formateur finance toutes les places, soit
-  chaque participant paie la sienne. Tout est supprimé à la fin de la session
-  et les crédits inutilisés sont reversés au formateur.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une
+  classe. Chaque participant obtient l'application dans son propre projet Google
+  Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie
+  par le formateur. Soit le formateur finance toutes les places, soit chaque
+  participant paie la sienne. Tout est supprimé à la fin de la session et les
+  crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute
   l'application pour un client à partir d'un portefeuille cloisonné qu'il
   finance, et règle directement avec le client. Si le portefeuille est faible,
   la facturation est suspendue et les données sont conservées, de sorte que
-  personne ne reçoit de frais inattendus. À la fin, le partenaire remet le
+  personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le
   projet et les déploiements deviennent la propriété du client.
 
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF,
@@ -166,54 +177,56 @@ NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 **Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud
 Billing Catalog ; frais RAD et estimation des crédits quotidiens de
 [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et
-restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects)
+restaurer des
+projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects)
 pour la fenêtre de pause/restauration et la mise en garde sur le bucket de
-sauvegarde ; [Tarification Budibase Cloud](https://budibase.com/pricing/) ; les
-prix changent, vérifiez chaque source avant de vous fier à un chiffre.
+sauvegarde ; [prix Budibase
+Cloud](https://budibase.com/pricing/) ; les prix changent, vérifiez chaque
+source avant de vous fier à un chiffre.
 
 ## 1. Vue d'ensemble {#1-overview}
 
 Budibase s'exécute comme un seul conteneur **tout-en-un** sur Cloud Run v2.
 L'image officielle `budibase/budibase` regroupe **CouchDB + MinIO + Redis** et les
 applications/worker/proxy Budibase et sert HTTP sur le **port 80** — il n'y a
-pas de base de données gérée externe. Le déploiement relie un ensemble ciblé de
-services Google Cloud :
+pas de base de données gérée externe. Le déploiement connecte un ensemble ciblé
+de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | Cloud Run v2 | Conteneur tout-en-un unique, 4 vCPU / 8 GiB par défaut ; s'exécute comme **une** instance (min = max = 1) |
+| Calcul | Cloud Run v2 | Conteneur tout-en-un unique, 4 vCPU / 8 Gio par défaut ; s'exécute comme **une** instance (min = max = 1) |
 | Base de données | Aucune (CouchDB intégré) | `database_type = "NONE"` — CouchDB, MinIO et Redis s'exécutent tous à l'intérieur du conteneur |
 | Stockage d'objets | Cloud Storage | Un bucket de données provisionné automatiquement ; le propre magasin d'actifs de Budibase est le MinIO intégré |
-| Cache et file d'attente | Redis intégré | S'exécute à l'intérieur du conteneur sur loopback ; `enable_redis` est désactivé par défaut |
+| Cache et file d'attente | Redis intégré | S'exécute à l'intérieur du conteneur sur la boucle locale ; `enable_redis` est désactivé par défaut |
 | Secrets | Secret Manager | Sept identifiants internes auto-générés injectés comme variables d'environnement de secret de service |
-| Entrée | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
+| Ingress | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
-**Valeurs par défaut judicieuses à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître à l'avance :**
 
 - **Cloud Run est éphémère / démo uniquement pour Budibase.** Tout l'état
-  (documents CouchDB + objets MinIO) réside sur le chemin du conteneur `/data`,
-  et **Cloud Run n'a pas de disque local durable** — un redémarrage ou une
-  nouvelle révision perd le magasin de données. Pour un déploiement persistant,
-  utilisez la [variante GKE](Budibase_GKE.md), qui monte un PVC de bloc à
-  `/data`.
-- **S'exécute en une seule instance.** `min_instance_count = 1` et `max_instance_count = 1`. Le conteneur
-  tout-en-un conserve tout l'état localement, de sorte que plusieurs réplicas
-  ne partageraient pas les données (split-brain). La mise à l'échelle à zéro
-  supprimerait le magasin de données en cours d'exécution, donc min est 1.
+  (documents CouchDB + objets MinIO) réside sur le chemin du conteneur
+  `/data`, et **Cloud Run n'a pas de disque local durable** — un redémarrage
+  ou une nouvelle révision perd le magasin de données. Pour un déploiement
+  persistant, utilisez la [variante GKE](Budibase_GKE.md), qui monte un PVC de
+  bloc à `/data`.
+- **S'exécute comme une seule instance.** `min_instance_count = 1` et `max_instance_count = 1`. Le
+  conteneur tout-en-un contient tout l'état localement, de sorte que plusieurs
+  réplicas ne partageraient pas les données (split-brain). La mise à l'échelle à
+  zéro supprimerait le magasin de données en cours d'exécution, donc min est 1.
 - **`cpu_always_allocated = true`.** Le CPU est alloué en permanence afin que les processus
-  d'arrière-plan CouchDB/MinIO/Redis intégrés continuent de fonctionner entre
-  les requêtes ; maintenez-le `true` avec `min_instance_count >= 1`.
+  d'arrière-plan CouchDB/MinIO/Redis intégrés continuent de fonctionner entre les
+  requêtes ; maintenez-le `true` avec `min_instance_count >= 1`.
 - **Sept identifiants internes sont générés automatiquement** et stockés dans
-  Secret Manager (`INTERNAL_API_KEY`, `JWT_SECRET`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`,
-  `API_ENCRYPTION_KEY`, `REDIS_PASSWORD`, `COUCH_DB_PASSWORD`). Ceux-ci ne doivent jamais être
-  renouvelés après le premier démarrage — les données sur `/data` sont chiffrées
-  avec eux et deviennent illisibles s'ils changent.
+  Secret Manager (`INTERNAL_API_KEY`, `JWT_SECRET`, `MINIO_ACCESS_KEY`,
+  `MINIO_SECRET_KEY`, `API_ENCRYPTION_KEY`, `REDIS_PASSWORD`, `COUCH_DB_PASSWORD`). Ceux-ci ne
+  doivent jamais être renouvelés après le premier démarrage — les données sur
+  `/data` sont clés avec eux et deviennent illisibles s'ils changent.
 - **Le port 80 est fixe.** Le proxy nginx de l'image tout-en-un sert toute
   l'application sur le port 80, donc `container_port` et les sondes sont épinglées à 80.
 - **Pas de base de données externe ou de job `db-init`.** Budibase
-  auto-provisionne CouchDB et MinIO au premier démarrage ; `enable_cloudsql_volume` et `database_type`
-  sont désactivés/`NONE` par défaut.
-- **Entrée publique par défaut.** `ingress_settings = "all"` pour que l'application soit
+  s'auto-provisionne CouchDB et MinIO au premier démarrage ; `enable_cloudsql_volume` et
+  `database_type` sont désactivés/`NONE` par défaut.
+- **Ingress public par défaut.** `ingress_settings = "all"` pour que l'application soit
   accessible à son URL `run.app` ; l'activation d'IAP place la connexion Google
   devant elle.
 
@@ -221,15 +234,15 @@ services Google Cloud :
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de
-services et de ressources sont signalés dans les [Sorties](#5-outputs) du
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les
+noms de service et de ressource sont rapportés dans les [Sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service Budibase {#a-cloud-run--the-budibase-service}
 
-Budibase s'exécute comme un service Cloud Run v2. Parce qu'il conserve tout
-l'état localement, il s'exécute comme une seule instance (min = max = 1) ;
-chaque déploiement crée une révision immuable.
+Budibase s'exécute comme un service Cloud Run v2. Comme il conserve tout l'état
+localement, il s'exécute comme une seule instance (min = max = 1) ; chaque
+déploiement crée une révision immuable.
 
 - **Console :** Cloud Run → sélectionnez le service pour les révisions, le
   trafic, les logs et les métriques.
@@ -243,14 +256,14 @@ chaque déploiement crée une révision immuable.
 Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
 l'environnement d'exécution et la répartition du trafic.
 
-### B. Magasin de données (CouchDB + MinIO intégrés) {#b-data-store-bundled-couchdb--minio}
+### B. Stockage de données (CouchDB + MinIO intégrés) {#b-data-store-bundled-couchdb--minio}
 
-Il n'y a **pas d'instance Cloud SQL** — `database_type = "NONE"`. Le magasin de documents CouchDB
-et le magasin d'objets MinIO de Budibase s'exécutent tous deux **à l'intérieur
-du conteneur** et persistent sur `/data`. Sur Cloud Run, ce répertoire se trouve
-sur le système de fichiers éphémère du conteneur, il ne survit donc pas à un
-redémarrage. Inspectez les services intégrés via l'environnement du conteneur et
-les logs plutôt que via une console de base de données gérée :
+Il n'y a **pas d'instance Cloud SQL** — `database_type = "NONE"`. Le magasin de documents
+CouchDB et le magasin d'objets MinIO de Budibase s'exécutent tous deux
+**à l'intérieur du conteneur** et persistent dans `/data`. Sur Cloud Run,
+ce répertoire se trouve sur le système de fichiers éphémère du conteneur, il ne
+survit donc pas à un redémarrage. Inspectez les services intégrés via l'env du
+conteneur et les logs plutôt qu'une console de base de données gérée :
 
 - **CLI :**
   ```bash
@@ -259,8 +272,8 @@ les logs plutôt que via une console de base de données gérée :
     --format='value(spec.template.spec.containers[0].env)'
   ```
 
-Pour un magasin de données durable, utilisez la [variante GKE](Budibase_GKE.md)
-(PVC de bloc sur `/data`).
+Pour un stockage de données durable, utilisez la [variante
+GKE](Budibase_GKE.md) (PVC de bloc sur `/data`).
 
 ### C. Cloud Storage {#c-cloud-storage}
 
@@ -280,10 +293,10 @@ Voir [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
 
 ### D. Redis (intégré) {#d-redis-bundled}
 
-Redis s'exécute **à l'intérieur du conteneur tout-en-un** sur loopback et est
-authentifié avec le `REDIS_PASSWORD` auto-généré. `enable_redis` est **désactivé par défaut** —
-n'activez pas un Redis externe à moins que vous n'externalisiez
-délibérément le cache.
+Redis s'exécute **à l'intérieur du conteneur tout-en-un** sur la boucle locale
+et est authentifié avec le `REDIS_PASSWORD` auto-généré. `enable_redis` est
+**désactivé par défaut** — n'activez pas un Redis externe à moins que vous
+n'externalisiez délibérément le cache.
 
 - **CLI :**
   ```bash
@@ -296,8 +309,9 @@ délibérément le cache.
 
 Sept identifiants internes sont générés automatiquement et stockés dans Secret
 Manager, puis injectés comme variables d'environnement de secret de service :
-`INTERNAL_API_KEY`, `JWT_SECRET`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `API_ENCRYPTION_KEY`, `REDIS_PASSWORD`, et
-`COUCH_DB_PASSWORD`. Ils ne doivent jamais être renouvelés après le premier démarrage.
+`INTERNAL_API_KEY`, `JWT_SECRET`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`,
+`API_ENCRYPTION_KEY`, `REDIS_PASSWORD` et `COUCH_DB_PASSWORD`. Ils ne doivent jamais être
+renouvelés après le premier démarrage.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -309,11 +323,12 @@ Manager, puis injectés comme variables d'environnement de secret de service :
 Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et
 [Budibase_Common](Budibase_Common.md) pour ce que chaque secret protège.
 
-### F. Réseau et entrée {#f-networking--ingress}
+### F. Réseau et ingress {#f-networking--ingress}
 
-Le service est accessible à son URL `run.app` par défaut. Un équilibreur de charge
-HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut être
-superposé ; les paramètres d'entrée et de sortie VPC contrôlent la connectivité.
+Le service est accessible à son URL `run.app` par défaut. Un équilibreur de
+charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor
+peuvent être superposés ; les paramètres d'ingress et le contrôle d'egress VPC
+contrôlent la connectivité.
 
 - **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
   charge.
@@ -329,7 +344,7 @@ Voir [App_CloudRun](App_CloudRun.md).
 
 Les logs des conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run
 sont envoyées à Cloud Monitoring, avec des tests de disponibilité et des
-politiques d'alerte facultatifs.
+stratégies d'alerte facultatifs.
 
 - **Console :** Logging → Explorateur de logs ; Monitoring → Tableaux de bord /
   Alertes.
@@ -342,22 +357,22 @@ politiques d'alerte facultatifs.
 
 ## 3. Comportement de l'application Budibase {#3-budibase-application-behaviour}
 
-- **Pas de bootstrap de base de données externe.** Avec `database_type = "NONE"`, il n'y a pas de
-  job `db-init`. Budibase auto-provisionne son CouchDB et MinIO intégrés au premier
-  démarrage à l'intérieur du conteneur. Seuls les `initialization_jobs` fournis par l'utilisateur
-  sont honorés.
-- **L'état réside sur `/data` — et Cloud Run ne le persiste pas.** Les documents
-  CouchDB et les objets MinIO sont écrits sur `/data` sur le système de fichiers
-  éphémère du conteneur. Tout redémarrage ou nouvelle révision démarre à partir
-  d'un magasin vide, donc traitez un déploiement Budibase Cloud Run comme
-  éphémère/démo uniquement et utilisez la variante GKE pour tout ce que vous
-  devez conserver.
+- **Pas de bootstrap de base de données externe.** Avec `database_type = "NONE"`, il n'y a
+  pas de job `db-init`. Budibase s'auto-provisionne son CouchDB et MinIO
+  intégrés au premier démarrage à l'intérieur du conteneur. Seuls les
+  `initialization_jobs` fournis par l'utilisateur sont honorés.
+- **L'état réside sur `/data` — et Cloud Run ne le persiste pas.** Les
+  documents CouchDB et les objets MinIO sont écrits dans `/data` sur le
+  système de fichiers éphémère du conteneur. Tout redémarrage ou nouvelle
+  révision démarre à partir d'un magasin vide, traitez donc un déploiement
+  Budibase Cloud Run comme éphémère/démo uniquement et utilisez la variante GKE
+  pour tout ce que vous devez conserver.
 - **Les identifiants internes sont immuables après le premier démarrage.** Les
-  sept secrets générés chiffrent les données sur `/data`. Changer `API_ENCRYPTION_KEY` corrompt
-  toutes les données stockées chiffrées ; changer `JWT_SECRET` invalide toutes les
-  sessions ; changer les identifiants MinIO ou CouchDB rompt l'accès aux
-  magasins d'objets/documents. Ne les renouvelez que lors d'une réinitialisation
-  planifiée.
+  sept secrets générés clés les données sur `/data`. Changer
+  `API_ENCRYPTION_KEY` corrompt toutes les données stockées chiffrées ; changer
+  `JWT_SECRET` invalide toutes les sessions ; changer les identifiants MinIO ou
+  CouchDB rompt l'accès aux magasins d'objets/documents. Ne les renouvelez que
+  lors d'une réinitialisation planifiée.
 - **Configuration initiale.** Budibase auto-hébergé est livré **sans compte
   administrateur par défaut**. Ouvrez l'URL du service après le déploiement et
   créez l'administrateur initial (e-mail + mot de passe) via l'écran de
@@ -365,17 +380,17 @@ politiques d'alerte facultatifs.
 - **Chemin de santé.** La sonde de démarrage est **TCP** sur le port 80 (pas
   HTTP) : nginx lie le port en quelques secondes mais renvoie 502 jusqu'à ce que
   les upstreams CouchDB/MinIO/app intégrés aient fini de démarrer, donc une
-  vérification HTTP sur `/` échouerait pendant toute la fenêtre de démarrage
-  de l'upstream — TCP passe dès que nginx lie le port, permettant à la révision
-  de passer à l'état Prêt pendant que les upstreams se terminent en arrière-plan
-  (délai initial de 30 secondes, fenêtre de 40 tentatives à une période de 15
-  secondes, ~10 minutes au total). Les sondes de vivacité et de disponibilité
-  sont HTTP sur la racine non authentifiée `/` ; la vivacité utilise un délai
-  initial de 240 secondes pour effacer la fenêtre post-démarrage où `/`
-  renvoie toujours 502.
-- **Instance unique uniquement.** Gardez `min_instance_count = max_instance_count = 1` ; le magasin de données est local
-  au conteneur et ne peut pas être partagé entre les réplicas.
-- **Vérifiez la révision en cours d'exécution :**
+  vérification HTTP sur `/` échouerait pendant toute la fenêtre de
+  démarrage de l'upstream — TCP passe dès que nginx lie le port, permettant à la
+  révision de passer à l'état Prêt pendant que les upstreams se terminent en
+  arrière-plan (délai initial de 30 secondes, fenêtre de 40 tentatives avec une
+  période de 15 secondes, ~10 minutes au total). Les sondes de vivacité et de
+  disponibilité sont HTTP sur la racine non authentifiée `/` ; la sonde de
+  vivacité utilise un délai initial de 240 secondes pour effacer la fenêtre
+  post-démarrage où `/` renvoie toujours 502.
+- **Instance unique uniquement.** Gardez `min_instance_count = max_instance_count = 1` ; le magasin de données est
+  local au conteneur et ne peut pas être partagé entre les réplicas.
+- **Vérifier la révision en cours d'exécution :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --project "$PROJECT" \
     --format='value(status.url)'
@@ -397,43 +412,43 @@ Budibase sont listés ; toutes les autres entrées sont héritées de
 |---|---|---|
 | `application_name` | `budibase` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `display_name` | `Budibase` | Nom lisible par l'homme affiché dans la console. |
-| `application_version` | `3.39.29` | Tag de l'image Budibase ; utilisé comme `FROM budibase/budibase:<tag>` pour le build du wrapper léger. Incrémentez pour déclencher un nouveau build/révision. |
+| `application_version` | `3.39.29` | Tag de l'image Budibase ; utilisé comme `FROM budibase/budibase:<tag>` pour le build du wrapper léger. Incrémenter pour déclencher un nouveau build/révision. |
 
-Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
+Toutes les autres entrées suivent le comportement standard de App_CloudRun.
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
+| `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
 | `container_port` | `80` | Le proxy nginx de l'image tout-en-un sert toute l'application sur le port 80 — doit rester 80. |
-| `container_resources` | `4000m` / `8Gi` | CPU et mémoire par instance ; le CouchDB/MinIO/Redis intégré + le niveau d'application nécessitent une mémoire généreuse — 4Gi OOM-loops sur Cloud Run gen2 (le répertoire `/data` inscriptible compte pour la limite de mémoire), donc 8Gi est le minimum fiable. |
-| `min_instance_count` | `1` | Gardez à 1 — la mise à l'échelle à zéro supprimerait le magasin de données local. |
-| `max_instance_count` | `1` | Gardez à 1 — le conteneur conserve tout l'état localement ; les réplicas ne partageraient pas les données. |
-| `cpu_always_allocated` | `true` | Allouez le CPU en permanence afin que les services d'arrière-plan intégrés continuent de fonctionner entre les requêtes. |
+| `container_resources` | `4000m` / `8Gi` | CPU et mémoire par instance ; le CouchDB/MinIO/Redis intégré + la couche d'application nécessitent une mémoire généreuse — 4 Gio OOM-loops sur Cloud Run gen2 (le répertoire `/data` inscriptible compte dans la limite de mémoire), donc 8 Gio est le minimum fiable. |
+| `min_instance_count` | `1` | Garder à 1 — la mise à l'échelle à zéro supprimerait le magasin de données local. |
+| `max_instance_count` | `1` | Garder à 1 — le conteneur contient tout l'état localement ; les réplicas ne partageraient pas les données. |
+| `cpu_always_allocated` | `true` | Allouer le CPU en permanence afin que les services d'arrière-plan intégrés continuent de fonctionner entre les requêtes. |
 | `execution_environment` | `gen2` | Gen2 recommandé. |
 | `enable_cloudsql_volume` | `false` | Budibase n'utilise pas de base de données SQL externe. |
-| `enable_image_mirroring` | `true` | Mettez en miroir l'image Budibase dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Mettre en miroir l'image Budibase dans Artifact Registry. |
 
-Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
+Toutes les autres entrées suivent le comportement standard de App_CloudRun.
 
-### Groupe 5 — Contrôle d'accès et d'entrée {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Accessible à l'URL `run.app` par défaut. |
-| `enable_iap` | `false` | Exigez la connexion Google devant Budibase. |
+| `enable_iap` | `false` | Exiger la connexion Google devant Budibase. |
 
-Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
+Toutes les autres entrées suivent le comportement standard de App_CloudRun.
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres non secrets supplémentaires fusionnés dans le conteneur. Les valeurs principales (`BUDIBASE_ENVIRONMENT`, `SELF_HOSTED`, `COUCH_DB_USER`, `LOG_LEVEL`) sont définies automatiquement. |
-| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager. Les sept identifiants internes sont injectés automatiquement — ne les définissez pas ici. |
+| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. Les sept identifiants internes sont injectés automatiquement — ne les définissez pas ici. |
 
-Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
+Toutes les autres entrées suivent le comportement standard de App_CloudRun.
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
@@ -441,23 +456,23 @@ Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
 |---|---|---|
 | `database_type` | `NONE` | Budibase intègre son propre CouchDB ; aucune base de données gérée externe n'est provisionnée. |
 
-Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
+Toutes les autres entrées suivent le comportement standard de App_CloudRun.
 
 ### Groupe 21 — Cache et file d'attente Redis {#group-21--redis-cache--queue}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Redis s'exécute à l'intérieur du conteneur ; laissez désactivé à moins d'externaliser le cache. |
+| `enable_redis` | `false` | Redis s'exécute à l'intérieur du conteneur ; laisser désactivé sauf si le cache est externalisé. |
 | `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | Utilisé uniquement si un Redis externe est activé. |
 
-Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
+Toutes les autres entrées suivent le comportement standard de App_CloudRun.
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Retournées lors d'un déploiement réussi — le moyen le plus rapide de localiser
-et d'explorer les ressources en cours d'exécution.
+Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et
+d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
@@ -489,33 +504,33 @@ et d'explorer les ressources en cours d'exécution.
 > (mineur).
 
 > **Validation héritée au moment du plan.** Ce module transmet sa configuration
-> au moteur de fondation [App_CloudRun](App_CloudRun.md), qui valide les
-> valeurs *et les combinaisons* au moment du plan — un `container_port` hors limites, une
-> quantité de CPU/mémoire invalide, un `database_type` qui ne correspond pas à une
-> extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide
-> échoue le **plan** avec une erreur claire et nommée avant qu'aucune ressource
-> ne soit créée, de sorte que la plupart des erreurs ci-dessous sont détectées
-> en amont plutôt qu'au moment de l'application ou de l'exécution.
+> au moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les
+> valeurs *et les combinaisons* au moment du plan — un `container_port` hors plage, une
+> quantité CPU/mémoire invalide, un `database_type` qui ne correspond pas à une
+> extension activée, un `redis_port`/`backup_retention_days` hors plage. Une configuration
+> invalide fait échouer le **plan** avec une erreur claire et nommée avant la
+> création de toute ressource, de sorte que la plupart des erreurs ci-dessous
+> sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si erreur |
 |---|---|---|---|
 | Cloud Run comme plateforme | GKE pour la persistance | Critique | Cloud Run n'a pas de disque durable — `/data` (tout l'état CouchDB + MinIO) est perdu à chaque redémarrage/révision. Utilisez Budibase_CloudRun uniquement pour la démo/évaluation. |
 | `API_ENCRYPTION_KEY` (auto-généré) | Ne jamais renouveler après le premier démarrage | Critique | Le renouveler corrompt toutes les données stockées chiffrées — elles ne peuvent pas être déchiffrées. |
-| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` / `COUCH_DB_PASSWORD` (auto-généré) | Ne jamais renouveler après le premier démarrage | Critique | Le renouveler rompt l'accès aux magasins d'objets/documents intégrés chiffrés avec `/data`. |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` / `COUCH_DB_PASSWORD` (auto-généré) | Ne jamais renouveler après le premier démarrage | Critique | Le renouveler rompt l'accès aux magasins d'objets/documents intégrés clés sur `/data`. |
 | `JWT_SECRET` (auto-généré) | Ne renouveler que pendant une fenêtre de maintenance | Élevé | Le renouveler invalide toutes les sessions utilisateur actives, forçant une reconnexion immédiate. |
 | `max_instance_count` | `1` | Critique | Plus d'une instance divise le magasin de données local — les réplicas ne partagent pas `/data` (split-brain, perte de données). |
 | `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro supprime le magasin de données en cours d'exécution dans le conteneur. |
-| `cpu_always_allocated` | `true` | Élevé | La facturation basée sur les requêtes étrangle le travail d'arrière-plan CouchDB/MinIO/Redis intégré à ~0 CPU entre les requêtes. |
-| `container_port` | `80` | Élevé | Le proxy nginx sert l'application sur le port 80 ; tout autre port échoue les sondes et le service ne devient jamais Prêt. |
+| `cpu_always_allocated` | `true` | Élevé | La facturation basée sur les requêtes limite le travail d'arrière-plan CouchDB/MinIO/Redis intégré à ~0 CPU entre les requêtes. |
+| `container_port` | `80` | Élevé | Le proxy nginx sert l'application sur le port 80 ; tout autre port fait échouer les sondes et le service ne passe jamais à l'état Prêt. |
 | `database_type` | `NONE` | Élevé | La sélection d'un moteur externe provisionne une instance Cloud SQL inutilisée ; Budibase ne s'y connecte jamais. |
-| `memory_limit` | `8Gi` | Élevé | 4Gi OOM-loops (redémarrages d'instance toutes les ~60s) — le répertoire `/data` inscriptible (état CouchDB/MinIO/Redis) est en mémoire sur Cloud Run gen2 et compte pour la limite ; 8Gi est le minimum fiable. |
+| `memory_limit` | `8Gi` | Élevé | 4 Gio OOM-loops (l'instance redémarre toutes les ~60 s) — le répertoire `/data` inscriptible (état CouchDB/MinIO/Redis) est en mémoire sur Cloud Run gen2 et compte dans la limite ; 8 Gio est le minimum fiable. |
 | Premier compte administrateur | Créer immédiatement après le déploiement | Élevé | Budibase auto-hébergé est livré sans administrateur par défaut — une instance non réclamée peut être réclamée par quiconque atteint l'URL. |
-| `enable_iap` | activer pour les déploiements privés | Moyen | Sans IAP ou WAF, l'interface utilisateur est publiquement accessible à l'URL `run.app`. |
+| `enable_iap` | activer pour les déploiements privés | Moyen | Sans IAP ou WAF, l'interface utilisateur est accessible publiquement à l'URL `run.app`. |
 
 ---
 
 Pour le comportement de la fondation référencé tout au long — identité de
-service, mise à l'échelle et concurrence, entrée et équilibrage de charge,
+service, mise à l'échelle et concurrence, ingress et équilibrage de charge,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en
 miroir d'images — voir **[App_CloudRun](App_CloudRun.md)**. La configuration
 d'application spécifique à Budibase partagée avec la variante GKE est décrite
@@ -525,10 +540,6 @@ dans **[Budibase_Common](Budibase_Common.md)**.
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : Budibase sur Cloud Run](../labs/Budibase_CloudRun.md) —
-  déployez-le étape par étape, avec les écrans de console et les commandes à
-  chaque étape.
-- [Budibase sur GKE Autopilot](Budibase_GKE.md) — la même application sur
-  Kubernetes, pour lorsque vous avez besoin de l'autre cible de déploiement.
-- [Budibase Common — Configuration d'application partagée](Budibase_Common.md)
-  — la configuration partagée par les deux cibles de déploiement.
+- [Lab pratique : Budibase sur Cloud Run](../labs/Budibase_CloudRun.md) — déployez-le étape par étape, avec les écrans de console et les commandes à chaque étape.
+- [Budibase sur GKE Autopilot](Budibase_GKE.md) — la même application sur Kubernetes, pour lorsque vous avez besoin de l'autre cible de déploiement.
+- [Budibase Common — Configuration d'application partagée](Budibase_Common.md) — la configuration partagée par les deux cibles de déploiement.

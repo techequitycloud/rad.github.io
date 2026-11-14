@@ -31,17 +31,17 @@ rather than repeating them here.
 
 ## What Plausible costs on RAD, and how that compares
 
-**Running Plausible in your own Google Cloud project costs about US$104.74/month in infrastructure, plus a one-time module fee of 110 RAD credits** (sized at 1 vCPU / 0.5 GiB on GKE Autopilot pods). RAD charges the module fee once, at deploy time — never again on Update — and builds are included in the price; Google Cloud usage itself is billed to your own billing account at Google's list price. On a **RAD-managed** project the same resources are metered hourly in credits at list price plus RAD's margin — about 92 credits/day — and the module fee is 10% lower, at 99 credits. See "Pause it for free" below for how a RAD-managed Plausible deployment can be stopped, at no running cost, until you need it again.
+**Running Plausible in your own Google Cloud project costs about US$104.74/month in infrastructure, plus a one-time module fee of 110 RAD credits** (sized at 1 vCPU / 0.5 GiB on GKE Autopilot pods). RAD charges the module fee once, at deploy time — never again on Update — and builds are included in the price; Google Cloud usage itself is billed to your own billing account at Google's list price. On a **RAD-managed** project the same resources are metered hourly in credits at list price plus RAD's margin — about 122 credits/day — and the module fee is 10% lower, at 99 credits. See "Pause it for free" below for how a RAD-managed Plausible deployment can be stopped, at no running cost, until you need it again.
 
 ### What you pay on RAD
 
 | Item | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | 110 credits (once) | 99 credits (once) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | ~$104.74/month, billed to your own billing account at Google's list price | ~92 credits/day, metered hourly at list price + RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | ~$104.74/month, billed to your own billing account at Google's list price | ~122 credits/day, metered hourly at list price + RAD's margin |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 **Default running cost in your own project**
 

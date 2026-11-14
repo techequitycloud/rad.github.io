@@ -3,78 +3,78 @@ title: "Module Xibo GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Xibo sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Xibo_GKE.md @ 60462a86 sha256:b36d2f676671 -->
+<!-- translated-from: docs/modules/Xibo_GKE.md @ 40c83c3f sha256:c0a2f7d28e1a -->
 
 # Module Xibo GKE — Guide de configuration {#xibo-gke-module--configuration-guide}
 
-Ce guide décrit chaque variable de configuration disponible dans le module `Xibo_GKE`. `Xibo_GKE` est un **module wrapper** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration d'application partagée [`Xibo_Common`](./Xibo_Common.md) pour déployer le CMS [Xibo](https://xibosignage.com/) — affichage numérique open source qui planifie et distribue des mises en page, des listes de lecture et des médias à des réseaux de lecteurs d'affichage — sur Google Kubernetes Engine (GKE) Autopilot.
+Ce guide décrit toutes les variables de configuration disponibles dans le module `Xibo_GKE`. `Xibo_GKE` est un **module enveloppe** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration d'application partagée [`Xibo_Common`](./Xibo_Common.md) pour déployer le CMS [Xibo](https://xibosignage.com/) — un affichage dynamique open-source qui planifie et distribue des mises en page, des listes de lecture et des médias à des réseaux de lecteurs d'affichage — sur Google Kubernetes Engine (GKE) Autopilot.
 
 La plupart des options de configuration de `Xibo GKE` correspondent directement aux mêmes options de `App GKE`. Lorsqu'une variable a un comportement identique, ce guide fait référence au guide `App GKE` plutôt que de répéter la même documentation. Seules les variables et les valeurs par défaut **spécifiques à Xibo** sont décrites en détail ici.
 
 > **Remarque :** Les variables marquées comme *gérées par la plateforme* sont définies et maintenues par la plateforme. Vous n'avez normalement pas besoin de les modifier.
 
-> **GKE uniquement :** La bibliothèque multimédia de Xibo (`/var/www/cms/library`) contient tous les fichiers téléchargés et les certificats de signature OAuth du lecteur, et Apache la sert avec XSendFile, qui nécessite une sémantique de fichier POSIX réelle. C'est pourquoi Xibo est proposé sur GKE, où la bibliothèque peut résider sur un volume persistant, plutôt que sur Cloud Run.
+> **GKE uniquement :** La bibliothèque de médias de Xibo (`/var/www/cms/library`) contient tous les fichiers téléchargés et les certificats de signature OAuth du lecteur, et Apache la sert avec XSendFile, ce qui nécessite une sémantique de fichier POSIX réelle. C'est pourquoi Xibo est proposé sur GKE, où la bibliothèque peut résider sur un volume persistant, plutôt que sur Cloud Run.
 
-> **Lisez [Groupe 7](#group-7-stateful-workloads) avant votre premier déploiement.** Avec les valeurs par défaut du module, la bibliothèque multimédia n'est **pas** persistante.
+> **Lisez le [Groupe 7](#group-7-stateful-workloads) avant votre premier déploiement.** Avec les valeurs par défaut du module, la bibliothèque de médias **n'est pas** persistante.
 
 ---
 
-## Ce que coûte Xibo sur RAD, et comment cela se compare {#what-xibo-costs-on-rad-and-how-that-compares}
+## Ce que coûte Xibo sur RAD, et comparaison {#what-xibo-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Xibo sur des pods GKE Autopilot dans votre propre projet Google Cloud coûte environ 110,13 $/mois en frais Google Cloud**, en plus d'un frais de module RAD unique de 110 crédits facturé une fois au moment du déploiement. Xibo a besoin d'une base de données MySQL et d'une VM de bibliothèque multimédia partagée (son stockage de fichiers persistant pour les mises en page et les médias), qui, avec le pod lui-même, représentent les 110,13 $ ci-dessus. Dans un projet géré par RAD, les frais de module tombent à 99 crédits (10 % de moins) et le coût d'exécution est mesuré à l'heure en crédits au lieu d'être facturé directement par Google — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous pour le seul avantage géré par RAD qu'un VPS auto-hébergé ne peut égaler. Xibo n'est proposé que sur GKE — sa bibliothèque multimédia a besoin d'une sémantique de fichier POSIX réelle que les montages NFS de Cloud Run ne fournissent pas, il n'y a donc pas de variante Cloud Run de ce module.
+**L'exécution de Xibo sur des pods GKE Autopilot dans votre propre projet Google Cloud coûte environ 110,13 $/mois en frais Google Cloud**, en plus d'un coût de module RAD unique de 110 crédits facturé une fois au moment du déploiement. Xibo nécessite une base de données MySQL et une VM de bibliothèque de médias partagée (son stockage de fichiers persistant pour les mises en page et les médias), qui, avec le pod lui-même, représentent les 110,13 $ ci-dessus. Dans un projet géré par RAD, les frais de module sont réduits à 99 crédits (10 % de moins) et le coût d'exécution est mesuré à l'heure en crédits au lieu d'être facturé directement par Google — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous pour le seul avantage d'un projet géré par RAD qu'un VPS auto-hébergé ne peut égaler. Xibo n'est proposé que sur GKE — sa bibliothèque de médias nécessite une sémantique de fichier POSIX réelle que les montages NFS de Cloud Run ne fournissent pas, il n'y a donc pas de variante Cloud Run de ce module.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 110 crédits | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | 110,13 $/mois, facturé par Google au prix catalogue | ~87 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Identique |
+| Coût d'exécution Google Cloud | 110,13 $/mois, facturé par Google au prix catalogue | ~118 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
 **Coût d'exécution par défaut dans votre propre projet**
 
 | Ressource | US$/mois (prix catalogue Google, us-central1) |
 |---|---|
-| Pod GKE Autopilot, 1x vCPU / 2 Gio | 39,68 $ |
+| Pod GKE Autopilot, 1 vCPU / 2 Gio | 39,68 $ |
 | Cloud SQL pour MySQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ |
 | Serveur de fichiers NFS/cache (petite VM) | 13,43 $ |
 | Cloud NAT et réseau | 5,00 $ |
 | Cloud Storage (modules complémentaires, sauvegardes) | 1,00 $ |
-| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 |
+| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 $ |
 | **Total** | **110,13 $** |
 
-*Les frais de gestion de cluster GKE sont exclus du total ci-dessus car ils sont partagés entre toutes les applications GKE du projet — 0 $ si c'est la seule, sinon environ 73 $/mois répartis entre le nombre d'applications que vous exécutez.*
+*Les frais de gestion de cluster GKE sont exclus du total ci-dessus car ils sont partagés entre toutes les applications GKE du projet — 0 $ si c'est le seul, sinon environ 73 $/mois répartis entre le nombre d'applications que vous exécutez.*
 
-### Comment cela se compare {#how-it-compares}
+### Comment ça se compare {#how-it-compares}
 
-- Xibo vend un SaaS hébergé "Xibo in the Cloud", mais les prix de ses plans actuels ne sont pas publiés sur sa page de tarification (vérifié le 8 octobre 2026) — seulement une inscription à un essai gratuit — donc aucun chiffre ne peut être cité ici avec certitude ; considérez cela comme une comparaison auto-gérée à la place.
-- Une comparaison auto-gérée : Hetzner CPX22 (2 vCPU/4 Go) coûte environ 24 $/mois, un Droplet DigitalOcean 2 vCPU/4 Go coûte le même 24 $/mois, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) coûte environ 49 $/mois — suffisant pour exécuter le CMS Xibo, sa base de données MySQL et la VM de bibliothèque multimédia partagée ensemble, à un prix inférieur à celui de la pile GKE gérée par RAD.
-- Ce que ce prix n'inclut pas : les sauvegardes, les correctifs de sécurité, le renouvellement TLS et le temps d'administration pour maintenir un CMS en ligne face aux lecteurs — Cloud SQL géré par RAD, Secret Manager et la surveillance absorbent cela pour vous.
+- Xibo vend un SaaS hébergé "Xibo in the Cloud", mais les prix de ses plans actuels ne sont pas publiés sur sa page de tarification (vérifié le 8 octobre 2026) — seulement une inscription à un essai gratuit — donc aucun chiffre ne peut être cité ici avec certitude ; considérez ceci comme une comparaison auto-gérée à la place.
+- Une comparaison auto-gérée : Hetzner CPX22 (2 vCPU/4 Go) coûte environ 24 $/mois, un Droplet DigitalOcean 2 vCPU/4 Go coûte le même 24 $/mois, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) coûte environ 49 $/mois — suffisant pour exécuter le CMS Xibo, sa base de données MySQL et la VM de bibliothèque de médias partagée ensemble, à un prix affiché inférieur à celui de la pile GKE gérée par RAD.
+- Ce que ce prix n'inclut pas : les sauvegardes, les correctifs de sécurité, le renouvellement TLS et le temps d'administration pour maintenir un CMS en ligne face aux lecteurs — Cloud SQL, Secret Manager et la surveillance gérés par RAD absorbent cela pour vous.
 
 ### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-C'est l'avantage principal d'un projet géré par RAD, et il ne coûte rien lorsqu'il est en pause.
+C'est l'avantage principal d'un projet géré par RAD, et il ne coûte rien pendant la pause.
 La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer
 le projet purement et simplement — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression d'un module,
-cela ne supprime **pas** Cloud SQL, aucune VM, ni la ressource de calcul une par une : l'ensemble
+cela ne démantèle **pas** Cloud SQL, aucune VM, ni la ressource de calcul une par une : l'ensemble
 du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà
 déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être invoquée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
 La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le
 projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour
 confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve
 les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
 
-Ce qu'il faut : vous devez être propriétaire du projet (pas un projet pour lequel RAD ne gère que la facturation), vous devez
-le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est
-admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser le
-seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google dit que la plupart
-des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
+Ce qu'il faut pour cela : vous devez être propriétaire du projet (pas un projet dont RAD ne gère que la facturation), vous devez
+le restaurer vous-même dans les 30 jours — après quoi Google le supprime définitivement — et la restauration est
+admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser
+le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des
+services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
 Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a
 la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous
@@ -94,11 +94,11 @@ coût de redéploiement par rapport à son propre coût d'exécution — pour Xi
 La majeure partie de ce coût d'exécution est généralement la base de données et toute VM de fichier/cache partagée — celles-ci ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de cette application pendant que quelque chose d'autre partage le projet n'économise que sa propre part de calcul.
 
 Conservez d'abord les données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui,
-donc copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
+donc copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
 
-### Sessions de labo et environnements gérés {#lab-sessions-and-managed-environments}
+### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-Sessions de labo, pour la formation : un formateur anime une session pour une classe. Chaque participant obtient l'
+Sessions de lab, pour la formation : un formateur anime une session pour une classe. Chaque participant obtient l'
 application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le
 formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
 Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
@@ -111,34 +111,34 @@ partenaire transfère le projet et les déploiements deviennent la propriété d
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR,
 par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les propres frais de RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les affirmations de pause/restauration.
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les frais propres à RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les affirmations de pause/restauration.
 
 ## Référence de configuration standard {#standard-configuration-reference}
 
-Les zones de configuration suivantes sont fournies par le module `App_GKE` sous-jacent. Consultez les sections liées du [Guide de configuration App_GKE](./App_GKE.md) pour une documentation complète.
+Les zones de configuration suivantes sont fournies par le module sous-jacent `App_GKE`. Consultez les sections liées du [Guide de configuration App_GKE](./App_GKE.md) pour une documentation complète.
 
 | Zone de configuration | Section du guide App_GKE | Notes spécifiques à Xibo |
 |---|---|---|
 | Projet et identité | Groupe 1 — Projet et identité | Identique. |
-| Identité de l'application | Groupe 3 — Identité de l'application | Les valeurs par défaut du nom d'affichage sont des résidus d'échafaudage ; voir [Groupe 3](#group-3-application-identity). |
+| Identité de l'application | Groupe 3 — Identité de l'application | Les valeurs par défaut des noms d'affichage sont des résidus d'échafaudage ; voir [Groupe 3](#group-3-application-identity). |
 | Exécution et mise à l'échelle | Groupe 4 — Exécution et mise à l'échelle | Build personnalisé à partir de `ghcr.io` ; `container_port = 80` ; voir [Groupe 4](#group-4-runtime--scaling). |
 | Variables d'environnement et secrets | Groupe 5 — Variables d'environnement et secrets | Variables `MYSQL_*` / `CMS_*` définies par le module ; voir [Groupe 5](#group-5-environment-variables--secrets). |
 | Configuration du backend GKE | Groupe 6 — Configuration du backend GKE | `service_type = "ClusterIP"` ; voir [Groupe 6](#group-6-gke-backend-configuration). |
-| Charges de travail avec état | Groupe 7 — StatefulSet / PVC | **Requis pour persister la bibliothèque multimédia** ; voir [Groupe 7](#group-7-stateful-workloads). |
+| Charges de travail avec état | Groupe 7 — StatefulSet / PVC | **Requis pour persister la bibliothèque de médias** ; voir [Groupe 7](#group-7-stateful-workloads). |
 | Jobs d'initialisation et CronJobs | Groupe 11 — Automatisation des charges de travail | `db-init` fourni par `Xibo Common` ; voir [Groupe 11](#group-11-workload-automation). |
 | Stockage — NFS | Groupe 13 — Stockage NFS | Monté par défaut à `/mnt/nfs`, inutilisé par Xibo ; voir [Groupe 13](#group-13-nfs). |
 | Stockage — GCS | Groupe 14 — Cloud Storage | Deux buckets créés, inutilisés par Xibo ; voir [Groupe 14](#group-14-cloud-storage). |
 | Configuration de la base de données | Groupe 16 — Configuration de la base de données | **MySQL 8.0, fixe** ; voir [Groupe 16](#group-16-database). |
-| Planification et rétention des sauvegardes | Groupe 17 — Sauvegarde et maintenance | Identique. |
+| Plan de sauvegarde et rétention | Groupe 17 — Sauvegarde et maintenance | Identique. |
 | Scripts SQL personnalisés | Groupe 18 — Scripts SQL personnalisés | Identique. |
 | Observabilité et vérifications de santé | Groupe 10 — Observabilité | Sondes sur `/login`, et elles atteignent le conteneur déployé ; voir [Groupe 10](#group-10-observability--health). |
 | Cloud Armor WAF | Groupe 21 — Cloud Armor et CDN | Identique. |
-| Proxy conscient de l'identité | Groupe 20 — Proxy conscient de l'identité | Les lecteurs doivent toujours atteindre le CMS ; voir [Groupes 20-22](#groups-2022-iap-cloud-armor-vpc-service-controls). |
+| Proxy conscient de l'identité (IAP) | Groupe 20 — Proxy conscient de l'identité | Les lecteurs doivent toujours atteindre le CMS ; voir [Groupes 20-22](#groups-2022-iap-cloud-armor-vpc-service-controls). |
 | Autorisation binaire | Groupe 12 — CI/CD | Identique. |
 | Contrôles de service VPC | Groupe 22 — Contrôles de service VPC et journalisation d'audit | Identique. |
 | Pilote CSI du magasin de secrets | Groupe 5 — Variables d'environnement et secrets | Toujours activé — aucune configuration requise. |
 | Trafic et Ingress | Groupe 19 — Accès et réseau | Identique. |
-| Domaine personnalisé et IP statique | Groupe 19 — Accès et réseau | Définir `CMS_SERVER_NAME` pour un domaine personnalisé ; voir [Groupe 19](#group-19-custom-domain--networking). |
+| Domaine personnalisé et IP statique | Groupe 19 — Accès et réseau | Définissez `CMS_SERVER_NAME` pour un domaine personnalisé ; voir [Groupe 19](#group-19-custom-domain--networking). |
 | Déclencheurs Cloud Build | Groupe 12 — CI/CD | Identique. |
 | Pipeline Cloud Deploy | Groupe 12 — CI/CD | Identique. |
 | Mise en miroir d'images | Groupe 4 — Exécution et mise à l'échelle | Identique. |
@@ -151,14 +151,14 @@ Les zones de configuration suivantes sont fournies par le module `App_GKE` sous-
 
 ## Comment Xibo GKE est lié à App GKE {#how-xibo-gke-relates-to-app-gke}
 
-`Xibo GKE` transmet ses variables à `App GKE` et ajoute un sous-module `Xibo Common` qui fournit une configuration spécifique à Xibo. Les principaux effets sont :
+`Xibo GKE` transmet ses variables à `App GKE` et ajoute un sous-module `Xibo Common` qui fournit une configuration spécifique à Xibo. Les principaux effets sont les suivants :
 
-1. **Une image personnalisée mince de ghcr.io.** `Xibo Common` fournit un Dockerfile, `FROM ghcr.io/xibosignage/xibo-cms:${XIBO_VERSION}`, qui ajoute un point d'entrée wrapper. `XIBO_VERSION` est défini à partir de `application_version` (un argument de build spécifique à l'application, donc le générique `APP_VERSION` de la Fondation ne peut pas le remplacer). Le `xibosignage/xibo-cms` de Docker Hub est abandonné (tag le plus récent `release23`, 2023) et n'a jamais reçu Xibo 4.x.
-2. **MySQL 8.0 est fixe.** `Xibo Common` définit `database_type = "MYSQL_8_0"` dans la configuration de l'application, ce que `App GKE` provisionne, quelle que soit la valeur de `database_type` du wrapper.
-3. **TCP vers l'IP privée, pas le socket.** Le point d'entrée du wrapper exporte `MYSQL_HOST = $DB_IP`, `MYSQL_PORT = ${DB_PORT:-3306}`, `MYSQL_DATABASE`, `MYSQL_USER` et `MYSQL_PASSWORD`, puis passe la main au `/entrypoint.sh` de Xibo. `DB_HOST` peut être un répertoire de socket, que Xibo ne peut pas utiliser. `Xibo Common` corrige donc `enable_cloudsql_volume = false`.
-4. **Installation non interactive.** Le point d'entrée de Xibo crée la base de données si elle est absente et exécute l'installation/mise à niveau complète de phinx à chaque démarrage. Le job `db-init` n'existe que pour créer l'utilisateur et la base de données MySQL avec la gestion correcte de `caching_sha2_password` de Cloud SQL MySQL 8.
-5. **Trois valeurs par défaut d'image corrigées.** `MYSQL_ATTR_SSL_VERIFY_SERVER_CERT = "false"` (l'image exige une vérification sans CA, donc PDO refuse Cloud SQL tel qu'il est livré) ; `CMS_PHP_COOKIE_SECURE = "On"` (le conteneur ne voit que HTTP derrière la passerelle de terminaison TLS) ; `CMS_SERVER_NAME` dérivé de l'URL du service au lieu du `localhost` livré.
-6. **Sondes sur `/login`.** Xibo n'a pas de point de terminaison de santé ; le générique `/healthz` de la Fondation renvoie 404 et redémarrerait un pod sain. `/login` renvoie 200 et prouve que le CMS a été rendu. `Xibo GKE` transmet `startup_probe_config`/`health_check_config` à `Xibo Common`, ce sont donc les sondes réellement déployées.
+1. **Une image personnalisée légère de ghcr.io.** `Xibo Common` fournit un Dockerfile, `FROM ghcr.io/xibosignage/xibo-cms:${XIBO_VERSION}`, qui ajoute un point d'entrée wrapper. `XIBO_VERSION` est défini à partir de `application_version` (un argument de build spécifique à l'application, de sorte que le générique `APP_VERSION` de la Fondation ne peut pas le remplacer). `xibosignage/xibo-cms` de Docker Hub est abandonné (tag le plus récent `release23`, 2023) et n'a jamais reçu Xibo 4.x.
+2. **MySQL 8.0 est fixe.** `Xibo Common` définit `database_type = "MYSQL_8_0"` dans la configuration de l'application, ce qui est ce que `App GKE` provisionne, quelle que soit la valeur de `database_type` du wrapper.
+3. **TCP vers l'IP privée, pas le socket.** Le point d'entrée du wrapper exporte `MYSQL_HOST = $DB_IP`, `MYSQL_PORT = ${DB_PORT:-3306}`, `MYSQL_DATABASE`, `MYSQL_USER` et `MYSQL_PASSWORD`, puis passe la main au propre `/entrypoint.sh` de Xibo. `DB_HOST` peut être un répertoire de socket, que Xibo ne peut pas utiliser. `Xibo Common` corrige donc `enable_cloudsql_volume = false`.
+4. **Installation non interactive.** Le point d'entrée de Xibo crée la base de données si elle est absente et exécute l'installation/mise à niveau complète de phinx à chaque démarrage. Le job `db-init` n'existe que pour créer l'utilisateur et la base de données MySQL avec `caching_sha2_password` de Cloud SQL MySQL 8 géré correctement.
+5. **Trois valeurs par défaut d'image corrigées.** `MYSQL_ATTR_SSL_VERIFY_SERVER_CERT = "false"` (l'image exige une vérification sans CA, donc PDO refuse Cloud SQL tel qu'il est livré) ; `CMS_PHP_COOKIE_SECURE = "On"` (le conteneur ne voit que HTTP derrière la passerelle de terminaison TLS) ; `CMS_SERVER_NAME` dérivé de l'URL du service au lieu de `localhost` livré.
+6. **Sondes sur `/login`.** Xibo n'a pas de point de terminaison de santé ; le générique `/healthz` de la Fondation renvoie 404 et redémarrerait un pod sain. `/login` renvoie 200 et prouve que le CMS a été rendu. `Xibo GKE` transmet `startup_probe_config`/`health_check_config` dans `Xibo Common`, ce sont donc les sondes réellement déployées.
 7. **Le service web est ClusterIP.** Le CMS est publié via la passerelle L7 ; un service `LoadBalancer` dépenserait une deuxième IP externe sur la même surface HTTP.
 
 ---
@@ -181,7 +181,7 @@ Identique à `App_GKE` : `support_users` (`[]`), `resource_labels` (`{}`).
 |---|---|---|
 | `application_name` | `"xibo"` | Nom de base pour toutes les ressources. **Ne pas modifier après le déploiement.** |
 | `application_display_name` | `"Wiki.js"` | **Résidu d'échafaudage** du module dont ce wrapper a été cloné. Il est transmis à `Xibo Common` comme `display_name` et devient le nom d'affichage de l'application. Définissez-le sur quelque chose comme `"Xibo CMS"`. |
-| `application_description` | `"Wiki.js - The most powerful and extensible open source Wiki software"` | Également un résidu d'échafaudage ; modifiez-le librement. |
+| `application_description` | `"Wiki.js - The most powerful and extensible open source Wiki software"` | Également résidu d'échafaudage ; modifiez-le librement. |
 | `application_version` | `"release-4.5.2"` | Tag sur `ghcr.io/xibosignage/xibo-cms`, utilisé comme `XIBO_VERSION` du build. Épinglez une version exacte : une reconstruction sous un tag inchangé ne produit pas de diff Terraform et donc pas de déploiement. |
 
 ---
@@ -214,21 +214,21 @@ Les variables d'exécution restantes (`deploy_application`, `container_build_con
 | `CMS_PHP_MEMORY_LIMIT` | `"512M"` | Limite de mémoire PHP (les 256 Mo livrés échouent sur les importations de grandes mises en page). |
 | `CMS_PHP_CLI_MEMORY_LIMIT` | `"512M"` | Idem, pour PHP CLI. |
 
-**Défini par le point d'entrée du wrapper au démarrage :**
+**Définies par le point d'entrée du wrapper au démarrage :**
 
 | Variable | Source |
 |---|---|
 | `MYSQL_HOST` | `DB_IP` (IP privée) |
-| `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD` | `DB_NAME`, `DB_USER`, `DB_PASSWORD` (injecté par `App GKE`) |
-| `CMS_SERVER_NAME` | Uniquement si non défini ou `localhost` : la partie hôte de `CLOUDRUN_SERVICE_URL`, `GKE_SERVICE_URL` ou `SERVICE_URL` (le premier présent) |
+| `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD` | `DB_NAME`, `DB_USER`, `DB_PASSWORD` (injectées par `App GKE`) |
+| `CMS_SERVER_NAME` | Uniquement si non défini ou `localhost` : la partie hôte de `CLOUDRUN_SERVICE_URL`, `GKE_SERVICE_URL` ou `SERVICE_URL` (la première présente) |
 
 Le point d'entrée échoue rapidement si `DB_IP`, `DB_NAME`, `DB_USER` ou `DB_PASSWORD` est manquant.
 
-**Substitutions utiles :**
+**Remplacements utiles :**
 
 | Variable | Quand |
 |---|---|
-| `CMS_SERVER_NAME` | Service sur un domaine personnalisé — Xibo l'écrit dans la configuration du lecteur et les liens sortants. |
+| `CMS_SERVER_NAME` | Servir sur un domaine personnalisé — Xibo l'écrit dans la configuration du lecteur et les liens sortants. |
 | `CMS_PHP_MEMORY_LIMIT` / `CMS_PHP_CLI_MEMORY_LIMIT` | Très grandes importations. |
 | `XMR_HOST` | Uniquement si vous exécutez le serveur push XMR de Xibo séparément — ce module n'en déploie pas. |
 
@@ -240,8 +240,8 @@ Le point d'entrée échoue rapidement si `DB_IP`, `DB_NAME`, `DB_USER` ou `DB_PA
 
 | Variable | Valeur par défaut Xibo GKE | Notes |
 |---|---|---|
-| `service_type` | `"ClusterIP"` | La passerelle fournit déjà l'adresse externe. Un `LoadBalancer` ici dépense une deuxième IP externe — ce qui, sur un projet à son quota d'adresses, peut laisser le load balancer d'un autre module `<pending>`. |
-| `workload_type` | `null` | Se résout en `"StatefulSet"` lorsque `stateful_pvc_enabled = true`, sinon `"Deployment"`. |
+| `service_type` | `"ClusterIP"` | La passerelle fournit déjà l'adresse externe. Un `LoadBalancer` ici dépense une deuxième IP externe — ce qui, sur un projet à son quota d'adresses, peut laisser le `<pending>` du répartiteur de charge d'un autre module. |
+| `workload_type` | `null` | Résout en `"StatefulSet"` lorsque `stateful_pvc_enabled = true`, sinon `"Deployment"`. |
 | `session_affinity` | `"ClientIP"` | — |
 | `deployment_strategy` | `null` | Déclaré mais non référencé — aucun effet. |
 
@@ -253,13 +253,13 @@ Le point d'entrée échoue rapidement si `DB_IP`, `DB_NAME`, `DB_USER` ou `DB_PA
 
 **Ce groupe décide si les médias téléchargés survivent à un redémarrage de pod.**
 
-Xibo conserve tout ce qui compte sur le disque sous `/var/www/cms/library` : tous les médias téléchargés, le répertoire `certs/` contenant les clés de signature OAuth du lecteur, `brand/`, `playersoftware/` et `temp/`. La base de données stocke l'*emplacement* ; les fichiers eux-mêmes ne sont que sur le disque.
+Xibo conserve tout ce qui est important sur le disque sous `/var/www/cms/library` : tous les médias téléchargés, le répertoire `certs/` contenant les clés de signature OAuth du lecteur, `brand/`, `playersoftware/` et `temp/`. La base de données stocke l'*emplacement* ; les fichiers eux-mêmes ne sont que sur le disque.
 
 Avec les valeurs par défaut du module, rien n'est monté à ce chemin :
 
 | Variable | Valeur par défaut | Effet de la valeur par défaut |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Se résout en `false` → le CMS s'exécute en tant que `Deployment` sans PVC. |
+| `stateful_pvc_enabled` | `null` | Résout en `false` → le CMS s'exécute comme un `Deployment` sans PVC. |
 | `stateful_pvc_mount_path` | `"/data"` | Même avec un PVC activé, il serait monté à `/data`, et non à la bibliothèque. |
 
 **Paramètres recommandés, appliqués lors du premier déploiement :**
@@ -272,7 +272,7 @@ stateful_pvc_storage_class = "standard-rwo"
 max_instance_count         = 1
 ```
 
-Le modèle de revendication de volume d'un StatefulSet ne peut pas être modifié sur place, il faut donc choisir la taille et la classe à l'avance. L'activation du PVC sur un déploiement existant remplace le `Deployment` par un `StatefulSet` dont la bibliothèque démarre vide — téléchargez à nouveau les médias par la suite. GCS Fuse (`gcs_volumes`) n'est pas un substitut approprié pour la bibliothèque car XSendFile a besoin de la sémantique POSIX.
+Le modèle de revendication de volume d'un StatefulSet ne peut pas être modifié sur place, il faut donc choisir la taille et la classe dès le départ. L'activation du PVC sur un déploiement existant remplace le `Deployment` par un `StatefulSet` dont la bibliothèque démarre vide — téléchargez à nouveau les médias par la suite. GCS Fuse (`gcs_volumes`) n'est pas un substitut approprié pour la bibliothèque car XSendFile nécessite une sémantique POSIX.
 
 `stateful_pvc_storage_class` (`"standard-rwo"`), `stateful_headless_service`, `stateful_pod_management_policy`, `stateful_update_strategy` et `stateful_fs_group` (`0`) se comportent comme décrit dans [App_GKE](./App_GKE.md#group-7--statefulset--pvc).
 
@@ -286,14 +286,14 @@ Le modèle de revendication de volume d'un StatefulSet ne peut pas être modifi�
 
 ## Groupe 10 : Observabilité et santé {#group-10-observability--health}
 
-`startup_probe_config` et `health_check_config` sont transmis à `Xibo Common` en tant que `startup_probe`/`liveness_probe` du conteneur, ce sont donc les sondes réellement déployées.
+`startup_probe_config` et `health_check_config` sont transmis à `Xibo Common` comme `startup_probe`/`liveness_probe` du conteneur, ce sont donc les sondes réellement déployées.
 
 | Sonde | Chemin | Délai initial | Délai d'expiration | Période | Seuil d'échec |
 |---|---|---|---|---|---|
 | Démarrage (`startup_probe_config`) | `/login` (HTTP) | 60s | 5s | 10s | 3 |
 | Vivacité (`health_check_config`) | `/login` (HTTP) | 60s | 5s | 30s | 3 |
 
-Ne changez pas le chemin vers `/healthz` — Xibo renvoie 404 là. `/` passe également (302 → `/login`), mais `/login` renvoie 200 et prouve que le CMS a été rendu.
+Ne changez pas le chemin vers `/healthz` — Xibo renvoie 404 à cet endroit. `/` passe également (302 → `/login`), mais `/login` renvoie 200 et prouve que le CMS a été rendu.
 
 `uptime_check_config` est par défaut `{ enabled = false, path = "/" }` ; `alert_policies` se comporte comme décrit dans [App_GKE](./App_GKE.md#group-10--observability).
 
@@ -308,11 +308,11 @@ Lorsque `initialization_jobs` est vide, `Xibo Common` fournit un job :
 | Nom du job | `db-init` |
 | Image | `mysql:8.0-debian` |
 | Script | `Xibo_Common/scripts/db-init.sh` |
-| Exécutions | Lors de l'application (`execute_on_apply = true`) |
+| Exécutions | Lors de l'apply (`execute_on_apply = true`) |
 | Délai d'expiration / tentatives | 600s / 3 |
 | CPU / Mémoire | `1000m` / `512Mi` |
 
-Il attend MySQL sur le port 3306, crée (ou réinitialise le mot de passe) l'utilisateur `xibo`, crée la base de données `xibo`, lui accorde tous les privilèges, vérifie que l'utilisateur peut se connecter, puis signale à tout sidecar Cloud SQL Proxy dans le pod du Job de quitter afin que le Job puisse se terminer. Une liste `initialization_jobs` non vide **remplace** ce job. `cron_jobs` et `additional_services` se comportent comme décrit dans [App_GKE](./App_GKE.md#group-11--workload-automation).
+Il attend MySQL sur le port 3306, crée (ou réinitialise le mot de passe de) l'utilisateur `xibo`, crée la base de données `xibo`, accorde tous les privilèges sur celle-ci, vérifie que l'utilisateur peut se connecter, puis signale à tout sidecar Cloud SQL Proxy dans le pod du Job de quitter afin que le Job puisse se terminer. Une liste `initialization_jobs` non vide **remplace** ce job. `cron_jobs` et `additional_services` se comportent comme décrit dans [App_GKE](./App_GKE.md#group-11--workload-automation).
 
 ---
 
@@ -330,7 +330,7 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#group-12--cicd).
 
 ## Groupe 14 : Cloud Storage {#group-14-cloud-storage}
 
-Avec `create_cloud_storage = true`, deux buckets sont créés : `storage` (déclaré par `Xibo Common`) et `data` (la valeur par défaut `storage_buckets` du wrapper). Une entrée dans `storage_buckets` avec le même `name_suffix` remplace le préréglage. Xibo n'utilise aucun des deux buckets. Les variables de rétention d'image et CMEK se comportent comme décrit dans [App_GKE](./App_GKE.md#group-14--cloud-storage).
+Avec `create_cloud_storage = true`, deux buckets sont créés : `storage` (déclaré par `Xibo Common`) et `data` (la valeur par défaut `storage_buckets` du wrapper). Une entrée dans `storage_buckets` avec le même `name_suffix` remplace le préréglage. Xibo n'utilise aucun des deux buckets. Les variables de rétention d'image et de CMEK se comportent comme décrit dans [App_GKE](./App_GKE.md#group-14--cloud-storage).
 
 ---
 
@@ -356,7 +356,7 @@ Avec `create_cloud_storage = true`, deux buckets sont créés : `storage` (décl
 
 ## Groupes 17-18 : Sauvegarde et maintenance, SQL personnalisé {#groups-1718-backup--maintenance-custom-sql}
 
-Identique à `App_GKE`. Les sauvegardes couvrent la **base de données uniquement** — les médias dans la bibliothèque sont sur le volume du pod (lorsque vous en configurez un), pas dans Cloud SQL. `backup_schedule` (`"0 2 * * *"`), `backup_retention_days` (`7`), `enable_backup_import` (`false`), `backup_source` (`"gcs"`), `backup_file` (`"backup.sql"`), `backup_format` (`"sql"`), et les variables `custom_sql_scripts_*`.
+Identique à `App_GKE`. Les sauvegardes ne couvrent que la **base de données** — les médias dans la bibliothèque sont sur le volume du pod (lorsque vous en configurez un), pas dans Cloud SQL. `backup_schedule` (`"0 2 * * *"`), `backup_retention_days` (`7`), `enable_backup_import` (`false`), `backup_source` (`"gcs"`), `backup_file` (`"backup.sql"`), `backup_format` (`"sql"`), et les variables `custom_sql_scripts_*`.
 
 ---
 
@@ -370,7 +370,7 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#group-19--access--networking
 
 ## Groupes 20-22 : IAP, Cloud Armor, Contrôles de service VPC {#groups-2022-iap-cloud-armor-vpc-service-controls}
 
-Identique à `App_GKE` — voir [App_GKE](./App_GKE.md#group-20--identity-aware-proxy). Si vous activez IAP, n'oubliez pas que les lecteurs d'affichage appellent également le CMS et ne peuvent pas effectuer une connexion Google.
+Identique à `App_GKE` — voir [App_GKE](./App_GKE.md#group-20--identity-aware-proxy). Si vous activez IAP, n'oubliez pas que les lecteurs d'affichage appellent également le CMS et ne peuvent pas effectuer de connexion Google.
 
 ---
 
@@ -378,8 +378,8 @@ Identique à `App_GKE` — voir [App_GKE](./App_GKE.md#group-20--identity-aware-
 
 ### Console Google Cloud {#google-cloud-console}
 
-- **Kubernetes Engine → Charges de travail**, filtré sur l'espace de noms : la charge de travail CMS (un `Deployment`, ou un `StatefulSet` lorsqu'un PVC est activé) et le Job `db-init`.
-- **Kubernetes Engine → Passerelles, Services et Ingress** : le service ClusterIP et la passerelle avec son IP externe.
+- **Kubernetes Engine → Charges de travail**, filtré sur l'espace de noms : la charge de travail CMS (un `Deployment`, ou un `StatefulSet` lorsqu'un PVC est activé) et le job `db-init`.
+- **Kubernetes Engine → Passerelles, services et Ingress** : le service ClusterIP et la passerelle avec son IP externe.
 - **SQL** : l'instance Cloud SQL MySQL 8.0 et la base de données `xibo`.
 - **Cloud Build → Historique** : le build d'image à partir du Dockerfile `Xibo_Common`.
 - **Sécurité → Secret Manager** : le secret du mot de passe de la base de données.
@@ -428,7 +428,7 @@ curl -s -o /dev/null -w "%{http_code}\n" SERVICE_URL/login
 
 ## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
-> Niveaux de risque : **Critique** (perte de données, panne complète, faille de sécurité) — **Élevé** (service indisponible ou dégradation significative) — **Moyen** (fonction dégradée ou coût accru) — **Faible** (impact mineur).
+> Niveaux de risque : **Critique** (perte de données, panne totale, faille de sécurité) — **Élevé** (service indisponible ou dégradation significative) — **Moyen** (fonction dégradée ou coût accru) — **Faible** (impact mineur).
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
@@ -436,22 +436,22 @@ curl -s -o /dev/null -w "%{http_code}\n" SERVICE_URL/login
 | `stateful_pvc_enabled` + `stateful_pvc_mount_path` | `true` + `"/var/www/cms/library"` | **Critique** | Les valeurs par défaut du module laissent la bibliothèque sur le système de fichiers du conteneur : tous les fichiers téléchargés et les certificats de signature du lecteur sont perdus lorsque le pod est remplacé. |
 | `max_instance_count` | `1` | **Élevé** | Plus d'un réplica donne à chacun sa propre bibliothèque ; les médias téléchargés via un pod sont manquants sur les autres. |
 | `application_database_name` / `application_database_user` | `"xibo"` | **Critique** | La modification après le déploiement pointe le CMS vers une nouvelle base de données vide. |
-| `database_password_length` | `32` | **Élevé** | Le modifier régénère une information d'identification en direct ; une incompatibilité entre le secret et l'octroi de la base de données bloque le CMS. |
+| `database_password_length` | `32` | **Élevé** | Le modifier régénère une information d'identification en direct ; une non-concordance entre le secret et l'octroi de la base de données bloque le CMS. |
 | `application_version` | `"release-4.5.2"` | **Élevé** | Doit exister sur `ghcr.io/xibosignage/xibo-cms`. La réutilisation d'un tag après une reconstruction ne produit aucun déploiement. |
 | `startup_probe_config.path` / `health_check_config.path` | `"/login"` | **Élevé** | `/healthz` renvoie 404 et la sonde redémarre un pod sain en boucle. |
 | `environment_variables.MYSQL_ATTR_SSL_VERIFY_SERVER_CERT` | `"false"` (défini par le module) | **Élevé** | Le remplacer par `true` fait que PDO refuse la connexion Cloud SQL. |
 | `CMS_SERVER_NAME` sur un domaine personnalisé | votre domaine | **Moyen** | Laissé dérivé, les lecteurs et les liens sortants utilisent l'hôte `nip.io`. |
-| Connexion via HTTP simple | utiliser HTTPS | **Moyen** | `CMS_PHP_COOKIE_SECURE = "On"` : le navigateur ne renverra pas le cookie de session via HTTP, donc la connexion semble ne pas fonctionner. |
+| Connexion via HTTP simple | utiliser HTTPS | **Moyen** | `CMS_PHP_COOKIE_SECURE = "On"` : le navigateur ne renverra pas le cookie de session via HTTP, de sorte que la connexion semble ne pas fonctionner. |
 | Mot de passe `xibo_admin` | changer lors de la première connexion | **Critique** | L'image amorce un compte administrateur fixe ; le module ne définit pas son mot de passe. |
-| `application_display_name` | `"Xibo CMS"` | **Faible** | Le `"Wiki.js"` par défaut est affiché dans la plateforme. |
+| `application_display_name` | `"Xibo CMS"` | **Faible** | La valeur par défaut `"Wiki.js"` est affichée sur la plateforme. |
 | `service_type` | `"ClusterIP"` | **Moyen** | `"LoadBalancer"` dépense une deuxième IP externe pour la même surface HTTP. |
-| `enable_cloudsql_volume` | (n'importe lequel) | **Faible** | N'a aucun effet pour Xibo. |
+| `enable_cloudsql_volume` | (n'importe quelle) | **Faible** | N'a aucun effet pour Xibo. |
 | `enable_nfs` / `create_cloud_storage` | `true` / `true` | **Faible** | Provisionné mais inutilisé par Xibo — un petit coût évitable. |
-| `backup_retention_days` | `7` | **Moyen** | Sauvegardes de la base de données uniquement ; les médias sur le volume de la bibliothèque ne sont pas inclus. |
+| `backup_retention_days` | `7` | **Moyen** | Sauvegardes de base de données uniquement ; les médias sur le volume de la bibliothèque ne sont pas inclus. |
 
 <!-- related-guides -->
 
-## Guides associés {#related-guides}
+## Guides connexes {#related-guides}
 
-- [Labo pratique : Xibo sur GKE Autopilot](../labs/Xibo_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
+- [Lab pratique : Xibo sur GKE Autopilot](../labs/Xibo_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Xibo Common — Configuration d'application partagée](Xibo_Common.md) — la configuration spécifique à Xibo sur laquelle ce module s'appuie.

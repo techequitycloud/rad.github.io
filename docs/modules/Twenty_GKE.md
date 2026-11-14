@@ -29,8 +29,8 @@ IAP, Binary Authorization, VPC Service Controls, backups, and the deployment lif
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee (one-off) | 175 credits | 157.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | US$106.53/month, billed by Google at list price | ~92 credits/day (about 2760/month, US$276 at the top-up price), metered at list price plus RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | US$106.53/month, billed by Google at list price | ~122 credits/day (about 3,660/month, US$366 at the top-up price), metered at list price plus RAD's margin |
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan.
 
@@ -94,7 +94,7 @@ scratch. That costs about 178-181 credits in your own project, or about
 Deleting only saves money once Twenty would otherwise sit unused long enough to clear that
 redeploy cost against its own running cost — about 5 days or more in your own project
 (about US$3.55 a day), or about 2 days or more in a RAD-managed one
-(92 credits a day).
+(122 credits a day).
 
 Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it,
 so copy the latest backup out before deleting if you want to keep it.

@@ -30,8 +30,8 @@ the [App_GKE foundation guide](App_GKE.md) rather than repeating them here.
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 175 credits (US$17.50 at the top-up price) | 157.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$136 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **105 credits a day**, about 3150 a month (about US$315 at the top-up price, US$252 at the Scale plan's rate) |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$136 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **135 credits a day**, about 4,050 a month (about US$405 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project
@@ -103,7 +103,7 @@ delete the deployment and deploy it again when you need it.**
   recreates the project and shared services before Langfuse. Deleting saves money
   only once Langfuse would otherwise sit unused for about four days
   or more, both in your own project (about US$4.55 a day) and in
-  a RAD-managed one (105 credits a day).
+  a RAD-managed one (135 credits a day).
 - **Delete everything Langfuse uses.** Most of the running cost is usually the database. It stops only when nothing else in the project uses it, so deleting Langfuse while something else shares the project saves only Langfuse's own compute part.
 - **Keep your data first.** Nightly backups go to a bucket inside the deployment
   and are deleted with it, so copy the latest backup out before deleting if you

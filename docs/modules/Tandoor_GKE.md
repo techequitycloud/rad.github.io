@@ -31,11 +31,13 @@ Service Controls, backups, and the deployment lifecycle — refer to the
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 75 credits (US$7.50 at the top-up price) | 67.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$91.31 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **85 credits a day**, about 2,550 a month |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$91.31 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **115 credits a day**, about 3,450 a month (about US$345 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+**Why the two columns differ.** The RAD-managed figure includes the GKE cluster's management fee (about US$73 a month) and the project's shared foundation. In your own project, Google's free tier covers the management fee of one cluster per billing account, which the own-project figure assumes. It is estimated from Google's list prices, because there is not yet enough RAD-managed GKE history to measure it, so the deploy confirmation does not quote it. A second GKE application in the same RAD-managed project shares the cluster and adds only its own pods.
+
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database and network are shared by every application in the project, so a second application does not add a second set of them.
 
@@ -72,7 +74,7 @@ One real gap: nightly backups are written to a bucket inside the project, and th
 
 In your own project, or once the 30-day restore window has passed, the alternative is to delete Tandoor outright and redeploy it later. A redeploy costs the module fee again (builds are included) — 75 credits (US$7.50) in your own project, or 67.5 credits in a RAD-managed one.
 
-Deleting saves money only once Tandoor would otherwise sit unused long enough to clear that redeploy cost against its own daily running cost — against the own-project total above (about US$3.04 a day), that works out to about 3 days or more, or about 1 days or more in a RAD-managed one (85 credits a day). Most of the running cost here is the database and the shared cluster fee; they stop only when nothing else in the project uses them, so deleting Tandoor while something else shares the project saves only this app's own compute part.
+Deleting saves money only once Tandoor would otherwise sit unused long enough to clear that redeploy cost against its own daily running cost — against the own-project total above (about US$3.04 a day), that works out to about 3 days or more, or about 1 day or more in a RAD-managed one (115 credits a day). Most of the running cost here is the database and the shared cluster fee; they stop only when nothing else in the project uses them, so deleting Tandoor while something else shares the project saves only this app's own compute part.
 
 Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it, so copy the latest backup out before deleting if you want to keep it.
 

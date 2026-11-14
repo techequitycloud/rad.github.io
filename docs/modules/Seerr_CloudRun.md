@@ -35,10 +35,10 @@ If a lower running cost matters more than the deployment target, see the GKE gui
 | | Your own project | RAD-managed project |
 |---|---|---|
 | Module fee | 110 credits, once | 99 credits, once (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | ~$180.87/month, billed to your own billing account at Google's list price | ~83 credits/day, metered hourly by RAD at list price plus margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | ~$180.87/month, billed to your own billing account at Google's list price | ~113 credits/day, metered hourly by RAD at list price plus margin |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 **Default running cost in your own project**
 

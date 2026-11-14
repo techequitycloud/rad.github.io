@@ -3,229 +3,116 @@ title: "Chroma sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Chroma sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Chroma_GKE.md @ 60462a86 sha256:f80d06a62353 -->
+<!-- translated-from: docs/modules/Chroma_GKE.md @ 40c83c3f sha256:40ab0e4aa7d9 -->
 
 # Chroma sur GKE Autopilot {#chroma-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Chroma_GKE.png" alt="Chroma sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 Chroma est une base de données vectorielle open source native de l'IA, conçue
-spécifiquement pour les embeddings et la recherche de similarité. Elle alimente
-les pipelines RAG, la recherche sémantique et les workflows LangChain/LlamaIndex.
-Ce module déploie Chroma sur **GKE Autopilot** sur la base de la fondation
-[App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée de
-Google Cloud et Kubernetes.
+spécifiquement pour les embeddings et la recherche de similarité. Elle alimente les
+pipelines RAG, la recherche sémantique et les workflows LangChain/LlamaIndex. Ce
+module déploie Chroma sur **GKE Autopilot** sur la base de la fondation
+[App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée de Google
+Cloud et Kubernetes.
 
-Ce guide se concentre sur les services cloud utilisés par Chroma et sur la
-manière de les explorer et de les opérer depuis la console Google Cloud et la
-ligne de commande. Pour les mécanismes communs à toutes les applications GKE
-— Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement
-— veuillez vous référer au [guide de la fondation App_GKE](App_GKE.md) plutôt
-que de les répéter ici.
+Ce guide se concentre sur les services cloud utilisés par Chroma et sur la manière de
+les explorer et de les opérer depuis la console Google Cloud et la ligne de commande.
+Pour les mécanismes communs à toutes les applications GKE — Workload Identity,
+ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
+Controls, sauvegardes et cycle de vie du déploiement — veuillez vous référer au
+[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
 ## Ce que coûte Chroma sur RAD, et comment cela se compare {#what-chroma-costs-on-rad-and-how-that-compares}
 
-**Le module GKE Autopilot de Chroma sur RAD coûte environ 42,08 $ US par mois
-dans un projet Google Cloud que vous possédez, plus des frais de module uniques
-de 75 crédits (7,50 $ US).** Chroma est une base de données vectorielle native
-de l'IA pour les embeddings et la recherche de similarité, utilisée pour
-soutenir les pipelines RAG et la recherche sémantique. Pour le coût le plus bas,
-le [guide Cloud Run](Chroma_CloudRun.md) exécute le même Chroma pour environ
-19,14 $ US par mois ; choisissez GKE ici uniquement si Chroma doit rester
-opérationnel en continu, s'adapter à travers les pods ou fonctionner à côté
-d'autres charges de travail Kubernetes.
+**Le module GKE Autopilot de Chroma sur RAD coûte environ 42,08 $ US par mois dans un projet Google Cloud que vous possédez, plus des frais de module uniques de 75 crédits (7,50 $ US).** Chroma est une base de données vectorielle native de l'IA pour les embeddings et la recherche de similarité, utilisée pour soutenir les pipelines RAG et la recherche sémantique. Pour le coût le plus bas, le [guide Cloud Run](Chroma_CloudRun.md) exécute le même Chroma pour environ 19,14 $ US par mois ; choisissez GKE ici uniquement si Chroma doit rester actif en continu, s'adapter à travers les pods, ou fonctionner aux côtés d'autres charges de travail Kubernetes.
 
-Si Chroma n'est nécessaire qu'occasionnellement — une démo, un essai, une charge
-de travail saisonnière ou d'étude — un projet géré par RAD peut être supprimé
-et restauré dans les 30 jours sans frais supplémentaires, de sorte que les
-42,08 $ US deviennent quelques dollars par mois à la place. Voir **Mettre en
-pause gratuitement**, ci-dessous.
+Si Chroma n'est nécessaire qu'occasionnellement — une démo, un essai, une charge de travail saisonnière ou d'étude — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les 42,08 $ US deviennent quelques dollars par mois à la place. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 75 crédits (7,50 $ US au prix de la recharge) | 67,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **42,08 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **56 crédits par jour**, environ 1680 par mois (environ 168 $ US au prix de la recharge) |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **42,08 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **64 crédits par jour**, environ 1 920 par mois (environ 192 $ US au prix de la recharge ; estimé à partir des prix catalogue de Google, et incluant les frais de cluster) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+**Pourquoi les deux colonnes diffèrent.** Le chiffre géré par RAD inclut les frais de gestion du cluster GKE (environ 73 $ US par mois) et la fondation partagée du projet. Dans votre propre projet, le niveau gratuit de Google couvre les frais de gestion d'un cluster par compte de facturation, ce que le chiffre du projet propre suppose. Il est estimé à partir des prix catalogue de Google, car il n'y a pas encore assez d'historique GKE géré par RAD pour le mesurer, donc la confirmation de déploiement ne le cite pas. Une deuxième application GKE dans le même projet géré par RAD partage le cluster et n'ajoute que ses propres pods.
 
-10 crédits coûtent 1 $ US pour une recharge ponctuelle, moins sur un plan. Dans
-un projet géré par RAD, la base de données, le serveur de fichiers et le réseau
-sont partagés par toutes les applications du projet, de sorte qu'une deuxième
-application n'ajoute pas une deuxième base de données.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
-**Coût de fonctionnement par défaut dans votre propre projet** (us-central1,
-prix catalogue Google) :
+10 crédits coûtent 1 $ US lors d'une recharge ponctuelle, moins sur un plan. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, donc une deuxième application n'ajoute pas de deuxième base de données.
+
+**Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
 
 | Ressource (par défaut du module) | Par mois |
 |---|---|
-| Pod GKE Autopilot, 1x vCPU / 1 Gio | 36,08 $ US |
+| Pod GKE Autopilot, 1x vCPU / 1 GiB | 36,08 $ US |
 | Cloud NAT et réseau | 5 $ US |
 | Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
-| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 |
+| Frais de gestion du cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 $ |
 | **Total** | **environ 42,08 $ US** |
 
 ### Comment cela se compare {#how-it-compares}
 
-- L'offre gérée du projet, **Chroma Cloud**, commence à 0 $ par mois plus
-  l'utilisation (10 bases de données, 5 $ de crédits inclus — environ 2,50 $/Gio
-  écrit, 0,33 $/Gio stocké par mois, et une petite charge par requête et par Gio
-  retourné), passant à 250 $ par mois plus l'utilisation sur le plan Team.
-- Exécutez-le vous-même et un petit VPS exécutant le propre processus serveur de
-  Chroma coûte moins cher en espèces : une boîte Hetzner CPX22 ou DigitalOcean
-  2 vCPU/4 Go coûte environ 24 $ par mois, ou un GCP `e2-standard-2` environ 49 $ par mois
-  — plus votre propre temps pour les sauvegardes, les correctifs de sécurité et
-  les mises à niveau, que le Cloud SQL, Secret Manager et la surveillance gérés
-  par RAD couvrent pour vous.
-- RAD ne prétend jamais être moins cher que l'infrastructure nue en termes
-  monétaires — ce n'est généralement pas le cas. La différence est ce que RAD
-  gère pour vous : les correctifs, les sauvegardes, les secrets et la
-  surveillance, plus la possibilité de mettre Chroma en pause gratuitement
-  plutôt que de payer pour une capacité inactive (voir ci-dessous).
+- L'offre gérée du projet, **Chroma Cloud**, commence à 0 $ par mois plus l'utilisation (10 bases de données, 5 $ de crédits inclus — environ 2,50 $/GiB écrit, 0,33 $/GiB stocké par mois, et une petite charge par requête et par GiB retourné), passant à 250 $ par mois plus l'utilisation sur le plan Team.
+- Si vous l'exécutez vous-même, un petit VPS exécutant le propre processus serveur de Chroma coûte moins cher en espèces : un Hetzner CPX22 ou un DigitalOcean 2 vCPU/4 Go coûte environ 24 $ par mois, ou un GCP `e2-standard-2` environ 49 $ par mois — plus votre propre temps pour les sauvegardes, les correctifs de sécurité et les mises à niveau, que Cloud SQL, Secret Manager et la surveillance gérés par RAD couvrent pour vous.
+- RAD ne prétend jamais être moins cher que l'infrastructure nue en termes monétaires — ce n'est généralement pas le cas. La différence est ce que RAD gère pour vous : les correctifs, les sauvegardes, les secrets et la surveillance, ainsi que la possibilité de mettre Chroma en pause gratuitement plutôt que de payer pour une capacité inactive (voir ci-dessous).
 
-### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-Si Chroma fonctionne dans **un projet géré par RAD pour vous**, vous avez une
-deuxième option qui va bien au-delà de la mise à l'échelle à zéro : **supprimer
-tout le projet et le restaurer dans les 30 jours pour presque rien.** Cela
-convient bien mieux à Chroma dont vous n'avez besoin qu'occasionnellement que de
-le faire fonctionner en continu.
+Si Chroma s'exécute dans **un projet géré par RAD pour vous**, vous avez une deuxième option qui va bien au-delà de la mise à l'échelle à zéro : **supprimez l'ensemble du projet et restaurez-le dans les 30 jours pour presque rien.** Cela convient bien mieux à Chroma dont vous n'avez besoin qu'occasionnellement que de le faire fonctionner en continu.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être invoquée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord
-  sa facturation, puis demande à Google de supprimer le projet. Google ne
-  supprime pas le projet immédiatement : il le conserve, récupérable, pendant
-  30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant
-  cette attente. Contrairement à la suppression d'un module, cela ne démantèle
-  pas les ressources GKE Autopilot une par une — tout le projet, et tout ce
-  qu'il contient, s'arrête simplement.
-- **La restauration est une vérification, pas une reconstruction.** Dans
-  les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à
-  Google de récupérer le projet et de rattacher son compte de facturation, puis
-  vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que
-  tout est revenu. Comme rien n'a été détruit individuellement, cette mise à
-  jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas
-  une reconstruction, et une mise à jour ne facture jamais les frais de module
-  à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
-- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
-  pas 42,08 $ US.** Déployez Chroma, utilisez-le, supprimez le projet.
-  Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec
-  Update, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez
-  qu'une seule fois les frais de module, et les heures pendant
-  lesquelles il a été réellement actif.
-- **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet que
-  vous apportez et dont RAD ne gère que la facturation), et vous le restaurez
-  vous-même dans les 30 jours — après cela, Google le supprime définitivement.
-  La restauration est admise comme la création d'un nouveau projet : votre
-  solde de crédits achetés doit toujours dépasser le seuil du palier (100
-  crédits pour le palier sandbox que la plupart des utilisations d'étude et de
-  démo conviennent). Google indique que la plupart des services sont
-  entièrement fonctionnels à nouveau dans les 36 heures suivant une
-  restauration.
-- **Un véritable manque : le bucket de sauvegarde ne survit pas.** Les
-  sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et
-  ce bucket n'est **pas** protégé par la suppression logicielle de Cloud
-  Storage, il est donc très probable qu'il disparaisse dès que vous supprimez
-  le projet — même si le projet lui-même est récupérable pendant 30 jours. Si
-  vous avez personnalisé Chroma et que vous souhaitez conserver ce travail,
-  copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet)
-  avant de supprimer. Pour une installation par défaut sans rien
-  d'irremplaçable, cela n'a pas d'importance.
+- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable, pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend. Contrairement à la suppression d'un module, cela ne démantèle pas les ressources GKE Autopilot une par une — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
+- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, et non les 192 $ US par mois pour le maintenir en fonctionnement.** Déployez Chroma, utilisez-le, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre à jour, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois et pour les heures où il était réellement actif.
+- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que vous apportez et dont RAD ne gère que la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude et de démonstration). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+- **Un véritable manque : le bucket de sauvegarde ne survit pas.** Les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket n'est **pas** protégé par la suppression logicielle de Cloud Storage, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé Chroma et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
-### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Ne payez que pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-GKE Autopilot maintient au moins un pod en cours d'exécution, il ne se met donc
-jamais à l'échelle zéro de lui-même. L'option ci-dessus ne s'applique qu'à un
-projet géré par RAD ; **dans votre propre projet, ou une fois que la fenêtre de
-30 jours est passée, la façon d'arrêter de payer est de supprimer le
-déploiement et de le déployer à nouveau lorsque vous en avez besoin.**
+GKE Autopilot maintient au moins un pod en cours d'exécution, il ne se met donc jamais à l'échelle à zéro de lui-même. L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 75 crédits (7,50 $ US) dans votre propre projet. La suppression
-  ne permet d'économiser de l'argent que si Chroma restait inutilisé pendant
-  environ 6 jours ou plus dans votre propre projet (1,40 $ US par jour), ou
-  environ 2 jours ou plus dans un projet géré par RAD (56 crédits par jour).
-- **Conservez d'abord vos données.** Les sauvegardes nocturnes sont écrites
-  dans un bucket à l'intérieur du déploiement et sont supprimées avec celui-ci,
-  alors copiez la dernière sauvegarde avant de la supprimer si vous souhaitez
-  la conserver.
-- **Notez vos paramètres.** RAD ne recrée pas un déploiement supprimé pour vous
-  ; vous saisissez à nouveau les paramètres lors du déploiement.
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 75 crédits (7,50 $ US) dans votre propre projet. La suppression ne permet d'économiser de l'argent que si Chroma devait rester inutilisé pendant environ 6 jours ou plus dans votre propre projet (1,40 $ US par jour), ou environ 2 jours ou plus dans un projet géré par RAD (64 crédits par jour).
+- **Conservez d'abord vos données.** Les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du déploiement et sont supprimées avec celui-ci, alors copiez la dernière sauvegarde avant de la supprimer si vous souhaitez la conserver.
+- **Notez vos paramètres.** RAD ne recrée pas un déploiement supprimé pour vous ; vous saisissez à nouveau les paramètres lors du déploiement.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session pour
-  une classe. Chaque participant obtient l'application dans son propre projet
-  Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
-  définie par le formateur. Soit le formateur finance toutes les places, soit
-  chaque participant paie la sienne. Tout est supprimé à la fin de la session
-  et les crédits inutilisés retournent au formateur.
-- **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute
-  l'application pour un client à partir d'un portefeuille cloisonné qu'il
-  finance, et règle directement avec le client. Si le portefeuille est faible,
-  la facturation est mise en pause et les données sont conservées, de sorte que
-  personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le
-  projet et les déploiements deviennent la propriété du client.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 
-Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF,
-NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud
-Billing Catalog ; frais propres à RAD et estimations de crédits quotidiens de
-[radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et
-restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects)
-pour la fenêtre de récupération de 30 jours et ce qu'elle dit sur les objets
-Cloud Storage sans suppression logicielle ; [Chroma Cloud](https://www.trychroma.com/pricing).
-Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
+**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais propres à RAD et estimations de crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour la fenêtre de récupération de 30 jours et ce qu'elle dit sur les objets Cloud Storage sans suppression logicielle ; [Chroma Cloud](https://www.trychroma.com/pricing). Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Chroma s'exécute comme une charge de travail de base de données vectorielle
-conteneurisée. Le déploiement relie un ensemble ciblé de services Google Cloud :
+Chroma s'exécute comme une charge de travail de base de données vectorielle conteneurisée. Le déploiement connecte un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | GKE Autopilot | Pods StatefulSet ou Deployment, 1 vCPU / 1 Gio par défaut |
-| Persistance des données | PVC StatefulSet (par défaut) ou GCS FUSE | Par défaut, basé sur PVC ; GCS FUSE uniquement lorsque `stateful_pvc_enabled = false` |
-| Stockage d'objets | Cloud Storage | Bucket `<prefix>-data` provisionné automatiquement ; utilisé comme stockage principal lorsque le PVC n'est pas activé |
-| Jeton d'authentification | Secret Manager | Jeton d'API facultatif — `CHROMA_SERVER_AUTHN_CREDENTIALS` injecté au moment de l'exécution |
-| Ingress | Cloud Load Balancing | `ClusterIP` par défaut (accès interne au cluster) ; `LoadBalancer` facultatif avec IAP ou jeton d'authentification |
+| Calcul | GKE Autopilot | Pods StatefulSet ou Deployment, 1 vCPU / 1 GiB par défaut |
+| Persistance des données | StatefulSet PVC (par défaut) ou GCS FUSE | PVC par défaut ; GCS FUSE uniquement lorsque `stateful_pvc_enabled = false` |
+| Stockage d'objets | Cloud Storage | Bucket `<prefix>-data` auto-provisionné ; utilisé comme stockage principal lorsque PVC n'est pas activé |
+| Jeton d'authentification | Secret Manager | Jeton API optionnel — `CHROMA_SERVER_AUTHN_CREDENTIALS` injecté à l'exécution |
+| Ingress | Cloud Load Balancing | `ClusterIP` par défaut (accès interne au cluster) ; `LoadBalancer` optionnel avec IAP ou jeton d'authentification |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **Pas de base de données SQL et pas de Redis.** Chroma gère son propre
-  stockage intégré. Aucune instance Cloud SQL n'est créée et aucune connexion
-  Redis n'est configurée.
-- **`ClusterIP` par défaut.** Le service n'est accessible qu'à l'intérieur du
-  cluster ; la sortie `endpoint_url` n'est pas accessible depuis l'extérieur du cluster
-  avec cette valeur par défaut. Définissez `service_type = "LoadBalancer"` uniquement si un accès
-  externe est nécessaire, et activez `enable_auth_token` ou IAP en même temps.
-- **Instance unique recommandée.** `max_instance_count = 1` est la valeur par défaut. Plusieurs
-  pods Chroma partageant un seul PVC ne sont pas pris en charge — les écritures
-  concurrentes corrompraient les collections.
-- **PVC StatefulSet par défaut.** `stateful_pvc_enabled = true` (la valeur par défaut) résout
-  automatiquement le type de charge de travail en `StatefulSet` et désactive le volume
-  GCS FUSE à `/data` pour éviter un conflit de double montage.
-- **Le jeton d'authentification est facultatif mais recommandé** pour tout
-  déploiement accessible en dehors de l'espace de noms du pod. Lorsqu'il est
-  activé, le jeton est stocké dans Secret Manager et doit être transmis comme
-  `Authorization: Bearer <token>` dans chaque appel d'API.
-- **Les sondes de santé sont fixées à `/api/v2/heartbeat`.** C'est le seul point de terminaison
-  de santé exposé par Chroma.
-- **La télémétrie anonymisée est toujours désactivée.** `ANONYMIZED_TELEMETRY=false` est injecté
-  automatiquement.
-- **De nombreuses entrées de base de données/Redis/build-config sont inertes.**
-  `Chroma_GKE` déclare la surface complète des variables App_GKE (base de données,
-  Redis, build de conteneur, quota et autres entrées miroir de la fondation)
-  pour la parité `check_conventions.py`, mais la plupart d'entre elles sont codées en dur ou
-  ignorées par `Chroma_Common`/`main.tf` — voir la [Section 4](#4-configuration-variables)
-  pour la liste complète, par groupe.
+- **Pas de base de données SQL et pas de Redis.** Chroma gère son propre stockage embarqué. Aucune instance Cloud SQL n'est créée et aucune connexion Redis n'est configurée.
+- **`ClusterIP` par défaut.** Le service n'est accessible qu'à l'intérieur du cluster ; la sortie `endpoint_url` n'est pas accessible depuis l'extérieur du cluster avec cette valeur par défaut. Définissez `service_type = "LoadBalancer"` uniquement si un accès externe est nécessaire, et activez `enable_auth_token` ou IAP en même temps.
+- **Instance unique recommandée.** `max_instance_count = 1` est la valeur par défaut. Plusieurs pods Chroma partageant un seul PVC ne sont pas pris en charge — les écritures concurrentes corrompraient les collections.
+- **StatefulSet PVC par défaut.** `stateful_pvc_enabled = true` (la valeur par défaut) résout automatiquement le type de charge de travail en `StatefulSet` et désactive le volume GCS FUSE à `/data` pour éviter un conflit de double montage.
+- **Le jeton d'authentification est facultatif mais recommandé** pour tout déploiement accessible en dehors de l'espace de noms du pod. Lorsqu'il est activé, le jeton est stocké dans Secret Manager et doit être transmis comme `Authorization: Bearer <token>` dans chaque appel API.
+- **Les sondes de santé sont fixées à `/api/v2/heartbeat`.** C'est le seul point de terminaison de santé exposé par Chroma.
+- **La télémétrie anonymisée est toujours désactivée.** `ANONYMIZED_TELEMETRY=false` est injecté automatiquement.
+- **De nombreuses entrées de configuration de base de données/Redis/build sont inertes.** `Chroma_GKE` déclare la surface complète des variables App_GKE (base de données, Redis, build de conteneur, quota et autres entrées miroir de la fondation) pour la parité `check_conventions.py`, mais la plupart d'entre elles sont codées en dur ou ignorées par `Chroma_Common`/`main.tf` — voir la [Section 4](#4-configuration-variables) pour la liste complète, par groupe.
 
 ---
 
@@ -238,14 +125,9 @@ identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Chroma {#a-gke-autopilot--the-chroma-workload}
 
-Les pods Chroma sont planifiés sur Autopilot, qui facture le CPU et la mémoire
-que les pods demandent réellement. Le déploiement s'exécute en tant que
-StatefulSet (lorsqu'il est basé sur PVC) ou Deployment (lorsqu'il est basé sur
-GCS FUSE), avec Horizontal Pod Autoscaling gérant le nombre de réplicas.
+Les pods Chroma sont planifiés sur Autopilot, qui facture le CPU et la mémoire que les pods demandent réellement. Le déploiement s'exécute en tant que StatefulSet (lorsqu'il est soutenu par PVC) ou Deployment (lorsqu'il est soutenu par GCS FUSE), avec Horizontal Pod Autoscaling gérant le nombre de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge
-  de travail Chroma pour voir les pods, les révisions et les événements.
-  Kubernetes Engine → Services et Ingress affiche l'adresse IP du service.
+- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de travail Chroma pour voir les pods, les révisions et les événements. Kubernetes Engine → Services et Ingress affiche l'adresse IP du service.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -253,19 +135,15 @@ GCS FUSE), avec Horizontal Pod Autoscaling gérant le nombre de réplicas.
   kubectl describe statefulset -n "$NAMESPACE"    # when using StatefulSet
   ```
 
-Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle
-et du type de charge de travail (Deployment vs StatefulSet).
+Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et du type de charge de travail (Deployment vs StatefulSet).
 
 ### B. Persistance des données — StatefulSet PVC ou GCS FUSE {#b-data-persistence--statefulset-pvc-or-gcs-fuse}
 
-Chroma stocke sa base de données SQLite intégrée, ses fichiers d'index HNSW et
-ses métadonnées de collection dans un volume persistant à `/data`. Deux
-backends de stockage sont disponibles :
+Chroma stocke sa base de données SQLite embarquée, ses fichiers d'index HNSW et les métadonnées de collection dans un volume persistant à `/data`. Deux backends de stockage sont disponibles :
 
 **StatefulSet PVC (par défaut) :** Un PersistentVolumeClaim Kubernetes
 soutenu par un PD équilibré (`standard-rwo`) ou SSD (`premium-rwo`) est provisionné par pod,
-offrant un accès à faible latence au disque local pour les lectures et écritures
-d'index.
+fournissant un accès disque local à faible latence pour les lectures et écritures d'index.
 
 - **Console :** Kubernetes Engine → Stockage → PersistentVolumeClaims.
 - **CLI :**
@@ -277,8 +155,7 @@ d'index.
 **GCS FUSE (uniquement lorsque `stateful_pvc_enabled = false`) :** Un bucket Cloud Storage (`<prefix>-data`)
 est provisionné et monté à `/data` via le pilote CSI GCS FUSE.
 
-- **Console :** Cloud Storage → Buckets — recherchez le bucket dont le nom se
-  termine par `-data`.
+- **Console :** Cloud Storage → Buckets — recherchez le bucket dont le nom se termine par `-data`.
 - **CLI :**
   ```bash
   gcloud storage buckets list --project "$PROJECT"
@@ -287,15 +164,13 @@ est provisionné et monté à `/data` via le pilote CSI GCS FUSE.
   kubectl exec -n "$NAMESPACE" <pod-name> -- df -h | grep /data
   ```
 
-Voir [App_GKE](App_GKE.md) pour GCS Fuse, les options CMEK et le
-provisionnement de PVC.
+Voir [App_GKE](App_GKE.md) pour GCS Fuse, les options CMEK et le provisionnement de PVC.
 
 ### C. Secret Manager {#c-secret-manager}
 
-Lorsque `enable_auth_token = true`, le jeton d'authentification de l'API de Chroma est généré et
-stocké en tant que secret Secret Manager. Il est injecté dans les pods au
-moment de l'exécution en tant que `CHROMA_SERVER_AUTHN_CREDENTIALS` ; le texte en clair n'apparaît jamais
-dans la configuration.
+Lorsque `enable_auth_token = true`, le jeton d'authentification API de Chroma est généré et
+stocké en tant que secret Secret Manager. Il est injecté dans les pods à l'exécution en tant que
+`CHROMA_SERVER_AUTHN_CREDENTIALS` ; le texte en clair n'apparaît jamais dans la configuration.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -305,17 +180,16 @@ dans la configuration.
   gcloud secrets versions access latest --secret=<prefix>-auth-token --project "$PROJECT"
   ```
 
-Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation de Secret Store CSI.
+Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation du Secret Store CSI.
 
 ### D. Réseau et ingress {#d-networking--ingress}
 
-Par défaut, le service Chroma est exposé en tant que `ClusterIP`, accessible
-uniquement au sein du cluster. Lorsque `service_type = "LoadBalancer"` est défini, une adresse IP
-externe Cloud Load Balancing est provisionnée. Un domaine personnalisé, une IP
-statique et Cloud Armor peuvent être superposés.
+Par défaut, le service Chroma est exposé en tant que `ClusterIP`, accessible uniquement au sein du
+cluster. Lorsque `service_type = "LoadBalancer"` est défini, une adresse IP externe de Cloud Load Balancing
+est provisionnée. Un domaine personnalisé, une adresse IP statique et Cloud Armor peuvent être superposés.
 
-- **Console :** Kubernetes Engine → Services et Ingress ; Services réseau →
-  Équilibrage de charge ; Réseau VPC → Adresses IP.
+- **Console :** Kubernetes Engine → Services et Ingress ; Services réseau → Équilibrage de charge ;
+  Réseau VPC → Adresses IP.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
@@ -325,17 +199,14 @@ statique et Cloud Armor peuvent être superposés.
     curl http://<cluster-ip>:8000/api/v2/heartbeat
   ```
 
-Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les
-détails de l'IP statique.
+Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et
+les détails de l'adresse IP statique.
 
 ### E. Cloud Logging et Monitoring {#e-cloud-logging--monitoring}
 
-Les flux stdout/stderr des pods vers Cloud Logging ; les métriques GKE vers
-Cloud Monitoring. Des tests de disponibilité facultatifs contre `/api/v2/heartbeat` et des
-politiques d'alerte sont disponibles.
+Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les métriques GKE sont acheminées vers Cloud Monitoring. Des tests de disponibilité optionnels contre `/api/v2/heartbeat` et des stratégies d'alerte sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
-  bord / Alertes.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -346,22 +217,10 @@ politiques d'alerte sont disponibles.
 
 ## 3. Comportement de l'application Chroma {#3-chroma-application-behaviour}
 
-- **Pas de bootstrap de base de données.** Chroma gère son propre stockage
-  intégré et ne nécessite aucun job d'initialisation de base de données. Aucun
-  job `db-init` n'est injecté. Si vous fournissez des `initialization_jobs` personnalisés, ils
-  s'exécutent avant le démarrage de l'application.
-- **Chargement de l'index au démarrage.** Lorsque Chroma redémarre (après une
-  éviction de pod ou une mise à jour progressive), il charge ses index HNSW
-  depuis le PVC ou le bucket GCS. Pour les grandes collections, cela peut
-  prendre des dizaines de secondes ; la sonde de démarrage à `/api/v2/heartbeat` attend que
-  Chroma signale sa disponibilité.
-- **Contrainte d'écriture unique.** Chroma n'a pas de verrouillage distribué sur
-  son stockage. L'exécution de plusieurs pods écrivant sur le même PVC ou
-  chemin GCS corrompra les collections. Gardez `max_instance_count = 1` à moins que vous n'exécutiez
-  un déploiement de cluster Chroma avec un stockage séparé par pod.
-- **Utilisation du jeton d'authentification.** Lorsque `enable_auth_token = true`, tous les appels
-  d'API doivent inclure `Authorization: Bearer <token>`. Récupérez le jeton de Secret Manager, puis
-  utilisez-le avec le client Python :
+- **Pas de bootstrap de base de données.** Chroma gère son propre stockage embarqué et ne nécessite aucun job d'initialisation de base de données. Aucun job `db-init` n'est injecté. Si vous fournissez des `initialization_jobs` personnalisés, ils s'exécutent avant le démarrage de l'application.
+- **Chargement de l'index au démarrage.** Lorsque Chroma redémarre (après une éviction de pod ou une mise à jour progressive), il charge ses index HNSW à partir du PVC ou du bucket GCS. Pour les grandes collections, cela peut prendre des dizaines de secondes ; la sonde de démarrage à `/api/v2/heartbeat` attend que Chroma signale sa disponibilité.
+- **Contrainte d'écriture unique.** Chroma n'a pas de verrouillage distribué sur son stockage. L'exécution de plusieurs pods écrivant sur le même PVC ou chemin GCS corrompra les collections. Gardez `max_instance_count = 1` à moins que vous n'exécutiez un déploiement de cluster Chroma avec un stockage séparé par pod.
+- **Utilisation du jeton d'authentification.** Lorsque `enable_auth_token = true`, tous les appels API doivent inclure `Authorization: Bearer <token>`. Récupérez le jeton de Secret Manager, puis utilisez-le avec le client Python :
   ```bash
   # Retrieve token
   TOKEN=$(gcloud secrets versions access latest \
@@ -374,22 +233,14 @@ politiques d'alerte sont disponibles.
       headers={"Authorization": f"Bearer {TOKEN}"}
   )
   ```
-- **Sonde de santé.** Les sondes de démarrage et de vivacité ciblent toutes deux
-  `/api/v2/heartbeat` avec un délai initial de 15 secondes. Le chemin de la sonde est fixé
-  par Chroma_Common et ne peut pas être modifié.
-- **Tâches planifiées.** Chroma n'a pas de commandes planifiées intégrées.
-  Utilisez `cron_jobs` si vous avez besoin de captures instantanées de collection
-  périodiques ou de tâches de maintenance.
+- **Sonde de santé.** Les sondes de démarrage et de vivacité ciblent toutes deux `/api/v2/heartbeat` avec un délai initial de 15 secondes. Le chemin de la sonde est fixé par Chroma_Common et ne peut pas être modifié.
+- **Tâches planifiées.** Chroma n'a pas de commandes planifiées intégrées. Utilisez `cron_jobs` si vous avez besoin de captures instantanées de collection périodiques ou de tâches de maintenance.
 
 ---
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la
-plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
-Chroma sont listés ; toutes les autres entrées sont héritées de
-[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut
-standards.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour Chroma sont listés ; toutes les autres entrées sont héritées de [App_GKE](App_GKE.md) avec son comportement et ses valeurs par défaut standard.
 
 ### Groupe 0 — Métadonnées du module {#group-0--module-metadata}
 
@@ -397,21 +248,21 @@ standards.
 |---|---|---|
 | `module_description` | `Chroma is the AI-native open-source vector database with 18,000+ GitHub stars, purpose-built for embeddings and similarity search. Accelerates AI application development with a production-grade store for RAG pipelines, semantic search, and LangChain/LlamaIndex workflows. Deploy on GKE Autopilot with StatefulSet persistence, GCS Fuse storage, optional token authentication, Workload Identity, Secret Manager, and horizontal auto-scaling.` | La description du module. (par exemple, "Chroma GKE : Déployer la base de données vectorielle Chroma sur GKE Autopilot.") |
 | `module_documentation` | `https://docs.radmodules.dev/docs/modules/Chroma_GKE` | L'URL de la documentation du module. |
-| `module_dependency` | _(défini)_ | Spécifiez les noms des modules dont ce module dépend dans l'ordre dans lequel ils doivent être déployés. (par exemple, ["Services_GCP"]) |
+| `module_dependency` | _(défini)_ | Spécifiez les noms des modules dont dépend ce module dans l'ordre dans lequel ils doivent être déployés. (par exemple, ["Services_GCP"]) |
 | `module_services` | _(défini)_ | Spécifiez les services du module. |
 | `credit_cost` | `75` | Spécifiez le coût du module. (par exemple, 50) |
 | `require_credit_purchases` | `false` | Lorsque `true`, les frais de module ne peuvent être payés qu'avec des crédits achetés (abonnement ou recharge), et non avec des crédits offerts ou d'événement. |
-| `enable_purge` | `true` | Définissez sur true pour activer la possibilité de purger ce module. |
-| `public_access` | `true` | Définissez sur true pour que le module soit disponible pour tous les utilisateurs de la plateforme. |
-| `require_services_gcp_module` | `true` | Exige que le module Services_GCP soit déployé avant ce module. Si true, le déploiement échoue au moment de la planification avec une erreur claire si aucun réseau VPC géré par Services_GCP n'est détecté dans le projet. Définissez sur false pour autoriser un déploiement autonome avec des ressources prérequises en ligne. |
+| `enable_purge` | `true` | Définir à true pour activer la possibilité de purger ce module. |
+| `public_access` | `true` | Définir à true pour activer la disponibilité du module pour tous les utilisateurs de la plateforme. |
+| `require_services_gcp_module` | `true` | Force le déploiement du module Services_GCP avant ce module. Lorsque true, le déploiement échoue au moment de la planification avec une erreur claire si aucun réseau VPC géré par Services_GCP n'est détecté dans le projet. Définir à false pour permettre un déploiement autonome avec des ressources prérequises intégrées. |
 | `resource_creator_identity` | `rad-module-creator@YOUR_PLATFORM_PROJECT.iam.gserviceaccount.com` | Le compte de service utilisé par Terraform pour créer des ressources dans le projet de destination. (par exemple, "rad-module-creator@YOUR_PLATFORM_PROJECT.iam.gserviceaccount.com") |
-| `shared_users` | _(défini)_ | Liste des utilisateurs qui peuvent afficher et déployer ce module, quel que soit le paramètre public_access. Saisissez une ou plusieurs adresses e-mail d'utilisateur. Métadonnées uniquement. |
+| `shared_users` | _(défini)_ | Liste des utilisateurs qui peuvent afficher et déployer ce module quelle que soit la valeur du paramètre public_access. Saisissez une ou plusieurs adresses e-mail d'utilisateur. Métadonnées uniquement. |
 | `technical_support_users` | _(défini)_ | Liste des utilisateurs responsables du support technique de ce module. Saisissez une ou plusieurs adresses e-mail d'utilisateur. Le portail de déploiement achemine les demandes de support pour ce module vers ces utilisateurs. Métadonnées uniquement. |
-| `impersonation_service_account` | `` | Adresse e-mail du compte de service à emprunter lors de l'appel des API GCP à partir de scripts shell. Laissez vide pour utiliser les propres identifiants de l'exécuteur. (par exemple, 'deployer@my-project.iam.gserviceaccount.com') |
-| `job_execution_wait_timeout` | `900` | Nombre maximal de secondes pendant lesquelles un déploiement attend que le job de configuration de la base de données (db-create) se termine avant d'avorter, de sorte qu'un job bloqué échoue rapidement au lieu de rester bloqué jusqu'au délai d'expiration externe du build. Définissez-le au moins sur la durée d'exécution du job plus une marge. |
+| `impersonation_service_account` | `` | E-mail du compte de service à emprunter lors de l'appel des API GCP à partir de scripts shell. Laisser vide pour utiliser les propres identifiants de l'exécuteur. (par exemple, 'deployer@my-project.iam.gserviceaccount.com') |
+| `job_execution_wait_timeout` | `900` | Nombre maximal de secondes pendant lesquelles un déploiement attend que le job de configuration de la base de données (db-create) se termine avant d'avorter, de sorte qu'un job bloqué échoue rapidement au apply au lieu de rester bloqué jusqu'au timeout externe du build. Définissez-le à au moins la durée d'exécution du job plus une marge. |
 | `explicit_secret_values` | _(défini)_ | Valeurs sensibles brutes à injecter directement dans les Secrets Kubernetes, en contournant les lectures de source de données Secret Manager. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
-| `scripts_dir` | `` | Chemin d'accès au répertoire des scripts d'initialisation. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
-| `requires_services` | _(défini)_ | Mappage explicite des ressources provisionnées par Services_GCP dont ce module a besoin, indépendamment des valeurs par défaut actuelles des variables de Services_GCP. La plateforme lit ce mappage (pas module_services, qui est une liste lisible par l'homme pour l'interface utilisateur de confirmation de déploiement) pour décider quels commutateurs create_* de Services_GCP doivent être activés lors du provisionnement automatique ou de la mise à jour du déploiement Services_GCP partagé pour le projet de destination. Les clés reflètent les noms de variables booléennes de Services_GCP 1:1. create_redis et create_filestore_nfs doivent rester false pour le chemin de déploiement automatisé : la VM NFS+Redis Compute Engine gratuite (create_network_filesystem) est ce que chaque déploiement automatisé obtient ; le passage à Cloud Memorystore/Filestore géré est une optimisation manuelle post-déploiement, jamais quelque chose qu'une chaîne de dépendances automatisée devrait demander seule. |
+| `scripts_dir` | `` | Chemin vers le répertoire des scripts d'initialisation. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
+| `requires_services` | _(défini)_ | Mappage explicite des ressources provisionnées par Services_GCP dont ce module a besoin, indépendamment des valeurs par défaut actuelles des variables de Services_GCP. La plateforme lit ce mappage (pas module_services, qui est une liste lisible par l'homme pour l'interface utilisateur de confirmation de déploiement) pour décider quels commutateurs create_* de Services_GCP doivent être activés lors du provisionnement automatique ou de la mise à jour du déploiement Services_GCP partagé pour le projet de destination. Les clés reflètent les noms de variables booléennes de Services_GCP 1:1. create_redis et create_filestore_nfs doivent rester faux pour le chemin de déploiement automatisé : la VM NFS+Redis Compute Engine gratuite (create_network_filesystem) est ce que chaque déploiement automatisé obtient ; le passage à Cloud Memorystore/Filestore géré est une optimisation manuelle post-déploiement, jamais quelque chose qu'une chaîne de dépendances automatisée devrait demander par elle-même. |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -419,9 +270,9 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(obligatoire)_ | Sélectionnez un projet existant sur la plateforme RAD ou saisissez l'ID du projet d'un projet GCP externe. Vous devez accorder le rôle Propriétaire au compte de service de l'agent du projet GCP RAD lors du déploiement dans un projet externe. (par exemple, 'my-project-123') |
-| `tenant_id` | `demo` | Spécifiez un identifiant de locataire ou de déploiement unique. Cela identifie de manière unique votre déploiement d'application et est utilisé dans la dénomination des ressources (1 à 7 caractères alphanumériques minuscules, sans tirets — la limite de 7 caractères provient de la limite de 30 caractères de l'ID de compte de service de GCP). |
-| `region` | `us-central1` | Région GCP pour le déploiement des ressources (par exemple, 'us-central1'). Utilisé comme solution de repli lorsque la découverte de réseau ne peut pas déterminer la région à partir des sous-réseaux VPC existants. |
+| `project_id` | _(obligatoire)_ | Sélectionnez un projet existant sur la plateforme RAD ou entrez l'ID du projet d'un projet GCP externe. Vous devez accorder le rôle Propriétaire au compte de service de l'agent RAD GCP Project lors du déploiement dans un projet externe. (par exemple, 'my-project-123') |
+| `tenant_id` | `demo` | Spécifiez un identifiant unique de locataire ou de déploiement. Cela identifie de manière unique votre déploiement d'application et est utilisé dans la dénomination des ressources (1-7 caractères alphanumériques minuscules, pas de tirets — la limite de 7 caractères provient de la limite de 30 caractères de l'ID de compte de service de GCP). |
+| `region` | `us-central1` | Région GCP pour le déploiement des ressources (par exemple, 'us-central1'). Utilisé comme solution de repli lorsque la découverte du réseau ne peut pas déterminer la région à partir des sous-réseaux VPC existants. |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -429,8 +280,8 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `support_users` | _(défini)_ | Adresses e-mail des utilisateurs auxquels l'accès au projet Google Cloud, aux alertes de surveillance et aux notifications doit être accordé (par exemple, ['admin@example.com', 'ops@example.com']). |
-| `resource_labels` | _(défini)_ | Étiquettes clé-valeur appliquées à toutes les ressources créées par ce module. Utilisez-les pour appliquer des politiques de balisage organisationnelles telles que le centre de coûts, l'environnement ou la propriété de l'équipe. (par exemple, `{ env = "prod", team = "engineering" }`) |
+| `support_users` | _(défini)_ | Adresses e-mail des utilisateurs auxquels sera accordé l'accès au projet Google Cloud, aux alertes de surveillance et aux notifications (par exemple, ['admin@example.com', 'ops@example.com']). |
+| `resource_labels` | _(défini)_ | Étiquettes clé-valeur appliquées à toutes les ressources créées par ce module. Utilisez-les pour appliquer des politiques de marquage organisationnelles telles que le centre de coûts, l'environnement ou la propriété de l'équipe. (par exemple, `{ env = "prod", team = "engineering" }`) |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -438,11 +289,11 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `application_name` | `chroma` | Nom de l'application utilisé dans la dénomination des ressources. Doit commencer par une lettre et ne contenir que des lettres minuscules, des chiffres et des tirets (1 à 20 caractères). (par exemple, "chroma") |
+| `application_name` | `chroma` | Nom de l'application utilisé dans la dénomination des ressources. Doit commencer par une lettre et ne contenir que des lettres minuscules, des chiffres et des tirets (1-20 caractères). (par exemple, "chroma") |
 | `application_display_name` | `Chroma Vector Database` | Nom de l'application lisible par l'homme à des fins d'affichage. (par exemple, "Base de données vectorielle Chroma") |
 | `application_description` | `Chroma Vector Database on GKE Autopilot` | Brève description de l'objectif de l'application. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
 | `description` | `Chroma — the AI-native open-source vector database for embeddings and similarity search` | Brève description de l'objectif du déploiement Chroma. Renseigne la description de la charge de travail GKE et la documentation de la plateforme. (par exemple, 'Base de données vectorielle Chroma pour les applications d'IA') |
-| `application_version` | `latest` | Version de l'image Docker Chroma. Utilisez 'latest' pour la version stable la plus récente, ou épinglez à une version spécifique pour des déploiements reproductibles. (par exemple, 'latest', '0.5.0') |
+| `application_version` | `latest` | Tag de version de l'image Docker Chroma. Utilisez 'latest' pour la version stable la plus récente, ou épinglez à une version spécifique pour des déploiements reproductibles. (par exemple, 'latest', '0.5.0') |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -450,26 +301,26 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définissez sur true pour déployer l'infrastructure de l'application. Si false, seules les ressources partagées (secrets, stockage, IAM) sont créées sans déployer la charge de travail GKE réelle. |
-| `container_image_source` | `custom` | Détermine comment l'image du conteneur est sourcée. Utilisez 'prebuilt' pour déployer directement une URI d'image existante, ou 'custom' pour construire l'image à partir de la source. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
+| `deploy_application` | `true` | Définir à true pour déployer l'infrastructure de l'application. Lorsque false, seules les ressources partagées (secrets, stockage, IAM) sont créées sans déployer la charge de travail GKE réelle. |
+| `container_image_source` | `custom` | Détermine la source de l'image conteneur. Utilisez 'prebuilt' pour déployer directement une URI d'image existante, ou 'custom' pour construire l'image à partir de la source. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
 | `container_image` | `` | URI de l'image. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
 | `container_build_config` | _(défini)_ | Configuration de build. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
-| `enable_image_mirroring` | `true` | Miroir de l'image conteneur Chroma dans Artifact Registry avant le déploiement. Recommandé pour éviter les limites de débit de Docker Hub et améliorer la fiabilité du pull dans les environnements de production. |
-| `min_instance_count` | `1` | Nombre minimum de réplicas de pods à maintenir en permanence. Pour Chroma, définissez au moins sur 1 pour éviter les démarrages à froid. Doit être inférieur ou égal à max_instance_count. (par exemple, 1) |
+| `enable_image_mirroring` | `true` | Met en miroir l'image conteneur Chroma dans Artifact Registry avant le déploiement. Recommandé pour éviter les limites de débit de Docker Hub et améliorer la fiabilité du pull dans les environnements de production. |
+| `min_instance_count` | `1` | Nombre minimum de réplicas de pods à maintenir en cours d'exécution en permanence. Pour Chroma, définissez-le à au moins 1 pour éviter les démarrages à froid. Doit être inférieur ou égal à max_instance_count. (par exemple, 1) |
 | `max_instance_count` | `1` | Nombre maximal de réplicas de pods autorisés à s'exécuter simultanément. Pour Chroma sans mode distribué, 1 est typique. Doit être supérieur ou égal à min_instance_count. (par exemple, 1) |
-| `enable_vertical_pod_autoscaling` | `false` | Active l'autoscaling vertical des pods (VPA). Lorsqu'il est activé, l'HPA basé sur le CPU/la mémoire est désactivé pour éviter les conflits. Le VPA optimise automatiquement les demandes de ressources. (par exemple, false) |
+| `enable_vertical_pod_autoscaling` | `false` | Activer l'autoscaling vertical de pods (VPA). Lorsqu'il est activé, l'HPA basé sur le CPU/Mémoire est désactivé pour éviter les conflits. Le VPA optimise automatiquement les demandes de ressources. (par exemple, false) |
 | `container_port` | `8000` | Port TCP sur lequel le conteneur Chroma écoute. Pour Chroma, c'est toujours 8000 (défini via Chroma_Common) ; cette variable n'est pas transmise à App_GKE et n'a aucun effet. |
 | `container_protocol` | `http1` | Version du protocole HTTP utilisée par le backend du service Kubernetes. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
-| `container_resources` | _(défini)_ | Limites de CPU/mémoire pour le conteneur Chroma. Remarque : utilisez les variables cpu_limit et memory_limit pour définir les ressources du conteneur — cet objet structuré est accepté pour la compatibilité de l'interface utilisateur mais ne remplace pas cpu_limit/memory_limit. |
+| `container_resources` | _(défini)_ | Limites CPU/Mémoire pour le conteneur Chroma. Remarque : utilisez les variables cpu_limit et memory_limit pour définir les ressources du conteneur — cet objet structuré est accepté pour la compatibilité de l'interface utilisateur mais ne remplace pas cpu_limit/memory_limit. |
 | `timeout_seconds` | `300` | Délai d'expiration de la requête en secondes (0-3600). Temps maximal qu'une requête peut prendre. (par exemple, 300) |
-| `enable_cloudsql_volume` | `false` | Injecte un conteneur sidecar Cloud SQL Auth Proxy dans le pod GKE. Chroma n'utilise pas Cloud SQL — cela doit rester false à moins que vous n'exécutiez un sidecar personnalisé à côté de Chroma. |
+| `enable_cloudsql_volume` | `false` | Injecte un conteneur sidecar Cloud SQL Auth Proxy dans le pod GKE. Chroma n'utilise pas Cloud SQL — cela doit rester faux à moins que vous n'exécutiez un sidecar personnalisé aux côtés de Chroma. |
 | `cloudsql_volume_mount_path` | `/cloudsql` | Chemin de montage du socket Cloud SQL Auth Proxy. Non référencé — Chroma n'a pas de base de données Cloud SQL. |
-| `service_annotations` | _(défini)_ | Annotations personnalisées appliquées à la ressource de service Kubernetes. (par exemple, `{ "cloud.google.com/neg" = "{\\"ingress\\": true}" }`) |
-| `service_labels` | _(défini)_ | Étiquettes personnalisées appliquées spécifiquement à la ressource de service Kubernetes. (par exemple, `{ category = "production", tier = "database" }`) |
-| `cloud_sql_proxy_version` | `2-alpine` | Balise d'image Cloud SQL Auth Proxy. Non applicable — Chroma n'a pas de base de données Cloud SQL. |
-| `cpu_limit` | `1000m` | Limite de CPU allouée au conteneur Chroma. (par exemple, '1000m', '2000m') |
+| `service_annotations` | _(défini)_ | Annotations personnalisées appliquées à la ressource Service Kubernetes. (par exemple, `{ "cloud.google.com/neg" = "{\\"ingress\\": true}" }`) |
+| `service_labels` | _(défini)_ | Étiquettes personnalisées appliquées spécifiquement à la ressource Service Kubernetes. (par exemple, `{ category = "production", tier = "database" }`) |
+| `cloud_sql_proxy_version` | `2-alpine` | Tag d'image Cloud SQL Auth Proxy. Non applicable — Chroma n'a pas de base de données Cloud SQL. |
+| `cpu_limit` | `1000m` | Limite CPU allouée au conteneur Chroma. (par exemple, '1000m', '2000m') |
 | `memory_limit` | `1Gi` | Limite de mémoire allouée au conteneur Chroma. Chroma charge les index d'embedding en mémoire ; dimensionnez-le en fonction de vos collections. (par exemple, '1Gi', '4Gi') |
-| `enable_auth_token` | `false` | Génère un jeton d'authentification aléatoire et le stocke dans Secret Manager. Si true, Chroma est démarré avec CHROMA_SERVER_AUTHN_CREDENTIALS et CHROMA_SERVER_AUTHN_PROVIDER définis de sorte que tous les appels d'API nécessitent le jeton. Recommandé pour tout déploiement accessible en dehors du pod/espace de noms. |
+| `enable_auth_token` | `false` | Génère un jeton d'authentification aléatoire et le stocke dans Secret Manager. Lorsque true, Chroma est démarré avec CHROMA_SERVER_AUTHN_CREDENTIALS et CHROMA_SERVER_AUTHN_PROVIDER définis de sorte que tous les appels API nécessitent le jeton. Recommandé pour tout déploiement accessible en dehors du pod/namespace. |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -478,32 +329,32 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | _(défini)_ | Variables d'environnement statiques pour le conteneur Chroma sous forme de paires clé-valeur. (par exemple, `{ CHROMA_LOG_CONFIG_FILE = "/chroma/log_config.yml" }`) |
-| `secret_environment_variables` | _(défini)_ | Variables d'environnement de Secret Manager. Mappez le nom de la variable d'environnement au nom du secret Secret Manager. |
+| `secret_environment_variables` | _(défini)_ | Variables d'environnement de Secret Manager. Mappe le nom de la variable d'environnement au nom du secret Secret Manager. |
 | `secret_rotation_period` | `2592000s` | Calendrier de rotation des secrets. (par exemple, '2592000s' pour 30 jours) |
 | `secret_propagation_delay` | `30` | Temps en secondes à attendre après la création ou la mise à jour d'un secret avant de poursuivre les opérations dépendantes. (par exemple, 30) |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
-### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `gke_cluster_name` | `` | Nom du cluster GKE dans lequel déployer. Laissez vide pour une découverte automatique. (par exemple, 'gke-cluster-1') |
-| `prereq_gke_subnet_cidr` | `10.201.0.0/24` | Plage CIDR pour le sous-réseau GKE en ligne. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
+| `gke_cluster_name` | `` | Nom du cluster GKE dans lequel déployer. Laisser vide pour la découverte automatique. (par exemple, 'gke-cluster-1') |
+| `prereq_gke_subnet_cidr` | `10.201.0.0/24` | Plage CIDR pour le sous-réseau GKE intégré. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
 | `gke_cluster_selection_mode` | `primary` | Stratégie de choix du cluster GKE cible. (par exemple, 'primary') |
-| `prereq_subnet_cidr_override` | `` | Remplacement pour le CIDR du sous-réseau primaire VPC en ligne. |
-| `namespace_name` | `` | Espace de noms Kubernetes pour le déploiement. Laissez vide pour générer automatiquement à partir de application_name et tenant_id. (par exemple, 'chroma-prod') |
-| `prereq_gke_pod_cidr_override` | `` | Remplacement pour le CIDR de la plage secondaire du pod GKE en ligne. |
-| `prereq_gke_service_cidr_override` | `` | Remplacement pour le CIDR de la plage secondaire du service GKE en ligne. |
+| `prereq_subnet_cidr_override` | `` | Remplacement pour le CIDR du sous-réseau primaire VPC intégré. |
+| `namespace_name` | `` | Espace de noms Kubernetes pour le déploiement. Laisser vide pour générer automatiquement à partir de application_name et tenant_id. (par exemple, 'chroma-prod') |
+| `prereq_gke_pod_cidr_override` | `` | Remplacement pour le CIDR de la plage secondaire de pods GKE intégrée. |
+| `prereq_gke_service_cidr_override` | `` | Remplacement pour le CIDR de la plage secondaire de services GKE intégrée. |
 | `workload_type` | `null` | Type de charge de travail Kubernetes. Utilisez 'StatefulSet' (recommandé pour Chroma) pour une identité de pod stable et des redémarrages ordonnés, ou 'Deployment' pour un fonctionnement sans état avec un stockage basé sur GCS. (par exemple, 'Deployment' ou 'StatefulSet') |
 | `service_type` | `ClusterIP` | Type de service Kubernetes. Gardez 'ClusterIP' (par défaut) pour que Chroma ne soit accessible qu'à l'intérieur du cluster — la sortie api_url n'est pas accessible depuis l'extérieur du cluster avec ce paramètre. Définissez 'LoadBalancer' uniquement si un accès externe est nécessaire, et activez IAP ou enable_auth_token en même temps. |
 | `session_affinity` | `None` | Mode d'affinité de session pour le service Kubernetes. (par exemple, 'None' ou 'ClientIP') |
 | `enable_multi_cluster_service` | `false` | Active les services multi-clusters (MCS) pour l'application. Non référencé — la définition de cette variable n'a aucun effet. |
-| `extra_service_ports` | _(défini)_ | Ports supplémentaires à exposer sur le service Kubernetes, pour une charge de travail qui utilise plusieurs protocoles sur le même pod. Reflète la variable App_GKE pour satisfaire les vérifications de convention ; déclarée mais NON transmise par ce module, donc sa définition n'a aucun effet ici. Par défaut, une liste vide, ce qui rend exactement le service que ce module rendait auparavant. |
-| `configure_service_mesh` | `false` | Active l'injection du maillage de services Istio pour l'espace de noms de l'application. Nécessite que Cloud Service Mesh ou Anthos Service Mesh soit installé sur le cluster. |
-| `enable_network_segmentation` | `false` | Active les NetworkPolicies Kubernetes pour la micro-segmentation. (par exemple, false) |
-| `termination_grace_period_seconds` | `60` | Secondes pendant lesquelles Kubernetes attend après SIGTERM avant de terminer de force. Augmentez pour permettre à Chroma de vider les écritures en cours. Plage valide : 0–3600. (par exemple, 60) |
-| `deployment_timeout` | `1800` | Nombre maximal de secondes pendant lesquelles Terraform attend que le déploiement Kubernetes se termine. (par exemple, 1800) |
+| `extra_service_ports` | _(défini)_ | Ports supplémentaires à exposer sur le service Kubernetes, pour une charge de travail qui utilise plus d'un protocole sur le même pod. Reflète la variable App_GKE pour satisfaire les vérifications de convention ; déclarée mais NON transmise par ce module, donc sa définition n'a aucun effet ici. Par défaut, une liste vide, ce qui rend exactement le service que ce module rendait auparavant. |
+| `configure_service_mesh` | `false` | Active l'injection de maillage de services Istio pour l'espace de noms de l'application. Nécessite que Cloud Service Mesh ou Anthos Service Mesh soit installé sur le cluster. |
+| `enable_network_segmentation` | `false` | Activer les NetworkPolicies Kubernetes pour la micro-segmentation. (par exemple, false) |
+| `termination_grace_period_seconds` | `60` | Secondes pendant lesquelles Kubernetes attend après SIGTERM avant de terminer de force. Augmenter pour permettre à Chroma de vider les écritures en cours. Plage valide : 0–3600. (par exemple, 60) |
+| `deployment_timeout` | `1800` | Nombre maximal de secondes pendant lesquelles Terraform attend la fin du déploiement Kubernetes. (par exemple, 1800) |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -511,14 +362,14 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `true` | Active le Persistent Volume Claim pour StatefulSet. Recommandé pour Chroma afin d'éviter la surcharge d'E/S de GCS FUSE pour les grandes collections. Si true sans workload_type explicite, se résout automatiquement en 'StatefulSet'. (par exemple, false) |
-| `stateful_pvc_size` | `20Gi` | Taille de stockage pour chaque PVC provisionné par le StatefulSet. Dimensionnez le PVC pour contenir toutes les collections Chroma plus les frais généraux. (par exemple, '20Gi', '50Gi') |
+| `stateful_pvc_enabled` | `true` | Activer la revendication de volume persistant pour StatefulSet. Recommandé pour Chroma afin d'éviter la surcharge d'E/S de GCS FUSE pour les grandes collections. Lorsque true sans workload_type explicite, se résout automatiquement en 'StatefulSet'. (par exemple, false) |
+| `stateful_pvc_size` | `20Gi` | Taille de stockage pour chaque PVC provisionné par le StatefulSet. Dimensionnez le PVC pour contenir toutes les collections Chroma plus la surcharge. (par exemple, '20Gi', '50Gi') |
 | `stateful_pvc_mount_path` | `/data` | Chemin du système de fichiers à l'intérieur du conteneur Chroma où le PVC par pod est monté. (par exemple, '/data') |
 | `stateful_pvc_storage_class` | `standard-rwo` | StorageClass Kubernetes pour les PVC StatefulSet. 'standard-rwo' (PD équilibré) est la valeur par défaut pour GKE Autopilot. Utilisez 'premium-rwo' pour des IOPS plus élevées. (par exemple, 'standard-rwo', 'premium-rwo') |
-| `stateful_headless_service` | `null` | Crée un service sans tête pour le StatefulSet afin d'activer des identités réseau stables. (par exemple, true) |
+| `stateful_headless_service` | `null` | Créer un service sans tête pour le StatefulSet afin d'activer des identités réseau stables. (par exemple, true) |
 | `stateful_pod_management_policy` | `null` | Contrôle l'ordre dans lequel les pods sont créés et supprimés. 'OrderedReady' est requis pour des redémarrages Chroma sûrs. (par exemple, 'OrderedReady' ou 'Parallel') |
-| `stateful_update_strategy` | `null` | Stratégie de mise à jour pour le StatefulSet. Utilisez 'RollingUpdate' pour des mises à jour sans interruption. (par exemple, 'RollingUpdate' ou 'OnDelete') |
-| `stateful_fs_group` | `1000` | GID défini comme fsGroup au niveau du pod dans le contexte de sécurité du StatefulSet. Garantit que le PVC est inscriptible par le groupe. Définissez sur 0 pour laisser fsGroup non défini. (par exemple, 1000) |
+| `stateful_update_strategy` | `null` | Stratégie de mise à jour pour le StatefulSet. Utilisez 'RollingUpdate' pour des mises à jour sans temps d'arrêt. (par exemple, 'RollingUpdate' ou 'OnDelete') |
+| `stateful_fs_group` | `1000` | GID défini comme fsGroup au niveau du pod dans le contexte de sécurité du StatefulSet. Garantit que le PVC est inscriptible par le groupe. Définir à 0 pour laisser fsGroup non défini. (par exemple, 1000) |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -544,7 +395,7 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 | `enable_pod_disruption_budget` | `true` | Crée un PodDisruptionBudget Kubernetes pour limiter l'indisponibilité des pods lors de perturbations volontaires. |
 | `pdb_min_available` | `1` | Nombre minimum de pods disponibles lors de perturbations volontaires. (par exemple, '1') |
 | `enable_topology_spread` | `false` | Ajoute des TopologySpreadConstraints Kubernetes. Non référencé — la définition de cette variable n'a aucun effet. |
-| `topology_spread_strict` | `false` | Contrôle le comportement whenUnsatisfiable de la contrainte de répartition topologique. Non référencé — la définition de cette variable n'a aucun effet. |
+| `topology_spread_strict` | `false` | Contrôle le comportement whenUnsatisfiable de la contrainte de répartition de topologie. Non référencé — la définition de cette variable n'a aucun effet. |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -554,9 +405,9 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 |---|---|---|
 | `startup_probe_config` | _(défini)_ | Configuration de la sonde de démarrage Kubernetes. Chroma expose /api/v2/heartbeat. Exemple : `{ enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 15, timeout_seconds = 5, period_seconds = 10, failure_threshold = 10 }`. |
 | `health_check_config` | _(défini)_ | Configuration de la sonde de vivacité Kubernetes. Utilise /api/v2/heartbeat (point de terminaison de santé de Chroma). Exemple : `{ enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }`. |
-| `uptime_check_config` | _(défini)_ | Configuration du contrôle de disponibilité. Surveille la disponibilité du service. Exemple : `{ enabled = true, path = "/api/v2/heartbeat", check_interval = "60s", timeout = "10s" }`. |
-| `alert_policies` | _(défini)_ | Politiques d'alerte personnalisées pour Cloud Monitoring. |
-| `startup_probe` | _(défini)_ | Configuration de la sonde de démarrage. Chroma expose /api/v2/heartbeat une fois entièrement prêt à servir les requêtes. Exemple : `{ enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 15, timeout_seconds = 5, period_seconds = 10, failure_threshold = 10 }`. |
+| `uptime_check_config` | _(défini)_ | Configuration du test de disponibilité. Surveille la disponibilité du service. Exemple : `{ enabled = true, path = "/api/v2/heartbeat", check_interval = "60s", timeout = "10s" }`. |
+| `alert_policies` | _(défini)_ | Stratégies d'alerte personnalisées pour Cloud Monitoring. |
+| `startup_probe` | _(défini)_ | Configuration de la sonde de démarrage. Chroma expose /api/v2/heartbeat une fois qu'il est entièrement prêt à servir les requêtes. Exemple : `{ enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 15, timeout_seconds = 5, period_seconds = 10, failure_threshold = 10 }`. |
 | `liveness_probe` | _(défini)_ | Configuration de la sonde de vivacité. Utilise /api/v2/heartbeat (point de terminaison de santé de Chroma). Exemple : `{ enabled = true, type = "HTTP", path = "/api/v2/heartbeat", initial_delay_seconds = 30, timeout_seconds = 5, period_seconds = 30, failure_threshold = 3 }`. |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
@@ -565,9 +416,9 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | _(défini)_ | Jobs Kubernetes pour les tâches d'initialisation. Chroma ne nécessite aucune initialisation par défaut ; ne fournissez des jobs que pour le chargement de données personnalisé ou les tâches de migration. |
-| `cron_jobs` | _(défini)_ | Liste des CronJobs à déployer avec Chroma (par exemple, pour les instantanés de collection ou les tâches de maintenance). |
-| `additional_services` | _(défini)_ | Liste des services Kubernetes supplémentaires à déployer avec Chroma (par exemple, sidecars, services d'aide). |
+| `initialization_jobs` | _(défini)_ | Jobs Kubernetes pour les tâches d'initialisation. Chroma ne nécessite aucune initialisation par défaut ; ne fournissez des jobs que pour le chargement de données personnalisées ou les tâches de migration. |
+| `cron_jobs` | _(défini)_ | Liste des CronJobs à déployer aux côtés de Chroma (par exemple, pour les instantanés de collection ou les tâches de maintenance). |
+| `additional_services` | _(défini)_ | Liste des services Kubernetes supplémentaires à déployer aux côtés de Chroma (par exemple, sidecars, services d'aide). |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -575,14 +426,14 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cicd_trigger` | `false` | Active le déclencheur Cloud Build automatisé pour CI/CD. (par exemple, false) |
+| `enable_cicd_trigger` | `false` | Activer le déclencheur Cloud Build automatisé pour CI/CD. (par exemple, false) |
 | `github_repository_url` | `` | URL du dépôt GitHub pour CI/CD automatisé (par exemple, 'https://github.com/username/repo'). |
 | `github_token` | `` | Jeton d'accès personnel (PAT) GitHub. Requis lorsque enable_cicd_trigger est true. |
 | `github_app_installation_id` | `` | ID d'installation de l'application GitHub. |
 | `cicd_trigger_config` | _(défini)_ | Configuration du déclencheur Cloud Build pour le pipeline CI/CD automatisé. Exemple : `{ branch_pattern = "^main$", included_files = [], ignored_files = [], trigger_name = null, description = "Automated build and deployment trigger", substitutions = { } }`. |
-| `enable_cloud_deploy` | `false` | Active Google Cloud Deploy pour un pipeline de promotion géré Dev → Staging → Prod. Nécessite enable_cicd_trigger = true. |
+| `enable_cloud_deploy` | `false` | Activer Google Cloud Deploy pour un pipeline de promotion géré Dev → Staging → Prod. Nécessite enable_cicd_trigger = true. |
 | `cloud_deploy_stages` | _(défini)_ | Liste ordonnée des étapes du pipeline Cloud Deploy. |
-| `enable_binary_authorization` | `false` | Active Binary Authorization pour ce déploiement. (par exemple, false) |
+| `enable_binary_authorization` | `false` | Activer Binary Authorization pour ce déploiement. (par exemple, false) |
 | `binauthz_evaluation_mode` | `ALWAYS_ALLOW` | Mode d'application de Binary Authorization. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
@@ -594,8 +445,8 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 | `enable_nfs` | `false` | Provisionne une instance Cloud Filestore (NFS) et la monte dans le pod GKE en tant que volume persistant partagé. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin du système de fichiers à l'intérieur du conteneur où le volume NFS est monté. (par exemple, '/mnt/nfs') |
 | `nfs_volume_name` | `nfs-data-volume` | Nom du volume pour le montage NFS. (par exemple, 'nfs-data-volume') |
-| `nfs_instance_name` | `` | Nom d'une VM GCE NFS existante à utiliser. Laissez vide pour une découverte automatique. |
-| `nfs_instance_base_name` | `app-nfs` | Nom de base pour la VM GCE NFS en ligne. (par exemple, 'app-nfs') |
+| `nfs_instance_name` | `` | Nom d'une VM NFS GCE existante à utiliser. Laisser vide pour la découverte automatique. |
+| `nfs_instance_base_name` | `app-nfs` | Nom de base pour la VM NFS GCE intégrée. (par exemple, 'app-nfs') |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -606,11 +457,11 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 | `create_cloud_storage` | `true` | Contrôle si le module provisionne les buckets GCS définis dans storage_buckets. |
 | `storage_buckets` | _(défini)_ | Buckets Cloud Storage à créer en plus du bucket de données Chroma. |
 | `gcs_volumes` | _(défini)_ | Montages de volume GCS FUSE via le pilote CSI. Le bucket de données Chroma est automatiquement ajouté ; utilisez ceci pour des volumes supplémentaires. |
-| `manage_storage_kms_iam` | `false` | Si true, crée un trousseau de clés CMEK KMS et une clé de chiffrement de stockage. |
-| `enable_artifact_registry_cmek` | `false` | Si true, active le chiffrement CMEK des images conteneur dans Artifact Registry. |
-| `max_images_to_retain` | `7` | Nombre maximal d'images conteneur récentes à conserver dans Artifact Registry. Définissez sur 0 pour désactiver. (par exemple, 7) |
-| `delete_untagged_images` | `true` | Supprime automatiquement les images conteneur non étiquetées d'Artifact Registry. (par exemple, true) |
-| `image_retention_days` | `30` | Jours après lesquels les images conteneur sont éligibles à la suppression. Définissez sur 0 pour désactiver. (par exemple, 30) |
+| `manage_storage_kms_iam` | `false` | Lorsque true, crée un trousseau de clés KMS CMEK et une clé de chiffrement de stockage. |
+| `enable_artifact_registry_cmek` | `false` | Lorsque true, active le chiffrement CMEK des images conteneurs dans Artifact Registry. |
+| `max_images_to_retain` | `7` | Nombre maximal d'images conteneurs récentes à conserver dans Artifact Registry. Définir à 0 pour désactiver. (par exemple, 7) |
+| `delete_untagged_images` | `true` | Supprimer automatiquement les images conteneurs non taguées d'Artifact Registry. (par exemple, true) |
+| `image_retention_days` | `30` | Jours après lesquels les images conteneurs sont éligibles à la suppression. Définir à 0 pour désactiver. (par exemple, 30) |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -618,9 +469,9 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `false` | Active la configuration Redis pour l'application en injectant les variables d'environnement REDIS_HOST et REDIS_PORT dans le déploiement GKE. Si true et que redis_host est laissé vide, le module utilise par défaut l'IP du serveur NFS comme hôte Redis. Définissez redis_host explicitement pour vous connecter à une instance Redis dédiée telle que Memorystore. |
-| `redis_host` | `` | Nom d'hôte ou adresse IP du serveur Redis injecté comme variable d'environnement REDIS_HOST. Utilisé uniquement lorsque enable_redis est true. Laissez vide pour utiliser par défaut l'adresse IP du serveur NFS. (par exemple, '10.0.0.5', 'redis.internal.example.com') |
-| `redis_port` | `6379` | Port TCP du serveur Redis injecté comme variable d'environnement REDIS_PORT. Utilisé uniquement lorsque enable_redis est true. (par exemple, '6379') |
+| `enable_redis` | `false` | Active la configuration Redis pour l'application en injectant les variables d'environnement REDIS_HOST et REDIS_PORT dans le déploiement GKE. Si true et que redis_host est laissé vide, le module utilise par défaut l'adresse IP du serveur NFS comme hôte Redis. Définissez redis_host explicitement pour vous connecter à une instance Redis dédiée telle que Memorystore. |
+| `redis_host` | `` | Nom d'hôte ou adresse IP du serveur Redis injecté en tant que variable d'environnement REDIS_HOST. Utilisé uniquement lorsque enable_redis est true. Laisser vide pour utiliser par défaut l'adresse IP du serveur NFS. (par exemple, '10.0.0.5', 'redis.internal.example.com') |
+| `redis_port` | `6379` | Port TCP du serveur Redis injecté en tant que variable d'environnement REDIS_PORT. Utilisé uniquement lorsque enable_redis est true. (par exemple, '6379') |
 | `redis_auth` | `` | Mot de passe d'authentification Redis. Non applicable à Chroma. Transmis au module de fondation pour compatibilité. |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
@@ -631,21 +482,21 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 |---|---|---|
 | `database_type` | `NONE` | Moteur de base de données Cloud SQL. Non référencé — Chroma n'a pas de base de données SQL ; le database_type est fixé à NONE par Chroma_Common. |
 | `sql_instance_name` | `` | Nom d'une instance Cloud SQL existante. Non référencé — Chroma n'a pas de base de données SQL. |
-| `sql_instance_base_name` | `app-sql` | Nom de base pour l'instance Cloud SQL en ligne. Non référencé — Chroma n'a pas de base de données SQL. |
-| `application_database_name` | `gkeappdb` | Nom de la base de données à créer dans l'instance Cloud SQL. Injecté dans l'application comme variable d'environnement DB_NAME. Utilisé uniquement lorsque database_type n'est pas 'NONE'. (par exemple, 'app_db', 'crm_production') |
-| `application_database_user` | `gkeappuser` | Nom d'utilisateur de l'utilisateur de la base de données créé pour l'application. Injecté dans l'application comme variable d'environnement DB_USER. Utilisé uniquement lorsque database_type n'est pas 'NONE'. (par exemple, 'app_user', 'crm_svc') |
+| `sql_instance_base_name` | `app-sql` | Nom de base pour l'instance Cloud SQL intégrée. Non référencé — Chroma n'a pas de base de données SQL. |
+| `application_database_name` | `gkeappdb` | Nom de la base de données à créer dans l'instance Cloud SQL. Injecté dans l'application en tant que variable d'environnement DB_NAME. Utilisé uniquement lorsque database_type n'est pas 'NONE'. (par exemple, 'app_db', 'crm_production') |
+| `application_database_user` | `gkeappuser` | Nom d'utilisateur de l'utilisateur de la base de données créé pour l'application. Injecté dans l'application en tant que variable d'environnement DB_USER. Utilisé uniquement lorsque database_type n'est pas 'NONE'. (par exemple, 'app_user', 'crm_svc') |
 | `database_password_length` | `32` | Longueur du mot de passe de la base de données généré aléatoirement. Non référencé — Chroma n'a pas de base de données SQL. Transmis à la fondation pour compatibilité. (par exemple, 32) |
-| `enable_postgres_extensions` | `false` | Active les extensions PostgreSQL. Non référencé — Chroma n'a pas de base de données SQL. |
+| `enable_postgres_extensions` | `false` | Activer les extensions PostgreSQL. Non référencé — Chroma n'a pas de base de données SQL. |
 | `postgres_extensions` | _(défini)_ | Extensions PostgreSQL à installer. Non référencé — Chroma n'a pas de base de données SQL. |
-| `enable_mysql_plugins` | `false` | Active les plugins MySQL. Non référencé — Chroma n'a pas de base de données SQL. (par exemple, false) |
+| `enable_mysql_plugins` | `false` | Activer les plugins MySQL. Non référencé — Chroma n'a pas de base de données SQL. (par exemple, false) |
 | `mysql_plugins` | _(défini)_ | Liste des plugins MySQL à installer. Non référencé — Chroma n'a pas de base de données SQL. |
-| `enable_auto_password_rotation` | `false` | Active la rotation automatique du mot de passe de la base de données. Non applicable — Chroma n'a pas de base de données SQL. |
+| `enable_auto_password_rotation` | `false` | Activer la rotation automatique du mot de passe de la base de données. Non applicable — Chroma n'a pas de base de données SQL. |
 | `rotation_propagation_delay_sec` | `90` | Secondes à attendre après un événement de rotation du mot de passe de la base de données. Non applicable — Chroma n'a pas de base de données SQL. |
 | `db_password_env_var_name` | `` | Variable d'environnement supplémentaire pour exposer le mot de passe de la base de données. Non applicable — Chroma n'a pas de base de données SQL. |
-| `db_host_env_var_name` | `` | Nom de variable d'environnement supplémentaire pour exposer l'hôte de la base de données à côté du DB_HOST standard. Laissez vide pour n'injecter que DB_HOST. (par exemple, 'DB_HOSTNAME') |
-| `db_user_env_var_name` | `` | Nom de variable d'environnement supplémentaire pour exposer l'utilisateur de la base de données à côté du DB_USER standard. Laissez vide pour n'injecter que DB_USER. (par exemple, 'DB_USERNAME') |
-| `db_name_env_var_name` | `` | Nom de variable d'environnement supplémentaire pour exposer le nom de la base de données à côté du DB_NAME standard. Laissez vide pour n'injecter que DB_NAME. (par exemple, 'DB_DATABASE') |
-| `db_port_env_var_name` | `` | Nom de variable d'environnement supplémentaire pour exposer le port de la base de données à côté du DB_PORT standard. Laissez vide pour n'injecter que DB_PORT. (par exemple, 'DB_PORT_NUMBER') |
+| `db_host_env_var_name` | `` | Nom de variable d'environnement supplémentaire pour exposer l'hôte de la base de données à côté du DB_HOST standard. Laisser vide pour injecter uniquement DB_HOST. (par exemple, 'DB_HOSTNAME') |
+| `db_user_env_var_name` | `` | Nom de variable d'environnement supplémentaire pour exposer l'utilisateur de la base de données à côté du DB_USER standard. Laisser vide pour injecter uniquement DB_USER. (par exemple, 'DB_USERNAME') |
+| `db_name_env_var_name` | `` | Nom de variable d'environnement supplémentaire pour exposer le nom de la base de données à côté du DB_NAME standard. Laisser vide pour injecter uniquement DB_NAME. (par exemple, 'DB_DATABASE') |
+| `db_port_env_var_name` | `` | Nom de variable d'environnement supplémentaire pour exposer le port de la base de données à côté du DB_PORT standard. Laisser vide pour injecter uniquement DB_PORT. (par exemple, 'DB_PORT_NUMBER') |
 | `db_name` | `chromadb` | Non référencé — Chroma n'a pas de base de données SQL. Transmis au module de fondation pour compatibilité. |
 | `db_user` | `chromauser` | Non référencé — Chroma n'a pas de base de données SQL. Transmis au module de fondation pour compatibilité. |
 
@@ -655,11 +506,11 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `backup_schedule` | `0 2 * * *` | Calendrier Cron pour les sauvegardes automatisées (par exemple, '0 2 * * *' pour tous les jours à 2h du matin). Laissez vide pour désactiver. |
+| `backup_schedule` | `0 2 * * *` | Planification Cron pour les sauvegardes automatisées (par exemple, '0 2 * * *' pour tous les jours à 2h du matin). Laisser vide pour désactiver. |
 | `backup_retention_days` | `7` | Nombre de jours pour conserver les fichiers de sauvegarde dans le bucket de sauvegarde GCS. (par exemple, 7) |
-| `enable_backup_import` | `false` | Active l'importation automatique d'une sauvegarde pendant le déploiement. (par exemple, false) |
+| `enable_backup_import` | `false` | Activer l'importation automatique d'une sauvegarde pendant le déploiement. (par exemple, false) |
 | `backup_source` | `gcs` | Source de sauvegarde : 'gdrive' ou 'gcs'. (par exemple, 'gcs') |
-| `backup_file` | `backup.tar` | Nom du fichier de sauvegarde à importer. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
+| `backup_file` | `backup.tar` | Nom de fichier de la sauvegarde à importer. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
 | `backup_uri` | `` | URI de sauvegarde. Pour GCS : URI complet comme 'gs://bucket/path/backup.tar'. Pour Google Drive : ID de fichier. |
 | `backup_format` | `tar` | Format du fichier de sauvegarde. (par exemple, 'tar') |
 
@@ -669,10 +520,10 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_custom_sql_scripts` | `false` | Active l'exécution de scripts SQL personnalisés à partir de GCS pendant l'initialisation. Non applicable à Chroma (pas de base de données SQL). (par exemple, false) |
+| `enable_custom_sql_scripts` | `false` | Activer l'exécution de scripts SQL personnalisés depuis GCS pendant l'initialisation. Non applicable à Chroma (pas de base de données SQL). (par exemple, false) |
 | `custom_sql_scripts_bucket` | `` | Nom du bucket GCS contenant les scripts SQL personnalisés. Non applicable à Chroma. |
 | `custom_sql_scripts_path` | `` | Préfixe de chemin dans le bucket GCS pour les scripts SQL. Non applicable à Chroma. |
-| `custom_sql_scripts_use_root` | `false` | Exécute les scripts SQL personnalisés en tant qu'utilisateur root de la base de données. Non applicable à Chroma. (par exemple, false) |
+| `custom_sql_scripts_use_root` | `false` | Exécuter des scripts SQL personnalisés en tant qu'utilisateur root de la base de données. Non applicable à Chroma. (par exemple, false) |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -680,12 +531,12 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_custom_domain` | `true` | Active la configuration de domaine personnalisé via l'API Kubernetes Gateway avec des certificats SSL. (par exemple, false) |
+| `enable_custom_domain` | `true` | Activer la configuration de domaine personnalisé via l'API Kubernetes Gateway avec des certificats SSL. (par exemple, false) |
 | `application_domains` | _(défini)_ | Liste des domaines personnalisés pour l'application (par exemple, ['chroma.example.com']). |
-| `reserve_static_ip` | `true` | Réserve une IP externe statique. Recommandé pour la production. |
-| `static_ip_name` | `` | Nom de l'IP statique réservée. Laissez vide pour générer automatiquement. |
-| `network_tags` | _(défini)_ | Balises réseau appliquées aux nœuds GKE. La balise 'nfsserver' est requise lorsque enable_nfs est true. (par exemple, ['allow-ingress', 'nfsserver']) |
-| `network_name` | `` | Nom du réseau VPC à utiliser. Laissez vide pour une découverte automatique. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
+| `reserve_static_ip` | `true` | Réserver une IP externe statique. Recommandé pour la production. |
+| `static_ip_name` | `` | Nom de l'IP statique réservée. Laisser vide pour générer automatiquement. |
+| `network_tags` | _(défini)_ | Tags réseau appliqués aux nœuds GKE. Le tag 'nfsserver' est requis lorsque enable_nfs est true. (par exemple, ['allow-ingress', 'nfsserver']) |
+| `network_name` | `` | Nom du réseau VPC à utiliser. Laisser vide pour la découverte automatique. Non référencé — la définition de cette variable n'a aucun effet sur le déploiement dans ce module d'application. |
 | `gateway_backend_stage` | `dev` | Étape Cloud Deploy dont le service est ciblé par la Gateway HTTPRoute. Pertinent uniquement lorsque enable_cloud_deploy est true. (par exemple, 'dev') |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
@@ -694,7 +545,7 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_iap` | `false` | Active Identity-Aware Proxy (IAP) pour l'authentification via Kubernetes Gateway. Requis lorsque service_type est 'LoadBalancer' pour empêcher l'accès externe non authentifié à l'API Chroma. Nécessite que enable_custom_domain ou enable_cdn soit true. (par exemple, false) |
+| `enable_iap` | `false` | Activer Identity-Aware Proxy (IAP) pour l'authentification via Kubernetes Gateway. Requis lorsque service_type est 'LoadBalancer' pour empêcher l'accès externe non authentifié à l'API Chroma. Nécessite que enable_custom_domain ou enable_cdn soit true. (par exemple, false) |
 | `iap_authorized_users` | _(défini)_ | Liste des e-mails d'utilisateurs autorisés à accéder via IAP (par exemple, ['user:alice@example.com']). |
 | `iap_authorized_groups` | _(défini)_ | Liste des groupes Google autorisés à accéder via IAP (par exemple, ['group:engineering@example.com']). |
 | `iap_oauth_client_id` | `` | ID client OAuth pour IAP. Requis lorsque enable_iap est true. |
@@ -708,21 +559,21 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_cloud_armor` | `false` | Attache une politique de sécurité Cloud Armor au backend Ingress GKE. Nécessite que enable_custom_domain soit true ou que service_type soit 'LoadBalancer'. |
-| `admin_ip_ranges` | _(défini)_ | Plages CIDR d'administration autorisées pour un accès privilégié. (par exemple, ['203.0.113.0/24']) |
+| `admin_ip_ranges` | _(défini)_ | Plages CIDR d'administration autorisées pour l'accès privilégié. (par exemple, ['203.0.113.0/24']) |
 | `cloud_armor_policy_name` | `default-waf-policy` | Le nom de la politique de sécurité Cloud Armor à appliquer. (par exemple, "default-waf-policy") |
-| `enable_cdn` | `false` | Active Cloud CDN via GCPBackendPolicy. (par exemple, false) |
+| `enable_cdn` | `false` | Activer Cloud CDN via GCPBackendPolicy. (par exemple, false) |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
-### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — Contrôles de service VPC et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_vpc_sc` | `false` | Active l'application du périmètre VPC Service Controls. |
+| `enable_vpc_sc` | `false` | Activer l'application du périmètre des contrôles de service VPC. |
 | `vpc_cidr_ranges` | _(défini)_ | Plages CIDR de sous-réseau VPC pour le niveau d'accès réseau VPC-SC. |
-| `vpc_sc_dry_run` | `true` | Si true, les violations VPC-SC sont journalisées mais non bloquées. |
+| `vpc_sc_dry_run` | `true` | Lorsque true, les violations VPC-SC sont journalisées mais non bloquées. |
 | `organization_id` | `` | ID d'organisation GCP pour la politique Access Context Manager VPC-SC. |
-| `enable_audit_logging` | `false` | Active les journaux d'audit Cloud détaillés pour tous les services GCP pris en charge. |
+| `enable_audit_logging` | `false` | Activer les journaux d'audit Cloud détaillés pour tous les services GCP pris en charge. |
 
 Toutes les autres entrées de ce groupe suivent le comportement standard d'App_GKE.
 
@@ -730,7 +581,7 @@ Toutes les autres entrées de ce groupe suivent le comportement standard d'App_G
 
 ## 5. Sorties {#5-outputs}
 
-Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen
+Ces valeurs sont renvoyées en cas de déploiement réussi et constituent le moyen
 le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
@@ -739,7 +590,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
 | `service_cluster_ip` | ClusterIP interne au cluster. |
 | `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à chaque étape (Cloud Deploy). |
-| `service_external_ip` | Adresse IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
+| `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `endpoint_url` | Point de terminaison de l'API REST Chroma (`<service-url>:8000`). |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
@@ -753,7 +604,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
 | `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt(e). |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État de VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Audit logging et état de CMEK. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
@@ -764,29 +615,29 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `enable_auth_token` | `true` pour tout déploiement accessible de l'extérieur | Critique | Sans jeton, tout appelant pouvant atteindre l'API Chroma peut lire, écrire ou supprimer toutes les collections. |
+| `enable_auth_token` | `true` pour tout déploiement accessible de l'extérieur | Critique | Sans jeton, tout appelant pouvant atteindre l'API Chroma peut lire, écrire ou supprimer chaque collection. |
 | `stateful_pvc_enabled` | `true` pour la production | Élevé | Sans PVC, Chroma stocke les données dans le système de fichiers éphémère du conteneur. Un redémarrage du pod efface toutes les collections et tous les vecteurs. |
 | `stateful_pvc_mount_path` | `/data` | Critique | Si le chemin de montage ne correspond pas au répertoire de stockage de Chroma, les données sont écrites dans la couche éphémère et perdues silencieusement au redémarrage. |
 | `stateful_pvc_size` | `20Gi` (taille généreusement) | Élevé | Un PVC plein provoque le crash de Chroma avec des erreurs de disque plein. La capacité du PVC ne peut pas être réduite après le provisionnement. |
 | `max_instance_count` | `1` | Élevé | Plusieurs pods Chroma sur le même stockage corrompront les collections — Chroma n'a pas de verrou d'écriture distribué. |
-| `memory_limit` | `4Gi`+ pour la production | Élevé | Chroma charge les index HNSW en mémoire. Le `1Gi` par défaut ne prend en charge que de très petites collections ; les kills OOM abandonnent les requêtes en cours. |
-| `workload_type` | défini par `stateful_pvc_enabled` | Élevé | La définition explicite de `"Deployment"` en même temps que `stateful_pvc_enabled = true` échoue au moment de la planification. |
+| `memory_limit` | `4Gi`+ pour la production | Élevé | Chroma charge les index HNSW en mémoire. Le `1Gi` par défaut ne prend en charge que de très petites collections ; les arrêts OOM interrompent les requêtes en cours. |
+| `workload_type` | défini par `stateful_pvc_enabled` | Élevé | La définition explicite de `"Deployment"` avec `stateful_pvc_enabled = true` échoue au moment de la planification. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets et bloquent toute planification de pod. |
 | `application_version` | épingler à une balise spécifique | Moyen | L'utilisation de `latest` rend les déploiements non reproductibles. Les formats de données Chroma peuvent changer entre les versions majeures. |
 | `iap_oauth_client_id` / `_secret` | définir avant d'activer IAP | Élevé | La définition de `enable_iap = true` sans informations d'identification OAuth valides bloque tout le trafic. |
-| `enable_iap` / `enable_cloud_armor` | activer pour les services accessibles de l'extérieur | Élevé | Sans authentification, un point de terminaison Chroma exposé de l'extérieur est entièrement ouvert. |
+| `enable_iap` / `enable_cloud_armor` | activer pour les services accessibles de l'extérieur | Élevé | Sans authentification, un point de terminaison Chroma exposé à l'extérieur est entièrement ouvert. |
 | `backup_retention_days` | augmenter pour la production | Moyen | Trop court pour la reprise après sinistre ; les instantanés GCS ou PVC réguliers sont la principale voie de récupération. |
-| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro entraîne la suppression du pod ; après la mise à l'échelle, Chroma doit recharger les index à partir du PVC ou de GCS, ce qui ajoute une latence au démarrage. |
-| `database_type` / `sql_instance_name` / `application_database_name`\_`user` / `redis_host`\_`port`\_`auth` | laisser par défaut | Faible | Ces entrées du groupe 15/16 sont transmises à `App_GKE` uniquement pour la parité des conventions ; `Chroma_Common` corrige `database_type = "NONE"` et `main.tf` code en dur `enable_redis = false`, donc les modifier n'a aucun effet. |
+| `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro entraîne la suppression du pod ; après la mise à l'échelle, Chroma doit recharger les index à partir du PVC ou de GCS, ce qui ajoute de la latence au démarrage. |
+| `database_type` / `sql_instance_name` / `application_database_name`\_`user` / `redis_host`\_`port`\_`auth` | laisser par défaut | Faible | Ces entrées du groupe 15/16 sont transmises à `App_GKE` uniquement pour la parité de convention ; `Chroma_Common` corrige `database_type = "NONE"` et `main.tf` code en dur `enable_redis = false`, donc les modifier n'a aucun effet. |
 | `container_image_source` / `container_protocol` / `container_build_config` | laisser par défaut | Faible | Non référencé par ce module — la source de l'image, le build et le protocole sont fixés par `Chroma_Common`. Les modifier n'a aucun effet. |
 
 ---
 
-Pour le comportement de base référencé partout — IAM et Workload Identity,
+Pour le comportement du socle référencé partout — IAM et Workload Identity,
 autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
-**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Chroma partagée avec la
-variante Cloud Run est décrite dans **[Chroma_Common](Chroma_Common.md)**.
+**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Chroma
+partagée avec la variante Cloud Run est décrite dans **[Chroma_Common](Chroma_Common.md)**.
 
 ## Guides associés {#related-guides}
 

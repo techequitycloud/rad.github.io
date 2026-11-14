@@ -53,10 +53,12 @@ Controls, and the deployment lifecycle — refer to the
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee (one-off) | 75 credits | 67.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | US$42.08/month, billed by Google at list price | ~60 credits/day (about 1800/month, US$180 at the top-up price), metered at list price plus RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | US$42.08/month, billed by Google at list price | ~68 credits/day (about 2,040/month, US$204 at the top-up price), metered at list price plus RAD's margin |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+**Why the two columns differ.** The RAD-managed figure includes the GKE cluster's management fee (about US$73 a month) and the project's shared foundation. In your own project, Google's free tier covers the management fee of one cluster per billing account, which the own-project figure assumes. It is estimated from Google's list prices, because there is not yet enough RAD-managed GKE history to measure it, so the deploy confirmation does not quote it. A second GKE application in the same RAD-managed project shares the cluster and adds only its own pods.
+
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan.
 
@@ -117,8 +119,8 @@ scratch. That costs about 78-81 credits in your own project, or about
 
 Deleting only saves money once UrBackup would otherwise sit unused long enough to clear that
 redeploy cost against its own running cost — about 6 days or more in your own project
-(about US$1.40 a day), or about 1 days or more in a RAD-managed one
-(60 credits a day).
+(about US$1.40 a day), or about 1 day or more in a RAD-managed one
+(68 credits a day).
 
 Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it,
 so copy the latest backup out before deleting if you want to keep it.

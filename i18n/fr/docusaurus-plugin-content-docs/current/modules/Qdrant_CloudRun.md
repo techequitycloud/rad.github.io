@@ -3,99 +3,101 @@ title: "Qdrant sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Qdrant sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Qdrant_CloudRun.md @ 60462a86 sha256:761b8db5369b -->
+<!-- translated-from: docs/modules/Qdrant_CloudRun.md @ 40c83c3f sha256:dc09252d4dbf -->
 
 # Qdrant sur Google Cloud Run {#qdrant-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Qdrant_CloudRun.png" alt="Qdrant sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Qdrant est une base de données vectorielle et un moteur de recherche de
-similarité haute performance conçus pour les charges de travail d'IA — pipelines
-RAG, systèmes de recommandation, recherche sémantique et stockage d'embeddings.
-Ce module déploie Qdrant sur **Cloud Run v2** en s'appuyant sur la fondation
+Qdrant est une base de données vectorielle et un moteur de recherche de similarité
+haute performance conçu pour les charges de travail d'IA — pipelines RAG,
+systèmes de recommandation, recherche sémantique et stockage d'embeddings. Ce
+module déploie Qdrant sur **Cloud Run v2** au-dessus de la fondation
 [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
 Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud utilisés par Qdrant et sur la
-manière de les explorer et de les opérer depuis la console Google Cloud et la
+manière de les explorer et de les exploiter depuis la console Google Cloud et la
 ligne de commande. Pour les mécanismes communs à chaque application Cloud Run —
-identité de service, ingress et équilibrage de charge, scaling et concurrence,
-CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes
-et cycle de vie du déploiement — reportez-vous au [guide de la fondation
-App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
+identité de service, ingress et équilibrage de charge, mise à l'échelle et
+concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
+Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
+[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les
+répéter ici.
 
 ---
 
-## Ce que coûte Qdrant sur RAD, et comparaison {#what-qdrant-costs-on-rad-and-how-that-compares}
+## Ce que coûte Qdrant sur RAD, et comment cela se compare {#what-qdrant-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Qdrant dans votre propre projet Google Cloud coûte environ 19,14 $ US/mois en infrastructure, plus des frais de module uniques de 40 crédits RAD** (dimensionnés à 1 vCPU / 1 GiB sur une instance Cloud Run chaude toujours active). RAD facture les frais de module une seule fois, au moment du déploiement — jamais plus lors d'une mise à jour — et les builds sont inclus dans le prix ; l'utilisation de Google Cloud elle-même est facturée à votre propre compte de facturation au prix catalogue de Google. Sur un projet **géré par RAD**, les mêmes ressources sont mesurées à l'heure en crédits au prix catalogue plus la marge de RAD — environ 9 crédits/jour — et les frais de module sont 10 % inférieurs, à 36 crédits. Voir "Mettez-le en pause gratuitement" ci-dessous pour savoir comment un déploiement Qdrant géré par RAD peut être arrêté, sans frais d'exécution, jusqu'à ce que vous en ayez à nouveau besoin. (ou consultez le [guide GKE](Qdrant_GKE.md) si vous avez besoin de Kubernetes)
+**L'exécution de Qdrant dans votre propre projet Google Cloud coûte environ 19,14 $ US/mois en infrastructure, plus des frais de module uniques de 40 crédits RAD** (dimensionnés à 1 vCPU / 1 GiB sur une instance Cloud Run chaude toujours active). RAD facture les frais de module une seule fois, au moment du déploiement — jamais plus lors d'une mise à jour — et les builds sont inclus dans le prix ; l'utilisation de Google Cloud elle-même est facturée à votre propre compte de facturation au prix catalogue de Google. Sur un projet **géré par RAD**, les mêmes ressources sont mesurées à l'heure en crédits au prix catalogue plus la marge de RAD — environ 17 crédits/jour — et les frais de module sont inférieurs de 10 %, soit 36 crédits. Voir "Mettez-le en pause gratuitement" ci-dessous pour savoir comment un déploiement Qdrant géré par RAD peut être arrêté, sans frais de fonctionnement, jusqu'à ce que vous en ayez à nouveau besoin. (ou voir le [guide GKE](Qdrant_GKE.md) si vous avez besoin de Kubernetes)
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | Élément | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 40 crédits (une fois) | 36 crédits (une fois) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | ~19,14 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~9 crédits/jour, mesurés à l'heure au prix catalogue + marge de RAD |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Coût de fonctionnement Google Cloud | ~19,14 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~17 crédits/jour, mesurés à l'heure au prix catalogue + marge de RAD |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant des frais : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
-**Coût d'exécution par défaut dans votre propre projet**
+**Coût de fonctionnement par défaut dans votre propre projet**
 
-| Ressource | US$/mois (prix catalogue Google, us-central1) |
+| Ressource | $/mois (prix catalogue Google, us-central1) |
 |---|---|
 | Cloud Run, 1x vCPU / 1 GiB (chaud) | 13,14 |
 | Cloud NAT et réseau | 5 |
-| Cloud Storage (add-ons, sauvegardes) | 1 |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 |
 | **Total** | **19,14 $** |
 
-### Comparaison {#how-it-compares}
+### Comment cela se compare {#how-it-compares}
 
-- Nous n'avons pas pu vérifier un prix SaaS commercial actuel, directement comparable, pour ce projet open-source exact, donc la comparaison honnête est un simple serveur autogéré : Hetzner CPX22 (2 vCPU/4 Go, ~24 $/mois), un Droplet DigitalOcean 2 vCPU/4 Go (~24 $/mois), ou un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go, ~49 $/mois). L'empreinte de cette application (1 vCPU ou moins, 1 GiB ou moins) est plus petite que n'importe laquelle de ces classes, donc un serveur autogéré dimensionné pour correspondre coûterait moins cher que les chiffres ci-dessus — mais vous seriez toujours responsable de chaque patch, sauvegarde et mise à jour de sécurité.
-- RAD ne prétend **pas** battre un VPS nu sur le prix affiché — ce n'est généralement pas le cas. Ce que RAD ajoute pour un montant similaire ou identique est une base de données gérée, des identifiants conservés dans Secret Manager, la surveillance et une mise à jour en un clic, ce qu'un VPS nu ne vous offre pas gratuitement.
-- Sur un VPS nu, c'est vous qui appliquez les correctifs de sécurité du système d'exploitation/de la base de données, effectuez et testez les sauvegardes, et renouvelez les certificats ; Cloud SQL géré par RAD, Secret Manager et la surveillance gèrent les trois pour vous.
+- Nous n'avons pas pu vérifier un prix SaaS commercial actuel, directement comparable, pour ce projet open source exact, donc la comparaison honnête est un serveur autogéré nu : Hetzner CPX22 (2 vCPU/4 Go, ~24 $/mois), un Droplet DigitalOcean 2 vCPU/4 Go (~24 $/mois), ou un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go, ~49 $/mois). L'empreinte propre de cette application (1 vCPU ou moins, 1 GiB ou moins) est plus petite que n'importe laquelle de ces classes, donc une machine autogérée nue dimensionnée pour correspondre coûterait moins cher que les chiffres ci-dessus — mais vous seriez toujours responsable de chaque correctif, sauvegarde et mise à jour de sécurité.
+- RAD ne prétend **pas** battre un VPS nu sur le prix affiché — ce n'est généralement pas le cas. Ce que RAD ajoute pour un montant en dollars identique ou similaire, c'est une base de données gérée, des identifiants conservés dans Secret Manager, une surveillance et une mise à jour en un clic, qu'un VPS nu ne vous offre pas gratuitement.
+- Sur un VPS nu, c'est vous qui appliquez les correctifs de sécurité du système d'exploitation/de la base de données, effectuez et testez les sauvegardes, et renouvelez les certificats ; Cloud SQL géré, Secret Manager et la surveillance de RAD gèrent les trois pour vous.
 
 ### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-C'est l'option phare sur un projet **géré par RAD**, et elle est gratuite pendant la pause. La suppression
-d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet lui-même —
-la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression d'un seul module, cela ne
-détruit pas la base de données, aucune VM, ou la ressource de calcul une par une : l'ensemble du projet s'arrête
-simplement, et comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend.
+C'est l'option principale sur un projet **géré par RAD**, et elle est gratuite pendant la pause. La suppression
+d'un projet géré par RAD commence par dissocier sa facturation, puis demande à Google de supprimer le projet lui-même —
+la suppression logique récupérable de 30 jours de Google. Contrairement à la suppression d'un seul module, cela ne
+détruit pas la base de données, une VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête
+simplement, et comme la facturation est déjà dissociée, rien n'est facturé pendant qu'il attend.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, sera utilisable après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
 La restauration — dans les 30 jours, et uniquement par le propriétaire du projet — demande à Google de récupérer le
-projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour
+projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour
 confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les
 mêmes ressources déjà présentes : c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Ce qu'il faut : vous devez être propriétaire du projet (pas seulement
-faire gérer sa facturation par RAD), vous devez le restaurer vous-même dans les 30 jours — après quoi Google
+jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement),
+donc une restauration ne coûte normalement aucun crédit. Ce qu'il faut : vous devez être propriétaire du projet (pas
+seulement faire gérer sa facturation par RAD), vous devez le restaurer vous-même dans les 30 jours — après quoi Google
 le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, donc votre solde de
-crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox que la plupart des utilisations d'étude et de
-démonstration conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des
+utilisations d'étude et de démonstration). Google indique que la plupart des services sont de nouveau pleinement
+opérationnels dans les 36 heures suivant une restauration.
 
 **Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a
-la suppression logicielle de Cloud Storage explicitement désactivée, de sorte que le bucket de sauvegarde est très probablement
-supprimé dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si
+la suppression logique de Cloud Storage explicitement désactivée, de sorte que le bucket de sauvegarde est très
+probablement supprimé dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si
 vous avez personnalisé ce déploiement et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google
 Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien
 d'irremplaçable, cela n'a pas d'importance.
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-L'autre levier, pour un **propre projet** (ou un projet géré par RAD au-delà de sa fenêtre de restauration de 30 jours),
-est de supprimer Qdrant purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 40 crédits au total pour ce module.
+L'autre levier, pour un **projet propre** (ou un projet géré par RAD au-delà de sa fenêtre de restauration de 30 jours),
+est de supprimer Qdrant purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — **40 crédits** au total pour ce module.
 
-La suppression ne permet d'économiser de l'argent que si Qdrant resterait inutilisé assez longtemps pour compenser ce
-coût de redéploiement par rapport à son propre coût d'exécution — pour ce module, cela représente environ 7 jours ou plus d'inactivité,
-basé sur son propre coût d'exécution de 19,14 $ US/mois ci-dessus. La majeure partie de ce coût d'exécution est
-généralement la base de données et toute VM de fichier/cache partagée, et ils ne s'arrêtent que lorsque rien d'autre dans le
+La suppression ne permet d'économiser de l'argent que si Qdrant reste inutilisé suffisamment longtemps pour que le coût de redéploiement soit inférieur à son propre coût de fonctionnement — pour ce module, cela représente environ 7 jours ou plus d'inactivité,
+basé sur son coût de fonctionnement de 19,14 $ US/mois ci-dessus. La majeure partie de ce coût de fonctionnement est
+généralement la base de données et toute VM de fichier/cache partagée, et elles ne s'arrêtent que lorsque rien d'autre dans le
 projet ne les utilise, donc la suppression de cette application seule n'économise que sa propre part de calcul si quelque chose d'autre
 partage le projet.
 
 **Conservez les données en premier :** les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec
-celui-ci, donc copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
+celui-ci, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
@@ -105,12 +107,12 @@ celui-ci, donc copiez la dernière sauvegarde avant de supprimer si vous voulez 
   Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un
   portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,
-  la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin,
-  le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+  la facturation est suspendue et les données sont conservées, afin que personne ne reçoive de frais inattendus. À la fin, le
+  partenaire transfère le projet et les déploiements deviennent la propriété du client.
 - Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par
   carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les frais propres à RAD et les estimations de crédits quotidiens ; [Resource Manager : supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration.
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les propres frais de RAD et les estimations de crédits quotidiens ; [Resource Manager : supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration.
 
 ## 1. Vue d'ensemble {#1-overview}
 
@@ -130,7 +132,7 @@ déploiement relie un ensemble ciblé de services Google Cloud :
 - **Pas de base de données SQL, pas de Redis.** Qdrant gère son propre stockage
   embarqué. Aucune instance Cloud SQL ou dépendance Redis n'est créée.
 - **Instance unique par défaut.** `max_instance_count = 1` est fortement
-  recommandé. Qdrant est un magasin à écrivain unique — plusieurs instances
+  recommandé. Qdrant est un stockage à écrivain unique — plusieurs instances
   écrivant sur le même montage GCS FUSE corrompent les collections.
 - **Ingress interne par défaut.** `ingress_settings = "internal"` restreint
   l'accès au VPC. Le passage à `"all"` (internet public) nécessite
@@ -139,38 +141,37 @@ déploiement relie un ensemble ciblé de services Google Cloud :
 - **L'environnement d'exécution Gen2 est requis** pour les montages GCS FUSE. Le
   module utilise par défaut `execution_environment = "gen2"`.
 - **Deux points de terminaison de santé distincts.** Le démarrage utilise
-  `/readyz` ; la vivacité utilise `/livez`. Ne jamais pointer la sonde de
-  vivacité vers `/readyz` — Qdrant se marque temporairement comme non prêt
-  lors du chargement de grandes collections, ce qui provoque des redémarrages
-  intempestifs des conteneurs.
+  `/readyz` ; la vivacité utilise `/livez`. Ne pointez jamais la
+  sonde de vivacité vers `/readyz` — Qdrant se marque temporairement comme
+  non prêt lors du chargement de grandes collections, provoquant des redémarrages
+  de conteneurs intempestifs.
 - **gRPC nécessite le protocole `h2c`.** Cloud Run n'expose pas le port
   6334. Utilisez `container_protocol = "h2c"` et un client gRPC sur le port principal si
   gRPC est nécessaire.
-- **Redis est déclaré mais inerte.** `enable_redis` est par défaut `true` au
-  niveau de la variable (la valeur par défaut de la fondation `App_CloudRun`), mais
-  le `Qdrant_CloudRun` de `main.tf` code en dur `enable_redis = false` sur l'appel à
-  `App_CloudRun` quelle que soit la valeur de la variable — `redis_host`,
-  `redis_port` et `redis_auth` n'ont aucun effet. Qdrant n'a aucune
-  dépendance de mise en cache.
+- **Redis est déclaré mais inactif.** `enable_redis` est par défaut
+  `true` au niveau de la variable (la valeur par défaut de la fondation
+  `App_CloudRun`), mais `Qdrant_CloudRun`'s `main.tf` code en dur
+  `enable_redis = false` sur l'appel à `App_CloudRun` quelle que soit la valeur de la
+  variable — `redis_host`, `redis_port` et `redis_auth` n'ont
+  aucun effet. Qdrant n'a pas de dépendance de mise en cache.
 - **Le build du conteneur est fixé par `Qdrant_Common`.** `container_image`,
   `container_image_source`, `container_build_config` et `container_resources`
-  sont déclarés uniquement pour la convention de la fondation — `Qdrant_Common`
-  définit l'image réelle (`qdrant/qdrant`), la source du build (`custom`,
-  via un Dockerfile léger) et la forme des ressources en interne et ignore ces
-  quatre variables.
+  sont déclarés uniquement pour la mise en miroir des conventions de la Fondation —
+  `Qdrant_Common` définit l'image réelle (`qdrant/qdrant`), la source du build
+  (`custom`, via un Dockerfile wrapper léger) et la forme des ressources
+  en interne et ignore ces quatre variables.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les
-noms des services et des ressources sont indiqués dans les [Sorties](#5-outputs)
-du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des services et des ressources sont
+rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Qdrant {#a-cloud-run--the-qdrant-service}
 
 Qdrant s'exécute en tant que service Cloud Run v2. Chaque déploiement crée une
-révision immuable. Le service s'adapte entre le nombre minimum et maximum
+révision immuable. Le service s'adapte entre le nombre minimal et maximal
 d'instances en fonction de la concurrence des requêtes.
 
 - **Console :** Cloud Run → sélectionnez le service pour les révisions, le
@@ -182,15 +183,15 @@ d'instances en fonction de la concurrence des requêtes.
   gcloud run revisions list --service <service-name> --project "$PROJECT" --region "$REGION"
   ```
 
-Voir [App_CloudRun](App_CloudRun.md) pour le scaling, la concurrence,
-l'environnement d'exécution et le partage de trafic.
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
+l'environnement d'exécution et la répartition du trafic.
 
-### B. Cloud Storage — stockage persistant de Qdrant {#b-cloud-storage--qdrant-persistent-storage}
+### B. Cloud Storage — Stockage persistant de Qdrant {#b-cloud-storage--qdrant-persistent-storage}
 
-Qdrant persiste son WAL, ses données de collection, ses fichiers d'index HNSW et
-ses métadonnées à `/qdrant/storage` à l'intérieur du conteneur. Ce chemin est
-soutenu par un bucket Cloud Storage (`<prefix>-storage`) monté via GCS FUSE. Le
-bucket est provisionné automatiquement par le module.
+Qdrant persiste son WAL, ses données de collection, ses fichiers d'index HNSW et ses métadonnées à
+`/qdrant/storage` à l'intérieur du conteneur. Ce chemin est sauvegardé par un bucket Cloud Storage
+(`<prefix>-storage`) monté via GCS FUSE. Le bucket est provisionné
+automatiquement par le module.
 
 - **Console :** Cloud Storage → Buckets — trouvez le bucket `*-storage`.
 - **CLI :**
@@ -200,15 +201,13 @@ bucket est provisionné automatiquement par le module.
   gcloud storage ls gs://<storage-bucket>/collections/
   ```
 
-Voir [App_CloudRun](App_CloudRun.md) pour les détails de GCS Fuse et les
-options CMEK.
+Voir [App_CloudRun](App_CloudRun.md) pour les détails de GCS Fuse et les options CMEK.
 
-### C. Secret Manager — clé API Qdrant {#c-secret-manager--qdrant-api-key}
+### C. Secret Manager — Clé API Qdrant {#c-secret-manager--qdrant-api-key}
 
 Lorsque `enable_api_key = true`, une clé API alphanumérique de 32 caractères est générée
-et stockée dans Secret Manager. Elle est injectée en tant que `QDRANT__SERVICE__API_KEY` au
-moment de l'exécution, exigeant que tous les appelants REST et gRPC passent
-`api-key: <key>` dans les en-têtes de requête.
+et stockée dans Secret Manager. Elle est injectée sous le nom `QDRANT__SERVICE__API_KEY` au
+moment de l'exécution, exigeant que tous les appelants REST et gRPC passent `api-key: <key>` dans les en-têtes de requête.
 
 - **Console :** Sécurité → Secret Manager — recherchez un secret nommé
   `<resource-prefix>-api-key`.
@@ -218,19 +217,16 @@ moment de l'exécution, exigeant que tous les appelants REST et gRPC passent
   gcloud secrets versions access latest --secret=<api-key-secret> --project "$PROJECT"
   ```
 
-Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de
-rotation.
+Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
 ### D. Réseau et ingress {#d-networking--ingress}
 
-Par défaut, le service n'est accessible que depuis l'intérieur du VPC
-(`ingress_settings =
-"internal"`). Un équilibreur de charge HTTPS externe avec un domaine
-personnalisé, Cloud CDN et Cloud Armor peuvent être ajoutés lorsque le service
-doit être accessible depuis l'extérieur du VPC.
+Par défaut, le service n'est accessible que depuis le VPC (`ingress_settings =
+"internal"`). Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN,
+et Cloud Armor peuvent être ajoutés lorsque le service doit être accessible depuis
+l'extérieur du VPC.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
-  charge.
+- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" \
@@ -242,12 +238,11 @@ Voir [App_CloudRun](App_CloudRun.md).
 
 ### E. Cloud Logging et Monitoring {#e-cloud-logging--monitoring}
 
-Les logs des conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run
-sont envoyées à Cloud Monitoring. Des tests de disponibilité optionnels (contre
-`/readyz`) et des politiques d'alerte sont disponibles.
+Les logs des conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run sont envoyées à Cloud
+Monitoring. Des tests de disponibilité optionnels (contre `/readyz`) et des politiques d'alerte sont
+disponibles.
 
-- **Console :** Logging → Explorateur de logs ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Explorateur de logs ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" \
@@ -261,36 +256,33 @@ sont envoyées à Cloud Monitoring. Des tests de disponibilité optionnels (cont
 - **Pas de bootstrap de base de données.** Qdrant gère son propre moteur de
   stockage embarqué. Aucun job d'initialisation n'est injecté par défaut. Le
   service démarre immédiatement après que le conteneur est prêt.
-- **Chargement des collections au démarrage.** Qdrant charge toutes les
+- **Chargement de la collection au démarrage.** Qdrant charge toutes les
   collections de GCS FUSE en mémoire pendant le démarrage. Pour les instances
   avec de grandes collections, le démarrage peut prendre des dizaines de
   secondes. La sonde de démarrage (`/readyz`) attend que cela soit terminé
   avant que le trafic ne soit envoyé à l'instance.
-- **Points de terminaison de vivacité et de disponibilité séparés.**
-  `/readyz` renvoie 503 pendant le chargement des collections ;
-  `/livez` renvoie toujours 200 tant que le processus est actif. La sonde
-  de vivacité utilise `/livez` pour éviter les redémarrages intempestifs
-  des conteneurs pendant le chargement des collections. Ne changez pas la sonde
-  de vivacité en `/readyz`.
+- **Points de terminaison de vivacité et de disponibilité séparés.** `/readyz`
+  renvoie 503 pendant le chargement des collections ; `/livez` renvoie
+  toujours 200 tant que le processus est actif. La sonde de vivacité utilise
+  `/livez` pour éviter les redémarrages intempestifs du conteneur pendant le
+  chargement de la collection. Ne modifiez pas la sonde de vivacité en
+  `/readyz`.
 - **Contrainte d'écrivain unique.** Plusieurs instances Cloud Run ne peuvent pas
   partager en toute sécurité le même chemin de stockage GCS FUSE. Gardez
-  `max_instance_count = 1`. Évoluez verticalement (augmentez le CPU et la mémoire) pour
-  un débit plus élevé.
+  `max_instance_count = 1`. Mettez à l'échelle verticalement (augmentez le CPU et la
+  mémoire) pour un débit plus élevé.
 - **gRPC sur HTTP/2.** Cloud Run n'expose pas de deuxième port pour gRPC.
   Utilisez `container_protocol = "h2c"` avec un client gRPC qui se connecte
   sur HTTP/2 sur le port 6333 si gRPC est nécessaire.
 - **Tâches planifiées.** Utilisez `cron_jobs` pour planifier des instantanés
   périodiques de collections Qdrant via l'API REST ou pour des routines de
-  maintenance personnalisées, exécutées en tant que Jobs Cloud Run.
+  maintenance personnalisées, exécutées en tant que jobs Cloud Run.
 
 ---
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la
-plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
-Qdrant sont listés ; toutes les autres entrées sont héritées de
-[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour Qdrant sont listés ; toutes les autres entrées sont héritées de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
@@ -304,7 +296,7 @@ Qdrant sont listés ; toutes les autres entrées sont héritées de
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail autorisées à accéder au projet et aux alertes de surveillance. |
+| `support_users` | `[]` | Emails ayant accès au projet et aux alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -312,13 +304,13 @@ Qdrant sont listés ; toutes les autres entrées sont héritées de
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `qdrant` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
-| `application_display_name` | `Qdrant Vector Database` | Nom convivial affiché dans la console. |
+| `application_display_name` | `Qdrant Vector Database` | Nom convivial affiché dans la Console. |
 | `description` | _(défini)_ | Description du service Cloud Run affichée dans l'interface utilisateur de la plateforme. |
-| `application_description` | _(défini)_ | Champ de description alternatif reflétant la fondation ; remplit la même description de service Cloud Run. |
+| `application_description` | _(défini)_ | Champ de description alternatif mis en miroir par la Fondation ; remplit la même description de service Cloud Run. |
 | `application_version` | `latest` | Tag de version de l'image Qdrant ; épingler à un tag semver pour la production (par exemple `v1.9.0`). |
 | `enable_api_key` | `false` | Générer une clé API aléatoire dans Secret Manager ; requis avant de définir `ingress_settings = "all"`. |
 
-### Groupe 4 — Exécution et scaling {#group-4--runtime--scaling}
+### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -326,10 +318,10 @@ Qdrant sont listés ; toutes les autres entrées sont héritées de
 | `cpu_limit` | `1000m` | CPU par instance. Augmenter à `2000m`–`4000m` pour les builds d'index de production et les requêtes concurrentes. |
 | `memory_limit` | `1Gi` | Mémoire par instance. Qdrant charge les index HNSW en RAM — taille basée sur les dimensions de la collection et le nombre de vecteurs. |
 | `min_instance_count` | `1` | Instances minimales. Garder ≥ 1 pour éviter les démarrages à froid pendant le chargement de l'index HNSW. |
-| `max_instance_count` | `1` | Instances maximales. Garder à 1 — Qdrant est un magasin à écrivain unique. |
+| `max_instance_count` | `1` | Instances maximales. Garder à 1 — Qdrant est un stockage à écrivain unique. |
 | `container_port` | `6333` | Port de l'API REST Qdrant. |
 | `execution_environment` | `gen2` | Gen2 requis pour les montages GCS FUSE. |
-| `timeout_seconds` | `300` | Durée maximale de la requête (0–3600 s). Augmenter pour les insertions en masse importantes ou les opérations d'instantané. |
+| `timeout_seconds` | `300` | Durée maximale de la requête (0–3600 s). Augmenter pour les insertions par lots importantes ou les opérations d'instantané. |
 | `enable_image_mirroring` | `true` | Mettre en miroir l'image Qdrant dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
 | `container_protocol` | `http1` | Utiliser `h2c` pour activer HTTP/2 pour les clients gRPC se connectant sur le port 6333. |
 | `traffic_split` | `[]` | Allocation de trafic entre les révisions pour les déploiements canary ou bleu-vert. |
@@ -337,9 +329,9 @@ Qdrant sont listés ; toutes les autres entrées sont héritées de
 | `enable_cloudsql_volume` | `false` | Injecte un sidecar Cloud SQL Auth Proxy. Non applicable — Qdrant n'a pas de base de données SQL ; laisser `false`. |
 | `cloudsql_volume_mount_path` | `/cloudsql` | Non applicable — Qdrant n'a pas de base de données Cloud SQL. |
 | `service_annotations` / `service_labels` | `{}` | Annotations / libellés de service Cloud Run personnalisés. |
-| `container_image_source` / `container_image` / `container_build_config` / `container_resources` | `custom` / `""` / _(défini)_ / _(défini)_ | Déclaré uniquement pour la convention de la fondation. `Qdrant_Common` fixe l'image réelle, la source du build et la forme des ressources ; ces quatre n'ont aucun effet. |
+| `container_image_source` / `container_image` / `container_build_config` / `container_resources` | `custom` / `""` / _(défini)_ / _(défini)_ | Déclaré uniquement pour la mise en miroir des conventions de la Fondation. `Qdrant_Common` fixe l'image réelle, la source de build et la forme des ressources ; ces quatre n'ont aucun effet. |
 
-### Groupe 5 — Accès et contrôle d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -353,10 +345,10 @@ Qdrant sont listés ; toutes les autres entrées sont héritées de
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Utilisez les clés `QDRANT__…` pour remplacer la configuration de Qdrant. |
-| `secret_environment_variables` | `{}` | Mappage variable d'environnement → nom de secret Secret Manager. |
+| `secret_environment_variables` | `{}` | Mappage de var d'env → nom de secret Secret Manager. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Période de rappel de rotation de Secret Manager (30 jours par défaut). |
-| `prereq_subnet_cidr_override` | `""` | Remplacement du CIDR du sous-réseau primaire VPC en ligne. Définir uniquement lors de la réapplication d'un déploiement existant pour éviter le remplacement des ressources. |
+| `prereq_subnet_cidr_override` | `""` | Remplacement du CIDR du sous-réseau primaire VPC intégré. Définir uniquement lors de la réapplication d'un déploiement existant pour éviter le remplacement des ressources. |
 
 ### Groupe 7 — Sauvegarde et restauration {#group-7--backup--restore}
 
@@ -365,8 +357,8 @@ Qdrant sont listés ; toutes les autres entrées sont héritées de
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
 | `backup_retention_days` | `7` | Rétention ; augmenter pour la production/conformité. |
 | `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
-| `backup_file` | `backup.sql` | Nom de fichier de la sauvegarde à importer ; utilisé uniquement lorsque `enable_backup_import = true`. Listé dans la plateforme sous Groupe 13 (Jobs). |
-| `additional_services` | `[]` | Services Cloud Run supplémentaires déployés avec Qdrant (par exemple, un worker sidecar ou un proxy). Non utilisé par défaut. |
+| `backup_file` | `backup.sql` | Nom de fichier de la sauvegarde à importer ; utilisé uniquement lorsque `enable_backup_import = true`. Listé dans la plateforme sous le Groupe 13 (Jobs). |
+| `additional_services` | `[]` | Services Cloud Run supplémentaires déployés à côté de Qdrant (par exemple, un worker sidecar ou un proxy). Non utilisé par défaut. |
 | `additional_containers` | `[]` | Conteneurs sidecar in-pod partageant le même service Cloud Run et localhost. Non utilisé par défaut — Qdrant n'a pas de processus compagnon. |
 
 ### Groupe 8 — CI/CD et autorisation binaire {#group-8--cicd--binary-authorization}
@@ -384,17 +376,17 @@ le définir n'a aucun effet sur ce module d'application).
 |---|---|---|
 | `enable_nfs` | `false` | Qdrant utilise GCS pour le stockage — activer NFS uniquement pour les jobs d'initialisation personnalisés qui nécessitent un système de fichiers partagé. Nécessite Gen2. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage à l'intérieur du conteneur. |
-| `nfs_instance_name` | `""` | Nom d'une VM GCE NFS existante à utiliser. Laisser vide pour la découverte automatique. |
-| `nfs_instance_base_name` | `app-nfs` | Nom de base pour une VM GCE NFS en ligne. |
+| `nfs_instance_name` | `""` | Nom d'une VM NFS GCE existante à utiliser. Laisser vide pour la découverte automatique. |
+| `nfs_instance_base_name` | `app-nfs` | Nom de base pour une VM NFS GCE intégrée. |
 | `nfs_volume_name` | `nfs-data-volume` | Nom du volume Cloud Run pour le montage NFS. Remplacer pour un deuxième partage NFS. |
 | `enable_custom_sql_scripts` | `false` | Non applicable — Qdrant n'a pas de base de données SQL. |
-| `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | `""` / `""` / `false` | Non applicable — accepté uniquement pour la compatibilité avec la fondation. |
+| `custom_sql_scripts_bucket` / `custom_sql_scripts_path` / `custom_sql_scripts_use_root` | `""` / `""` / `false` | Non applicable — accepté uniquement pour la compatibilité avec la Fondation. |
 
 ### Groupe 10 — Équilibreur de charge, CDN et rétention d'images {#group-10--load-balancer-cdn--image-retention}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Provisionner le LB HTTPS global + WAF Cloud Armor. |
+| `enable_cloud_armor` | `false` | Provisionner Global HTTPS LB + Cloud Armor WAF. |
 | `admin_ip_ranges` | `[]` | CIDR exemptés des règles WAF. |
 | `application_domains` | `[]` | Noms de domaine personnalisés pour le LB HTTPS (SSL géré par Google). |
 | `enable_cdn` | `false` | Activer Cloud CDN sur le backend du LB HTTPS. |
@@ -410,16 +402,15 @@ le définir n'a aucun effet sur ce module d'application).
 | `storage_buckets` / `gcs_volumes` | `[]` | Buckets supplémentaires / montages GCS FUSE. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 | `enable_redis` | `true` (valeur par défaut de la variable) | **Inerte.** `main.tf` code en dur `enable_redis = false` sur l'appel `App_CloudRun` quelle que soit cette valeur — Qdrant n'a pas de dépendance de mise en cache. |
-| `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | **Inerte** — jamais transféré, car Redis est désactivé en dur. |
+| `redis_host` / `redis_port` / `redis_auth` | `""` / `6379` / `""` | **Inerte** — jamais transféré, puisque Redis est désactivé en dur. |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
 
-Non applicable — Qdrant n'a pas de base de données SQL. `database_type` est transmis à
-`App_CloudRun` mais sa valeur par défaut (`NONE`) est la seule valeur
-prise en charge ; la modifier ne donnerait pas à Qdrant une connexion de base de
-données fonctionnelle car `Qdrant_Common` ne connecte jamais les identifiants de
-base de données au conteneur. Les éléments suivants sont acceptés uniquement
-pour la compatibilité avec la fondation et n'ont aucun effet : `sql_instance_name`,
+Non applicable — Qdrant n'a pas de base de données SQL. `database_type` est transféré à
+`App_CloudRun` mais sa valeur par défaut (`NONE`) est la seule valeur prise en charge ; la modifier
+ne donnerait pas à Qdrant une connexion de base de données fonctionnelle car `Qdrant_Common`
+ne connecte jamais les identifiants de la base de données au conteneur. Les éléments suivants sont
+acceptés uniquement pour la compatibilité avec la Fondation et n'ont aucun effet : `sql_instance_name`,
 `sql_instance_base_name`, `database_password_length`, `application_database_name`,
 `application_database_user`, `db_password_env_var_name`,
 `enable_postgres_extensions`, `postgres_extensions`, `enable_mysql_plugins`,
@@ -440,8 +431,8 @@ pour la compatibilité avec la fondation et n'ont aucun effet : `sql_instance_na
 |---|---|---|
 | `startup_probe` | `/readyz`, délai de 15s | Sonde HTTP — Qdrant signale qu'il est prêt une fois toutes les collections chargées. |
 | `liveness_probe` | `/livez`, délai de 30s | Sonde HTTP — point de terminaison de vivacité dédié non affecté par l'état de chargement de la collection. |
-| `startup_probe_config` | `enabled=true, path=/readyz` | Interface de sonde de démarrage alternative au niveau de la fondation. |
-| `health_check_config` | `enabled=true, path=/livez` | Interface de sonde de vivacité alternative au niveau de la fondation. |
+| `startup_probe_config` | `enabled=true, path=/readyz` | Interface de sonde de démarrage alternative au niveau de la Fondation. |
+| `health_check_config` | `enabled=true, path=/livez` | Interface de sonde de vivacité alternative au niveau de la Fondation. |
 | `uptime_check_config` | désactivé, `/readyz` | Test de disponibilité Cloud Monitoring. |
 | `alert_policies` | `[]` | Politiques d'alerte métriques. |
 
@@ -456,7 +447,7 @@ pour la compatibilité avec la fondation et n'ont aucun effet : `sql_instance_na
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode d'exécution à sec. |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
 | `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 ### Groupe 0 — Métadonnées du module (avancé/interne) {#group-0--module-metadata-advancedinternal}
@@ -465,20 +456,20 @@ Au-delà des métadonnées orientées plateforme (`module_description`, `module_
 `module_dependency`, `module_services`, `credit_cost`, `require_credit_purchases`,
 `enable_purge`, `public_access`, `shared_users`, `technical_support_users`,
 `resource_creator_identity`, `impersonation_service_account`,
-`require_services_gcp_module`), trois variables contrôlent le provisionnement interne de la
-plateforme et ne sont normalement pas définies manuellement : `requires_services` (indique à la
+`require_services_gcp_module`), trois variables contrôlent le provisionnement interne de la plateforme
+et ne sont normalement pas définies manuellement : `requires_services` (indique à la
 plateforme quelles ressources `Services_GCP` provisionner automatiquement pour ce module —
-par défaut, le chemin de la VM Compute NFS/Redis gratuite, non géré par Memorystore/Filestore),
-`job_execution_wait_timeout` (`900` — combien de temps le déploiement attend un
+par défaut, le chemin de la VM Compute NFS/Redis gratuite, et non Memorystore/Filestore géré),
+`job_execution_wait_timeout` (`900`s — combien de temps le déploiement attend un
 job d'initialisation avant d'avorter), et `module_writable_secret_ids` (`{}` —
-octrois d'écriture Secret Manager pour les hooks post-installation ; inutilisé par Qdrant).
+autorisations d'écriture Secret Manager pour les hooks post-installation ; inutilisé par Qdrant).
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Retournées lors d'un déploiement réussi — le moyen le plus rapide de localiser et
-d'explorer les ressources en cours d'exécution.
+Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les
+ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
@@ -506,34 +497,34 @@ d'explorer les ressources en cours d'exécution.
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
 | `enable_api_key` | `true` (tout déploiement externe) | Critique | Sans clé API, tout appelant pouvant atteindre le service peut lire, modifier ou supprimer toutes les collections. |
-| `ingress_settings` | `internal` (par défaut) | Critique | Définir à `"all"` sans `enable_api_key = true` est bloqué au moment de la planification ; cela expose Qdrant à l'internet public. |
+| `ingress_settings` | `internal` (par défaut) | Critique | Définir sur `"all"` sans `enable_api_key = true` est bloqué au moment de la planification ; cela expose Qdrant à l'internet public. |
 | `application_name` | défini une fois | Critique | Immuable après le premier déploiement ; la modification recrée le stockage et perd toutes les collections. |
-| `max_instance_count` | `1` | Élevé | Plusieurs instances écrivant sur le même chemin GCS FUSE corrompent les collections — Qdrant est un magasin à écrivain unique. |
-| `liveness_probe` chemin | `/livez` (par défaut) | Élevé | Pointer la vivacité vers `/readyz` provoque des redémarrages intempestifs des conteneurs chaque fois qu'une grande collection est chargée depuis GCS. |
-| `memory_limit` | ≥ `4Gi` pour la production | Élevé | La valeur par défaut `1Gi` ne prend en charge que les petites collections de test ; les OOM kills terminent toutes les requêtes en cours et déclenchent un rechargement complet de l'index depuis GCS. |
+| `max_instance_count` | `1` | Élevé | Plusieurs instances écrivant sur le même chemin GCS FUSE corrompent les collections — Qdrant est un stockage à écrivain unique. |
+| Chemin `liveness_probe` | `/livez` (par défaut) | Élevé | Pointer la vivacité vers `/readyz` provoque des redémarrages intempestifs du conteneur chaque fois qu'une grande collection est chargée depuis GCS. |
+| `memory_limit` | ≥ `4Gi` pour la production | Élevé | La valeur par défaut `1Gi` ne prend en charge que les petites collections de test ; les arrêts OOM terminent toutes les requêtes en cours et déclenchent un rechargement complet de l'index depuis GCS. |
 | `execution_environment` | `gen2` (par défaut) | Élevé | GCS FUSE nécessite Gen2 ; les déploiements Gen1 avec `enable_nfs = true` échouent au moment de la planification. |
 | `application_version` | épingler à semver pour la production | Moyen | L'utilisation de `latest` peut entraîner une mise à niveau involontaire du format de stockage qui rend les collections existantes illisibles. |
 | `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro provoque un rechargement à froid de toutes les collections depuis GCS lors de la prochaine requête ; à éviter pour les charges de travail sensibles à la latence. |
-| `timeout_seconds` | `300` | Moyen | Les grandes recherches ANN, les insertions en masse ou les opérations d'instantané peuvent dépasser la valeur par défaut — augmenter à `600` ou plus pour les charges de travail lourdes. |
+| `timeout_seconds` | `300` | Moyen | Les grandes recherches ANN, les insertions par lots ou les opérations d'instantané peuvent dépasser la valeur par défaut — augmenter à `600` ou plus pour les charges de travail lourdes. |
 | `enable_iap` / `enable_cloud_armor` | activer pour les déploiements exposés | Élevé | Sans contrôles d'accès, l'API REST Qdrant est accessible par tout appelant sur le réseau autorisé. |
 | `secret_propagation_delay` | `30` | Moyen | Dans les grands projets, la réplication de Secret Manager peut dépasser 30 s ; augmenter à `60` pour éviter de lire un secret de clé API vide. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans un `backup_uri` valide fait échouer le job d'importation. |
-| `enable_redis` / `redis_host` / `redis_port` / `redis_auth` | laisser les valeurs par défaut | Faible | Inerte — `main.tf` désactive Redis en dur quelle que soit la valeur de ces variables. Les définir n'a aucun effet et n'indique pas une mauvaise configuration. |
-| `database_type` / `sql_instance_name` et les autres variables de base de données du Groupe 12 | laisser les valeurs par défaut | Faible | Inerte pour Qdrant — `Qdrant_Common` ne connecte jamais les identifiants de base de données au conteneur, donc modifier ces variables ne crée pas de connexion de base de données utilisable. |
-| `container_image` / `container_image_source` / `container_build_config` / `container_resources` | laisser les valeurs par défaut | Faible | Inerte — `Qdrant_Common` fixe l'image réelle, la source du build et la forme des ressources. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans `backup_uri` valide échoue le job d'importation. |
+| `enable_redis` / `redis_host` / `redis_port` / `redis_auth` | laisser aux valeurs par défaut | Faible | Inerte — `main.tf` désactive Redis en dur quelle que soit la valeur de ces variables. Les définir n'a aucun effet et n'indique pas une mauvaise configuration. |
+| `database_type` / `sql_instance_name` et les autres variables de base de données du Groupe 12 | laisser aux valeurs par défaut | Faible | Inerte pour Qdrant — `Qdrant_Common` ne connecte jamais les identifiants de la base de données au conteneur, donc modifier ces variables ne crée pas de connexion de base de données utilisable. |
+| `container_image` / `container_image_source` / `container_build_config` / `container_resources` | laisser aux valeurs par défaut | Faible | Inerte — `Qdrant_Common` fixe l'image réelle, la source de build et la forme des ressources. |
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — identité de
-service, scaling et concurrence, ingress et équilibrage de charge, CI/CD, Cloud
-Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir
-d'images — voir **[App_CloudRun](App_CloudRun.md)**. La configuration
-d'application spécifique à Qdrant partagée avec la variante GKE est décrite
-dans **[Qdrant_Common](Qdrant_Common.md)**.
+Pour le comportement de la fondation référencé tout au long — identité de service, mise à l'échelle
+et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
+Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
+**[App_CloudRun](App_CloudRun.md)**. La configuration d'application spécifique à Qdrant
+partagée avec la variante GKE est décrite dans
+**[Qdrant_Common](Qdrant_Common.md)**.
 
 <!-- related-guides -->
 
@@ -542,4 +533,4 @@ dans **[Qdrant_Common](Qdrant_Common.md)**.
 - [Lab pratique : Qdrant sur Cloud Run](../labs/Qdrant_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Qdrant sur GKE Autopilot](Qdrant_GKE.md) — la même application sur Kubernetes, pour quand vous avez besoin de l'autre cible de déploiement.
 - [Qdrant Common — Configuration d'application partagée](Qdrant_Common.md) — la configuration partagée par les deux cibles de déploiement.
-- Déployé aux côtés d'[Elasticsearch sur GKE Autopilot](Elasticsearch_GKE.md), [MongoDB sur GKE Autopilot](MongoDB_GKE.md), [Meilisearch sur GKE Autopilot](Meilisearch_GKE.md) dans la solution **Shared Data Services**.
+- Déployé aux côtés de [Elasticsearch sur GKE Autopilot](Elasticsearch_GKE.md), [MongoDB sur GKE Autopilot](MongoDB_GKE.md), [Meilisearch sur GKE Autopilot](Meilisearch_GKE.md) dans la solution **Shared Data Services**.

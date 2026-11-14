@@ -3,50 +3,46 @@ title: "N8N AI sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de N8N AI sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/N8N_AI_GKE.md @ 60462a86 sha256:c70fd7f104ff -->
+<!-- translated-from: docs/modules/N8N_AI_GKE.md @ 40c83c3f sha256:13aafcd5185b -->
 
 # N8N AI sur GKE Autopilot {#n8n-ai-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/N8N_AI_GKE.png" alt="N8N AI sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-n8n est une plateforme open source d'automatisation de flux de travail avec une interface
+n8n est une plateforme d'automatisation de flux de travail open source avec une interface
 visuelle basée sur des nœuds pour connecter des services, exécuter de la logique et créer des
-pipelines basés sur l'IA. Ce module déploie n8n sur **GKE Autopilot** avec deux services
-d'IA complémentaires — **Qdrant** (base de données vectorielle pour RAG et recherche
+pipelines basés sur l'IA. Ce module déploie n8n sur **GKE Autopilot** aux côtés de deux
+services d'IA complémentaires — **Qdrant** (base de données vectorielle pour RAG et recherche
 sémantique) et **Ollama** (inférence LLM locale pour une IA axée sur la confidentialité) —
-sur la base de la fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure
-partagée de Google Cloud et Kubernetes.
+sur la base de la fondation [App_GKE](App_GKE.md), qui provisionne et gère
+l'infrastructure partagée Google Cloud et Kubernetes.
 
 Ce guide se concentre sur les services cloud utilisés par n8n AI et sur la manière de les
 explorer et de les opérer depuis la console Google Cloud et la ligne de commande. Pour les
 mécanismes communs à chaque application GKE — Workload Identity, ingress, autoscaling, CI/CD,
 Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et le cycle de vie
-du déploiement — veuillez-vous référer au [guide de la fondation App_GKE](App_GKE.md) plutôt
+du déploiement — veuillez vous référer au [guide de la fondation App_GKE](App_GKE.md) plutôt
 que de les répéter ici.
 
 ---
 
 ## Ce que coûte N8N_AI sur RAD, et comment cela se compare {#what-n8n_ai-costs-on-rad-and-how-that-compares}
 
-**L'exécution de N8N_AI dans votre propre projet GCP coûte environ 149,81 $/mois en frais
-Google Cloud ; les frais de module de RAD sont de 175 crédits (ou 157,5 crédits dans un
-projet géré par RAD), couvrant la configuration et le support — pas la facture cloud
-courante, que Google vous facture directement dans votre propre projet ou que RAD facture à
-l'heure en crédits dans un projet géré par RAD.** Si un coût d'exécution inférieur est plus
-important que la cible de déploiement, consultez le guide Cloud Run pour l'option à moindre
-coût ; sinon, si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause
-gratuitement lorsque vous ne l'utilisez pas — voir [Mettre en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it)
-ci-dessous.
+**L'exécution de N8N_AI dans votre propre projet GCP coûte environ 149,81 $/mois en frais Google Cloud ; les frais de module de RAD sont de 175 crédits uniques (ou 157,5 crédits dans un projet géré par RAD), couvrant la configuration et le support — pas la facture cloud continue, que Google vous facture directement dans votre propre projet ou que RAD mesure à l'heure en crédits dans un projet géré par RAD.**
+Si un coût de fonctionnement inférieur est plus important que la cible de déploiement, consultez
+le guide Cloud Run pour l'option la moins chère ; sinon, si vous déployez dans un projet géré
+par RAD, vous pouvez tout mettre en pause gratuitement lorsque vous ne l'utilisez pas — voir
+[Mettre en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 175 crédits, une fois | 157,5 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | ~149,81 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~116 crédits/jour, facturé à l'heure par RAD au prix catalogue majoré d'une marge |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Coût de fonctionnement Google Cloud | ~149,81 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~146 crédits/jour, mesuré à l'heure par RAD au prix catalogue plus marge |
 
-**Coût d'exécution par défaut dans votre propre projet**
+**Coût de fonctionnement par défaut dans votre propre projet**
 
 | Ressource | US$/mois (prix catalogue Google, us-central1) |
 |---|---|
@@ -62,97 +58,97 @@ ci-dessous.
 
 - Il n'existe pas de SaaS géré officiel vérifié pour N8N_AI à comparer, donc la base de
   référence honnête est un VPS nu : Hetzner CPX22 (2 vCPU/4 Go) coûte environ **24 $/mois**,
-  un Droplet DigitalOcean 2 vCPU/4 Go est également à **24 $/mois**, et un GCP Compute Engine
-  e2-standard-2 (2 vCPU/8 Go) est à environ **49 $/mois** — plus le temps de l'administrateur
+  un Droplet DigitalOcean 2 vCPU/4 Go coûte également **24 $/mois**, et un GCP Compute Engine
+  e2-standard-2 (2 vCPU/8 Go) coûte environ **49 $/mois** — plus le temps de l'administrateur
   pour les sauvegardes, les correctifs de sécurité et les mises à niveau, que Cloud SQL,
   Secret Manager et la surveillance gérés par RAD couvrent pour vous.
 - RAD n'est pas censé être moins cher qu'un VPS en termes monétaires, et ne l'est
   généralement pas — pour une pile d'automatisation IA axée sur la confidentialité (flux de
   travail + recherche vectorielle + service LLM local), le véritable argument est ce que RAD
   gère pour vous (sauvegardes, correctifs, secrets, surveillance) plutôt que le prix affiché.
-- Dans tous les cas, il s'agit d'une pile d'automatisation IA axée sur la confidentialité
-  (flux de travail + recherche vectorielle + service LLM local), donc le coût d'exécution
-  ci-dessus est ce qui génère réellement la facture, pas les frais de module — et ce coût
-  d'exécution est celui que vous pouvez mettre en pause (voir ci-dessous).
+- Quoi qu'il en soit, il s'agit d'une pile d'automatisation IA axée sur la confidentialité
+  (flux de travail + recherche vectorielle + service LLM local), donc le coût de
+  fonctionnement ci-dessus est ce qui génère réellement la facture, pas les frais de module
+  — et ce coût de fonctionnement est celui que vous pouvez mettre en pause (voir ci-dessous).
 
 ### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 **C'est le titre pour un projet géré par RAD.** La suppression d'un projet géré par RAD
-délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le
-projet — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la
-suppression d'un module, cela ne démantèle pas Cloud SQL, aucune VM ou la ressource de
+délie d'abord sa facturation, puis demande à Google de supprimer le projet purement et
+simplement — la suppression logique récupérable de 30 jours de Google. Contrairement à la
+suppression d'un seul module, cela ne supprime pas Cloud SQL, aucune VM ou la ressource de
 calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant
 qu'il attend, car la facturation est déjà déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
 La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à
-Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande
-d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Étant
-donné que rien n'a été détruit individuellement, cette mise à jour trouve les mêmes
-ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à
-jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande
+d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien
+n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà
+présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
+jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois
+pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère
 uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après quoi
 Google le supprime définitivement — et la restauration est admise comme la création d'un
-nouveau projet, donc votre solde de crédits achetés doit toujours dépasser le seuil du
-niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo
-correspondent). Google indique que la plupart des services sont à nouveau pleinement
+nouveau projet, donc votre solde de crédits achetés doit toujours dépasser le seuil du palier
+(100 crédits pour le palier sandbox que la plupart des utilisations d'étude/démo
+conviennent). Google indique que la plupart des services sont de nouveau pleinement
 opérationnels dans les 36 heures suivant une restauration.
 
-**Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket à
-l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage
-explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez
-le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez
-personnalisé l'application et que vous souhaitez conserver ce travail, copiez une
-sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer. Pour
-une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+**Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur
+du projet, et ce bucket a la suppression logique de Cloud Storage explicitement désactivée,
+il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le
+projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé l'application et
+souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive, ou un bucket en
+dehors du projet) avant de supprimer. Pour une installation par défaut sans rien
+d'irremplaçable, cela n'a pas d'importance.
 
 ### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
 Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de restauration de 30
 jours ci-dessus), l'alternative est de supprimer N8N_AI purement et simplement et de le
-redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus)
-— 175 crédits.
+redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont
+inclus) — 175 crédits.
 
-La suppression ne permet d'économiser de l'argent que si N8N_AI resterait inutilisé
-suffisamment longtemps pour compenser ce coût de redéploiement par rapport à son propre
-coût d'exécution quotidien — par rapport au total du projet ci-dessus, cela représente
-environ 4 jours ou plus. La majeure partie du coût d'exécution ici est généralement la base
-de données et la VM de fichier/cache partagée ; elles ne s'arrêtent que si rien d'autre dans
-le projet ne les utilise, donc la suppression de cette application pendant que quelque chose
-d'autre partage le projet n'économise que la partie calcul de cette application.
+La suppression ne permet d'économiser de l'argent que si N8N_AI reste inutilisé assez
+longtemps pour compenser ce coût de redéploiement par rapport à son propre coût de
+fonctionnement quotidien — par rapport au total du projet propre ci-dessus, cela représente
+environ 4 jours ou plus. La majeure partie du coût de fonctionnement ici est généralement la
+base de données et la VM de fichier/cache partagée ; elles ne s'arrêtent que si rien d'autre
+dans le projet ne les utilise, donc la suppression de cette application pendant que quelque
+chose d'autre partage le projet n'économise que la partie calcul de cette application.
 
-**Conserver les données en premier :** les sauvegardes nocturnes vont dans un bucket à
-l'intérieur du déploiement et sont supprimées avec celui-ci, donc copiez la dernière
-sauvegarde avant de supprimer si vous voulez la conserver.
+**Conserver les données d'abord :** les sauvegardes nocturnes vont dans un bucket à
+l'intérieur du déploiement et sont supprimées avec lui, donc copiez la dernière sauvegarde
+avant de supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
 - **Sessions de lab, pour la formation :** un formateur anime une session pour une classe.
-  Chaque participant reçoit l'application dans son propre projet Google Cloud pendant 15
+  Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15
   minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le
   formateur finance toutes les places, soit chaque participant paie la sienne. Tout est
   supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les cabinets de conseil :** un partenaire exécute
-  l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle
-  directement avec le client. Si le portefeuille est faible, la facturation est suspendue et
-  les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la
-  fin, le partenaire transfère le projet et les déploiements deviennent la propriété du
-  client.
+- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application
+  pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec
+  le client. Si le portefeuille est faible, la facturation est suspendue et les données sont
+  conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire
+  transfère le projet et les déploiements deviennent la propriété du client.
 - Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES
   et ZAR, par carte, virement bancaire ou argent mobile.
 
 **Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ;
-radmodules.dev/pricing pour les frais propres à RAD et les estimations de crédits quotidiens
+radmodules.dev/pricing pour les propres frais de RAD et les estimations de crédits quotidiens
 ; https://cloud.google.com/resource-manager/docs/delete-restore-projects pour les mécanismes
 de pause/restauration.
 
 ## 1. Vue d'ensemble {#1-overview}
 
 N8N AI s'exécute comme une charge de travail de flux de travail Node.js aux côtés des
-déploiements Kubernetes de Qdrant et Ollama. Le déploiement relie un ensemble ciblé de
+déploiements Kubernetes Qdrant et Ollama. Le déploiement connecte un ensemble ciblé de
 services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
@@ -160,30 +156,30 @@ services Google Cloud :
 | Calcul | GKE Autopilot | Déploiements n8n + Qdrant + Ollama, 2 vCPU / 4 Gio par défaut pour n8n |
 | Base de données | Cloud SQL pour PostgreSQL 15 | Requis — n8n nécessite PostgreSQL ; le moteur est fixe |
 | Stockage d'objets | Cloud Storage (GCS Fuse) | Bucket de données AI partagé monté à `/mnt/gcs` ; données de flux de travail à `/home/node/.n8n` |
-| Fichiers partagés | Filestore (NFS) | Volume NFS partagé pour la persistance multi-réplique ; sert également d'hôte Redis par défaut |
+| Fichiers partagés | Filestore (NFS) | Volume NFS partagé pour la persistance inter-répliques ; sert également d'hôte Redis par défaut |
 | Cache et file d'attente | Redis | Activé par défaut ; utilisé pour le mode file d'attente n8n sur plusieurs répliques |
-| Base de données vectorielle | Qdrant (intra-cluster) | Déployé comme un déploiement Kubernetes compagnon ; service ClusterIP interne uniquement |
-| Inférence LLM | Ollama (intra-cluster) | Déployé comme un déploiement Kubernetes compagnon ; service ClusterIP interne uniquement |
+| Base de données vectorielle | Qdrant (dans le cluster) | Déployé comme un déploiement Kubernetes compagnon ; service ClusterIP interne uniquement |
+| Inférence LLM | Ollama (dans le cluster) | Déployé comme un déploiement Kubernetes compagnon ; service ClusterIP interne uniquement |
 | Secrets | Secret Manager | `N8N_ENCRYPTION_KEY` et `N8N_SMTP_PASS` auto-générés ; synchronisés avec les secrets Kubernetes |
 | Ingress | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé facultatif + certificat géré via l'API Gateway |
 
-**Valeurs par défaut judicieuses à connaître à l'avance :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la
-  configuration commune ; la modification de `database_type` en MySQL interrompt le démarrage.
-- **`N8N_ENCRYPTION_KEY` est auto-généré** et stocké dans Secret Manager. Sauvegardez-le avant de
-  détruire le module — les identifiants chiffrés avec une clé ne peuvent pas être déchiffrés
-  avec une clé différente.
-- **Qdrant et Ollama s'exécutent en tant que déploiements Kubernetes internes uniquement**
-  dans le même espace de noms que n8n, chacun avec un service ClusterIP. Ils ne sont pas
-  exposés en dehors du cluster.
-- **La persistance GCS Fuse** maintient l'index vectoriel de Qdrant (`/mnt/gcs/qdrant`) et les poids
-  de modèle d'Ollama (`/mnt/gcs/ollama/models`) durables après les redémarrages de pod.
+  configuration commune ; changer `database_type` en MySQL interrompt le démarrage.
+- **`N8N_ENCRYPTION_KEY` est auto-généré** et stocké dans Secret Manager. Sauvegardez-le
+  avant de détruire le module — les identifiants chiffrés avec une clé ne peuvent pas être
+  déchiffrés avec une clé différente.
+- **Qdrant et Ollama s'exécutent comme des déploiements Kubernetes internes uniquement** dans
+  le même espace de noms que n8n, chacun avec un service ClusterIP. Ils ne sont pas exposés
+  en dehors du cluster.
+- **La persistance GCS Fuse** maintient l'index vectoriel de Qdrant (`/mnt/gcs/qdrant`) et les
+  poids du modèle d'Ollama (`/mnt/gcs/ollama/models`) durables après les redémarrages de pod.
 - **Redis est activé par défaut.** Avec plus d'une réplique, un backend de file d'attente
-  partagé est requis pour éviter l'exécution de flux de travail en split-brain.
-- **`min_instance_count` par défaut à `0`.** GKE HPA ne prend pas en charge la véritable mise à
-  l'échelle à zéro de la même manière que Cloud Run ; définissez sur `1` pour une
-  disponibilité fiable des webhooks.
+  partagé est requis pour éviter l'exécution de flux de travail en mode split-brain.
+- **`min_instance_count` est par défaut `0`.** GKE HPA ne prend pas en charge la
+  véritable mise à l'échelle à zéro de la même manière que Cloud Run ; définissez-le sur
+  `1` pour une disponibilité fiable des webhooks.
 
 ---
 
@@ -192,17 +188,17 @@ services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont signalés dans les [Sorties](#5-outputs) du déploiement.
+identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail n8n AI {#a-gke-autopilot--the-n8n-ai-workload}
 
-n8n, Qdrant et Ollama s'exécutent chacun comme un déploiement Kubernetes distinct dans le
-même espace de noms. L'autoscaling horizontal de pods (HPA) régit le nombre de répliques n8n
-entre les limites minimale et maximale. Qdrant et Ollama sont fixés à une réplique chacun.
+n8n, Qdrant et Ollama s'exécutent chacun comme un déploiement Kubernetes distinct dans le même
+espace de noms. L'autoscaling horizontal des pods régit le nombre de répliques n8n entre les
+limites minimale et maximale. Qdrant et Ollama sont fixés à une réplique chacun.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez chaque charge de
-  travail pour voir les pods, les révisions et les événements. Kubernetes Engine → Services
-  et Ingress affiche les adresses IP externes et les points de terminaison ClusterIP.
+- **Console :** Kubernetes Engine → Charges de travail → sélectionnez chaque charge de travail
+  pour voir les pods, les révisions et les événements. Kubernetes Engine → Services et Ingress
+  affiche les adresses IP externes et les points de terminaison ClusterIP.
 - **CLI :**
   ```bash
   kubectl get deployments,svc,hpa -n "$NAMESPACE"
@@ -212,14 +208,14 @@ entre les limites minimale et maximale. Qdrant et Ollama sont fixés à une rép
   kubectl describe hpa -n "$NAMESPACE"
   ```
 
-Voir [App_GKE](App_GKE.md) pour les détails sur Autopilot, la mise à l'échelle et les types
-de charges de travail.
+Voir [App_GKE](App_GKE.md) pour les détails sur Autopilot, la mise à l'échelle et les types de
+charges de travail.
 
 ### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
 n8n stocke toutes les définitions de flux de travail, l'historique d'exécution et les
-identifiants dans une instance gérée de Cloud SQL pour PostgreSQL 15. Les pods y accèdent
-privatement via le sidecar **Cloud SQL Auth Proxy** sur un socket Unix à `127.0.0.1`. Lors du
+identifiants dans une instance Cloud SQL pour PostgreSQL 15 gérée. Les pods l'atteignent en
+privé via le sidecar **Cloud SQL Auth Proxy** sur un socket Unix à `127.0.0.1`. Lors du
 premier déploiement, un job `db-init` crée la base de données et l'utilisateur de
 l'application.
 
@@ -232,9 +228,9 @@ l'application.
   gcloud sql connect <instance-name> --user=<db-user> --database=n8n_db --project "$PROJECT"
   ```
 
-Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret
-Manager contenant le mot de passe sont tous affichés dans les [Sorties](#5-outputs). Pour le
-modèle de connexion, les sauvegardes automatisées et la rotation des mots de passe, voir
+Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret Manager
+contenant le mot de passe sont tous affichés dans les [Sorties](#5-outputs). Pour le modèle
+de connexion, les sauvegardes automatisées et la rotation des mots de passe, voir
 [App_GKE](App_GKE.md).
 
 ### C. Cloud Storage (GCS Fuse) et Filestore (NFS) {#c-cloud-storage-gcs-fuse-and-filestore-nfs}
@@ -243,7 +239,7 @@ Un bucket **Cloud Storage** partagé est monté dans chaque conteneur via GCS Fu
 
 - Données de flux de travail et identifiants n8n à `/home/node/.n8n`
 - Index vectoriel de Qdrant à `/mnt/gcs/qdrant`
-- Poids de modèle d'Ollama à `/mnt/gcs/ollama/models`
+- Poids du modèle d'Ollama à `/mnt/gcs/ollama/models`
 
 **Filestore (NFS)** est activé par défaut et fournit un volume persistant partagé pour les
 données multi-répliques et sert également de point de terminaison Redis par défaut.
@@ -262,8 +258,8 @@ Voir [App_GKE](App_GKE.md) pour le provisionnement NFS, GCS Fuse et les options 
 
 ### D. Backend de file d'attente Redis {#d-redis-queue-backend}
 
-Redis prend en charge le mode file d'attente de n8n, permettant une exécution fiable des
-flux de travail multi-répliques. Lorsqu'aucun `redis_host` n'est configuré et que NFS est
+Redis prend en charge le mode file d'attente de n8n, permettant une exécution fiable des flux
+de travail multi-répliques. Lorsqu'aucun `redis_host` n'est configuré et que NFS est
 activé, l'adresse IP du serveur NFS est utilisée comme point de terminaison Redis. Pour la
 production avec haute disponibilité, pointez vers une instance Cloud Memorystore.
 
@@ -276,7 +272,7 @@ production avec haute disponibilité, pointez vers une instance Cloud Memorystor
 
 ### E. Qdrant — base de données vectorielle {#e-qdrant--vector-database}
 
-Qdrant offre une recherche de similarité vectorielle haute performance pour les pipelines
+Qdrant fournit une recherche de similarité vectorielle haute performance pour les pipelines
 RAG, les embeddings de documents et la mémoire AI dans les flux de travail n8n. Il est
 déployé en tant que déploiement Kubernetes interne uniquement et est accessible depuis n8n
 via la variable d'environnement `QDRANT_URL`, qui pointe vers son service ClusterIP.
@@ -315,8 +311,8 @@ dépendances API externes. Il s'agit d'un déploiement Kubernetes interne unique
 ### G. Secret Manager {#g-secret-manager}
 
 La clé de chiffrement n8n et le mot de passe SMTP sont générés automatiquement et stockés
-en tant que secrets Secret Manager, puis synchronisés avec les secrets Kubernetes et injectés
-dans les pods au moment de l'exécution.
+sous forme de secrets Secret Manager, puis synchronisés avec les secrets Kubernetes et
+injectés dans les pods au moment de l'exécution.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -325,15 +321,16 @@ dans les pods au moment de l'exécution.
   gcloud secrets versions access latest --secret=<encryption-key-secret> --project "$PROJECT"
   ```
 
-Le nom du secret du mot de passe de la base de données se trouve dans les [Sorties](#5-outputs).
-Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation de Secret Store CSI.
+Le nom du secret du mot de passe de la base de données se trouve dans les
+[Sorties](#5-outputs). Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation de
+Secret Store CSI.
 
 ### H. Réseau et ingress {#h-networking--ingress}
 
-Par défaut, la charge de travail est exposée via une adresse IP externe de Cloud Load
-Balancing. La prise en charge de domaines personnalisés via l'API Kubernetes Gateway avec un
-certificat géré par Google est activée par défaut (`enable_custom_domain = true`), et une adresse IP
-statique est réservée par défaut afin que l'adresse survive aux redéploiements.
+Par défaut, la charge de travail est exposée via une adresse IP externe Cloud Load Balancing.
+La prise en charge de domaines personnalisés via l'API Kubernetes Gateway avec un certificat
+géré par Google est activée par défaut (`enable_custom_domain = true`), et une adresse IP statique est
+réservée par défaut afin que l'adresse survive aux redéploiements.
 
 - **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
 - **CLI :**
@@ -342,14 +339,13 @@ statique est réservée par défaut afin que l'adresse survive aux redéploiemen
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et l'adresse IP
-statique.
+Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et l'adresse IP statique.
 
 ### I. Cloud Logging et Monitoring {#i-cloud-logging--monitoring}
 
-Les sorties standard/erreur des pods sont acheminées vers Cloud Logging ; les métriques GKE
-et Cloud SQL sont acheminées vers Cloud Monitoring. Des vérifications de disponibilité et
-des politiques d'alerte facultatives sont disponibles.
+Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les métriques GKE et
+Cloud SQL sont acheminées vers Cloud Monitoring. Des tests de disponibilité et des règles
+d'alerte facultatifs sont disponibles.
 
 - **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
@@ -364,12 +360,12 @@ des politiques d'alerte facultatives sont disponibles.
 ## 3. Comportement de l'application N8N AI {#3-n8n-ai-application-behaviour}
 
 - **Configuration de la base de données au premier déploiement.** Un job Kubernetes
-  `db-init` s'exécute avant le démarrage du déploiement n8n. Il crée la base de données
-  PostgreSQL `n8n_db` et l'utilisateur `n8n_user` via le socket Cloud SQL Auth Proxy,
-  accorde tous les privilèges et arrête proprement le proxy. Le job est idempotent et peut
-  être réexécuté en toute sécurité.
-- **Clé de chiffrement.** `N8N_ENCRYPTION_KEY` est auto-généré lors du premier déploiement et
-  stocké dans Secret Manager. **Sauvegardez ce secret avant de détruire le module.** Tous
+  `db-init` s'exécute avant le démarrage du déploiement n8n. Il crée la base de
+  données PostgreSQL `n8n_db` et l'utilisateur `n8n_user` via le socket Cloud SQL Auth
+  Proxy, accorde tous les privilèges et arrête proprement le proxy. Le job est idempotent et
+  peut être réexécuté en toute sécurité.
+- **Clé de chiffrement.** `N8N_ENCRYPTION_KEY` est auto-générée lors du premier déploiement et
+  stockée dans Secret Manager. **Sauvegardez ce secret avant de détruire le module.** Tous
   les identifiants n8n (clés API, jetons OAuth, mots de passe de flux de travail) sont
   chiffrés avec cette clé ; ils ne peuvent pas être déchiffrés après un redéploiement avec
   une clé différente.
@@ -377,13 +373,13 @@ des politiques d'alerte facultatives sont disponibles.
   délai initial de 120 secondes, donnant à n8n le temps de se connecter à PostgreSQL et de
   charger l'état du flux de travail. La sonde de vivacité vérifie le même chemin après le
   démarrage.
-- **URL de webhook et d'éditeur.** `WEBHOOK_URL` et `N8N_EDITOR_BASE_URL` sont définis sur
+- **URL de webhook et d'éditeur.** `WEBHOOK_URL` et `N8N_EDITOR_BASE_URL` sont définies sur
   l'URL de service prédite avant la création du déploiement afin que les webhooks
   fonctionnent sans réapplication post-déploiement.
 - **Mode file d'attente.** Lorsque Redis est activé, n8n fonctionne en mode file d'attente
   pour une exécution fiable des flux de travail sur plusieurs répliques. Sans Redis, une
   seule réplique doit s'exécuter.
-- **Mot de passe SMTP.** `N8N_SMTP_PASS` est auto-généré comme un espace réservé. Remplacez la
+- **Mot de passe SMTP.** `N8N_SMTP_PASS` est auto-généré comme espace réservé. Remplacez la
   valeur secrète dans Secret Manager par de véritables identifiants SMTP avant d'activer
   l'envoi d'e-mails.
 - **Inspecter les jobs planifiés et les CronJobs :**
@@ -398,8 +394,8 @@ des politiques d'alerte facultatives sont disponibles.
 
 Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de
 déploiement. Seuls les paramètres spécifiques ou notables pour n8n AI sont listés ; toutes
-les autres entrées sont héritées de [App_GKE](App_GKE.md) avec son comportement standard et
-ses valeurs par défaut.
+les autres entrées sont héritées de [App_GKE](App_GKE.md) avec son comportement et ses
+valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
@@ -413,8 +409,8 @@ ses valeurs par défaut.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails ayant accès au projet et aux alertes de surveillance. |
-| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources pour le suivi des coûts/propriétés. |
+| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
+| `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts/propriétés. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
@@ -429,24 +425,24 @@ ses valeurs par défaut.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
+| `deploy_application` | `true` | Définir `false` pour provisionner l'infrastructure uniquement. |
 | `cpu_limit` | `2000m` | CPU par pod n8n ; également hérité par Ollama. 2 vCPU recommandés. |
-| `memory_limit` | `4Gi` | Mémoire par pod n8n ; également hérité par Ollama. 4 Gio minimum pour les charges de travail AI. |
-| `min_instance_count` | `0` | Répliques n8n minimales. Définir sur `1` pour une disponibilité continue des webhooks. |
-| `max_instance_count` | `3` | Répliques maximales. Augmenter uniquement avec Redis activé. |
+| `memory_limit` | `4Gi` | Mémoire par pod n8n ; également héritée par Ollama. 4 Gio minimum pour les charges de travail IA. |
+| `min_instance_count` | `0` | Nombre minimal de répliques n8n. Définir sur `1` pour une disponibilité continue des webhooks. |
+| `max_instance_count` | `3` | Nombre maximal de répliques. Augmenter uniquement avec Redis activé. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions socket. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisser Autopilot ajuster automatiquement les requêtes de ressources. |
-| `timeout_seconds` | `300` | Durée maximale de la requête ; augmenter pour les longs flux de travail d'inférence AI. |
+| `timeout_seconds` | `300` | Durée maximale de la requête ; augmenter pour les longs flux de travail d'inférence IA. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | Espaces réservés SMTP | Paramètres non sensibles. Les variables n8n principales sont injectées automatiquement ; ne pas définir `N8N_PORT`, `DB_TYPE`, `DB_POSTGRESDB_*`, `N8N_ENCRYPTION_KEY`, `WEBHOOK_URL`, `QDRANT_URL` ou `OLLAMA_HOST`. |
-| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager. Utiliser pour les clés API de fournisseurs AI externes. |
+| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager. Utiliser pour les clés API de fournisseurs d'IA externes. |
 | `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager (30 jours). Configure une notification Pub/Sub lorsque la rotation est due. |
 
-### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -456,7 +452,7 @@ ses valeurs par défaut.
 | `network_tags` | `['nfsserver']` | Requis pour les règles de pare-feu de connectivité NFS. |
 | `gke_cluster_name` | `""` | Laisser vide pour la découverte automatique. |
 | `namespace_name` | `""` | Laisser vide pour générer automatiquement. |
-| `prereq_subnet_cidr_override` | `""` | Remplacer pour le sous-réseau primaire VPC inline CIDR. Vide dérive un /24 unique par déploiement à partir de l'ID de déploiement aléatoire ; définir sur la valeur précédemment appliquée sur les déploiements existants pour éviter le remplacement des ressources. |
+| `prereq_subnet_cidr_override` | `""` | Remplacement pour le CIDR du sous-réseau primaire VPC intégré. Vide dérive un /24 unique par déploiement à partir de l'ID de déploiement aléatoire ; défini sur la valeur précédemment appliquée sur les déploiements existants pour éviter le remplacement des ressources. |
 
 ### Groupe 7 — StatefulSet {#group-7--statefulset}
 
@@ -465,14 +461,14 @@ ses valeurs par défaut.
 | `stateful_pvc_enabled` | `null` | Activer les modèles PVC dans le StatefulSet. La définition de `true` sélectionne automatiquement StatefulSet. |
 | `stateful_pvc_size` | `10Gi` | Taille de stockage pour chaque PVC. |
 | `stateful_pvc_mount_path` | `/data` | Chemin du conteneur où le PVC est monté. |
-| `stateful_pvc_storage_class` | `standard-rwo` | Kubernetes StorageClass pour les PVC. |
+| `stateful_pvc_storage_class` | `standard-rwo` | StorageClass Kubernetes pour les PVC. |
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Limiter les comptes de CPU/mémoire/objets de l'espace de noms. |
-| `quota_memory_requests` / `quota_memory_limits` | `""` | **Doit utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers bruts sont traités comme des octets et bloquent la planification. |
+| `enable_resource_quota` | `false` | Limiter les nombres de CPU/mémoire/objets de l'espace de noms. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Doit utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers nus sont traités comme des octets et bloquent la planification. |
 
 ### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
 
@@ -486,7 +482,7 @@ ses valeurs par défaut.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/` — délai de 120s | Sonde de démarrage n8n ; un délai généreux permet la connexion à la base de données + le chargement du flux de travail. |
+| `startup_probe` | HTTP `/` — délai de 120s | Sonde de démarrage n8n ; délai généreux permettant la connexion à la base de données + le chargement du flux de travail. |
 | `liveness_probe` | HTTP `/` — délai de 30s | Sonde de vivacité n8n. |
 | `startup_probe_config` | TCP — activé | Sonde de démarrage standard App_GKE. |
 | `health_check_config` | HTTP `/` — activé | Sonde de vivacité standard App_GKE. |
@@ -501,7 +497,7 @@ ses valeurs par défaut.
 | `cron_jobs` | `[]` | CronJobs planifiés pour les tâches périodiques (exportations, maintenance). |
 | `additional_services` | `[]` | Déploiements sidecar ou auxiliaires supplémentaires à côté de n8n. |
 
-### Groupe 12 — Intégration CI/CD et GitHub {#group-12--cicd--github-integration}
+### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
 
 Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 [App_GKE](App_GKE.md). Entrées clés : `enable_cicd_trigger`,
@@ -529,7 +525,7 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `true` | Utiliser Redis pour le mode file d'attente n8n. **Requis lorsque `max_instance_count > 1`.** |
-| `redis_host` | `""` | Laisser vide pour utiliser l'adresse IP du serveur NFS ; définir explicitement pour une instance Memorystore. |
+| `redis_host` | `""` | Laisser vide pour utiliser l'IP du serveur NFS ; définir explicitement pour une instance Memorystore. |
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
@@ -539,9 +535,9 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 |---|---|---|
 | `db_name` | `n8n_db` | Nom de la base de données PostgreSQL. **Immuable après le premier déploiement.** |
 | `db_user` | `n8n_user` | Utilisateur de l'application. **Immuable après le premier déploiement.** |
-| `database_password_length` | `32` | Longueur du mot de passe généré (16-64). |
-| `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption de service. |
-| `enable_mysql_plugins` | `false` | Activer l'installation automatique des plugins MySQL. Applicable uniquement aux bases de données MySQL ; `N8N_AI_Common` fixe `database_type` à PostgreSQL 15, donc ceci est inerte pour la propre base de données de n8n. |
+| `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
+| `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption. |
+| `enable_mysql_plugins` | `false` | Activer l'installation automatique des plugins MySQL. Applicable uniquement aux bases de données MySQL ; `N8N_AI_Common` fixe `database_type` à PostgreSQL 15, donc ceci est inactif pour la propre base de données de n8n. |
 | `mysql_plugins` | `[]` | Liste des plugins MySQL à installer (par exemple `validate_password`, `audit_log`). Applicable uniquement aux bases de données MySQL. |
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
@@ -549,7 +545,7 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
-| `backup_retention_days` | `7` | Rétention ; augmenter à 30-90 pour la production/conformité. |
+| `backup_retention_days` | `7` | Rétention ; augmenter à 30–90 pour la production/conformité. |
 | `enable_backup_import` / `backup_source` / `backup_uri` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
 ### Groupe 18 — Scripts SQL personnalisés {#group-18--custom-sql-scripts}
@@ -566,11 +562,11 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | `application_domains` | `[]` | Noms d'hôte à servir. |
 | `reserve_static_ip` | `true` | IP externe stable sur les redéploiements. |
 
-### Groupe 20 — Proxy sensible à l'identité (IAP) {#group-20--identity-aware-proxy-iap}
+### Groupe 20 — Proxy conscient de l'identité (IAP) {#group-20--identity-aware-proxy-iap}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_iap` | `false` | Exiger la connexion Google devant n8n. **Note :** l'activation d'IAP bloque les points de terminaison de webhook publics. |
+| `enable_iap` | `false` | Exiger la connexion Google devant n8n. **Remarque :** l'activation d'IAP bloque les points de terminaison de webhook publics. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder. |
 | `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | Requis lorsque IAP est activé (sensible). |
 
@@ -588,14 +584,14 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | Niveaux d'accès CIDR / mode simulation. |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
 | `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
-### Groupe — Composants AI {#group--ai-components}
+### Groupe — Composants IA {#group--ai-components}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_ai_components` | `true` | Commutateur principal. Définir `false` pour déployer n8n sans Qdrant ni Ollama. |
+| `enable_ai_components` | `true` | Interrupteur principal. Définir `false` pour déployer n8n sans Qdrant ni Ollama. |
 | `enable_qdrant` | `true` | Déployer Qdrant en tant que déploiement Kubernetes interne uniquement. |
 | `qdrant_version` | `latest` | Tag d'image Docker Qdrant. Épingler à une version spécifique pour la stabilité de la production. |
 | `enable_ollama` | `true` | Déployer Ollama en tant que déploiement Kubernetes interne uniquement. |
@@ -606,33 +602,32 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 
 ## 5. Sorties {#5-outputs}
 
-Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le plus rapide
-de localiser et d'explorer les ressources en cours d'exécution.
+Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Kubernetes pour la charge de travail n8n. |
 | `namespace` | Espace de noms dans lequel toutes les charges de travail (n8n, Qdrant, Ollama) s'exécutent. |
-| `service_cluster_ip` | ClusterIP intra-cluster pour le service n8n. |
-| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à l'étape (Cloud Deploy). |
+| `service_cluster_ip` | ClusterIP interne au cluster pour le service n8n. |
+| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques aux étapes (Cloud Deploy). |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `service_url` | URL pour atteindre l'interface utilisateur de n8n. |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` | Nom de la base de données de l'application (`n8n_db`). |
 | `database_user` | Utilisateur de la base de données de l'application (`n8n_user`). |
-| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
+| `database_password_secret` | Secret Manager secret contenant le mot de passe de la base de données. |
 | `database_host` / `database_port` | Point de terminaison de la base de données (127.0.0.1 via Auth Proxy) / port. |
 | `storage_buckets` | Buckets Cloud Storage créés (y compris le bucket de données AI). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État de la surveillance et canaux. |
+| `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants de projet. |
+| `project_id` / `project_number` | Identifiants du projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails du dépôt connecté. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. |
+| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt(e). |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
 | `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
@@ -647,8 +642,8 @@ de localiser et d'explorer les ressources en cours d'exécution.
 |---|---|---|---|
 | `N8N_ENCRYPTION_KEY` (auto-généré) | Sauvegarder immédiatement | Critique | Toute modification après la première exécution détruit définitivement toutes les informations d'identification n8n enregistrées. |
 | `application_name` | `n8nai` — défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée toutes les ressources GCP et Kubernetes avec perte de données. |
-| `db_name` / `db_user` | défini une fois | Critique | Immuable après le premier déploiement ; le renommage pointe n8n vers une nouvelle base de données vide, perdant tous les workflows. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans un `backup_uri` valide fait échouer le job d'importation. |
+| `db_name` / `db_user` | défini une fois | Critique | Immuable après le premier déploiement ; le renommage pointe n8n vers une nouvelle base de données vide, entraînant la perte de tous les workflows. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans un `backup_uri` valide fait échouer le job d'importation. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets et bloquent toute planification de pod. |
 | `enable_qdrant` | `true` | Élevé | Les workflows RAG actifs échouent à l'exécution avec des erreurs de connexion si Qdrant est supprimé. |
 | `enable_ollama` | `true` | Élevé | Les workflows utilisant le nœud LLM local échouent ; ne désactiver que lors de l'utilisation exclusive de fournisseurs d'IA externes. |
@@ -664,7 +659,7 @@ de localiser et d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — IAM et Workload Identity, autoscaling,
+Pour le comportement de la fondation référencé partout — IAM et Workload Identity, autoscaling,
 ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes,
 et mise en miroir d'images — voir **[App_GKE](App_GKE.md)**. La configuration d'application spécifique à n8n AI
 partagée avec la variante Cloud Run est décrite dans

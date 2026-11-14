@@ -26,18 +26,20 @@ rather than repeating them here.
 
 **In a Google Cloud project you own, Filebrowser on RAD's GKE Autopilot module costs about US$42 a month, plus US$7.50 once per deployment and no per-user licence.** Filebrowser is a lightweight, self-hosted web file manager with an embedded SQLite database. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
-If this runs in a project RAD manages for you, it can be deleted and restored within 30 days at no extra charge instead of sitting there running — so an occasional-use deployment costs a few dollars a month, not US$42. See **Pause it for free**, below.
+If this runs in a project RAD manages for you, it can be deleted and restored within 30 days at no extra charge instead of sitting there running — so an occasional-use deployment costs a few dollars a month, not the US$225 a month it costs to keep running there. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 75 credits (US$7.50 at the top-up price) | 67.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$42 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **67 credits a day**, about 2,010 a month (about US$201 at the top-up price) |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$42 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **75 credits a day**, about 2,250 a month (about US$225 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+**Why the two columns differ.** The RAD-managed figure includes the GKE cluster's management fee (about US$73 a month) and the project's shared foundation. In your own project, Google's free tier covers the management fee of one cluster per billing account, which the own-project figure assumes. It is estimated from Google's list prices, because there is not yet enough RAD-managed GKE history to measure it, so the deploy confirmation does not quote it. A second GKE application in the same RAD-managed project shares the cluster and adds only its own pods.
+
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database, file server and network are shared by every application in the project, so a second application does not add a second database.
 
@@ -77,14 +79,14 @@ If Filebrowser runs in **a project RAD manages for you**, you have an option bey
 
 - **How it works.** Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the project. Google does not remove it immediately: it keeps it, recoverable, for 30 days, and because billing is already unlinked, nothing is charged while it waits. Unlike deleting one module, this does not tear down GKE Autopilot one by one — the whole project, and everything in it, simply stops.
 - **Restoring is a check, not a rebuild.** Within 30 days, the project's owner can restore it. RAD asks Google to undelete the project and reattaches its billing account, then asks you to run **Update** on each deployment to confirm everything came back. Because nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
-- **So a month of occasional use can cost a few dollars, not US$42.** Deploy Filebrowser, use it for a session, delete the project. Restore it next time you want it, confirm with Update, and delete it again when you're done. You pay only for the module fee once and whatever hours it was actually live.
+- **So a month of occasional use can cost a few dollars, not the US$225 a month of keeping it running.** Deploy Filebrowser, use it for a session, delete the project. Restore it next time you want it, confirm with Update, and delete it again when you're done. You pay only for the module fee once and whatever hours it was actually live.
 - **What this needs.** You must own the project (not a bring-your-own one RAD only manages billing for), and you restore it yourself within the 30 days — after that, Google deletes it for good. Restoring is admitted like creating a new project: your purchased credit balance must still clear the tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most services are fully working again within 36 hours of a restore.
 
 ### Pay only while you use it, the other way: delete and redeploy
 
 GKE keeps at least one pod running, so Filebrowser never scales to zero on its own. The option above only applies to a RAD-managed project; **in your own project, or once the 30-day window has passed, the way to stop paying is to delete the deployment and deploy it again when you need it.**
 
-- **What a redeploy costs.** The module fee again (builds are included): 75 credits (US$7.50). Deleting saves money if Filebrowser would otherwise sit unused for about 6 days or more in your own project (about US$1.40 a day), or about 2 days or more in a RAD-managed one (67 credits a day).
+- **What a redeploy costs.** The module fee again (builds are included): 75 credits (US$7.50). Deleting saves money if Filebrowser would otherwise sit unused for about 6 days or more in your own project (about US$1.40 a day), or about 1 day or more in a RAD-managed one (75 credits a day).
 - **Note your settings.** RAD does not recreate a deleted deployment for you; you enter the settings again when you deploy.
 
 ### Lab sessions and Managed Environments

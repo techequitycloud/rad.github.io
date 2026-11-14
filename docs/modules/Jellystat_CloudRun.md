@@ -33,11 +33,11 @@ repeating them here.
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 40 credits (US$4.00) | 36 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$67.80 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **26 credits a day** |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$67.80 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **61 credits a day**, about 1,830 a month (about US$183 at the top-up price) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 10 credits cost US$1 on a one-off top-up, less on a plan. In a project RAD manages, the
 database, file server and network are shared by every application in the project, so a second

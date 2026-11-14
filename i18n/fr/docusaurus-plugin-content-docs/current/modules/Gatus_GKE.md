@@ -3,54 +3,53 @@ title: "Gatus sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Gatus sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gatus_GKE.md @ 60462a86 sha256:73fdfdb7f555 -->
+<!-- translated-from: docs/modules/Gatus_GKE.md @ 40c83c3f sha256:b416eb14ee26 -->
 
 # Gatus sur GKE Autopilot {#gatus-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Gatus_GKE.png" alt="Gatus sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Gatus est un moniteur de page d'état et de contrôle de santé open-source, sous
-licence Apache 2.0, orienté développeur et écrit en Go. Il interroge les
-points de terminaison HTTP, TCP, DNS, ICMP et autres configurés selon des
-calendriers indépendants par point de terminaison, évalue des conditions de
-résultat simples (code d'état, temps de réponse, contenu du corps de la
-réponse, expiration du certificat TLS) et sert une page d'état publique en
-direct ainsi que des alertes — aucune base de données externe n'est requise.
-Ce module déploie Gatus sur **GKE Autopilot** sur la base de la fondation
+Gatus est une page de statut et un moniteur de contrôle de santé orientés
+développeur, open source, sous licence Apache 2.0, écrits en Go. Il interroge
+les points de terminaison HTTP, TCP, DNS, ICMP et autres configurés selon des
+planifications indépendantes par point de terminaison, évalue des conditions de
+résultat simples (code de statut, temps de réponse, contenu du corps de la
+réponse, expiration du certificat TLS) et sert une page de statut publique en
+direct ainsi que des alertes — aucune base de données externe n'est requise. Ce
+module déploie Gatus sur **GKE Autopilot** sur la base de la fondation
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée de
 Google Cloud et Kubernetes.
 
-Ce guide se concentre sur les services cloud que Gatus utilise et sur la
-manière de les explorer et de les exploiter depuis la console Google Cloud et
-la ligne de commande. Pour les mécanismes communs à chaque application GKE —
-Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC Service Controls, sauvegardes et cycle de vie du
-déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md)
-plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud que Gatus utilise et sur la façon
+de les explorer et de les exploiter depuis la console Google Cloud et la ligne
+de commande. Pour les mécanismes communs à chaque application GKE — Workload
+Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization,
+VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous
+au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
 ## Ce que coûte Gatus sur RAD, et comment cela se compare {#what-gatus-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Gatus dans votre propre projet Google Cloud coûte environ 40,29 $ US/mois en frais Google Cloud, en plus d'un frais de module RAD unique de 40 crédits** (36 crédits — 10 % de moins — dans un projet géré par RAD). Gatus est une page d'état et un moniteur de contrôle de santé auto-hébergés, orientés développeur (Go). Si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement et le reprendre plus tard — voir "Mettre en pause gratuitement" ci-dessous.
+**L'exécution de Gatus dans votre propre projet Google Cloud coûte environ 40,29 $ US/mois en frais Google Cloud, en plus d'un frais de module RAD unique de 40 crédits** (36 crédits — 10 % de moins — dans un projet géré par RAD). Gatus est une page de statut et un moniteur de contrôle de santé auto-hébergés, orientés développeur (Go). Si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement et le reprendre plus tard — voir "Mettez-le en pause gratuitement" ci-dessous.
 
-*Gatus est également disponible sur Cloud Run — voir le [guide Cloud Run](Gatus_CloudRun.md) pour l'option à moindre coût ; ce guide couvre la variante GKE.*
+*Gatus est également disponible sur Cloud Run — voir le [guide Cloud Run](Gatus_CloudRun.md) pour l'option moins chère ; ce guide couvre la variante GKE.*
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
-| Frais de module | **40 crédits** (une fois) | **36 crédits** (une fois, 10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | ~40,29 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~63 crédits/jour (~6,30 $ US/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
+| Frais de module | **40 crédits** (une seule fois) | **36 crédits** (une seule fois, 10 % de moins) |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | ~40,29 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~70 crédits/jour (~7,00 $ US/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
 **Coût d'exécution par défaut dans votre propre projet**
 
 | Ressource | US$/mois (prix catalogue Google, us-central1) |
 |---|---|
-| Pod GKE Autopilot, 1x vCPU / 0,5 GiB | 34,29 $ US |
+| Pod GKE Autopilot, 1x vCPU / 0,5 Gio | 34,29 $ US |
 | Cloud NAT et réseau | 5 $ US |
 | Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
 | Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 |
@@ -58,31 +57,31 @@ Votre premier déploiement réussi sur RAD est exempté des frais de module lors
 
 ### Comment cela se compare {#how-it-compares}
 
-- Il n'existe pas de version officiellement hébergée/cloud de Gatus pour comparer, donc la comparaison honnête est avec une infrastructure auto-gérée, pas un SaaS concurrent.
-- Un VPS nu dimensionné à environ 1 vCPU / 0,5 GiB — un Hetzner CPX22 (2 vCPU/4 Go, ~24 $ US/mois), un DigitalOcean 2 vCPU/4 Go Droplet (24 $ US/mois), ou le propre Compute Engine e2-standard-2 de GCP (2 vCPU/8 Go, ~49 $ US/mois) — est généralement moins cher que le prix affiché de RAD ; un VPS d'une ou deux tailles inférieures le serait encore plus.
-- Ce prix inférieur n'inclut pas le temps de l'administrateur : patcher le système d'exploitation, faire tourner les sauvegardes de base de données, renouveler les certificats TLS et surveiller les temps d'arrêt. Cloud SQL géré par RAD, Secret Manager et la surveillance le font pour vous, ce qui est le véritable compromis, pas le prix affiché.
+- Il n'existe pas de version officiellement hébergée/cloud de Gatus à comparer, donc la comparaison honnête se fait avec une infrastructure autogérée, et non avec un SaaS concurrent.
+- Un VPS nu dimensionné à environ 1 vCPU / 0,5 Gio — un Hetzner CPX22 (2 vCPU/4 Go, ~24 $ US/mois), un DigitalOcean 2 vCPU/4 Go Droplet (24 $ US/mois), ou le propre Compute Engine e2-standard-2 de GCP (2 vCPU/8 Go, ~49 $ US/mois) — est généralement moins cher que le prix affiché de RAD ; un VPS d'une ou deux tailles inférieures le serait encore plus.
+- Ce prix inférieur n'inclut pas le temps de l'administrateur : patcher le système d'exploitation, faire tourner les sauvegardes de base de données, renouveler les certificats TLS et surveiller les temps d'arrêt. Les services Cloud SQL, Secret Manager et de surveillance gérés par RAD le font pour vous, ce qui est le véritable compromis, et non le prix affiché.
 - RAD ne prétend pas être moins cher qu'un VPS nu en termes d'argent — ce n'est généralement pas le cas. L'intérêt de RAD est ce qui est géré pour vous.
 
-### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 Si Gatus est exécuté dans un **projet géré par RAD**, vous pouvez arrêter de le payer entièrement sans le détruire.
 La suppression de ce projet délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet —
-la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression du module Gatus seul, cela ne
+la propre suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression du module Gatus seul, cela ne
 détruit pas Cloud SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est
 facturé pendant qu'il attend, car la facturation est déjà déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher
 son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Parce que
 rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une
-reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Les frais de module de 36 crédits
+reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit. Les frais de module de 36 crédits
 ne sont pas facturés à nouveau.
 
-Ce qu'il faut : vous devez être propriétaire du projet (pas un projet que RAD gère uniquement pour la facturation), vous devez le restaurer vous-même
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même
 dans les 30 jours — après quoi Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau
-projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox
-qui convient à la plupart des utilisations d'étude/démo). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox
+qui convient à la plupart des utilisations d'étude/démo). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
 Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage
 explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si
@@ -90,34 +89,46 @@ le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalis
 copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut
 sans rien d'irremplaçable, cela n'a pas d'importance.
 
-### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Si Gatus se trouve dans votre propre projet (ou si plus de 30 jours se sont écoulés sur un projet géré par RAD), la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer plus tard lorsque vous en aurez à nouveau besoin.
+Si Gatus se trouve dans votre propre projet (ou si plus de 30 jours se sont écoulés sur un projet géré par RAD), la façon d'arrêter
+de payer est de supprimer le déploiement et de le redéployer plus tard lorsque vous en aurez à nouveau besoin.
 
-Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) : 40 crédits (4,00 $ US) dans votre propre projet, ou **36 crédits** sur un projet géré par RAD.
+Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) : 40 crédits (4,00 $ US)
+dans votre propre projet, ou **36 crédits** sur un projet géré par RAD.
 
-La suppression ne permet d'économiser de l'argent que si Gatus reste inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution : environ **4 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa facture Google Cloud d'environ 40,29 $ US/mois), ou **environ 1 jour ou plus** d'inactivité dans un projet géré par RAD (par rapport à ses environ 63 crédits/jour).
+La suppression ne permet d'économiser de l'argent que si Gatus reste inutilisé suffisamment longtemps pour que le coût de redéploiement
+soit inférieur à son propre coût d'exécution : environ **4 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa
+facture Google Cloud d'environ 40,29 $ US/mois), ou **environ 1 jour ou plus** d'inactivité dans un projet géré par RAD
+(par rapport à ses ~70 crédits/jour).
 
-Priorité aux données : les sauvegardes nocturnes sont stockées dans un bucket à l'intérieur du déploiement et sont supprimées avec celui-ci. Copiez donc la dernière sauvegarde avant de supprimer si vous souhaitez la conserver.
+Conservez d'abord les données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la
+dernière sauvegarde avant de supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant dispose de l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est mise en pause et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
-- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant obtient l'application dans son
+  propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur
+  finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et
+  les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il
+  finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que
+  personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements
+  deviennent la propriété du client.
+- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire
+  ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les propres frais de RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration.
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les frais propres à RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration.
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Gatus s'exécute comme une seule charge de travail web Go. Le déploiement relie
-un ensemble délibérément restreint de services Google Cloud — Gatus n'a pas
-de dépendance de base de données, de cache ou de stockage d'objets propre :
+Gatus s'exécute comme une seule charge de travail web Go. Le déploiement relie un ensemble délibérément
+petit de services Google Cloud — Gatus n'a pas de dépendance propre à une base de données, un cache ou un stockage d'objets :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
 | Calcul | GKE Autopilot | Déploiement Go unique, 1 vCPU / 512 Mio par défaut |
-| Base de données | **Aucune** | `database_type = "NONE"` ; le magasin d'historique optionnel est un fichier SQLite local, aucun Cloud SQL n'est provisionné |
+| Base de données | **Aucune** | `database_type = "NONE"` ; le magasin d'historique optionnel est un fichier SQLite local, aucune instance Cloud SQL n'est provisionnée |
 | Persistance | Disque éphémère (par défaut), NFS ou PVC de bloc (StatefulSet) | Historique SQLite à `/data/data.db` ; le PVC de bloc est la seule option vérifiée comme sûre pour le SQLite en mode WAL de Gatus (voir ci-dessous) |
 | Stockage d'objets | **Aucun** | Gatus ne stocke rien dans Cloud Storage |
 | Cache / file d'attente | **Aucun** | Pas de Redis ; Gatus n'a pas de dépendance de cache ou de file d'attente |
@@ -127,13 +138,13 @@ de dépendance de base de données, de cache ou de stockage d'objets propre :
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **Aucune base de données n'est provisionnée.** `database_type = "NONE"` — le magasin d'historique optionnel de Gatus est un fichier SQLite local. Les variables liées à la base de données existent pour être complètes mais sont inertes à moins que vous n'optiez délibérément pour une base de données externe.
-- **La configuration est entièrement basée sur des fichiers.** Chaque point de terminaison surveillé, intégration d'alerte et paramètre de stockage se trouve dans un fichier YAML intégré à l'image au moment de la construction — il n'y a pas de convention de variable d'environnement par paramètre et pas d'API de rechargement de configuration à l'exécution. Modifiez les points de terminaison surveillés en éditant `modules/Gatus_Common/scripts/config.yaml` et en redéployant.
-- **Déploiement sans état par défaut, avec la SEULE option de durabilité réellement sûre dans ce catalogue.** `workload_type = "Deployment"` avec un magasin d'historique SQLite **éphémère** à `/data/data.db`. Gatus code en dur le mode journal WAL de SQLite (confirmé en direct : aucune option de configuration ne le désactive), et la propre documentation de SQLite indique que WAL n'est pas pris en charge sur les systèmes de fichiers réseau — donc NFS présente un risque réel de corruption ici. Le `stateful_pvc_enabled = true` de GKE (un véritable périphérique de bloc, pas gcsfuse) est le chemin recommandé pour un historique durable : associez-le à `stateful_pvc_storage_class = "standard"` (HDD ; l'historique de Gatus n'a pas besoin d'IOPS SSD, et le HDD évite le quota régional strict `SSD_TOTAL_GB`).
+- **La configuration est entièrement basée sur des fichiers.** Chaque point de terminaison surveillé, intégration d'alerte et paramètre de stockage se trouve dans un fichier YAML intégré à l'image au moment de la compilation — il n'y a pas de convention de variable d'environnement par paramètre ni d'API de rechargement de configuration à l'exécution. Modifiez les points de terminaison surveillés en éditant `modules/Gatus_Common/scripts/config.yaml` et en redéployant.
+- **Déploiement sans état par défaut, avec la SEULE option de durabilité véritablement sûre de ce catalogue.** `workload_type = "Deployment"` avec un magasin d'historique SQLite **éphémère** à `/data/data.db`. Gatus code en dur le mode journal WAL de SQLite (confirmé en direct : aucune option de configuration ne le désactive), et la propre documentation de SQLite indique que WAL n'est pas pris en charge sur les systèmes de fichiers réseau — donc NFS présente un risque réel de corruption ici. Le `stateful_pvc_enabled = true` de GKE (un véritable périphérique de bloc, pas gcsfuse) est le chemin recommandé pour un historique durable : associez-le à `stateful_pvc_storage_class = "standard"` (HDD ; l'historique de Gatus n'a pas besoin d'IOPS SSD, et le HDD évite le quota régional strict `SSD_TOTAL_GB`).
 - **Réplica unique par défaut** (`min_instance_count = 1`, `max_instance_count = 1`). Plusieurs réplicas interrogeraient chacun indépendamment chaque point de terminaison et dupliqueraient les alertes — il n'y a pas de coordination partagée entre les instances Gatus.
-- **Exposé via un service LoadBalancer** (`service_type = "LoadBalancer"`) afin que la page d'état soit accessible depuis l'extérieur du cluster ; `reserve_static_ip` et `enable_custom_domain` sont tous deux par défaut à `false` car Gatus n'intègre aucune URL auto-référente dans sa configuration au démarrage — n'activez l'un ou l'autre que si vous avez besoin d'une IP stable ou d'un nom d'hôte personnalisé.
+- **Exposé via un service LoadBalancer** (`service_type = "LoadBalancer"`) afin que la page de statut soit accessible depuis l'extérieur du cluster ; `reserve_static_ip` et `enable_custom_domain` sont tous deux par défaut à `false` puisque Gatus n'intègre aucune URL auto-référente dans sa configuration au démarrage — activez l'un ou l'autre uniquement si vous avez besoin d'une IP stable ou d'un nom d'hôte personnalisé.
 - **Le point de terminaison de santé est `/health`**, qui renvoie HTTP 200 dès que le serveur lie son port.
 - **Pour fonctionner aux côtés de `Gatus_CloudRun` sur le même locataire**, définissez `tenant_id = "gke"` (et `"cr"` sur la variante Cloud Run) — voir la recommandation dans `config/deploy.tfvars`. Cela évite une collision de noms sur les noms de secrets partagés, les noms de buckets GCS et les sujets de rotation.
-- **Le contrôle d'accès, le cas échéant, est configuré dans `config.yaml`.** Gatus est livré avec une page d'état ouverte par défaut ; une protection optionnelle par authentification de base ou OIDC est configurée dans le bloc `security` de `config.yaml` et nécessite une reconstruction.
+- **Le contrôle d'accès, le cas échéant, est configuré dans `config.yaml`.** Gatus est livré avec une page de statut ouverte par défaut ; la protection optionnelle par authentification basique ou OIDC est configurée dans le bloc `security` de `config.yaml` et nécessite une reconstruction.
 
 ---
 
@@ -142,14 +153,13 @@ de dépendance de base de données, de cache ou de stockage d'objets propre :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont signalés dans les [Sorties](#5-outputs) du déploiement.
+identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Gatus {#a-gke-autopilot--the-gatus-workload}
 
 Les pods Gatus sont planifiés sur Autopilot, qui facture le CPU/la mémoire que les pods
 demandent réellement. Par défaut, la charge de travail est un `Deployment` sans état avec un seul
-réplica ; le passage à un `StatefulSet` provisionne un PVC de bloc par pod pour un historique
-de vérification durable.
+réplica ; le passage à un `StatefulSet` provisionne un PVC de bloc par pod pour un historique de vérification durable.
 
 - **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de travail Gatus pour voir les pods
   et les événements. Kubernetes Engine → Services et Ingress affiche l'IP externe.
@@ -161,14 +171,11 @@ de vérification durable.
   ```
 
 Voir [App_GKE](App_GKE.md) pour savoir comment Autopilot, la mise à l'échelle et le type de charge de travail
-(Déploiement vs StatefulSet) sont gérés.
+(Deployment vs StatefulSet) sont gérés.
 
 ### B. Persistance — le magasin d'historique SQLite {#b-persistence--the-sqlite-history-store}
 
-Gatus n'a **pas d'instance Cloud SQL**. Son magasin d'historique optionnel est un fichier SQLite local
-à `/data/data.db`, intégré à la structure de répertoires de l'image. Avec le
-déploiement sans état par défaut, ce répertoire est **éphémère** — l'historique ne
-survit pas à un redémarrage de pod.
+Gatus n'a **pas d'instance Cloud SQL**. Son magasin d'historique optionnel est un fichier SQLite local à `/data/data.db`, intégré à la structure de répertoires de l'image. Avec le déploiement sans état par défaut, ce répertoire est **éphémère** — l'historique ne survit pas à un redémarrage de pod.
 
 - **PVC de bloc StatefulSet (recommandé pour un historique durable) :**
   `stateful_pvc_enabled = true` avec `stateful_pvc_mount_path = "/data"` et
@@ -191,7 +198,7 @@ Voir [App_GKE](App_GKE.md) pour les modèles NFS et StatefulSet PVC.
 ### C. Secret Manager {#c-secret-manager}
 
 Gatus ne génère **aucun** secret au moment du déploiement — il n'y a pas de mot de passe de base de données ou
-de clé de chiffrement à gérer. Secret Manager n'est utilisé que si vous fournissez le vôtre via
+de clé de chiffrement à gérer. Secret Manager n'est utilisé que si vous fournissez les vôtres via
 `secret_environment_variables` (par exemple un `${VAR}` référencé dans
 la configuration d'alerte de `config.yaml`).
 
@@ -209,7 +216,7 @@ Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation de Secret Store CS
 Par défaut, la charge de travail est exposée via une adresse IP externe de Cloud Load Balancing via un
 service LoadBalancer. Un domaine personnalisé avec un certificat géré par Google et une
 adresse IP statique réservée peuvent tous deux être activés si nécessaire, mais aucun n'est requis pour
-la correction puisque la configuration de Gatus n'intègre aucune URL auto-référente.
+le bon fonctionnement puisque la configuration de Gatus n'intègre aucune URL auto-référente.
 
 - **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
 - **CLI :**
@@ -222,9 +229,9 @@ Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les d�
 
 ### E. Cloud Logging et Monitoring {#e-cloud-logging--monitoring}
 
-Les sorties standard/erreur des pods sont acheminées vers Cloud Logging ; les métriques GKE sont acheminées vers Cloud Monitoring.
-Des vérifications de disponibilité et des politiques d'alerte optionnelles sont disponibles. Gatus enregistre le résultat de chaque
-vérification de point de terminaison (succès/échec, durée) au fur et à mesure de son exécution.
+Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les métriques GKE sont acheminées vers Cloud Monitoring.
+Des tests de disponibilité et des stratégies d'alerte optionnels sont disponibles. Gatus enregistre le résultat de chaque vérification de point de terminaison
+(succès/échec, durée) au fur et à mesure de son exécution.
 
 - **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
@@ -237,22 +244,33 @@ vérification de point de terminaison (succès/échec, durée) au fur et à mesu
 
 ## 3. Comportement de l'application Gatus {#3-gatus-application-behaviour}
 
-- **Pas de configuration de base de données au premier déploiement.** Gatus n'a pas de base de données externe et pas d'étape de migration. Il lit `config.yaml`, initialise son magasin d'historique SQLite (si configuré) et commence à servir immédiatement. Il n'y a pas de job d'initialisation par défaut.
-- **La persistance dépend du type de charge de travail.** Un `Deployment` sans état utilise un magasin d'historique éphémère ; un `StatefulSet` avec un PVC de bloc le rend durable après les redémarrages de pod.
-- **`imagePullPolicy = Always` pour l'image personnalisée.** App_GKE le définit pour les images personnalisées/miroirs afin qu'une reconstruction et un redéploiement sous une balise inchangée tirent les nouvelles couches plutôt que de servir un cache de nœud obsolète.
-- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/health`, qui renvoie HTTP 200 dès que le serveur lie le port 8080. Vérifiez depuis l'intérieur du cluster :
+- **Pas de configuration de base de données au premier déploiement.** Gatus n'a pas de base de données externe et pas
+  d'étape de migration. Il lit `config.yaml`, initialise son magasin d'historique SQLite (si
+  configuré), et commence à servir immédiatement. Il n'y a pas de job d'initialisation par défaut.
+- **La persistance dépend du type de charge de travail.** Un `Deployment` sans état utilise un
+  magasin d'historique éphémère ; un `StatefulSet` avec un PVC de bloc le rend durable après
+  les redémarrages de pod.
+- **`imagePullPolicy = Always` pour l'image personnalisée.** App_GKE le définit pour
+  les images personnalisées/miroirs afin qu'une reconstruction et un redéploiement sous une balise inchangée tirent
+  les nouvelles couches plutôt que de servir un cache de nœud obsolète.
+- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/health`, qui renvoie HTTP
+  200 dès que le serveur lie le port 8080. Vérifiez depuis l'intérieur du cluster :
   ```bash
   kubectl run curl --rm -it --image=curlimages/curl -n "$NAMESPACE" -- \
     curl -s -o /dev/null -w '%{http_code}\n' http://<service-name>.$NAMESPACE.svc.cluster.local/health
   ```
-- **Afficher la page d'état** (par rapport à l'IP externe) :
+- **Afficher la page de statut** (par rapport à l'IP externe) :
   ```bash
   EXTERNAL_IP=$(kubectl get svc <service-name> -n "$NAMESPACE" \
     -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   curl -s "http://$EXTERNAL_IP/" | head -20
   ```
-- **Les modifications de configuration nécessitent une reconstruction.** Gatus n'a pas d'interface utilisateur d'administration ou d'API pour modifier les points de terminaison surveillés. Modifiez `modules/Gatus_Common/scripts/config.yaml` (ajoutez, supprimez ou modifiez les entrées `endpoints`) et redéployez pour appliquer les modifications.
-- **L'accès est ouvert jusqu'à ce que vous le configuriez.** Par défaut, la page d'état n'a pas d'authentification. Configurez l'authentification de base ou OIDC dans le bloc `config.yaml` de `security` et redéployez pour restreindre la visualisation.
+- **Les modifications de configuration nécessitent une reconstruction.** Gatus n'a pas d'interface utilisateur ou d'API d'administration pour
+  modifier les points de terminaison surveillés. Modifiez `modules/Gatus_Common/scripts/config.yaml` (ajoutez,
+  supprimez ou modifiez les entrées `endpoints`) et redéployez pour appliquer les modifications.
+- **L'accès est ouvert jusqu'à ce que vous le configuriez.** Par défaut, la page de statut n'a pas
+  d'authentification. Configurez l'authentification basique ou OIDC dans le bloc `security` de `config.yaml`
+  et redéployez pour restreindre la visualisation.
 
 ---
 
@@ -272,7 +290,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court ; définissez `"gke"` pour coexister avec un déploiement `Gatus_CloudRun` sur le même locataire (voir `config/deploy.tfvars`). |
-| `application_name` | `gatus` | Nom de base pour les ressources. Ne pas modifier après le premier déploiement. |
+| `application_name` | `gatus` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_version` | `latest` | Tag de version de l'image ; `latest` correspond à une base `v5.36.0` épinglée. Épinglez `v5.x.y` en production. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
@@ -282,7 +300,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `custom` | `custom` construit l'image wrapper via Cloud Build ; `prebuilt` déploie une image directement. |
 | `min_instance_count` | `1` | Réplicas minimum (GKE n'a pas de mise à l'échelle à zéro). |
-| `max_instance_count` | `1` | **Gardez à 1** — chaque réplica interrogerait indépendamment chaque point de terminaison et dupliquerait les alertes. |
+| `max_instance_count` | `1` | **Maintenir à 1** — chaque réplica interrogerait indépendamment chaque point de terminaison et dupliquerait les alertes. |
 | `container_resources` | `{ cpu_limit="1000m", memory_limit="512Mi" }` | CPU/mémoire par pod. |
 | `container_port` | `8080` | Gatus écoute sur le port 8080. |
 | `container_protocol` | `http1` | HTTP/1.1 par défaut. |
@@ -300,15 +318,15 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Substitutions pour les références de type `${VAR}` dans `config.yaml`, pas des remplacements par paramètre. |
-| `secret_environment_variables` | `{}` | Mappage variable d'environnement → nom de secret Secret Manager (facultatif ; aucun n'est requis). |
+| `environment_variables` | `{}` | Substitutions pour les références de style `${VAR}` dans `config.yaml`, pas des remplacements par paramètre. |
+| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager (facultatif ; aucun requis). |
 
 ### Groupe 6 — Cluster GKE {#group-6--gke-cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Laisser vide pour découvrir automatiquement le cluster Services_GCP. |
-| `service_type` | `LoadBalancer` | Gatus est une page d'état publique, donc cela est par défaut à `LoadBalancer`. |
+| `service_type` | `LoadBalancer` | Gatus est une page de statut publique, donc cela est par défaut à `LoadBalancer`. |
 | `session_affinity` | `None` | Définissez `ClientIP` si vous mettez à l'échelle les réplicas et que vous souhaitez un client épinglé. |
 
 ### Groupe 7 — StatefulSet (historique de vérification durable) {#group-7--statefulset-durable-check-history}
@@ -333,7 +351,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 |---|---|---|
 | `startup_probe_config` | HTTP `/health` | Sonde de démarrage. Gatus devient sain en quelques secondes. |
 | `health_check_config` | HTTP `/health` | Sonde de vivacité. |
-| `uptime_check_config` | désactivé | Vérification de disponibilité Cloud Monitoring facultative. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
 
 ### Groupe 13 / 14 — Système de fichiers et Cloud Storage {#group-13--14--filesystem--cloud-storage}
 
@@ -362,7 +380,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 |---|---|---|
 | `enable_custom_domain` | `false` | Provisionner un Ingress pour un nom d'hôte personnalisé + certificat géré. Désactivé par défaut — le service `LoadBalancer` offre déjà une accessibilité externe. |
 | `application_domains` | `[]` | Noms d'hôtes à servir. |
-| `reserve_static_ip` | `false` | Désactivé par défaut — Gatus n'intègre aucune URL auto-référente, il n'y a donc aucune raison de réserver une IP stable pour la correction. |
+| `reserve_static_ip` | `false` | Désactivé par défaut — Gatus n'intègre aucune URL auto-référente, il n'y a donc aucune raison de réserver une IP stable pour le bon fonctionnement. |
 
 Toutes les autres entrées suivent le comportement standard de [App_GKE](App_GKE.md).
 
@@ -378,7 +396,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `service_name` | Nom du service Kubernetes. |
 | `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
 | `service_cluster_ip` | ClusterIP intra-cluster. |
-| `stage_service_cluster_ips` | Carte des ClusterIPs pour les services spécifiques à chaque étape. |
+| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer. |
 | `service_url` | URL pour atteindre Gatus. |
 | `database_instance_name` / `database_name` / `database_user` | Identifiants de base de données — vides pour le moteur `NONE` par défaut. |
@@ -386,16 +404,16 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (aucun par défaut). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
+| `monitoring_enabled` / `monitoring_notification_channels` | Statut et canaux de surveillance. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (aucun par défaut). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants de projet. |
-| `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
+| `cicd_enabled` / `cicd_configuration` | Statut et détails CI/CD (dépôt, déclencheur, registre). |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
 | `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | Statut VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et statut CMEK. |
 
 ---
 
@@ -404,18 +422,18 @@ localiser et d'explorer les ressources en cours d'exécution.
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de fondation [App_GKE](App_GKE.md), qui valide les valeurs *et les combinaisons* au moment de la planification — IAP sans identifiants OAuth, `enable_cloudsql_volume = true` avec `database_type = "NONE"`, `min_instance_count > max_instance_count`, `quota_memory_*` sans unités binaires. Le propre `validation.tf` de la variante GKE applique ces protections. Une configuration invalide échoue à la **planification** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au moment de l'application ou de l'exécution.
+> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de fondation [App_GKE](App_GKE.md), qui valide les valeurs *et les combinaisons* au moment de la planification — IAP sans identifiants OAuth, `enable_cloudsql_volume = true` avec `database_type = "NONE"`, `min_instance_count > max_instance_count`, `quota_memory_*` sans unités binaires. Le propre `validation.tf` de la variante GKE applique ces protections. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si erreur |
 |---|---|---|---|
-| `enable_nfs` (pour l'historique durable) | Préférer `stateful_pvc_enabled` à la place | Critique | Gatus code en dur le mode journal WAL de SQLite, que la propre documentation de SQLite déclare non pris en charge sur les systèmes de fichiers réseau — l'historique sauvegardé par NFS risque une corruption silencieuse au fil du temps. |
+| `enable_nfs` (pour l'historique durable) | Préférer `stateful_pvc_enabled` à la place | Critique | Gatus code en dur le mode journal WAL de SQLite, que la propre documentation de SQLite déclare non pris en charge sur les systèmes de fichiers réseau — l'historique basé sur NFS risque une corruption silencieuse au fil du temps. |
 | `stateful_pvc_mount_path` | `/data` | Élevé | Monter le PVC ailleurs que dans le répertoire `storage.path` intégré de Gatus persiste le mauvais chemin et l'historique reste éphémère. |
 | `stateful_pvc_storage_class` | `standard` (HDD) | Moyen | Le défaut basé sur SSD (`standard-rwo`) réduit le quota régional strict `SSD_TOTAL_GB` pour une charge de travail qui n'a pas besoin d'IOPS SSD. |
 | `max_instance_count` | `1` | Élevé | La mise à l'échelle au-delà de 1 fait que chaque réplica interroge indépendamment chaque point de terminaison, dupliquant les notifications d'alerte sans coordination entre les instances. |
-| `enable_cloudsql_volume` | `false` | Élevé | Définir `true` avec `database_type = "NONE"` démarre un sidecar de proxy d'authentification sans instance à atteindre — rejeté par la protection au moment de la planification. |
-| `enable_iap` | uniquement lorsque l'authentification est activée | Élevé | IAP exige la connexion Google pour chaque requête, bloquant la visualisation non authentifiée de la page d'état. |
-| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la protection de validation rejette les valeurs invalides, et 0 ne laisserait aucun pod pour servir la page d'état. |
-| Bloc `security` de Gatus dans `config.yaml` | Configurer si la page contient des noms de points de terminaison sensibles | Moyen | Par défaut, la page d'état (y compris tous les noms de points de terminaison configurés et leur historique de disponibilité/indisponibilité) est visible publiquement par toute personne disposant de l'IP externe. |
+| `enable_cloudsql_volume` | `false` | Élevé | Définir `true` avec `database_type = "NONE"` démarre un sidecar Auth Proxy sans instance à atteindre — rejeté par la protection au moment de la planification. |
+| `enable_iap` | uniquement lorsque l'authentification est activée | Élevé | IAP exige la connexion Google pour chaque requête, bloquant la visualisation non authentifiée de la page de statut. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la protection de validation rejette les valeurs invalides, et 0 ne laisserait aucun pod pour servir la page de statut. |
+| Bloc Gatus `security` dans `config.yaml` | Configurer si la page contient des noms de points de terminaison sensibles | Moyen | Par défaut, la page de statut (y compris tous les noms de points de terminaison configurés et leur historique de disponibilité/indisponibilité) est visible publiquement par toute personne disposant de l'adresse IP externe. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pod dans l'espace de noms. |
 | `enable_pod_disruption_budget` | `true` | Moyen | La désactivation permet à GKE d'expulser tous les pods simultanément pendant la maintenance. |
 | `application_version` | Épinglez `v5.x.y` en production | Faible | `latest` correspond à une base épinglée (`v5.36.0`) ; épinglez explicitement pour contrôler les mises à niveau. |
@@ -423,7 +441,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 ---
 
 Pour le comportement de la fondation référencé tout au long — IAM et Workload Identity,
-mise à l'échelle automatique, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
+autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir **[App_GKE](App_GKE.md)**.
 La configuration d'application spécifique à Gatus partagée avec la variante Cloud Run est
 décrite dans **[Gatus_Common](Gatus_Common.md)**.

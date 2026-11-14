@@ -3,7 +3,7 @@ title: "App Common — Guide de configuration"
 description: "Référence de configuration partagée pour le module App — paramètres de la couche application consommés par les déploiements Cloud Run et GKE Autopilot."
 ---
 
-<!-- translated-from: docs/modules/App_Common.md @ 15fd4c7 sha256:53f7d90edf40 -->
+<!-- translated-from: docs/modules/App_Common.md @ 40c83c3f sha256:252575a8a254 -->
 
 # App Common — Guide de configuration {#app-common--configuration-guide}
 
@@ -11,15 +11,15 @@ description: "Référence de configuration partagée pour le module App — para
 
 App Common est la bibliothèque de capacités partagées qui sous-tend chaque déploiement d'application sur cette plateforme. Elle **n'est pas déployée directement par les utilisateurs**. Au lieu de cela, elle est consommée en interne par les deux moteurs de déploiement de base — [App CloudRun](App_CloudRun.md) et [App GKE](App_GKE.md) — qui l'appellent automatiquement lorsque vous déployez un module d'application (tel que Django CloudRun ou Odoo GKE).
 
-Considérez App Common comme la "boîte à outils d'infrastructure standard" de la plateforme. Chaque fois qu'une application est déployée, App Common est responsable de la découverte de l'environnement GCP déjà en place, de la connexion de l'application à celui-ci et du provisionnement des services de support dont l'application a besoin — bases de données, buckets de stockage, secrets, surveillance, contrôles de sécurité et pipelines CI/CD.
+Considérez App Common comme la « boîte à outils d'infrastructure standard » de la plateforme. Chaque fois qu'une application est déployée, App Common est responsable de la découverte de l'environnement GCP déjà en place, de la connexion de l'application à celui-ci et du provisionnement des services de support dont l'application a besoin — bases de données, buckets de stockage, secrets, surveillance, contrôles de sécurité et pipelines CI/CD.
 
-Étant donné qu'App Common s'exécute dans le cadre de chaque déploiement, les améliorations et les corrections qui lui sont apportées bénéficient automatiquement à toutes les applications sans aucune modification des modules d'application individuels.
+Étant donné qu'App Common s'exécute dans le cadre de chaque déploiement, les améliorations et les correctifs qui lui sont apportés profitent automatiquement à toutes les applications sans aucune modification des modules d'application individuels.
 
 Ce guide est organisé par **capacité** plutôt que par groupe de configuration : App Common est une bibliothèque partagée et n'expose aucune variable déployable via l'interface utilisateur ni aucune sortie de haut niveau qui lui soit propre. Pour les variables d'entrée et les sorties de déploiement d'un déploiement réel, consultez le [Guide de configuration d'App GKE](App_GKE.md) et le [Guide de configuration d'App CloudRun](App_CloudRun.md).
 
 ## Services GCP déployés {#deployed-gcp-services}
 
-App Common ne se déploie pas de manière indépendante. Pour chaque déploiement d'application, il provisionne et configure les services GCP suivants. Chaque capacité correspond à un ou plusieurs services Google Cloud, décrits en détail dans les sections ci-dessous.
+App Common ne se déploie pas indépendamment. Pour le compte de chaque déploiement d'application, il provisionne et configure les services GCP suivants. Chaque capacité correspond à un ou plusieurs services Google Cloud, décrits en détail dans les sections ci-dessous.
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
@@ -28,13 +28,13 @@ App Common ne se déploie pas de manière indépendante. Pour chaque déploiemen
 | Stockage | Cloud Storage (GCS) | Buckets de données d'application et buckets de sauvegarde |
 | Stockage de fichiers | Cloud Filestore / VM NFS Compute Engine | Découvre le NFS partagé pour le partage de fichiers multi-instances |
 | Images de conteneurs | Artifact Registry, Cloud Build | Découverte du registre d'images et builds d'images Kaniko |
-| IAM | IAM (liaisons de rôles de compte de service) | Liaisons de charge de travail et Cloud Build à moindre privilège |
+| IAM | IAM (liaisons de rôles de compte de service) | Liaisons de moindre privilège pour la charge de travail et Cloud Build |
 | Secrets | Secret Manager, Pub/Sub | Génération, validation et notifications de rotation de mots de passe |
 | Surveillance | Cloud Monitoring | Règles d'alerte, canaux de notification, tests de disponibilité et tableaux de bord |
 | CI/CD *(facultatif)* | Cloud Build (v2 GitHub), Cloud Deploy | Connexions GitHub et pipelines de livraison multi-étapes |
 | Sécurité *(facultatif)* | Binary Authorization, Container Analysis, VPC Service Controls | Attestation d'image et périmètres d'API |
 | Chiffrement *(facultatif)* | Cloud KMS | Trousseau de clés CMEK et CryptoKeys pour GCS et Artifact Registry |
-| Rotation de mot de passe *(facultatif)* | Cloud Run Jobs, Eventarc | `pw-rotator` job et `rot-dispatch` dispatcher |
+| Rotation de mot de passe *(facultatif)* | Cloud Run Jobs, Eventarc | Job `pw-rotator` et répartiteur `rot-dispatch` |
 
 ---
 
@@ -42,7 +42,7 @@ App Common ne se déploie pas de manière indépendante. Pour chaque déploiemen
 
 ### Découverte du réseau VPC {#vpc-network-discovery}
 
-App Common découvre automatiquement le réseau VPC et les sous-réseaux qui ont été provisionnés par Services GCP. Il identifie les sous-réseaux existants dans chaque région, mappe les régions à leurs sous-réseaux et collecte les tags de pare-feu réseau utilisés pour acheminer le trafic correctement. Cela signifie que les charges de travail des applications sont connectées au bon réseau privé sans aucune configuration manuelle — les services Cloud Run avec sortie VPC directe et les pods GKE reçoivent tous deux automatiquement le bon placement réseau et les bonnes attributions de tags de pare-feu.
+App Common découvre automatiquement le réseau VPC et les sous-réseaux qui ont été provisionnés par Services GCP. Il identifie les sous-réseaux existants dans chaque région, mappe les régions à leurs sous-réseaux et collecte les tags de pare-feu réseau utilisés pour acheminer correctement le trafic. Cela signifie que les charges de travail d'application sont connectées au bon réseau privé sans aucune configuration manuelle — les services Cloud Run avec sortie VPC directe et les pods GKE reçoivent automatiquement le bon placement réseau et les bonnes attributions de tags de pare-feu.
 
 ### Exploration dans GCP {#exploring-in-gcp}
 
@@ -71,9 +71,9 @@ gcloud compute firewall-rules list \
 
 ### Intégration Cloud SQL {#cloud-sql-integration}
 
-App Common découvre l'instance Cloud SQL que Services GCP a provisionnée pour le projet. Il lit le nom de connexion de l'instance, l'adresse IP interne et la version du moteur de base de données, puis génère un mot de passe de base de données aléatoire sécurisé et le stocke dans Secret Manager. Il provisionne également la base de données et l'utilisateur de base de données spécifiques à l'application sur l'instance partagée, de sorte que chaque application dispose de ses propres identifiants isolés tout en partageant l'infrastructure Cloud SQL sous-jacente.
+App Common découvre l'instance Cloud SQL que Services GCP a provisionnée pour le projet. Il lit le nom de connexion de l'instance, l'adresse IP interne et la version du moteur de base de données, puis génère un mot de passe de base de données aléatoire sécurisé et le stocke dans Secret Manager. Il provisionne également la base de données et l'utilisateur de base de données spécifiques à l'application sur l'instance partagée, de sorte que chaque application obtienne ses propres identifiants isolés tout en partageant l'infrastructure Cloud SQL sous-jacente.
 
-Le secret du mot de passe de la base de données suit la convention de nommage `secret-INSTANCE_NAME-SERVICE_NAME`, où `SERVICE_NAME` est l'identifiant de l'application `{application_name}{tenant_id}{hash}` — ainsi chaque application sur un locataire obtient son propre secret distinct. Les charges de travail des applications récupèrent ce secret au moment de l'exécution via Secret Manager plutôt que de le recevoir comme une variable d'environnement en clair.
+Le secret du mot de passe de la base de données suit la convention de nommage `secret-INSTANCE_NAME-SERVICE_NAME`, où `SERVICE_NAME` est l'identifiant `{application_name}{tenant_id}{hash}` de l'application — ainsi chaque application sur un locataire obtient son propre secret distinct. Les charges de travail d'application récupèrent ce secret au moment de l'exécution via Secret Manager plutôt que de le recevoir comme une variable d'environnement en clair.
 
 ### Exploration dans GCP {#exploring-in-gcp-1}
 
@@ -105,7 +105,7 @@ gcloud sql users list \
 
 ### Buckets Cloud Storage {#cloud-storage-buckets}
 
-App Common provisionne un ou plusieurs buckets GCS pour l'utilisation des applications. Les buckets sont créés avec la gestion des versions, un accès uniforme au niveau du bucket et la prévention de l'accès public activés par défaut. Des règles de cycle de vie sont appliquées pour transférer ou supprimer automatiquement les objets en fonction de l'âge et des conditions de version, ce qui permet de maintenir les coûts de stockage prévisibles. Un bucket de sauvegarde dédié est également créé pour chaque application avec une période de rétention configurable.
+App Common provisionne un ou plusieurs buckets GCS pour l'utilisation de l'application. Les buckets sont créés avec le versionnement, l'accès uniforme au niveau du bucket et la prévention de l'accès public activés par défaut. Des règles de cycle de vie sont appliquées pour transférer ou supprimer automatiquement des objets en fonction de l'âge et des conditions de version, ce qui rend les coûts de stockage prévisibles. Un bucket de sauvegarde dédié est également créé pour chaque application avec une période de rétention configurable.
 
 Lorsque le chiffrement CMEK est activé (voir la section CMEK ci-dessous), tous les buckets sont chiffrés avec une clé KMS gérée par le client.
 
@@ -133,7 +133,7 @@ gcloud storage buckets describe gs://BUCKET_NAME \
 
 ### Cloud Filestore et découverte NFS {#cloud-filestore-and-nfs-discovery}
 
-Pour les applications qui ont besoin d'un stockage de fichiers partagé (par exemple, un CMS avec des médias téléchargés par les utilisateurs partagés entre plusieurs instances), App Common découvre l'infrastructure NFS que Services GCP a mise à disposition. Il prend en charge deux types : les instances Cloud Filestore gérées et les serveurs NFS basés sur GCE. Lorsque les deux sont présents, l'instance Filestore a la priorité. Le point de terminaison NFS découvert est mis à la disposition de la charge de travail de l'application afin qu'elle puisse monter le système de fichiers partagé au démarrage.
+Pour les applications qui nécessitent un stockage de fichiers partagé (par exemple, un CMS avec des médias téléchargés par l'utilisateur partagés sur plusieurs instances), App Common découvre l'infrastructure NFS que Services GCP a mise à disposition. Il prend en charge deux types : les instances Cloud Filestore gérées et les serveurs NFS basés sur GCE. Lorsque les deux sont présents, l'instance Filestore a la priorité. Le point de terminaison NFS découvert est mis à la disposition de la charge de travail de l'application afin qu'elle puisse monter le système de fichiers partagé au démarrage.
 
 ### Exploration dans GCP {#exploring-in-gcp-3}
 
@@ -156,7 +156,7 @@ gcloud filestore instances describe INSTANCE_NAME \
 
 ### Artifact Registry {#artifact-registry}
 
-App Common découvre le dépôt Artifact Registry partagé provisionné par Services GCP. Ce dépôt stocke toutes les images de conteneurs d'applications et les images d'utilitaires de base de données. L'emplacement et l'ID du dépôt découverts sont utilisés à la fois par le processus de build de conteneur et par les déclencheurs de pipeline CI/CD pour garantir que les images sont poussées et tirées du bon registre.
+App Common découvre le dépôt Artifact Registry partagé provisionné par Services GCP. Ce dépôt stocke toutes les images de conteneurs d'applications et les images utilitaires de base de données. L'emplacement et l'ID du dépôt découverts sont utilisés à la fois par le processus de build de conteneur et par les déclencheurs de pipeline CI/CD pour garantir que les images sont poussées et tirées du bon registre.
 
 ### Exploration dans GCP {#exploring-in-gcp-4}
 
@@ -203,18 +203,18 @@ gcloud builds list \
 
 ## IAM {#iam}
 
-### Identité de charge de travail et liaisons de rôles {#workload-identity-and-role-bindings}
+### Workload Identity et liaisons de rôles {#workload-identity-and-role-bindings}
 
-App Common configure les liaisons IAM nécessaires au compte de service de chaque application pour fonctionner avec un accès à moindre privilège. Plus précisément, il accorde au compte de service de la charge de travail :
+App Common configure les liaisons IAM nécessaires pour que le compte de service de chaque application fonctionne avec un accès de moindre privilège. Plus précisément, il accorde au compte de service de la charge de travail :
 
-- **Secret Manager** — `roles/secretmanager.secretAccessor` sur le secret du mot de passe de la base de données et tout secret supplémentaire déclaré par l'application. Les secrets que la charge de travail elle-même réécrit (par exemple, un hook post-installation qui stocke une valeur générée) reçoivent en plus `roles/secretmanager.secretVersionManager`.
+- **Secret Manager** — `roles/secretmanager.secretAccessor` sur le secret du mot de passe de la base de données et tout secret supplémentaire déclaré par l'application. Les secrets sur lesquels la charge de travail écrit elle-même (par exemple, un hook post-installation qui stocke une valeur générée) reçoivent en plus `roles/secretmanager.secretVersionManager`. Ces octrois par secret sont le seul accès de la charge de travail à Secret Manager : aucun compte d'exécution ou de build ne détient un rôle Secret Manager au niveau du projet. Le mot de passe root de Cloud SQL est l'exception à la propriété par application — le secret et son octroi aux comptes d'exécution du locataire appartiennent à `Services GCP`, car chaque application sur l'instance partage cette liaison unique et une liaison appartenant à l'application a été révoquée pour toutes lorsque l'une des applications a été détruite. L'octroi `root_password` ici ne s'applique qu'à une instance créée en ligne par l'application.
 - **Cloud Storage** — `roles/storage.objectAdmin` et `roles/storage.legacyBucketReader` sur chacun des buckets GCS de l'application.
 
 Lorsque le CI/CD est activé, App Common accorde également au compte de service Cloud Build le rôle de déploiement approprié (`roles/run.developer` ou `roles/container.developer`) et la capacité d'agir en tant que compte de service de la charge de travail.
 
 ### Exploration dans GCP {#exploring-in-gcp-6}
 
-Console : **IAM et administration** → **IAM** — filtrez par l'adresse e-mail du compte de service de l'application pour voir ses liaisons. Pour les liaisons par ressource (secrets, buckets), vérifiez l'onglet **Autorisations** sur la ressource individuelle.
+Console : **IAM et administration** → **IAM** — filtrez par l'e-mail du compte de service de l'application pour voir ses liaisons. Pour les liaisons par ressource (secrets, buckets), vérifiez l'onglet **Autorisations** sur la ressource individuelle.
 
 ```bash
 # Show IAM bindings for the project (filter by service account)
@@ -240,9 +240,9 @@ App Common gère le cycle de vie complet des secrets d'application dans Secret M
 
 - Génère un mot de passe de base de données aléatoire et le stocke en tant que secret versionné.
 - Valide que tout secret supplémentaire déclaré par le module d'application (clés API, identifiants tiers, etc.) existe déjà dans Secret Manager avant que le déploiement ne se poursuive.
-- Crée un sujet Pub/Sub pour recevoir les notifications de rotation de secrets à un intervalle de rotation configurable.
+- Crée un sujet Pub/Sub pour recevoir les notifications de rotation de secret à un intervalle de rotation configurable.
 
-Les secrets sont référencés par les charges de travail des applications au moment de l'exécution — les services Cloud Run les résolvent en tant que variables d'environnement au démarrage, tandis que les charges de travail GKE les reçoivent en tant que secrets Kubernetes.
+Les secrets sont référencés par les charges de travail d'application au moment de l'exécution — les services Cloud Run les résolvent en tant que variables d'environnement au démarrage, tandis que les charges de travail GKE les reçoivent en tant que secrets Kubernetes.
 
 ### Exploration dans GCP {#exploring-in-gcp-7}
 
@@ -271,10 +271,10 @@ gcloud secrets versions access latest \
 Lorsque la rotation automatique des mots de passe est activée pour une application, App Common déploie une architecture de rotation basée sur trois composants :
 
 1. **Cloud Run Job** (`SERVICE_NAME-pw-rotator`) — exécute la rotation : génère un nouveau mot de passe, met à jour l'utilisateur Cloud SQL, ajoute la nouvelle version du secret, attend la propagation, puis désactive l'ancienne version. Cette approche sans interruption garantit que les charges de travail en cours d'exécution ne sont jamais perturbées.
-2. **Cloud Run Service** (`SERVICE_NAME-rot-dispatch`) — un répartiteur léger qui se met à l'échelle à zéro et qui relie le déclencheur Eventarc au job de rotation.
+2. **Cloud Run Service** (`SERVICE_NAME-rot-dispatch`) — un répartiteur léger à mise à l'échelle à zéro qui relie le déclencheur Eventarc au job de rotation.
 3. **Déclencheur Eventarc** (`SERVICE_NAME-pw-rot-trigger`) — déclenche le répartiteur chaque fois que Secret Manager émet une notification de rotation sur le sujet Pub/Sub.
 
-Les trois ressources sont spécifiques à l'application : elles sont préfixées par `SERVICE_NAME` du déploiement, de sorte que chaque application sur un locataire fait pivoter ses propres identifiants indépendamment.
+Les trois ressources sont spécifiques à l'application : elles sont préfixées par le `SERVICE_NAME` du déploiement, de sorte que chaque application sur un locataire tourne ses propres identifiants indépendamment.
 
 ### Exploration dans GCP {#exploring-in-gcp-8}
 
@@ -305,17 +305,17 @@ App Common crée des règles d'alerte Cloud Monitoring pour chaque application. 
 
 - Une **alerte d'utilisation du CPU** — se déclenche lorsque l'utilisation du CPU dépasse 90 % pendant 60 secondes.
 - Une **alerte d'utilisation de la mémoire** — se déclenche lorsque l'utilisation de la mémoire dépasse 90 % pendant 60 secondes.
-- Une **alerte de taux d'erreur 5xx** (`SERVICE_NAME-5xx-error-rate-alert`) — se déclenche lorsqu'un service Cloud Run renvoie plus de 5 erreurs de serveur en 5 minutes. Les alertes d'utilisation ne peuvent pas voir un service qui est en panne (un conteneur cassé ne consomme pas de CPU), mais les nombres de requêtes sont émis par requête, donc un conteneur répondant 503 est détecté. Un service qui ne reçoit aucun trafic ne déclenche rien. Il surveille les métriques de requêtes Cloud Run ; définissez `error_rate_alert_enabled = false` pour le supprimer lorsque des réponses 5xx sont attendues.
+- Une **alerte de taux d'erreur 5xx** (`SERVICE_NAME-5xx-error-rate-alert`) — se déclenche lorsqu'un service Cloud Run renvoie plus de 5 erreurs de serveur en 5 minutes. Les alertes d'utilisation ne peuvent pas voir un service qui est en panne (un conteneur cassé ne consomme pas de CPU), mais les nombres de requêtes sont émis par requête, donc un conteneur répondant 503 est détecté. Un service qui ne reçoit aucun trafic ne déclenche rien. Il surveille les métriques de requête Cloud Run ; définissez `error_rate_alert_enabled = false` pour le supprimer lorsque des réponses 5xx sont attendues.
 
 Les trois alertes notifient les adresses e-mail désignées comme utilisateurs de support pour le déploiement et re-notifient toutes les 30 minutes tant que la condition persiste. Les applications peuvent également définir des règles d'alerte personnalisées supplémentaires avec leurs propres filtres, seuils et périodes d'agrégation.
 
 ### Tests de disponibilité {#uptime-checks}
 
-Lorsque le point de terminaison de l'application est accessible publiquement, App Common provisionne également un **test de disponibilité** Cloud Monitoring (`SERVICE_NAME-uptime-check`) qui sonde le chemin configuré via HTTP(S) à partir de plusieurs emplacements mondiaux, ainsi qu'une **alerte de défaillance de test correspondante (créée uniquement lorsque `support_users` n'est pas vide)** (`SERVICE_NAME-uptime-check-alert`) qui se déclenche lorsque le point de terminaison est inaccessible pendant 5 minutes. Le chemin, le délai d'expiration et l'intervalle du test sont configurables ; le module de base décide si le point de terminaison est accessible publiquement et ignore le test s'il ne l'est pas.
+Lorsque le point de terminaison de l'application est publiquement accessible, App Common provisionne également un **test de disponibilité** Cloud Monitoring (`SERVICE_NAME-uptime-check`) qui sonde le chemin configuré via HTTP(S) depuis plusieurs emplacements mondiaux, ainsi qu'une **alerte d'échec de test correspondante (créée uniquement lorsque `support_users` n'est pas vide)** (`SERVICE_NAME-uptime-check-alert`) qui se déclenche lorsque le point de terminaison est inaccessible pendant 5 minutes. Le chemin, le délai d'attente et l'intervalle du test sont configurables ; le module de base décide si le point de terminaison est publiquement accessible et ignore le test s'il ne l'est pas.
 
 ### Exploration dans GCP {#exploring-in-gcp-9}
 
-Console : **Surveillance** → **Alertes** → **Règles** — filtrez par le nom de l'application pour trouver ses alertes. **Alertes** → **Canaux de notification** pour voir les canaux de messagerie.
+Console : **Surveillance** → **Alertes** → **Règles** — filtrez par le nom de l'application pour trouver ses alertes. **Alertes** → **Canaux de notification** pour voir les canaux e-mail.
 
 ```bash
 # List alert policies in the project
@@ -347,7 +347,7 @@ gcloud monitoring dashboards list --project=PROJECT_ID
 
 ### Intégration Cloud Build v2 GitHub {#cloud-build-v2-github-integration}
 
-Lorsque le CI/CD est activé pour une application, App Common établit une connexion Cloud Build v2 à GitHub à l'aide d'un jeton OAuth et d'une installation d'application GitHub. Il crée ensuite une ressource de dépôt Cloud Build v2 liée au dépôt GitHub de l'application. Cette connexion permet aux déclencheurs Cloud Build de répondre aux événements de push et à l'activité des requêtes pull dans GitHub.
+Lorsque le CI/CD est activé pour une application, App Common établit une connexion Cloud Build v2 à GitHub à l'aide d'un jeton OAuth et d'une installation d'application GitHub. Il crée ensuite une ressource de dépôt Cloud Build v2 liée au dépôt GitHub de l'application. Cette connexion permet aux déclencheurs Cloud Build de répondre aux événements de push et à l'activité des demandes de tirage dans GitHub.
 
 ### Exploration dans GCP {#exploring-in-gcp-11}
 
@@ -377,7 +377,7 @@ Un bucket GCS est créé pour stocker la configuration Skaffold et les manifeste
 
 ### Exploration dans GCP {#exploring-in-gcp-12}
 
-Console : **Cloud Deploy** → **Pipelines de livraison** — sélectionnez le pipeline pour voir ses étapes, ses versions et l'historique des déploiements.
+Console : **Cloud Deploy** → **Pipelines de livraison** — sélectionnez le pipeline pour voir ses étapes, ses versions et son historique de déploiement.
 
 ```bash
 # List Cloud Deploy delivery pipelines
@@ -409,7 +409,7 @@ Lorsque Binary Authorization est activé, App Common garantit que seules les ima
 - Une **note Container Analysis** et un **attestateur** (`pipeline-attestor`) auxquels la règle Binary Authorization fait référence.
 - Une **règle Binary Authorization** limitée au projet.
 
-Après chaque build de conteneur réussi, l'image de l'application est signée à l'aide de la clé KMS et une attestation est enregistrée dans Container Analysis. La règle est configurable selon trois modes d'application : permissif (autoriser tout), exiger une attestation (appliquer les images signées) ou refus d'urgence (bloquer tous les déploiements).
+Après chaque build de conteneur réussi, l'image de l'application est signée à l'aide de la clé KMS et une attestation est enregistrée dans Container Analysis. La règle est configurable selon trois modes d'application : permissif (tout autoriser), exiger l'attestation (appliquer les images signées) ou refus d'urgence (bloquer tous les déploiements).
 
 ### Exploration dans GCP {#exploring-in-gcp-13}
 
@@ -431,12 +431,12 @@ gcloud container binauthz attestations list \
 
 ### VPC Service Controls {#vpc-service-controls}
 
-Lorsque les contrôles de service VPC sont activés, App Common configure un périmètre Access Context Manager autour du projet pour restreindre les identités et les réseaux qui peuvent appeler les API GCP protégées. Le périmètre couvre les services clés utilisés par la plateforme, notamment Cloud Run, GKE, Cloud SQL, Secret Manager, Cloud Storage, Artifact Registry, Cloud Build, KMS et Pub/Sub.
+Lorsque les VPC Service Controls sont activés, App Common configure un périmètre Access Context Manager autour du projet pour restreindre les identités et les réseaux qui peuvent appeler les API GCP protégées. Le périmètre couvre les services clés utilisés par la plateforme, notamment Cloud Run, GKE, Cloud SQL, Secret Manager, Cloud Storage, Artifact Registry, Cloud Build, KMS et Pub/Sub.
 
-App Common découvre automatiquement l'ID de l'organisation à partir du projet et les plages CIDR des sous-réseaux VPC, puis construit quatre niveaux d'accès :
+App Common découvre automatiquement l'ID de l'organisation à partir du projet et des plages CIDR des sous-réseaux VPC, puis construit quatre niveaux d'accès :
 
 - **Accès VPC** — trafic provenant des sous-réseaux VPC du projet.
-- **Accès administrateur** — plages d'adresses IP d'administrateur spécifiées.
+- **Accès administrateur** — plages IP d'administrateur spécifiées.
 - **Accès IAP** — l'agent de service Identity-Aware Proxy.
 - **Accès CI/CD** — le compte de service Cloud Build et l'identité de déploiement.
 
@@ -470,9 +470,9 @@ Lorsque CMEK est activé, App Common provisionne et gère les clés Cloud KMS af
 
 - Découvre tout trousseau de clés KMS existant créé par Services GCP (préfixe `PROJECT_ID-cmek-`) et le réutilise ; crée un nouveau trousseau de clés uniquement si aucun n'existe.
 - Provisionne une CryptoKey `storage-key` pour le chiffrement des buckets GCS et accorde au compte de service Cloud Storage l'autorisation `roles/cloudkms.cryptoKeyEncrypterDecrypter` sur celle-ci.
-- Provisionne éventuellement une CryptoKey `artifact-registry-key` et accorde au compte de service Artifact Registry la même autorisation.
+- Provisionne éventuellement une CryptoKey `artifact-registry-key` et accorde à l'agent de service Artifact Registry la même autorisation.
 
-Au moment de la planification, App Common vérifie également si des versions de clés KMS sont programmées pour être détruites ou désactivées, et les restaure avant de provisionner les ressources chiffrées — empêchant ainsi la perte accidentelle de données due à l'expiration des versions de clés.
+Au moment de la planification, App Common vérifie également les versions de clés KMS qui sont programmées pour être détruites ou désactivées, et les restaure avant de provisionner les ressources chiffrées — empêchant ainsi la perte accidentelle de données due à l'expiration de la version de la clé.
 
 ### Exploration dans GCP {#exploring-in-gcp-15}
 
@@ -508,7 +508,7 @@ gcloud kms keys versions list \
 
 ## Entrées et sorties de déploiement {#deployment-inputs-and-outputs}
 
-App Common est une bibliothèque partagée interne. Elle n'a pas de variables d'entrée déployables via l'interface utilisateur et n'expose pas de sorties de déploiement de haut niveau qui lui soient propres — ses capacités sont toujours consommées via un module de base. Pour les variables de configuration destinées à l'utilisateur et les sorties renvoyées après un déploiement réussi, consultez le [Guide de configuration d'App GKE](App_GKE.md) et le [Guide de configuration d'App CloudRun](App_CloudRun.md).
+App Common est une bibliothèque interne partagée. Elle n'a pas de variables d'entrée déployables via l'interface utilisateur et n'expose pas de sorties de déploiement de haut niveau qui lui soient propres — ses capacités sont toujours consommées via un module de base. Pour les variables de configuration destinées à l'utilisateur et les sorties renvoyées après un déploiement réussi, consultez le [Guide de configuration d'App GKE](App_GKE.md) et le [Guide de configuration d'App CloudRun](App_CloudRun.md).
 
 <!-- related-guides -->
 

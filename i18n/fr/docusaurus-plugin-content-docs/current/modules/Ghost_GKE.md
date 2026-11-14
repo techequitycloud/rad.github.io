@@ -3,61 +3,61 @@ title: "Ghost sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Ghost sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ghost_GKE.md @ 60462a86 sha256:e9c2c2e45d3b -->
+<!-- translated-from: docs/modules/Ghost_GKE.md @ 40c83c3f sha256:4e05f8c0e86a -->
 
 # Ghost sur GKE Autopilot {#ghost-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Ghost_GKE.png" alt="Ghost sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Ghost est une plateforme de publication open source moderne qui alimente plus de 2 millions de publications avec des fonctionnalités intégrées d'adhésion, d'abonnements et de newsletters. Ce module déploie Ghost sur **GKE Autopilot** sur la base de la fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée Google Cloud et Kubernetes.
+Ghost est une plateforme de publication open source moderne qui alimente plus de 2 millions de publications avec des fonctionnalités intégrées d'adhésion, d'abonnements et de newsletters. Ce module déploie Ghost sur **GKE Autopilot** sur la base [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée de Google Cloud et Kubernetes.
 
-Ce guide se concentre sur les services cloud utilisés par Ghost et sur la manière de les explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les applications GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — veuillez vous référer au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud utilisés par Ghost et sur la manière de les explorer et de les opérer depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les applications GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement — veuillez vous référer au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
 ## Coût de Ghost sur RAD et comparaison {#what-ghost-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Ghost dans votre propre projet Google Cloud coûte environ 149,81 $ US/mois en frais Google Cloud, en plus d'un coût de module RAD unique de 300 crédits** (270 crédits — 10 % de moins — dans un projet géré par RAD). Ghost est une plateforme de publication open source moderne avec plus de 48 000 étoiles GitHub, alimentant plus de 2 millions de publications et utilisée par les principales marques de médias indépendants. Si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement et le reprendre plus tard — voir "Mettre en pause gratuitement" ci-dessous.
+**L'exécution de Ghost dans votre propre projet Google Cloud coûte environ 149,81 $ US/mois en frais Google Cloud, en plus d'un coût unique de 300 crédits pour le module RAD** (270 crédits — 10 % de moins — dans un projet géré par RAD). Ghost est une plateforme de publication open source moderne avec plus de 48 000 étoiles sur GitHub, alimentant plus de 2 millions de publications et utilisée par les principales marques de médias indépendants. Si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement et reprendre plus tard — voir "Mettre en pause gratuitement" ci-dessous.
 
-*Ghost est également disponible sur Cloud Run — voir le [guide Cloud Run](Ghost_CloudRun.md) pour l'option à moindre coût ; ce guide couvre la variante GKE.*
+*Ghost est également disponible sur Cloud Run — voir le [guide Cloud Run](Ghost_CloudRun.md) pour l'option moins coûteuse ; ce guide couvre la variante GKE.*
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
-| Frais de module | **300 crédits** (une seule fois) | **270 crédits** (une seule fois, 10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | ~149,81 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~115 crédits/jour (~11,50 $ US/jour), facturé à l'heure au prix catalogue plus la marge de RAD |
+| Frais de module | **300 crédits** (une fois) | **270 crédits** (une fois, 10 % de moins) |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Coût d'exécution Google Cloud | ~149,81 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~145 crédits/jour (~14,50 $ US/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
 
 **Coût d'exécution par défaut dans votre propre projet**
 
-| Ressource | $ US/mois (prix catalogue Google, us-central1) |
+| Ressource | US$/mois (prix catalogue Google, us-central1) |
 |---|---|
 | Pod GKE Autopilot, 2x vCPU / 4 Gio | 79,35 $ US |
 | Cloud SQL pour MySQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
 | Serveur de fichiers NFS/cache (petite VM) | 13,43 $ US |
 | Cloud NAT et réseau | 5 $ US |
 | Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
-| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 $ |
+| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 |
 | **Total** | **149,81 $ US** |
 
 ### Comparaison {#how-it-compares}
 
-- Le plan payant le moins cher de **Ghost(Pro)**, Starter, est de 18 $ US/mois (jusqu'à 1 000 membres, une newsletter, un nom de domaine personnalisé gratuit (facturé annuellement)) — vérifié sur [https://ghost.org/pricing/](https://ghost.org/pricing/). Cela réduit la facture Google Cloud de RAD d'environ 149,81 $ US/mois pour la variante GKE, mais cela plafonne l'utilisation ; l'instance de RAD est illimitée, auto-hébergée, et les données ne quittent jamais votre propre projet.
-- Le véritable compromis ici est entre le plafond et le contrôle, pas le prix : un plan SaaS géré est moins cher à cette échelle, et le coût d'exécution de RAD est ce que coûtent réellement Cloud SQL, le calcul et le réseau au prix catalogue de Google, sans rien de caché dans un prix de siège groupé.
-- RAD ne prétend pas être moins cher qu'un simple VPS en termes d'argent — ce n'est généralement pas le cas. L'intérêt de RAD est ce qui est géré pour vous.
+- Le plan payant le moins cher de **Ghost(Pro)**, Starter, est de 18 $ US/mois (jusqu'à 1 000 membres, une newsletter, un domaine personnalisé gratuit (facturé annuellement)) — vérifié sur [https://ghost.org/pricing/](https://ghost.org/pricing/). Cela est moins cher que la facture Google Cloud de RAD d'environ 149,81 $ US/mois pour la variante GKE, mais cela limite l'utilisation ; l'instance de RAD est illimitée, auto-hébergée, et les données ne quittent jamais votre propre projet.
+- Le véritable compromis ici est entre la limite et le contrôle, pas le prix : un plan SaaS géré est moins cher à cette échelle, et le coût d'exécution de RAD est ce que coûtent réellement Cloud SQL, le calcul et le réseau au prix catalogue de Google, sans rien de caché dans un prix de siège groupé.
+- RAD ne prétend pas être moins cher qu'un VPS nu en termes d'argent — ce n'est généralement pas le cas. L'intérêt de RAD est ce qui est géré pour vous.
 
-### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-Si Ghost est exécuté dans un **projet géré par RAD**, vous pouvez arrêter de le payer entièrement sans le détruire. La suppression de ce projet délie d'abord sa facturation, puis demande à Google de supprimer le projet purement et simplement — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression du module Ghost seul, cela ne supprime pas Cloud SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
+Si Ghost est exécuté dans un **projet géré par RAD**, vous pouvez arrêter de le payer entièrement sans le détruire. La suppression de ce projet délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression du module Ghost seul, cela ne supprime pas Cloud SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Les frais de module de 270 crédits ne sont pas facturés à nouveau.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit. Les frais de module de 270 crédits ne sont pas facturés à nouveau.
 
-Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après quoi Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude/démo). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
-Un véritable écart : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé Ghost et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé Ghost et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
 ### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
@@ -65,40 +65,40 @@ Si Ghost se trouve dans votre propre projet (ou si plus de 30 jours se sont éco
 
 Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) : 300 crédits (30,00 $ US) dans votre propre projet, ou **270 crédits** sur un projet géré par RAD.
 
-La suppression ne permet d'économiser de l'argent que si Ghost reste inutilisé suffisamment longtemps pour compenser le coût de ce redéploiement par rapport à son propre coût d'exécution : environ **7 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa facture Google Cloud d'environ 149,81 $ US/mois), ou **environ 3 jours ou plus** d'inactivité dans un projet géré par RAD (par rapport à ses ~115 crédits/jour).
+La suppression ne permet d'économiser de l'argent que si Ghost reste inutilisé assez longtemps pour que le coût de redéploiement soit inférieur à son propre coût d'exécution : environ **7 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa facture Google Cloud d'environ 149,81 $ US/mois), ou **environ 3 jours ou plus** d'inactivité dans un projet géré par RAD (par rapport à ses environ 145 crédits/jour).
 
-La majeure partie du coût d'exécution de Ghost est la base de données et la VM de fichier/cache partagée. Elles ne s'arrêtent que si rien d'autre dans le projet ne les utilise, donc la suppression de cette application alors que quelque chose d'autre partage le projet n'économise que la part de calcul de cette application du total ci-dessus.
+La majeure partie du coût d'exécution de Ghost est la base de données et la VM de fichier/cache partagée. Elles ne s'arrêtent que si rien d'autre dans le projet ne les utilise, donc la suppression de cette application alors que quelque chose d'autre partage le projet n'économise que la part de calcul de cette application sur le total ci-dessus.
 
-Conservez d'abord les données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec celui-ci, alors copiez la dernière sauvegarde avant de la supprimer si vous souhaitez la conserver.
+Conservez d'abord les données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant reçoit l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les cabinets de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est interrompue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite fixée par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés retournent au formateur.
+- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 - Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les propres frais de RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration ; [tarification de Ghost(Pro)](https://ghost.org/pricing/) pour les chiffres de Ghost(Pro).
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les frais propres à RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration ; [tarification de Ghost(Pro)](https://ghost.org/pricing/) pour les chiffres de Ghost(Pro).
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Ghost s'exécute comme une charge de travail web Node.js. Le déploiement relie un ensemble ciblé de services Google Cloud :
+Ghost fonctionne comme une charge de travail web Node.js. Le déploiement connecte un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | GKE Autopilot | Pods Node.js, 2 vCPU / 4 Gio par défaut, autoscalés horizontalement |
+| Calcul | GKE Autopilot | Pods Node.js, 2 vCPU / 4 Gio par défaut, mise à l'échelle horizontale automatique |
 | Base de données | Cloud SQL pour MySQL 8.0 | Requis — Ghost 6.x ne prend pas en charge PostgreSQL |
-| Fichiers partagés | Filestore (NFS) | Contenu et thèmes téléchargés partagés entre toutes les répliques |
+| Fichiers partagés | Filestore (NFS) | Contenu téléchargé et thèmes partagés entre tous les réplicas |
 | Stockage d'objets | Cloud Storage | Un bucket de contenu dédié (`ghost-content`) provisionné automatiquement |
 | Cache | Redis | Activé par défaut ; revient à l'adresse IP de l'hôte NFS si aucun hôte Redis n'est spécifié |
 | Secrets | Secret Manager | Mot de passe de la base de données géré automatiquement |
-| Ingress | Cloud Load Balancing | LoadBalancer externe, nom de domaine personnalisé facultatif + certificat géré |
+| Ingress | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé optionnel + certificat géré |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Ghost 6.x nécessite MySQL ; PostgreSQL n'est pas pris en charge et ne démarrera pas.
-- **`database__client = "mysql"` est injecté automatiquement.** Sans cela, Ghost revient silencieusement à SQLite — le module le gère de sorte que vous n'avez jamais besoin de le définir manuellement.
+- **`database__client = "mysql"` est injecté automatiquement.** Sans cela, Ghost revient silencieusement à SQLite — le module le gère pour que vous n'ayez jamais à le définir manuellement.
 - **Redis est activé par défaut.** Ghost utilise Redis pour la mise en cache des pages afin de réduire la charge de la base de données et d'améliorer les temps de réponse.
-- **L'affinité de session est `ClientIP`.** Le panneau d'administration et le portail d'adhésion de Ghost utilisent des sessions côté serveur ; les requêtes d'un navigateur sont épinglées à un pod.
+- **L'affinité de session est `ClientIP`.** Le panneau d'administration et le portail des membres de Ghost utilisent des sessions côté serveur ; les requêtes d'un navigateur sont épinglées à un pod.
 - **Un bucket GCS `ghost-content` est provisionné automatiquement** par `Ghost_Common` et n'a pas besoin d'être ajouté à `storage_buckets`.
 - **Un job `db-init` s'exécute à chaque apply** pour créer de manière idempotente la base de données et l'utilisateur MySQL de Ghost.
 - **Les sondes de santé ciblent `/`** avec un délai initial de 90 secondes pour permettre à Ghost d'exécuter les migrations de base de données et de compiler les thèmes au premier démarrage.
@@ -111,11 +111,11 @@ Ghost s'exécute comme une charge de travail web Node.js. Le déploiement relie 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont signalés dans les [Sorties](#5-outputs) du déploiement.
+identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Ghost {#a-gke-autopilot--the-ghost-workload}
 
-Les pods Ghost sont planifiés sur Autopilot, qui facture le CPU/la mémoire réellement demandés par les pods. L'autoscaling horizontal des pods dimensionne le déploiement entre le nombre minimum et maximum de répliques.
+Les pods Ghost sont planifiés sur Autopilot, qui facture le CPU/la mémoire que les pods demandent réellement. L'autoscaling horizontal des pods dimensionne le déploiement entre le nombre minimal et maximal de réplicas.
 
 - **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de travail Ghost pour voir les pods, les révisions et les événements. Kubernetes Engine → Services et Ingress affiche l'adresse IP externe.
 - **CLI :**
@@ -125,11 +125,11 @@ Les pods Ghost sont planifiés sur Autopilot, qui facture le CPU/la mémoire ré
   kubectl describe hpa -n "$NAMESPACE"          # current vs target utilisation
   ```
 
-Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de l'autoscaling et du type de charge de travail (Deployment vs StatefulSet).
+Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et du type de charge de travail (Deployment vs StatefulSet).
 
 ### B. Cloud SQL pour MySQL 8.0 {#b-cloud-sql-for-mysql-80}
 
-Ghost stocke toutes les données d'application (articles, membres, paramètres) dans une instance gérée de Cloud SQL pour MySQL 8.0. Les pods l'atteignent en privé via le sidecar **Cloud SQL Auth Proxy** sur un socket Unix, de sorte qu'aucune IP publique n'est exposée. Lors du premier déploiement, un job `db-init` crée la base de données et l'utilisateur de l'application.
+Ghost stocke toutes les données de l'application (articles, membres, paramètres) dans une instance Cloud SQL pour MySQL 8.0 gérée. Les pods l'atteignent en privé via le sidecar **Cloud SQL Auth Proxy** sur un socket Unix, de sorte qu'aucune IP publique n'est exposée. Lors du premier déploiement, un job `db-init` crée la base de données et l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs et les métriques.
 - **CLI :**
@@ -144,7 +144,7 @@ Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret 
 
 ### C. Filestore (NFS) et Cloud Storage {#c-filestore-nfs-and-cloud-storage}
 
-Le contenu téléchargé (images, thèmes, fichiers) est écrit dans un partage **Filestore (NFS)** monté dans chaque pod afin que toutes les répliques voient les mêmes fichiers. Un bucket **Cloud Storage** dédié (`ghost-content`) est également provisionné automatiquement pour le contenu ; le compte de service de la charge de travail se voit accorder l'accès automatiquement.
+Le contenu téléchargé (images, thèmes, fichiers) est écrit sur un partage **Filestore (NFS)** monté dans chaque pod afin que tous les réplicas voient les mêmes fichiers. Un bucket **Cloud Storage** dédié (`ghost-content`) est également provisionné automatiquement pour le contenu ; le compte de service de la charge de travail se voit accorder l'accès automatiquement.
 
 - **Console :** Filestore → Instances pour le partage NFS ; Cloud Storage → Buckets pour le bucket de contenu.
 - **CLI :**
@@ -186,7 +186,7 @@ Le nom du secret du mot de passe de la base de données se trouve dans les [Sort
 
 ### F. Réseau et ingress {#f-networking--ingress}
 
-La charge de travail est exposée via une adresse IP externe de Cloud Load Balancing. `enable_custom_domain` utilise par défaut `true`, provisionnant un Ingress Kubernetes avec un certificat géré par Google pour les noms d'hôte dans `application_domains` ; une adresse IP statique est réservée par défaut (`reserve_static_ip = true`) afin que l'adresse survive aux redéploiements.
+La charge de travail est exposée via une adresse IP externe de Cloud Load Balancing. `enable_custom_domain` utilise par défaut `true`, provisionnant un Ingress Kubernetes avec un certificat géré par Google pour les noms d'hôtes dans `application_domains` ; une adresse IP statique est réservée par défaut (`reserve_static_ip = true`) afin que l'adresse survive aux redéploiements.
 
 - **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
 - **CLI :**
@@ -199,7 +199,7 @@ Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les d�
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les métriques GKE et Cloud SQL sont acheminées vers Cloud Monitoring. Des tests de disponibilité et des politiques d'alerte facultatifs sont disponibles.
+Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les métriques GKE et Cloud SQL sont acheminées vers Cloud Monitoring. Des tests de disponibilité et des règles d'alerte optionnels sont disponibles.
 
 - **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
@@ -212,11 +212,11 @@ Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les mé
 
 ## 3. Comportement de l'application Ghost {#3-ghost-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un job `db-init` se connecte à Cloud SQL via le proxy d'authentification et crée de manière idempotente la base de données Ghost (avec le jeu de caractères `utf8mb4` et la collation `utf8mb4_0900_ai_ci`), crée l'utilisateur de l'application et accorde tous les privilèges. Le job s'exécute à chaque apply et peut être réexécuté en toute sécurité.
-- **Démarrage lent au premier lancement.** Ghost exécute des migrations de base de données et compile des thèmes au premier démarrage. La sonde de démarrage autorise un délai initial de 90 secondes (`initial_delay_seconds = 90`, `failure_threshold = 10`) — ne le réduisez pas en dessous de 60 secondes, sinon Ghost sera tué avant d'avoir terminé son initialisation.
-- **Détection dynamique d'URL.** Le script de point d'entrée personnalisé interroge le serveur de métadonnées Cloud Run/GKE au démarrage pour découvrir l'URL du service et l'exporter en tant que `url` et `admin__url` pour Ghost. Une variable d'environnement explicite `url` a toujours la priorité.
+- **Configuration de la base de données au premier déploiement.** Un job `db-init` se connecte à Cloud SQL via le proxy d'authentification et crée de manière idempotente la base de données Ghost (avec le jeu de caractères `utf8mb4` et le classement `utf8mb4_0900_ai_ci`), crée l'utilisateur de l'application et accorde tous les privilèges. Le job s'exécute à chaque apply et peut être réexécuté en toute sécurité.
+- **Démarrage lent au premier lancement.** Ghost exécute des migrations de base de données et compile des thèmes au premier démarrage. La sonde de démarrage autorise un délai initial de 90 secondes (`initial_delay_seconds = 90`, `failure_threshold = 10`) — ne réduisez pas ce délai en dessous de 60 secondes, sinon Ghost sera tué avant d'avoir terminé son initialisation.
+- **Détection dynamique de l'URL.** Le script de point d'entrée personnalisé interroge le serveur de métadonnées Cloud Run/GKE au démarrage pour découvrir l'URL du service et l'exporter en tant que `url` et `admin__url` pour Ghost. Une variable d'environnement `url` explicite a toujours la priorité.
 - **Connexion à la base de données.** Le point d'entrée mappe automatiquement les variables `DB_HOST`, `DB_USER`, `DB_NAME`, `DB_PASSWORD` et `DB_PORT` de la fondation aux paramètres `database__connection__*` de Ghost. Lorsque `DB_HOST` commence par `/`, il est traité comme un chemin de socket Unix.
-- **SMTP pour les e-mails.** Ghost nécessite SMTP pour les inscriptions de membres, les réinitialisations de mot de passe et la livraison de newsletters. `environment_variables` pré-remplis (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SSL`, `EMAIL_FROM`) — configurez-les avant d'inviter des membres.
+- **SMTP pour l'e-mail.** Ghost nécessite SMTP pour les inscriptions de membres, les réinitialisations de mot de passe et la livraison des newsletters. `environment_variables` pré-remplis (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SSL`, `EMAIL_FROM`) — configurez-les avant d'inviter des membres.
 - **Connexion administrateur.** Le panneau d'administration de Ghost se trouve à l'adresse `<url>/ghost`. Au premier démarrage, Ghost crée un utilisateur administrateur de manière interactive.
 - **Chemin de santé.** Les sondes de disponibilité/vivacité ciblent `/`, qui renvoie HTTP 200 lorsque Ghost est entièrement initialisé.
 
@@ -224,13 +224,13 @@ Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les mé
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour Ghost sont listés ; toutes les autres entrées sont héritées de [App_GKE](App_GKE.md) avec son comportement standard et ses valeurs par défaut.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour Ghost sont listés ; toutes les autres entrées sont héritées de [App_GKE](App_GKE.md) avec son comportement et ses valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
+| `project_id` | _(requis)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région pour la charge de travail et les ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
@@ -239,7 +239,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails ayant accès au projet et aux alertes de surveillance. |
-| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources pour le suivi des coûts/de la propriété. |
+| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources pour le suivi des coûts/propriétés. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
@@ -256,11 +256,11 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 |---|---|---|
 | `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `2000m` | CPU par pod ; 2 vCPU minimum pour Ghost 6.x. |
-| `memory_limit` | `4Gi` | Mémoire par pod ; 4 Gio recommandés (Ghost manque de mémoire en dessous de 1 Gio). |
-| `min_instance_count` | `1` | Répliques minimales. Garder ≥ 1 pour éviter les démarrages à froid et les retards de migration. |
-| `max_instance_count` | `5` | Répliques maximales (plafond de l'autoscaler). |
+| `memory_limit` | `4Gi` | Mémoire par pod ; 4 Gio recommandés (Ghost OOM en dessous de 1 Gio). |
+| `min_instance_count` | `1` | Réplicas minimum. Garder ≥ 1 pour éviter les démarrages à froid et les retards de migration. |
+| `max_instance_count` | `5` | Réplicas maximum (plafond de l'autoscaler). |
 | `container_port` | `2368` | Port HTTP natif de Ghost. Ne pas modifier sauf si votre Dockerfile se lie à un port différent. |
-| `container_image_source` | `custom` | `custom` construit via Cloud Build (par défaut) ; `prebuilt` déploie une image existante. |
+| `container_image_source` | `custom` | `custom` builds via Cloud Build (par défaut) ; `prebuilt` déploie une image existante. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions socket. Requis pour Ghost. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisser Autopilot ajuster automatiquement les demandes de ressources. |
 
@@ -269,7 +269,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{SMTP_HOST="", SMTP_PORT="587", SMTP_USER="", SMTP_PASSWORD="", SMTP_SSL="false", EMAIL_FROM="ghost@example.com"}` | Paramètres SMTP pré-remplis pour la livraison d'e-mails Ghost. `database__client=mysql` est injecté automatiquement — ne le définissez pas ici. |
-| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. |
+| `secret_environment_variables` | `{}` | Mappage de var d'env → nom de secret Secret Manager. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
@@ -308,10 +308,10 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/` 90s de délai initial, 10 échecs | Sonde HTTP sur le chemin racine de Ghost (200 quand prêt). Délai généreux pour les migrations au premier démarrage. |
+| `startup_probe` | HTTP `/` 90s de délai initial, 10 échecs | Sonde HTTP vers le chemin racine de Ghost (200 quand prêt). Délai généreux pour les migrations au premier démarrage. |
 | `liveness_probe` | HTTP `/` 60s de délai initial | Sonde de vivacité ciblant le chemin racine de Ghost. |
-| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
-| `alert_policies` | `[]` | Politiques d'alerte métrique facultatives. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring optionnel. |
+| `alert_policies` | `[]` | Politiques d'alerte métrique optionnelles. |
 
 ### Groupe 11 — Automatisation de la charge de travail {#group-11--workload-automation}
 
@@ -322,13 +322,13 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
 
-Intégration standard Cloud Build / Cloud Deploy d'App_GKE — voir [App_GKE](App_GKE.md). Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`, `enable_cloud_deploy`.
+Intégration standard App_GKE Cloud Build / Cloud Deploy — voir [App_GKE](App_GKE.md). Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`, `enable_cloud_deploy`.
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Volume Filestore partagé pour le contenu Ghost (garder activé pour les répliques multiples). |
+| `enable_nfs` | `true` | Volume Filestore partagé pour le contenu Ghost (garder activé pour les réplicas multiples). |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage à l'intérieur du conteneur. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
@@ -347,7 +347,7 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — voir [App_GKE](Ap
 | `enable_redis` | `true` | Utiliser Redis pour la mise en cache des pages de Ghost. |
 | `redis_host` | `""` | Laisser vide pour utiliser l'adresse IP de l'hôte NFS ; définir explicitement lorsque NFS est désactivé. |
 | `redis_port` | `6379` | Port Redis. |
-| `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
+| `redis_auth` | `""` | Mot de passe d'authentification Redis optionnel (sensible). |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
@@ -377,17 +377,17 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — voir [App_GKE](Ap
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_custom_domain` | `true` | Provisionner Ingress pour les noms d'hôte personnalisés + certificat géré. |
-| `application_domains` | `[]` | Noms d'hôte à servir. Ghost doit connaître son URL publique au démarrage — assurez-vous que le domaine correspond. |
+| `enable_custom_domain` | `true` | Provisionner Ingress pour les noms d'hôtes personnalisés + certificat géré. |
+| `application_domains` | `[]` | Noms d'hôtes à servir. Ghost doit connaître son URL publique au démarrage — assurez-vous que le domaine correspond. |
 | `reserve_static_ip` | `true` | IP externe stable sur les redéploiements. |
 
-### Groupe 20 — Proxy d'identité (IAP) {#group-20--identity-aware-proxy-iap}
+### Groupe 20 — Identity-Aware Proxy (IAP) {#group-20--identity-aware-proxy-iap}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_iap` | `false` | Exiger la connexion Google devant Ghost. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder. |
-| `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | Requis lorsque l'IAP est activé (sensible). |
+| `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | Requis lorsque IAP est activé (sensible). |
 | `iap_support_email` | `""` | Affiché sur l'écran de consentement OAuth. |
 
 ### Groupe 21 — Cloud Armor {#group-21--cloud-armor}
@@ -398,12 +398,12 @@ Intégration standard Cloud Build / Cloud Deploy d'App_GKE — voir [App_GKE](Ap
 | `admin_ip_ranges` | `[]` | CIDR autorisés à un accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la politique. |
 
-### Groupe 22 — Contrôles de service VPC et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode de simulation (dry-run). |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
 | `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 ---
@@ -428,7 +428,7 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
-| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatif) d'importation. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (optionnel). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants de projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
@@ -443,25 +443,25 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
-| `database_type` | `MYSQL_8_0` | Critique | Ghost nécessite MySQL 8.0 ; tout autre moteur bloque le démarrage. |
+| `database_type` | `MYSQL_8_0` | Critique | Ghost nécessite MySQL 8.0 ; tout autre moteur empêche le démarrage. |
 | `db_name` / `db_user` | défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_nfs` | `true` | Critique | Sans stockage partagé, le contenu téléchargé est perdu au redémarrage du pod et n'est pas partagé entre les répliques. |
+| `enable_nfs` | `true` | Critique | Sans stockage partagé, le contenu téléchargé est perdu au redémarrage du pod et n'est pas partagé entre les réplicas. |
 | `container_port` | `2368` | Critique | Port natif de Ghost ; une non-concordance entraîne l'échec de toutes les sondes de santé. |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans un `backup_uri` valide échoue le job d'importation. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans `backup_uri` valide fait échouer le job d'importation. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets et bloquent toute planification. |
-| `startup_probe` initial_delay_seconds | `90` | Élevé | La réduction en dessous de 60 secondes entraîne la suppression de Ghost par Kubernetes avant qu'il ne termine l'exécution des migrations. |
+| `startup_probe` initial_delay_seconds | `90` | Élevé | La réduction en dessous de 60 secondes entraîne l'arrêt de Ghost par Kubernetes avant qu'il ne termine l'exécution des migrations. |
 | `enable_redis` | `true` | Élevé | Sans Redis, Ghost sert toutes les pages sans cache, augmentant la charge de la base de données. |
 | `redis_host` | `""` (NFS) ou explicite | Élevé | Pas de point de terminaison valide si Redis est activé mais NFS est désactivé et aucun hôte n'est défini. |
-| `memory_limit` | `4Gi` | Élevé | Trop peu de mémoire provoque un manque de mémoire (OOM) de Node.js lors de l'envoi de newsletters ou de la compilation de thèmes. |
-| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les sessions d'administration Ghost multi-répliques échouent par intermittence. |
-| `environment_variables` Paramètres SMTP | serveur SMTP réel | Élevé | L'absence de livraison d'e-mails signifie l'absence d'inscriptions de membres, de réinitialisations de mot de passe, de newsletters. |
+| `memory_limit` | `4Gi` | Élevé | Trop peu de mémoire provoque un OOM de Node.js lors de l'envoi de newsletters ou de la compilation de thèmes. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance, les sessions d'administration Ghost multi-réplicas échouent par intermittence. |
+| `environment_variables` Paramètres SMTP | vrai serveur SMTP | Élevé | Aucune livraison d'e-mail signifie aucune inscription de membre, aucune réinitialisation de mot de passe, aucune newsletter. |
 | `container_image_source` | `custom` | Élevé | L'image Ghost en amont ne contient pas le point d'entrée personnalisé qui mappe les identifiants de la base de données et détecte l'URL du service. |
 | `min_instance_count` | `1` | Moyen | `0` provoque des démarrages à froid pendant lesquels Ghost exécute des migrations, ce qui entraîne des délais d'attente pour les premières requêtes. |
-| `enable_iap` / `enable_cloud_armor` | activer pour l'administration | Moyen | Le panneau d'administration de Ghost (`/ghost`) est autrement accessible publiquement. |
+| `enable_iap` / `enable_cloud_armor` | activer pour l'administration | Moyen | Le panneau d'administration de Ghost (`/ghost`) est sinon publiquement accessible. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
-| `pdb_min_available` vs `min_instance_count` | laisser une marge | Moyen | `1`/`1` peut bloquer les mises à niveau de nœuds (un seul pod ne peut pas être évincé). |
+| `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau de nœuds (un seul pod ne peut pas être évincé). |
 
 ---
 
@@ -472,5 +472,5 @@ Pour le comportement de la fondation référencé tout au long — IAM et Worklo
 ## Guides associées {#related-guides}
 
 - [Lab pratique : Ghost sur GKE Autopilot](../labs/Ghost_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
-- [Ghost sur Google Cloud Run](Ghost_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.
+- [Ghost sur Google Cloud Run](Ghost_CloudRun.md) — la même application sur Cloud Run, pour lorsque vous avez besoin de l'autre cible de déploiement.
 - [Ghost Common — Configuration d'application partagée](Ghost_Common.md) — la configuration partagée par les deux cibles de déploiement.

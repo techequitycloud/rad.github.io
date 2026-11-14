@@ -205,7 +205,7 @@ gcloud builds list \
 
 App Common sets up the IAM bindings needed for each application's service account to operate with least-privilege access. Specifically, it grants the workload service account:
 
-- **Secret Manager** — `roles/secretmanager.secretAccessor` on the database password secret and any additional secrets the application declares. Secrets the workload itself writes back to (for example a post-install hook that stores a generated value) additionally receive `roles/secretmanager.secretVersionManager`.
+- **Secret Manager** — `roles/secretmanager.secretAccessor` on the database password secret and any additional secrets the application declares. Secrets the workload itself writes back to (for example a post-install hook that stores a generated value) additionally receive `roles/secretmanager.secretVersionManager`. These per-secret grants are the workload's only Secret Manager access: no runtime or build account holds a project-level Secret Manager role. The Cloud SQL root password is the exception to per-application ownership — the secret and its grant to the tenant's runtime accounts belong to `Services GCP`, because every application on the instance shares that one binding and an application-owned binding was revoked for all of them when any one application was destroyed. The `root_password` grant here applies only to an instance the application created inline.
 - **Cloud Storage** — `roles/storage.objectAdmin` and `roles/storage.legacyBucketReader` on each of the application's GCS buckets.
 
 When CI/CD is enabled, App Common also grants the Cloud Build service account the appropriate deployment role (`roles/run.developer` or `roles/container.developer`) and the ability to act as the workload service account.

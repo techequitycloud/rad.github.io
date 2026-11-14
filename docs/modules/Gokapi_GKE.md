@@ -35,10 +35,10 @@ than repeating them here.
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | **75 credits** (one-time) | **67.5 credits** (one-time, 10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | ~US$42.08/month, billed to your own Google billing account at list price | ~67 credits/day (~US$6.70/day), metered hourly at list price plus RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | ~US$42.08/month, billed to your own Google billing account at list price | ~75 credits/day (~US$7.50/day), metered hourly at list price plus RAD's margin |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 **Default running cost in your own project**
 
@@ -95,7 +95,7 @@ in your own project, or **67.5 credits** on a RAD-managed one.
 Deleting only saves money once Gokapi would otherwise sit unused long enough to clear that redeploy cost
 against its own running cost: roughly **about 6 days or more** idle in your own project (against its
 ~US$42.08/month Google Cloud bill), or **about 2 days or more** idle in a RAD-managed project
-(against its ~67 credits/day).
+(against its ~75 credits/day).
 
 Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it, so copy the
 latest backup out before deleting if you want to keep it.

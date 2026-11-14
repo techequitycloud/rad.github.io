@@ -3,7 +3,7 @@ title: "Saleor sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Saleor sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Saleor_CloudRun.md @ 60462a86 sha256:8127304bd3a8 -->
+<!-- translated-from: docs/modules/Saleor_CloudRun.md @ 40c83c3f sha256:d2c52cfb8d9f -->
 
 # Saleor sur Google Cloud Run {#saleor-on-google-cloud-run}
 
@@ -11,34 +11,34 @@ description: "Référence de configuration pour le déploiement de Saleor sur Go
 
 Saleor est une plateforme e-commerce headless open source, GraphQL-first, basée
 sur Python/Django (catalogue de produits, paiement, commandes et plugins de
-paiement, tous exposés via une API GraphQL plutôt que par une vitrine intégrée).
-Ce module déploie Saleor sur **Cloud Run v2** sur la base de la fondation
-[App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
-Google Cloud partagée.
+paiement, tous exposés via une API GraphQL plutôt que par une vitrine
+intégrée). Ce module déploie Saleor sur **Cloud Run v2** sur la base de la
+fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
+l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud utilisés par Saleor et sur la
 manière de les explorer et de les exploiter depuis la console Google Cloud et la
-ligne de commande. Pour les mécanismes communs à chaque application Cloud Run —
-identité de service, ingress et équilibrage de charge, mise à l'échelle et
+ligne de commande. Pour les mécanismes communs à toutes les applications Cloud
+Run — identité de service, entrée et équilibrage de charge, mise à l'échelle et
 concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
 Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter
-ici.
+[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les
+répéter ici.
 
 ---
 
 ## Ce que coûte Saleor sur RAD, et comment cela se compare {#what-saleor-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Saleor dans votre propre projet GCP coûte environ 100,40 $/mois en frais Google Cloud ; les frais de module de RAD sont de 175 crédits uniques (ou 157,5 crédits dans un projet géré par RAD), couvrant la configuration et le support — pas la facture cloud continue, que Google vous facture directement dans votre propre projet ou que RAD facture à l'heure en crédits dans un projet géré par RAD.**
-Ou consultez le guide GKE pour la cible de déploiement alternative ; dans tous les cas, si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement lorsque vous ne l'utilisez pas — voir [Mettre en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous.
+**L'exécution de Saleor dans votre propre projet GCP coûte environ 100,40 $/mois en frais Google Cloud ; les frais de module de RAD sont de 175 crédits uniques (ou 157,5 crédits dans un projet géré par RAD), couvrant la configuration et le support — pas la facture cloud continue, que Google vous facture directement dans votre propre projet ou que RAD mesure à l'heure en crédits dans un projet géré par RAD.**
+Ou consultez le guide GKE pour la cible de déploiement alternative ; dans tous les cas, si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement lorsque vous ne l'utilisez pas — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 175 crédits, une fois | 157,5 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | ~100,40 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~32 crédits/jour, facturé à l'heure par RAD au prix catalogue plus marge |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | ~100,40 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~67 crédits/jour, mesuré à l'heure par RAD au prix catalogue plus marge |
 
 **Coût d'exécution par défaut dans votre propre projet**
 
@@ -53,69 +53,98 @@ Ou consultez le guide GKE pour la cible de déploiement alternative ; dans tous 
 
 ### Comment cela se compare {#how-it-compares}
 
-- L'offre gérée officielle de Saleor, Saleor Cloud, commence à **1 599 $/mois** (niveau Select, jusqu'à 200 000 $ de GMV ; source : https://saleor.io/pricing) — destinée aux vitrines de production avec un volume de transactions réel, ce n'est donc pas une comparaison directe avec un déploiement en libre-service unique, mais c'est le seul prix commercial vérifié pour cette plateforme exacte.
-- L'exécuter vous-même sur un VPS nu reste l'option la moins chère — Hetzner CPX22 (2 vCPU/4 Go) coûte environ **24 $/mois**, un Droplet DigitalOcean 2 vCPU/4 Go coûte également **24 $/mois**, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) coûte environ **49 $/mois** — plus le temps de l'administrateur pour les sauvegardes, les correctifs de sécurité et les mises à niveau, que le Cloud SQL géré, Secret Manager et la surveillance de RAD couvrent pour vous — mais le prix de RAD n'est jamais destiné à battre un VPS, seulement à remplacer le temps d'administration qu'un VPS nécessite encore.
-- Saleor est une API de commerce dont dépendent les vitrines en direct, donc la disponibilité a tendance à être plus importante ici que de réduire les coûts d'exécution — mais le même mécanisme de pause ci-dessous s'applique toujours à une vitrine de staging ou de démonstration qui ne prend pas de commandes en direct.
+- L'offre gérée officielle de Saleor, Saleor Cloud, commence à **1 599 $/mois** (niveau Select, jusqu'à 200 000 $ de GMV ; source : https://saleor.io/pricing) — elle vise les vitrines de production avec un volume de transactions réel, ce n'est donc pas une comparaison directe avec un déploiement en libre-service unique, mais c'est le seul prix commercial vérifié pour cette plateforme exacte.
+- L'exécuter vous-même sur un VPS nu reste l'option la moins chère en espèces — Hetzner CPX22 (2 vCPU/4 Go) coûte environ **24 $/mois**, un Droplet DigitalOcean 2 vCPU/4 Go coûte également **24 $/mois**, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) coûte environ **49 $/mois** — plus le temps de l'administrateur pour les sauvegardes, les correctifs de sécurité et les mises à niveau, que Cloud SQL géré, Secret Manager et la surveillance de RAD couvrent pour vous — mais le prix de RAD n'est jamais destiné à battre un VPS, seulement à remplacer le temps d'administration qu'un VPS nécessite encore.
+- Saleor est une API de commerce dont dépendent les vitrines en direct, de sorte que la disponibilité a tendance à être plus importante ici que la réduction des coûts d'exécution — mais le même mécanisme de pause ci-dessous s'applique toujours à une vitrine de staging ou de démonstration qui ne prend pas de commandes en direct.
 
-### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 **C'est le titre pour un projet géré par RAD.** La suppression d'un projet géré par RAD
 délie d'abord sa facturation, puis demande à Google de supprimer le projet
-purement et simplement — la propre suppression logicielle récupérable de 30 jours
-de Google. Contrairement à la suppression d'un module, cela ne supprime pas
-Cloud SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du
-projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la
-facturation est déjà déliée.
+purement et simplement — la suppression logique récupérable de 30 jours de Google.
+Contrairement à la suppression d'un module, cela ne supprime pas Cloud SQL,
+aucune VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête
+simplement, et rien n'est facturé pendant qu'il attend, car la facturation est
+déjà déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
 La restauration, dans les 30 jours et uniquement par le propriétaire du projet,
 demande à Google de restaurer le projet et de rattacher son compte de
-facturation, puis vous demande d'exécuter une mise à jour sur chaque
-déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit
+facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement
+pour confirmer que tout est revenu. Étant donné que rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà présentes
 — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+jamais les frais de module à nouveau. Les mises à jour sont incluses dans le
+prix (5 par mois pour chaque déploiement), donc une restauration ne coûte
+normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD
 gère uniquement la facturation), vous devez le restaurer vous-même dans les 30
 jours — après cela, Google le supprime définitivement — et la restauration est
-admise comme la création d'un nouveau projet, donc votre solde de crédits
-achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau
-sandbox qui convient à la plupart des utilisations d'étude/démo). Google
-affirme que la plupart des services sont à nouveau pleinement fonctionnels dans
-les 36 heures suivant une restauration.
+admise comme la création d'un nouveau projet, de sorte que votre solde de
+crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le
+niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google
+affirme que la plupart des services sont entièrement fonctionnels dans les 36
+heures suivant une restauration.
 
 **Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket
-à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud
-Storage explicitement désactivée, il est donc très probable qu'il disparaisse
-dès que vous supprimez le projet — même si le projet lui-même est récupérable
-pendant 30 jours. Si vous avez personnalisé l'application et que vous souhaitez
-conserver ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en
-dehors du projet) avant de la supprimer. Pour une installation par défaut sans
-rien d'irremplaçable, cela n'a pas d'importance.
+à l'intérieur du projet, et ce bucket a la suppression logique de Cloud Storage
+explicitement désactivée, il est donc très probable qu'il disparaisse dès que
+vous supprimez le projet — même si le projet lui-même est récupérable pendant 30
+jours. Si vous avez personnalisé l'application et que vous souhaitez conserver
+ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en dehors du
+projet) avant de la supprimer. Pour une installation par défaut sans rien
+d'irremplaçable, cela n'a pas d'importance.
 
-### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payez uniquement pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de restauration de 30 jours ci-dessus), l'alternative est de supprimer Saleor purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 175 crédits.
+Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de
+restauration de 30 jours ci-dessus), l'alternative est de supprimer Saleor
+purement et simplement et de le redéployer plus tard. Un redéploiement coûte à
+nouveau les frais de module (les builds sont inclus) — 175 crédits.
 
-La suppression ne permet d'économiser de l'argent que si Saleor reste inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution quotidien — par rapport au total du projet ci-dessus, cela représente environ 5 jours ou plus. La majeure partie du coût d'exécution ici est généralement la base de données et la VM NFS/cache ; elles ne s'arrêtent que si rien d'autre dans le projet ne les utilise, donc la suppression de cette application pendant que quelque chose d'autre partage le projet n'économise que la partie calcul propre à cette application.
+La suppression ne permet d'économiser de l'argent que si Saleor resterait
+inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par
+rapport à son propre coût d'exécution quotidien — par rapport au total du
+projet ci-dessus, cela représente environ 5 jours ou plus. La majeure partie du
+coût d'exécution ici est généralement la base de données et la VM NFS/cache ;
+elles ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc
+la suppression de cette application pendant que quelque chose d'autre partage le
+projet n'économise que la partie calcul propre à cette application.
 
-**Conserver les données d'abord :** les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+**Conservez d'abord les données :** les sauvegardes nocturnes vont dans un
+bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez
+la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, afin que personne ne reçoive de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
-- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+- **Sessions de lab, pour la formation :** un formateur anime une session pour
+  une classe. Chaque participant obtient l'application dans son propre projet
+  Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
+  définie par le formateur. Soit le formateur finance toutes les places, soit
+  chaque participant paie la sienne. Tout est supprimé à la fin de la session et
+  les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les cabinets de conseil :** un partenaire exécute
+  l'application pour un client à partir d'un portefeuille cloisonné qu'il
+  finance, et règle directement avec le client. Si le portefeuille est faible,
+  la facturation est mise en pause et les données sont conservées, afin que
+  personne ne reçoive de frais inattendus. À la fin, le partenaire transfère le
+  projet et les déploiements deviennent la propriété du client.
+- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF,
+  NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les propres frais de RAD et les estimations de crédits quotidiens ; https://cloud.google.com/resource-manager/docs/delete-restore-projects pour les mécanismes de pause/restauration ; https://saleor.io/pricing pour le prix du concurrent nommé.
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ;
+radmodules.dev/pricing pour les frais propres à RAD et les estimations de crédits
+quotidiens ; https://cloud.google.com/resource-manager/docs/delete-restore-projects
+pour les mécanismes de pause/restauration ; https://saleor.io/pricing pour le prix du
+concurrent nommé.
 
 ## 1. Vue d'ensemble {#1-overview}
 
 Saleor s'exécute en tant que conteneur personnalisé (`ghcr.io/saleor/saleor:3.23` enveloppé d'un
-point d'entrée cloud) sur Cloud Run v2. Le déploiement connecte un ensemble ciblé
-de services Google Cloud :
+point d'entrée cloud) sur Cloud Run v2. Le déploiement connecte un ensemble
+ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
@@ -123,29 +152,31 @@ de services Google Cloud :
 | Base de données | Cloud SQL pour PostgreSQL 15 | Requis — fixé par `Saleor_Common` quelle que soit la valeur de `database_type` |
 | Stockage d'objets | Cloud Storage | Un bucket `media` dédié provisionné automatiquement |
 | Cache et broker | Redis (facultatif) | Prend en charge `CACHE_URL`/`CELERY_BROKER_URL` pour le worker Celery colocalisé |
-| Secrets | Secret Manager | `SECRET_KEY`, `RSA_PRIVATE_KEY`, `DJANGO_SUPERUSER_PASSWORD` auto-générés ; mot de passe de la base de données |
-| Ingress | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, entièrement publique ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
+| Secrets | Secret Manager | `SECRET_KEY`, `RSA_PRIVATE_KEY`, `DJANGO_SUPERUSER_PASSWORD` générés automatiquement ; mot de passe de la base de données |
+| Entrée | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut, entièrement publique ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **PostgreSQL 15 est obligatoire.** `Saleor_Common` fixe le moteur de base de données ;
-  la sélection de toute autre valeur dans `database_type` n'a aucun effet.
-- **Le worker Celery (traitement des commandes, webhooks, e-mails, tâches planifiées)
-  s'exécute colocalisé à l'intérieur du conteneur principal**, démarré en tant que
-  processus d'arrière-plan par le point d'entrée cloud — pas un sidecar `additional_services`
-  séparé. Il a besoin de la même image personnalisée dont la Fondation ne connaît
-  le chemin Artifact Registry qu'*après* cet appel de module, donc la colocation
-  évite un cycle au moment de la planification.
-- **`cpu_always_allocated = true` par défaut.** Le worker Celery colocalisé a besoin d'un CPU
-  continu entre les requêtes, pas seulement pendant le traitement d'une requête —
-  confirmé en direct que la facturation basée sur les requêtes sous-alloue les
-  ressources à la charge de travail combinée.
+- **PostgreSQL 15 est obligatoire.** `Saleor_Common` fixe le moteur de base de
+  données ; la sélection de toute autre valeur dans `database_type` n'a aucun
+  effet.
+- **Le worker Celery (traitement des commandes, webhooks, e-mails, tâches
+  planifiées) s'exécute colocalisé à l'intérieur du conteneur principal**,
+  démarré en tant que processus d'arrière-plan par le point d'entrée cloud —
+  pas un sidecar `additional_services` séparé. Il a besoin de la même image
+  personnalisée dont la Fondation ne connaît le chemin Artifact Registry
+  qu'*après* cet appel de module, de sorte que la colocation évite un cycle
+  de planification.
+- **`cpu_always_allocated = true` par défaut.** Le worker Celery colocalisé a besoin d'un
+  CPU continu entre les requêtes, pas seulement pendant le traitement d'une
+  requête — il est confirmé en direct que la facturation basée sur les requêtes
+  sous-dimensionne la charge de travail combinée.
 - **Le dimensionnement des ressources est pré-réglé : `2000m` CPU / `3Gi`
-  mémoire.** Confirmé en direct que des tailles plus petites provoquent des
-  OOMKill sous la charge combinée de 2 workers uvicorn + Django + worker/beat
-  Celery, le tout dans un seul conteneur.
+  mémoire.** Il est confirmé en direct que des tailles plus petites
+  provoquent des OOMKill sous la charge combinée de 2 workers uvicorn + Django +
+  worker/beat Celery, le tout dans un seul conteneur.
 - **Trois secrets sont générés automatiquement** : `SECRET_KEY`, `RSA_PRIVATE_KEY`
-  (paire de clés de signature JWT de Saleor — ne doit jamais être renouvelée
+  (paire de clés de signature JWT de Saleor — ne doit jamais être tournée
   à la légère), et `DJANGO_SUPERUSER_PASSWORD`.
 - **Un service Dashboard séparé, véritablement pré-construit** (`ghcr.io/saleor/saleor-dashboard:3.23`)
   est déployé à côté de l'API en tant qu'entrée `additional_services`. Son `API_URL` est
@@ -153,28 +184,30 @@ de services Google Cloud :
   partir de l'URL de service prédite de l'API principale + `/graphql/`.
 - **Redis est facultatif et désactivé par défaut** (`enable_redis = false`). Lorsqu'il est
   activé, `redis_host` doit être défini explicitement — Cloud Run n'a pas de
-  repli automatique d'IP NFS.
+  solution de repli NFS-IP automatique.
 - **Les sondes de santé ciblent `/health/`**, non authentifiées, confirmées 200
-  localement et en direct.
-- **`min_instance_count = 0`** par défaut — l'API principale se met à l'échelle à zéro
-  lorsqu'elle est inactive ; définie sur `1` en production pour éviter
-  les démarrages à froid.
+  à la fois localement et en direct.
+- **`min_instance_count = 0`** par défaut — l'API principale passe à zéro lorsqu'elle est
+  inactive ; définissez `1` en production pour éviter les démarrages à
+  froid.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des services et des ressources sont
-rapportés dans les [Sorties](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms
+des services et des ressources sont signalés dans les [Sorties](#5-outputs) du
+déploiement.
 
 ### A. Cloud Run — les services API et Dashboard de Saleor {#a-cloud-run--the-saleor-api-and-dashboard-services}
 
 L'API de Saleor s'exécute en tant que service Cloud Run v2 qui s'adapte
-automatiquement à la charge des requêtes. Le Dashboard s'exécute en tant que
-deuxième service Cloud Run indépendant (une entrée `additional_services`) servant le
-bundle d'interface utilisateur d'administration statique.
+automatiquement en fonction de la charge des requêtes. Le Dashboard s'exécute
+en tant que second service Cloud Run indépendant (une entrée `additional_services`)
+servant le bundle d'interface utilisateur d'administration statique.
 
-- **Console :** Cloud Run → sélectionnez l'un des services pour les révisions, le trafic, les journaux et les métriques.
+- **Console :** Cloud Run → sélectionnez l'un ou l'autre service pour les
+  révisions, le trafic, les journaux et les métriques.
 - **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION"
@@ -182,20 +215,21 @@ bundle d'interface utilisateur d'administration statique.
   gcloud run revisions list --service <service-name> --project "$PROJECT" --region "$REGION"
   ```
 
-Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
-l'environnement d'exécution et la répartition du trafic.
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la
+concurrence, l'environnement d'exécution et le fractionnement du trafic.
 
 ### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Saleor stocke toutes les données de l'application (produits, commandes, paniers,
-utilisateurs, enregistrements de paiement) dans une instance Cloud SQL gérée
-pour PostgreSQL 15. Le service se connecte en privé via le **Cloud SQL Auth
-Proxy** (socket Unix ou IP privée TCP selon `enable_cloudsql_volume`) ; aucune IP
-publique n'est exposée. Lors du premier déploiement, `db-init` crée la
-base de données et le rôle de l'application, puis `db-migrate` (qui dépend de
+Saleor stocke toutes les données de l'application (produits, commandes,
+paniers, utilisateurs, enregistrements de paiement) dans une instance Cloud SQL
+gérée pour PostgreSQL 15. Le service se connecte en privé via le **Cloud SQL
+Auth Proxy** (socket Unix ou IP privée TCP selon `enable_cloudsql_volume`) ; aucune IP
+publique n'est exposée. Lors du premier déploiement, `db-init` crée la base
+de données et le rôle de l'application, puis `db-migrate` (qui dépend de
 `db-init`) applique les migrations de schéma de Django.
 
-- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs, les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les
+  sauvegardes, les indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -205,14 +239,14 @@ base de données et le rôle de l'application, puis `db-migrate` (qui dépend de
 
 Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de
 passe se trouvent dans les [Sorties](#5-outputs). Voir
-[App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes et
-la rotation des mots de passe.
+[App_CloudRun](App_CloudRun.md) pour le modèle de connexion, les sauvegardes
+et la rotation des mots de passe.
 
 ### C. Cloud Storage {#c-cloud-storage}
 
-Un bucket **Cloud Storage** `media` dédié est provisionné automatiquement
-pour les actifs de produits/médias téléchargés de Saleor. Des buckets
-supplémentaires peuvent être déclarés via `storage_buckets`.
+Un bucket **Cloud Storage** `media` dédié est provisionné
+automatiquement pour les ressources multimédias/produits téléchargées de
+Saleor. Des buckets supplémentaires peuvent être déclarés via `storage_buckets`.
 
 - **Console :** Cloud Storage → Buckets.
 - **CLI :**
@@ -225,10 +259,9 @@ Voir [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
 
 ### D. Redis (cache et broker Celery) {#d-redis-cache--celery-broker}
 
-Redis est **désactivé par défaut**. Lorsque `enable_redis = true` est défini,
-`redis_host` et `redis_port` sont injectés en tant que
-`REDIS_HOST`/`REDIS_PORT`, et le point d'entrée cloud compose
-`CACHE_URL` (base de données Redis `/0`) et
+Redis est **désactivé par défaut**. Lorsque `enable_redis = true` est défini, `redis_host`
+et `redis_port` sont injectés en tant que `REDIS_HOST`/`REDIS_PORT`, et le point
+d'entrée cloud compose `CACHE_URL` (base de données Redis `/0`) et
 `CELERY_BROKER_URL` (base de données Redis `/1`) à partir de ceux-ci.
 
 - **Console :** Memorystore → Redis (si vous utilisez une instance gérée).
@@ -242,10 +275,10 @@ Redis est **désactivé par défaut**. Lorsque `enable_redis = true` est défini
 ### E. Secret Manager {#e-secret-manager}
 
 Trois secrets sont générés automatiquement et stockés dans Secret Manager :
-`SECRET_KEY` (clé de signature cryptographique de Django), `RSA_PRIVATE_KEY`
-(paire de clés de signature JWT pour tous les jetons d'accès/actualisation
-émis) et `DJANGO_SUPERUSER_PASSWORD` (mot de passe du compte administrateur de démarrage). Le
-mot de passe de la base de données est géré séparément par la fondation.
+`SECRET_KEY` (clé de signature cryptographique de Django), `RSA_PRIVATE_KEY` (paire de
+clés de signature JWT pour tous les jetons d'accès/actualisation émis) et
+`DJANGO_SUPERUSER_PASSWORD` (mot de passe du compte administrateur de démarrage). Le mot de
+passe de la base de données est géré séparément par la fondation.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -254,17 +287,19 @@ mot de passe de la base de données est géré séparément par la fondation.
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
+Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de
+rotation.
 
-### F. Réseau et ingress {#f-networking--ingress}
+### F. Réseau et entrée {#f-networking--ingress}
 
 Le service API principal est accessible par son URL `run.app` par défaut
 (entièrement publique — `ingress_settings = "all"`). Le service Dashboard est déployé avec
 `ingress = INGRESS_TRAFFIC_ALL` afin que l'interface utilisateur d'administration soit également
 directement accessible. Un équilibreur de charge HTTPS externe avec un domaine
-personnalisé, Cloud CDN et Cloud Armor peuvent être ajoutés.
+personnalisé, Cloud CDN et Cloud Armor peuvent être superposés.
 
-- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
+- **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
+  charge.
 - **CLI :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --format='value(status.url)'
@@ -275,11 +310,12 @@ Voir [App_CloudRun](App_CloudRun.md).
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les journaux de conteneurs des deux services sont acheminés vers Cloud Logging ;
-les métriques Cloud Run et Cloud SQL sont acheminées vers Cloud Monitoring, avec
-des vérifications de disponibilité et des politiques d'alerte facultatives.
+Les journaux des conteneurs des deux services sont acheminés vers Cloud Logging
+; les métriques Cloud Run et Cloud SQL sont acheminées vers Cloud Monitoring,
+avec des tests de disponibilité et des politiques d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
+  bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -294,31 +330,32 @@ des vérifications de disponibilité et des politiques d'alerte facultatives.
   l'application. `db-migrate` (l'image de l'application, `depends_on_jobs = ["db-init"]`) exécute
   ensuite `python3 manage.py migrate --noinput`. Les deux jobs peuvent être réexécutés en toute sécurité.
 - **Extensions toujours installées.** `pg_trgm`, `unaccent`, `hstore` et
-  `citext` sont installées inconditionnellement par la configuration assemblée
-  de `Saleor_Common` — les variables `enable_postgres_extensions`/`postgres_extensions` du module appelant
-  n'ont aucun effet supplémentaire sur cet ensemble de base.
-- **Le worker Celery + beat s'exécute de manière colocalisée, et non en tant que
-  service séparé.** Le traitement des commandes, les webhooks, les e-mails et les
-  tâches planifiées s'exécutent tous dans le processus de worker en arrière-plan
-  du conteneur principal. C'est pourquoi `cpu_always_allocated` est par défaut
-  `true` — sans allocation continue de CPU, le worker meurt de faim entre
-  les requêtes API.
+  `citext` sont installés inconditionnellement par la configuration
+  assemblée de `Saleor_Common` — les variables `enable_postgres_extensions`/`postgres_extensions` du module
+  appelant n'ont aucun effet supplémentaire sur cet ensemble de base.
+- **Le worker Celery + beat s'exécute en colocation, pas en tant que service
+  séparé.** Le traitement des commandes, les webhooks, les e-mails et les tâches
+  planifiées s'exécutent tous à l'intérieur du processus worker d'arrière-plan
+  du conteneur principal. C'est pourquoi `cpu_always_allocated` est par défaut à
+  `true` — sans allocation continue de CPU, le worker est sous-alimenté
+  entre les requêtes API.
 - **`SECRET_KEY`, `RSA_PRIVATE_KEY` et `DJANGO_SUPERUSER_PASSWORD` sont immuables
   après le premier démarrage.** `RSA_PRIVATE_KEY` en particulier signe chaque JWT
-  émis par Saleor — le faire pivoter invalide toutes les sessions actives. Ne le
-  faites pivoter que pendant une fenêtre de maintenance planifiée.
+  émis par Saleor — le faire pivoter invalide toutes les sessions actives. Ne
+  le faites pivoter que pendant une fenêtre de maintenance planifiée.
 - **Démarrage du superutilisateur.** Le point d'entrée cloud exécute
   `manage.py createsuperuser --email $SALEOR_SUPERUSER_EMAIL --noinput` à chaque démarrage lorsque `DJANGO_SUPERUSER_PASSWORD` est défini
-  (idempotent — une opération nulle une fois que l'utilisateur existe).
-  `SALEOR_SUPERUSER_EMAIL` est par défaut `admin@example.com` et n'est pas exposé en tant que
-  variable sur ce module — c'est la valeur par défaut fixe de `Saleor_Common`.
+  (idempotent — une opération nulle une fois l'utilisateur existant).
+  `SALEOR_SUPERUSER_EMAIL` est par défaut à `admin@example.com` et n'est pas exposé en tant
+  que variable sur ce module — c'est la propre valeur par défaut fixe de
+  `Saleor_Common`.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent
   `/health/` — le point de terminaison de santé non authentifié de Saleor,
   confirmé pour renvoyer `200` dès que le serveur ASGI accepte les
   connexions.
-- **L'`API_URL` du tableau de bord est intégré au démarrage du conteneur**,
-  non lu dynamiquement — confirmé via le propre `/docker-entrypoint.d/50-replace-env-vars.sh` de l'image
-  officielle du tableau de bord, qui remplace `API_URL` par sed dans le
+- **L'URL `API_URL` du Dashboard est intégrée au démarrage du conteneur**,
+  non lue dynamiquement — confirmé via le propre `/docker-entrypoint.d/50-replace-env-vars.sh` de l'image
+  officielle du Dashboard, qui remplace par sed `API_URL` dans le
   fichier `index.html` construit. Sur Cloud Run, il s'agit d'une chaîne calculée
   (l'URL de service prédite de l'API principale + `/graphql/`), sûre pour la
   planification `for_each` car elle n'est pas connue après l'application.
@@ -332,10 +369,10 @@ des vérifications de disponibilité et des politiques d'alerte facultatives.
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la
+Les variables sont regroupées exactement telles qu'elles apparaissent sur la
 plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
-Saleor sont listés ; toutes les autres entrées sont héritées de
-[App_CloudRun](App_CloudRun.md) avec leur comportement standard.
+Saleor sont listés ; toute autre entrée est héritée de
+[App_CloudRun](App_CloudRun.md) avec son comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
@@ -358,24 +395,24 @@ Saleor sont listés ; toutes les autres entrées sont héritées de
 |---|---|---|
 | `application_name` | `saleor` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | `Saleor Application` | Nom lisible par l'homme affiché dans la console. |
-| `application_version` | `latest` | Correspond à l'ARG de build `SALEOR_VERSION` (`3.23` lorsque `latest`) et au propre tag de l'image du tableau de bord. |
+| `application_version` | `latest` | Correspond à l'ARG de build `SALEOR_VERSION` (`3.23` lorsque `latest`) et au tag de l'image du Dashboard. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
+| `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `container_resources` | `{ cpu_limit = "2000m", memory_limit = "3Gi" }` | Dimensionné pour la charge de travail combinée uvicorn + Celery — voir Vue d'ensemble. |
 | `cpu_always_allocated` | `true` | Requis pour que le worker Celery colocalisé continue de traiter entre les requêtes. |
-| `min_instance_count` | `0` | `0` active la mise à l'échelle à zéro ; définir `1` pour éviter les démarrages à froid. |
+| `min_instance_count` | `0` | `0` active la mise à l'échelle à zéro ; définissez `1` pour éviter les démarrages à froid. |
 | `max_instance_count` | `1` | Plafond de coût. |
-| `container_port` | `8000` | Port de liaison d'uvicorn — doit correspondre à `CMD` de l'image de base. |
+| `container_port` | `8000` | Port de liaison d'uvicorn — doit correspondre au `CMD` de l'image de base. |
 | `execution_environment` | `gen2` | Gen2 requis pour les montages NFS/GCS Fuse, si utilisés. |
 | `timeout_seconds` | `300` | Durée maximale de la requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions socket. |
 | `enable_image_mirroring` | `true` | Mettre en miroir l'image construite dans Artifact Registry. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Accès et contrôle d'entrée {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -388,7 +425,7 @@ Saleor sont listés ; toutes les autres entrées sont héritées de
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres non secrets supplémentaires, fusionnés en plus des valeurs par défaut de `Saleor_Common` (`ALLOWED_HOSTS`, `SALEOR_SUPERUSER_EMAIL`). Ne pas définir `SECRET_KEY`, `RSA_PRIVATE_KEY` ou `DJANGO_SUPERUSER_PASSWORD` ici. |
+| `environment_variables` | `{}` | Paramètres supplémentaires non secrets, fusionnés en plus des valeurs par défaut de `Saleor_Common` (`ALLOWED_HOSTS`, `SALEOR_SUPERUSER_EMAIL`). Ne définissez pas `SECRET_KEY`, `RSA_PRIVATE_KEY` ou `DJANGO_SUPERUSER_PASSWORD` ici. |
 | `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. |
@@ -413,14 +450,14 @@ provisionnement. Voir [App_CloudRun](App_CloudRun.md).
 ### Groupe 10 — Équilibreur de charge, CDN et rétention d'images {#group-10--load-balancer-cdn--image-retention}
 
 Options standard d'équilibreur de charge/CDN/nettoyage d'Artifact Registry
-d'App_CloudRun — voir [App_CloudRun](App_CloudRun.md).
+App_CloudRun — voir [App_CloudRun](App_CloudRun.md).
 
 ### Groupe 11 — Stockage et système de fichiers {#group-11--storage--filesystem}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Créer des buckets GCS définis dans `storage_buckets`. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets supplémentaires, en plus du bucket `media` déclaré par `Saleor_Common`. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets supplémentaires, en plus du bucket `Saleor_Common` déclaré `media`. |
 | `enable_nfs` | `true` | Déclaré mais non utilisé par le propre chemin de stockage de Saleor — les médias sont servis à partir du bucket GCS `media`. |
 | `gcs_volumes` | `[]` | Montages de volume GCS Fuse. |
 
@@ -437,7 +474,7 @@ d'App_CloudRun — voir [App_CloudRun](App_CloudRun.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laisser vide pour la paire intégrée `db-init` → `db-migrate`. |
+| `initialization_jobs` | `[]` | Laissez vide pour la paire `db-init` → `db-migrate` intégrée. |
 | `cron_jobs` | `[]` | Jobs récurrents (par exemple, commandes de gestion Saleor) via Cloud Scheduler. |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
@@ -446,7 +483,7 @@ d'App_CloudRun — voir [App_CloudRun](App_CloudRun.md).
 |---|---|---|
 | `startup_probe` | HTTP `/health/`, délai de 20s | Sonde de démarrage transmise à `Saleor_Common`. |
 | `liveness_probe` | HTTP `/health/`, délai de 30s | Sonde de vivacité transmise à `Saleor_Common`. |
-| `uptime_check_config` | `{ enabled=false, path="/" }` | Vérification de disponibilité Cloud Monitoring facultative. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Test de disponibilité Cloud Monitoring facultatif. |
 | `alert_policies` | `[]` | Politiques d'alerte métrique. |
 
 ### Groupe 21 — Redis {#group-21--redis}
@@ -454,7 +491,7 @@ d'App_CloudRun — voir [App_CloudRun](App_CloudRun.md).
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Active le cache/broker de Saleor sur Redis. |
-| `redis_host` | `""` | Doit être défini explicitement lorsqu'il est activé — pas de repli automatique sur Cloud Run. |
+| `redis_host` | `""` | Doit être défini explicitement lorsqu'il est activé — pas de solution de repli automatique sur Cloud Run. |
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
@@ -467,8 +504,8 @@ Options standard App_CloudRun VPC-SC et journalisation d'audit — voir
 
 ## 5. Sorties {#5-outputs}
 
-Retournées lors d'un déploiement réussi — le moyen le plus rapide de localiser et
-d'explorer les ressources en cours d'exécution.
+Retournées lors d'un déploiement réussi — le moyen le plus rapide de localiser
+et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
@@ -484,7 +521,7 @@ d'explorer les ressources en cours d'exécution.
 | `storage_buckets` | Buckets Cloud Storage créés (y compris `media`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image API déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | Statut de surveillance, canaux, vérifications de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | Statut de surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs `db-init`/`db-migrate`. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants de projet. |
@@ -493,9 +530,9 @@ d'explorer les ressources en cours d'exécution.
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | Statut VPC-SC. |
 | `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et statut CMEK. |
 
-L'URL propre au service Dashboard est renvoyée dans l'environnement de l'API
+L'URL du service Dashboard est renvoyée dans l'environnement de l'API
 principale en tant que `SALEOR_DASHBOARD_URL` plutôt que comme une sortie Terraform de
-premier niveau.
+haut niveau.
 
 ---
 
@@ -504,7 +541,7 @@ premier niveau.
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et les combinaisons* au moment de la planification. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et les combinaisons* au moment de la planification. Une configuration invalide fait échouer la **planification** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'au moment de l'application ou de l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
@@ -513,17 +550,17 @@ premier niveau.
 | `application_database_name` / `application_database_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
 | `cpu_always_allocated` | `true` | Élevé | Définir `false` affame le worker Celery colocalisé entre les requêtes — le traitement des commandes/webhooks/e-mails se dégrade ou s'arrête. |
 | `container_resources` | `{ cpu_limit="2000m", memory_limit="3Gi" }` | Élevé | Des tailles plus petites provoquent des OOMKill sous la charge de travail combinée uvicorn + Celery — confirmé en direct. |
-| `enable_redis` | `true` avant de compter sur le débit des tâches asynchrones à grande échelle | Moyen | Sans Redis, le cache et le broker Celery retombent sur un comportement no-op/en mémoire lié à une seule instance. |
-| `redis_host` | Définir explicitement lorsque `enable_redis = true` | Élevé | Cloud Run n'a pas de repli automatique de l'hôte Redis ; un hôte vide rompt la composition `CACHE_URL`/`CELERY_BROKER_URL`. |
-| `min_instance_count` | `1` pour la production | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après l'inactivité, plus une brève fenêtre avant la reprise du worker Celery. |
-| `SALEOR_SUPERUSER_EMAIL` / `DJANGO_SUPERUSER_PASSWORD` | Récupérer de Secret Manager rapidement | Élevé | Le compte administrateur de démarrage est le seul moyen d'accéder au premier déploiement ; perdre la trace du mot de passe généré nécessite une réinitialisation manuelle du shell Django. |
-| `enable_iap` | uniquement lorsque le tableau de bord/l'API n'ont pas besoin d'un accès public | Élevé | IAP bloque les requêtes non authentifiées vers les services API et tableau de bord. |
+| `enable_redis` | `true` avant de compter sur le débit des tâches asynchrones à grande échelle | Moyen | Sans Redis, le cache et le broker Celery reviennent à un comportement sans opération/en mémoire lié à une seule instance. |
+| `redis_host` | Définir explicitement lorsque `enable_redis = true` | Élevé | Cloud Run n'a pas de solution de repli automatique pour l'hôte Redis ; un hôte vide rompt la composition `CACHE_URL`/`CELERY_BROKER_URL`. |
+| `min_instance_count` | `1` pour la production | Moyen | La mise à l'échelle à zéro (`0`) ajoute un délai de démarrage à froid à la première requête après l'inactivité, plus une brève fenêtre avant que le worker Celery ne reprenne. |
+| `SALEOR_SUPERUSER_EMAIL` / `DJANGO_SUPERUSER_PASSWORD` | Récupérer rapidement de Secret Manager | Élevé | Le compte administrateur de démarrage est le seul moyen d'accéder au premier déploiement ; la perte du mot de passe généré nécessite une réinitialisation manuelle du shell Django. |
+| `enable_iap` | uniquement lorsque le Dashboard/API n'ont pas besoin d'un accès public | Élevé | IAP bloque les requêtes non authentifiées vers les services API et Dashboard. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
 
 ---
 
 Pour le comportement de la fondation référencé tout au long — identité de
-service, mise à l'échelle et concurrence, ingress et équilibrage de charge,
+service, mise à l'échelle et concurrence, entrée et équilibrage de charge,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en
 miroir d'images — voir **[App_CloudRun](App_CloudRun.md)**. La configuration
 d'application spécifique à Saleor partagée avec la variante GKE est décrite

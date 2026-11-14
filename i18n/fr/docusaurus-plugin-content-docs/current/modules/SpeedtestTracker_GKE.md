@@ -3,132 +3,164 @@ title: "Speedtest Tracker sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Speedtest Tracker sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SpeedtestTracker_GKE.md @ 60462a86 sha256:9eb11511b391 -->
+<!-- translated-from: docs/modules/SpeedtestTracker_GKE.md @ 40c83c3f sha256:4fe157bc6c0e -->
 
 # Speedtest Tracker sur GKE Autopilot {#speedtest-tracker-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/SpeedtestTracker_GKE.png" alt="Speedtest Tracker sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 Speedtest Tracker est un outil gratuit et open source de surveillance de la
-vitesse d'Internet, auto-hébergé et basé sur Laravel (PHP). Il exécute des
-tests de vitesse Ookla selon un calendrier récurrent, stocke les résultats dans
-une base de données et les présente sous forme de graphiques historiques via un
+vitesse d'Internet, auto-hébergé et basé sur Laravel (PHP). Il exécute des tests
+de vitesse Ookla selon un calendrier récurrent, stocke les résultats dans une
+base de données et les présente sous forme de graphiques historiques via un
 tableau de bord web et une API REST. Ce module déploie Speedtest Tracker sur
 **GKE Autopilot** sur la base de la fondation [App_GKE](App_GKE.md), qui
 provisionne et gère l'infrastructure partagée de Google Cloud et Kubernetes.
 
 Ce guide se concentre sur les services cloud utilisés par Speedtest Tracker et
-sur la manière de les explorer et de les opérer depuis la console Google Cloud
-et la ligne de commande. Pour les mécanismes communs à chaque application GKE
-— Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement
-— veuillez vous référer au [guide de la fondation App_GKE](App_GKE.md) plutôt
-que de les répéter ici.
+sur la manière de les explorer et de les exploiter depuis la console Google
+Cloud et la ligne de commande. Pour les mécanismes communs à toutes les
+applications GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor,
+IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du
+déploiement — veuillez vous référer au [guide de la fondation
+App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
-## Ce que coûte Speedtest Tracker sur RAD, et comment cela se compare {#what-speedtest-tracker-costs-on-rad-and-how-that-compares}
+## Coût de Speedtest Tracker sur RAD et comparaison {#what-speedtest-tracker-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Speedtest Tracker dans votre propre projet GCP coûte environ 93,10 $/mois en frais Google Cloud ; les frais de module de RAD sont de 75 crédits uniques (ou 67,5 crédits dans un projet géré par RAD), couvrant la configuration et le support — pas la facture cloud continue, que Google vous facture directement dans votre propre projet ou que RAD facture à l'heure en crédits dans un projet géré par RAD.**
-Ou consultez le guide Cloud Run pour la cible de déploiement alternative ; dans tous les cas, si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement lorsque vous ne l'utilisez pas — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous.
+**L'exécution de Speedtest Tracker dans votre propre projet GCP coûte environ
+93,10 $ par mois en frais Google Cloud ; les frais de module de RAD sont de 75
+crédits uniques (ou 67,5 crédits dans un projet géré par RAD), couvrant la
+configuration et le support — pas la facture cloud continue, que Google vous
+facture directement dans votre propre projet ou que RAD mesure à l'heure en
+crédits dans un projet géré par RAD.** Ou consultez le guide Cloud Run pour la
+cible de déploiement alternative ; dans tous les cas, si vous déployez dans un
+projet géré par RAD, vous pouvez tout mettre en pause gratuitement lorsque vous
+ne l'utilisez pas — voir [Mettre en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it)
+ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 75 crédits, une fois | 67,5 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | ~93,10 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~87 crédits/jour, facturé à l'heure par RAD au prix catalogue majoré d'une marge |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Coût d'exécution Google Cloud | ~93,10 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~117 crédits/jour, mesuré à l'heure par RAD au prix catalogue plus marge |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+**Pourquoi les deux colonnes diffèrent.** Le chiffre pour les projets gérés par
+RAD inclut les frais de gestion du cluster GKE (environ 73 $ US par mois) et la
+fondation partagée du projet. Dans votre propre projet, le niveau gratuit de
+Google couvre les frais de gestion d'un cluster par compte de facturation, ce
+que le chiffre pour les projets personnels suppose. Il est estimé à partir des
+prix catalogue de Google, car il n'y a pas encore suffisamment d'historique GKE
+géré par RAD pour le mesurer, donc la confirmation de déploiement ne le cite
+pas. Une deuxième application GKE dans le même projet géré par RAD partage le
+cluster et n'ajoute que ses propres pods.
+
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel
+que soit le montant des frais : une fois par compte, pour un module que vous
+déployez et payez vous-même (dans une solution, les frais d'une application : la
+première à réussir ; jamais une session de lab ou un projet client).
 
 **Coût d'exécution par défaut dans votre propre projet**
 
 | Ressource | US$/mois (prix catalogue Google, us-central1) |
 |---|---|
-| Pod GKE Autopilot, 1x vCPU / 1 GiB | 36,08 $ |
+| Pod GKE Autopilot, 1 vCPU / 1 Gio | 36,08 $ |
 | Cloud SQL pour MySQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ |
 | Cloud NAT et réseau | 5,00 $ |
 | Cloud Storage (modules complémentaires, sauvegardes) | 1,00 $ |
-| Frais de gestion de cluster GKE | partagés entre chaque application GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 $ |
+| Frais de gestion du cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 $ |
 | **Total** | **93,10 $** |
 
-### Comment cela se compare {#how-it-compares}
+### Comparaison {#how-it-compares}
 
-- L'empreinte propre de Speedtest Tracker ici (1x vCPU / 1 GiB) est plus petite
-  que cette classe de référence, donc un niveau de VPS encore moins cher ferait
+- L'empreinte propre de Speedtest Tracker ici (1 vCPU / 1 Gio) est plus petite
+  que cette classe de référence, donc un niveau VPS encore moins cher ferait
   tout aussi bien, mais dimensionné à la plus petite classe couramment citée
   pour comparaison : Hetzner CPX22 (2 vCPU/4 Go) coûte environ **24 $/mois**,
   un Droplet DigitalOcean 2 vCPU/4 Go coûte également **24 $/mois**, et un GCP
   Compute Engine e2-standard-2 (2 vCPU/8 Go) coûte environ **49 $/mois** — plus
   le temps de l'administrateur pour les sauvegardes, les correctifs de sécurité
-  et les mises à niveau, que Cloud SQL géré, Secret Manager et la surveillance
-  de RAD couvrent pour vous — mais le prix de RAD n'est jamais destiné à battre
-  un VPS, seulement à remplacer le temps d'administration qu'un VPS nécessite
-  encore.
-- Speedtest Tracker exécute des tests planifiés à l'aide d'un minuteur plutôt
-  que de servir un trafic continu, il est donc à noter que ce module nécessite
-  `alwaysOn` de calcul pour maintenir le calendrier actif sur Cloud Run, c'est
-  pourquoi il est la cible la plus coûteuse des deux ici malgré la charge de
-  travail légère.
+  et les mises à niveau, que Cloud SQL, Secret Manager et la surveillance gérés
+  par RAD couvrent pour vous — mais le prix de RAD n'est jamais destiné à
+  battre un VPS, seulement à remplacer le temps d'administration qu'un VPS
+  nécessite encore.
+- Speedtest Tracker exécute des tests planifiés sur une minuterie plutôt que de
+  servir un trafic continu, il faut donc noter que ce module nécessite `alwaysOn`
+  de calcul pour maintenir le calendrier sur Cloud Run, c'est pourquoi il est le
+  plus coûteux des deux cibles ici malgré la faible charge de travail.
 
-### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 **C'est le titre pour un projet géré par RAD.** La suppression d'un projet géré
-par RAD commence par dissocier sa facturation, puis demande à Google de
-supprimer purement et simplement le projet — la suppression logicielle
-récupérable de 30 jours de Google. Contrairement à la suppression d'un seul
-module, cela ne détruit pas Cloud SQL, aucune VM ou la ressource de calcul une
-par une : l'ensemble du projet s'arrête simplement, et rien n'est facturé
-pendant qu'il attend, car la facturation est déjà dissociée.
+par RAD commence par délier sa facturation, puis demande à Google de supprimer
+le projet purement et simplement — la suppression logique récupérable de 30
+jours de Google. Contrairement à la suppression d'un module, cela ne détruit
+pas Cloud SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du
+projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la
+facturation est déjà déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.**
+> Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou
+> les ressources qu'il contient, seront utilisables après sa restauration, de
+> sorte que la restauration ne peut pas être invoquée comme un moyen de
+> récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué
+> des sauvegardes appropriées des données et de la configuration de
+> l'application et de les avoir stockées en dehors du projet. Si une restauration
+> échoue, ou si le projet restauré ne fonctionne pas, la solution de repli
+> consiste à redéployer l'application (voir la section suivante) et à restaurer
+> sa configuration et ses données à partir de ces sauvegardes.
 
 La restauration, dans les 30 jours et uniquement par le propriétaire du projet,
 demande à Google de récupérer le projet et de rattacher son compte de
-facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement
-pour confirmer que tout est revenu. Comme rien n'a été détruit
+facturation, puis vous demande d'exécuter une mise à jour sur chaque
+déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà présentes
 — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+jamais les frais de module à nouveau. Les mises à jour sont incluses dans le
+prix (5 par mois pour chaque déploiement), donc une restauration ne coûte
+normalement aucun crédit.
 
-Ce qu'il faut : vous devez être propriétaire du projet (pas un projet que RAD
-gère uniquement pour la facturation), vous devez le restaurer vous-même dans
-les 30 jours — après cela, Google le supprime définitivement — et la
-restauration est admise comme la création d'un nouveau projet, donc votre
-solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits
-pour le niveau sandbox qui convient à la plupart des utilisations d'étude/démo).
-Google indique que la plupart des services fonctionnent à nouveau pleinement
-dans les 36 heures suivant une restauration.
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD
+gère uniquement la facturation), vous devez le restaurer vous-même dans les 30
+jours — après cela, Google le supprime définitivement — et la restauration est
+admise comme la création d'un nouveau projet, donc votre solde de crédits
+achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau
+sandbox qui convient à la plupart des utilisations d'étude/démo). Google
+indique que la plupart des services sont de nouveau pleinement fonctionnels dans
+les 36 heures suivant une restauration.
 
 **Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket
-à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud
-Storage explicitement désactivée, il est donc très probable qu'il disparaisse
-dès que vous supprimez le projet — même si le projet lui-même est récupérable
-pendant 30 jours. Si vous avez personnalisé l'application et que vous souhaitez
+à l'intérieur du projet, et ce bucket a la suppression logique de Cloud Storage
+explicitement désactivée, il est donc très probable qu'il disparaisse dès que
+vous supprimez le projet — même si le projet lui-même est récupérable pendant
+30 jours. Si vous avez personnalisé l'application et que vous souhaitez
 conserver ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en
-dehors du projet) avant de supprimer. Pour une installation par défaut sans
+dehors du projet) avant de la supprimer. Pour une installation par défaut sans
 rien d'irremplaçable, cela n'a pas d'importance.
 
-### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Ne payez que lorsque vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
 Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de
-restauration de 30 jours ci-dessus), l'alternative est de supprimer Speedtest
-Tracker purement et simplement et de le redéployer plus tard. Un redéploiement
-coûte à nouveau les frais de module (les builds sont inclus) — 75 crédits au total.
+restauration de 30 jours ci-dessus), l'alternative est de supprimer
+Speedtest Tracker purement et simplement et de le redéployer plus tard. Un
+redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 75
+crédits.
 
 La suppression ne permet d'économiser de l'argent que si Speedtest Tracker
-devait rester inutilisé assez longtemps pour compenser ce coût de redéploiement
-par rapport à son propre coût d'exécution quotidien — par rapport au total du
-projet ci-dessus, cela représente environ 3 jours ou plus. La majeure partie du
-coût d'exécution ici est généralement la base de données ; elle ne s'arrête que
-lorsque rien d'autre dans le projet ne l'utilise, donc la suppression de cette
-application pendant que quelque chose d'autre partage le projet n'économise que
-la partie calcul de cette application.
+resterait inutilisé suffisamment longtemps pour compenser ce coût de
+redéploiement par rapport à son propre coût d'exécution quotidien — par rapport
+au total du projet propre ci-dessus, cela représente environ 3 jours ou plus. La
+plupart des coûts d'exécution ici sont généralement liés à la base de données ;
+elle ne s'arrête que lorsque rien d'autre dans le projet ne l'utilise, donc la
+suppression de cette application alors que quelque chose d'autre partage le
+projet n'économise que la partie calcul de cette application.
 
-**Conserver les données en premier :** les sauvegardes nocturnes vont dans un
-bucket à l'intérieur du déploiement et sont supprimées avec lui, donc copiez la
-dernière sauvegarde avant de supprimer si vous voulez la conserver.
+**Conservez les données en premier :** les sauvegardes nocturnes vont dans un
+bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez
+la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
@@ -136,19 +168,19 @@ dernière sauvegarde avant de supprimer si vous voulez la conserver.
   une classe. Chaque participant dispose de l'application dans son propre projet
   Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
   définie par le formateur. Soit le formateur finance toutes les places, soit
-  chaque participant paie la sienne. Tout est supprimé à la fin de la session
-  et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les cabinets de conseil :** un partenaire
-  exécute l'application pour un client à partir d'un portefeuille cloisonné
-  qu'il finance, et règle directement avec le client. Si le portefeuille
-  devient faible, la facturation est suspendue et les données sont conservées,
-  afin que personne ne reçoive de frais inattendus. À la fin, le partenaire
-  transfère le projet et les déploiements deviennent la propriété du client.
+  chaque participant paie la sienne. Tout est supprimé à la fin de la session et
+  les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute
+  l'application pour un client à partir d'un portefeuille cloisonné qu'il
+  finance, et règle directement avec le client. Si le portefeuille est faible,
+  la facturation est suspendue et les données sont conservées, afin que
+  personne ne reçoive de frais inattendus. À la fin, le partenaire transfère le
+  projet et les déploiements deviennent la propriété du client.
 - Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF,
   NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
 **Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing
-Catalog ; radmodules.dev/pricing pour les propres frais de RAD et les
+Catalog ; radmodules.dev/pricing pour les frais propres de RAD et les
 estimations de crédits quotidiens ;
 https://cloud.google.com/resource-manager/docs/delete-restore-projects pour les
 mécanismes de pause/restauration.
@@ -160,59 +192,54 @@ Autopilot. Le déploiement relie un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | GKE Autopilot | Pod PHP (LinuxServer), 1 vCPU / 1 GiB par défaut, réplica unique |
-| Base de données | Cloud SQL pour MySQL 8.0 | Obligatoire — ce module fixe MySQL ; le défaut SQLite de l'image amont est contourné |
-| Cache et sessions | Redis (optionnel) | Désactivé par défaut ; Speedtest Tracker utilise le pilote de cache local fichier/sync |
-| Secrets | Secret Manager | Clé Laravel `APP_KEY` auto-générée ; mot de passe de la base de données |
-| Ingress | Cloud Load Balancing | Équilibreur de charge externe, domaine personnalisé + certificat géré + IP statique par défaut |
+| Calcul | GKE Autopilot | Pod PHP (LinuxServer), 1 vCPU / 1 Gio par défaut, réplica unique |
+| Base de données | Cloud SQL pour MySQL 8.0 | Requis — ce module fixe MySQL ; le comportement par défaut de SQLite de l'image amont est contourné |
+| Cache et sessions | Redis (facultatif) | Désactivé par défaut ; Speedtest Tracker utilise le pilote de cache local fichier/synchronisation |
+| Secrets | Secret Manager | `APP_KEY` Laravel auto-généré ; mot de passe de la base de données |
+| Ingress | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé + certificat géré + IP statique par défaut |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **MySQL 8.0 est obligatoire.** Le moteur de base de données est fixé par la
   couche d'application partagée (`database_type` se résout en `MYSQL_8_0`) ;
   PostgreSQL n'est pas pris en charge.
-- **L'image `linuxserver/speedtest-tracker` pré-construite est utilisée directement.** Il n'y a
-  pas de Cloud Build personnalisé ; l'image officielle LinuxServer.io est mise
-  en miroir dans Artifact Registry (`enable_image_mirroring = true`) et déployée telle quelle.
-  Repli : `ghcr.io/alexjustesen/speedtest-tracker` (basé sur Alpine) si un runtime spécifique
-  s'avère incompatible avec l'image s6-overlay de LinuxServer.
+- **L'image `linuxserver/speedtest-tracker` pré-construite est utilisée directement.** Il n'y a pas de
+  Cloud Build personnalisé ; l'image officielle LinuxServer.io est mise en
+  miroir dans Artifact Registry (`enable_image_mirroring = true`) et déployée telle quelle.
+  Repli : `ghcr.io/alexjustesen/speedtest-tracker` (basé sur Alpine) si un runtime spécifique est
+  un jour jugé incompatible avec l'image s6-overlay de LinuxServer.
 - **Le conteneur écoute sur le port 80** (`container_port = 80`, `container_protocol = "http1"`).
-- **Un seul réplica est maintenu** (`min_instance_count = 1`, `max_instance_count = 1` ; GKE n'a
-  pas de mise à l'échelle à zéro). C'est une charge portante, pas seulement une
-  valeur par défaut de coût — le planificateur Laravel `SPEEDTEST_SCHEDULE` n'a pas de
-  verrouillage inter-pods, donc plus d'un réplica risque de déclencher des tests
-  de vitesse planifiés en double.
+- **Un seul réplica est maintenu** (`min_instance_count = 1`, `max_instance_count = 1` ; GKE n'a pas de
+  mise à l'échelle à zéro). C'est porteur de charge, pas seulement une valeur
+  par défaut de coût — le planificateur Laravel `SPEEDTEST_SCHEDULE` n'a pas de verrouillage
+  inter-pod, donc plus d'un réplica risque de déclencher des tests de vitesse
+  planifiés en double.
 - **`APP_KEY` est immuable après le premier démarrage.** La clé d'application
-  Laravel est générée une fois et stockée dans Secret Manager ; la faire
-  tourner rend toutes les valeurs chiffrées de la base de données
-  indéchiffrables.
+  Laravel est générée une fois et stockée dans Secret Manager ; la faire pivoter
+  rend toutes les valeurs de base de données chiffrées indéchiffrables.
 - **L'image exécute `php artisan migrate --force` automatiquement au démarrage**, de sorte que le
-  schéma est créé au premier démarrage après que `db-init` ait provisionné la
-  base de données et l'utilisateur — il n'y a pas de tâche de migration
-  distincte.
+  schéma est créé au premier démarrage après que `db-init` ait provisionné la base
+  de données et l'utilisateur — il n'y a pas de job de migration séparé.
 - **Pas de stockage par défaut.** Speedtest Tracker stocke tous les résultats et
-  la configuration dans Cloud SQL — `create_cloud_storage` et `enable_nfs` sont
-  désactivés par défaut.
+  la configuration dans Cloud SQL — `create_cloud_storage` et `enable_nfs` sont désactivés par défaut.
 - **GKE se connecte à Cloud SQL via le sidecar Auth Proxy** sur `127.0.0.1:3306`
   (`enable_cloudsql_volume = true`), et le câblage GKE remplace `DB_HOST = "127.0.0.1"`.
-- **Un domaine personnalisé, un certificat géré et une IP statique réservée
-  sont activés par défaut** (`enable_custom_domain = true`, `reserve_static_ip = true`), avec
-  `session_affinity = "ClientIP"`.
+- **Un domaine personnalisé, un certificat géré et une IP statique réservée sont
+  activés par défaut** (`enable_custom_domain = true`, `reserve_static_ip = true`), avec `session_affinity = "ClientIP"`.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que vous avez exécuté
-`gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants sont indiqués dans les [Sorties](#5-outputs) du déploiement.
+Toutes les commandes supposent que vous avez exécuté `gcloud container clusters get-credentials <cluster> --region <region> --project <project>` et que `PROJECT`,
+`REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Speedtest Tracker {#a-gke-autopilot--the-speedtest-tracker-workload}
 
 Le pod de Speedtest Tracker est planifié sur Autopilot, qui facture le CPU/la
-mémoire réellement demandés par le pod. La charge de travail s'exécute en tant
-que déploiement à réplica unique afin que le planificateur cron intégré ne
+mémoire que le pod demande réellement. La charge de travail s'exécute comme un
+déploiement à réplica unique afin que le planificateur cron intégré ne
 s'exécute jamais simultanément sur plusieurs pods.
 
 - **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge
@@ -225,16 +252,16 @@ s'exécute jamais simultanément sur plusieurs pods.
   kubectl describe deploy/<service-name> -n "$NAMESPACE"    # strategy, events
   ```
 
-Voir [App_GKE](App_GKE.md) pour savoir comment Autopilot, la mise à l'échelle
-et le type de charge de travail (Déploiement vs StatefulSet) sont gérés.
+Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle
+et du type de charge de travail (Déploiement vs StatefulSet).
 
 ### B. Cloud SQL pour MySQL 8.0 {#b-cloud-sql-for-mysql-80}
 
 Speedtest Tracker stocke tous les résultats des tests de vitesse et la
-configuration de l'application dans une instance gérée de Cloud SQL pour MySQL
-8.0. Les pods l'atteignent en privé via le sidecar **Cloud SQL Auth Proxy** sur
+configuration de l'application dans une instance Cloud SQL pour MySQL 8.0 gérée.
+Les pods l'atteignent en privé via le sidecar **Cloud SQL Auth Proxy** sur
 `127.0.0.1:3306` (`enable_cloudsql_volume = true`) ; aucune IP publique n'est exposée. Lors du
-premier déploiement, un Job d'initialisation crée la base de données et
+premier déploiement, un job d'initialisation crée la base de données et
 l'utilisateur de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les
@@ -252,12 +279,12 @@ Secret Manager contenant le mot de passe sont tous affichés dans les
 [Sorties](#5-outputs). Pour le modèle de connexion, les sauvegardes
 automatisées et la rotation des mots de passe, voir [App_GKE](App_GKE.md).
 
-### C. Redis (cache et sessions optionnels) {#c-redis-optional-cache--sessions}
+### C. Redis (cache et sessions facultatifs) {#c-redis-optional-cache--sessions}
 
-Redis est **désactivé par défaut** (`enable_redis = false`) ; Speedtest Tracker utilise
-ses pilotes de cache et de session locaux basés sur des fichiers/synchronisation,
-ce qui convient pour un déploiement à réplica unique. Lorsque `enable_redis = true` est
-défini, la couche partagée injecte `REDIS_HOST` et `REDIS_PORT`.
+Redis est **désactivé par défaut** (`enable_redis = false`) ; Speedtest Tracker utilise ses
+pilotes de cache et de session locaux basés sur des fichiers/synchronisation, ce
+qui convient à un déploiement à réplica unique. Lorsque `enable_redis = true` est défini, la
+couche partagée injecte `REDIS_HOST` et `REDIS_PORT`.
 
 - **Console :** Memorystore → Redis (si vous utilisez une instance gérée).
 - **CLI :**
@@ -270,10 +297,9 @@ défini, la couche partagée injecte `REDIS_HOST` et `REDIS_PORT`.
 ### D. Secret Manager {#d-secret-manager}
 
 Un secret cryptographique est généré automatiquement et stocké dans Secret
-Manager : la **clé d'application Laravel `APP_KEY`** (`base64:<44-char base64>`),
-utilisée pour chiffrer toutes les données d'application que Speedtest Tracker
-stocke chiffrées. Le mot de passe de la base de données est géré séparément par
-la fondation.
+Manager : la **`APP_KEY`** Laravel (`base64:<44-char base64>`), utilisée pour chiffrer
+toutes les données d'application que Speedtest Tracker stocke chiffrées. Le mot
+de passe de la base de données est géré séparément par la fondation.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -290,8 +316,8 @@ rotation de Secret Store CSI.
 
 Par défaut, la charge de travail est exposée via une IP externe Cloud Load
 Balancing avec un domaine personnalisé et un certificat géré par Google
-(`enable_custom_domain = true`), et une IP statique est réservée (`reserve_static_ip = true`) afin
-que l'adresse survive aux redéploiements.
+(`enable_custom_domain = true`), et une IP statique est réservée (`reserve_static_ip = true`) afin que
+l'adresse survive aux redéploiements.
 
 - **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses
   IP.
@@ -302,13 +328,13 @@ que l'adresse survive aux redéploiements.
   ```
 
 Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les
-détails de l'IP statique.
+détails des IP statiques.
 
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
-Les flux stdout/stderr des pods vers Cloud Logging ; les métriques GKE et Cloud
-SQL vers Cloud Monitoring. Des vérifications de disponibilité et des politiques
-d'alerte optionnelles sont disponibles.
+Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les
+métriques GKE et Cloud SQL sont acheminées vers Cloud Monitoring. Des tests de
+disponibilité et des stratégies d'alerte facultatifs sont disponibles.
 
 - **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
   bord / Alertes.
@@ -322,37 +348,36 @@ d'alerte optionnelles sont disponibles.
 
 ## 3. Comportement de l'application Speedtest Tracker {#3-speedtest-tracker-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un Job
-  d'initialisation exécute `db-init.sh` en utilisant `mysql:8.0-debian`. Il
-  détecte le socket Cloud SQL ou le point de terminaison TCP, attend que MySQL
-  soit accessible, crée la base de données et l'utilisateur de l'application,
-  accorde les privilèges, vérifie que l'utilisateur de l'application peut se
-  connecter et arrête gracieusement le sidecar Cloud SQL Auth Proxy. Le job est
-  idempotent et peut être réexécuté en toute sécurité (`max_retries = 3`).
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` en utilisant `mysql:8.0-debian`. Il détecte le socket
+  Cloud SQL ou le point de terminaison TCP, attend que MySQL soit accessible,
+  crée la base de données et l'utilisateur de l'application, accorde les
+  privilèges, vérifie que l'utilisateur de l'application peut se connecter et
+  arrête proprement le sidecar Cloud SQL Auth Proxy. Le job est idempotent et
+  peut être réexécuté en toute sécurité (`max_retries = 3`).
 - **Auto-migration du schéma au démarrage.** L'image LinuxServer Speedtest
-  Tracker exécute `php artisan migrate --force` automatiquement à chaque démarrage du
-  conteneur, de sorte que le schéma est créé au premier démarrage et mis à jour
-  lors des démarrages ultérieurs — il n'y a **pas de job de migration
-  distinct**.
+  Tracker exécute `php artisan migrate --force` automatiquement à chaque démarrage du conteneur, de
+  sorte que le schéma est créé au premier démarrage et mis à niveau aux
+  démarrages ultérieurs — il n'y a **pas de job de migration séparé**.
 - **`APP_KEY` est immuable après le premier démarrage.** La clé d'application
-  Laravel est générée une fois et écrite dans Secret Manager. La faire tourner
-  rend toutes les valeurs chiffrées de la base de données
-  indéchiffrables de manière permanente. Ne la faites tourner que pendant une
-  fenêtre de maintenance planifiée avec un plan de rechiffrement.
-- **Planificateur cron intégré.** `SPEEDTEST_SCHEDULE` (par défaut `"0 * * * *"`,
-  toutes les heures) pilote le propre planificateur Laravel de Speedtest
-  Tracker pour exécuter des tests de vitesse automatisés. Contrairement à Cloud
-  Run, les pods GKE s'exécutent en continu (pas de problème de mise à l'échelle
-  à zéro), de sorte que cela se déclenche de manière fiable tant que le pod
-  unique est en cours d'exécution.
-- **Élagage des résultats.** `PRUNE_RESULTS_OLDER_THAN` (par défaut `"0"`,
-  désactivé) supprime automatiquement les résultats des tests de vitesse
-  datant de plus du nombre de jours configuré.
-- **Chemin de santé.** La sonde de vivacité cible `/api/healthcheck` par défaut — le
-  point de terminaison de santé JSON non authentifié de Speedtest Tracker. La
-  sonde de démarrage est une vérification TCP. Prévoyez une fenêtre généreuse
-  pour le premier démarrage (délai initial de 30 secondes, seuil d'échec élevé)
-  pour les migrations automatiques.
+  Laravel est générée une fois et écrite dans Secret Manager. La faire pivoter
+  rend toutes les valeurs de base de données chiffrées définitivement
+  indéchiffrables. Ne la faites pivoter que pendant une fenêtre de maintenance
+  planifiée avec un plan de rechiffrement.
+- **Planificateur cron intégré.** `SPEEDTEST_SCHEDULE` (par défaut `"0 * * * *"`, toutes les
+  heures) pilote le propre planificateur Laravel de Speedtest Tracker pour
+  exécuter des tests de vitesse automatisés. Contrairement à Cloud Run, les
+  pods GKE s'exécutent en continu (pas de problème de mise à l'échelle à zéro),
+  donc cela se déclenche de manière fiable tant que le pod unique est en
+  cours d'exécution.
+- **Élagage des résultats.** `PRUNE_RESULTS_OLDER_THAN` (par défaut `"0"`, désactivé) supprime
+  automatiquement les résultats des tests de vitesse plus anciens que le nombre
+  de jours configuré.
+- **Chemin de santé.** La sonde de vivacité cible `/api/healthcheck` par défaut — le point
+  de terminaison de santé JSON non authentifié de Speedtest Tracker. La sonde
+  de démarrage est une vérification TCP. Prévoyez une fenêtre de premier
+  démarrage généreuse (délai initial de 30 secondes, seuil d'échec élevé) pour
+  les migrations automatiques.
 - **Configuration initiale.** L'interface web de Speedtest Tracker guide la
   création de compte lors de la première visite — il n'y a pas de compte
   administrateur par défaut pré-rempli à modifier.
@@ -369,14 +394,14 @@ d'alerte optionnelles sont disponibles.
 Les variables sont regroupées exactement comme elles apparaissent sur la
 plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
 Speedtest Tracker sont listés ; toutes les autres entrées sont héritées de
-[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut
+[App_GKE](App_GKE.md) avec son comportement et ses valeurs par défaut
 standards.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
+| `project_id` | _(requis)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région pour la charge de travail et les ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
@@ -385,7 +410,7 @@ standards.
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | Adresses e-mail autorisées à accéder au projet et aux alertes de surveillance. |
-| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources pour le suivi des coûts/propriété. |
+| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources pour le suivi des coûts/de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
@@ -403,7 +428,7 @@ standards.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
-| `container_image_source` | `prebuilt` | Déployer l'image LinuxServer mise en miroir directement — pas de build personnalisé. |
+| `container_image_source` | `prebuilt` | Déployer directement l'image LinuxServer mise en miroir — pas de build personnalisé. |
 | `container_image` | `""` | Remplacer la référence de l'image ; laisser vide pour utiliser la valeur par défaut mise en miroir. |
 | `enable_image_mirroring` | `true` | Mettre en miroir l'image LinuxServer dans Artifact Registry avant le déploiement. |
 | `min_instance_count` | `1` | Réplicas minimum ; maintenir à 1. |
@@ -412,7 +437,7 @@ standards.
 | `container_protocol` | `http1` | HTTP/1.1. |
 | `cpu_limit` | `1000m` | CPU par pod ; 1 vCPU par défaut. |
 | `memory_limit` | `1Gi` | Mémoire par pod. |
-| `timeout_seconds` | `300` | Durée maximale de la requête (0–3600 secondes). |
+| `timeout_seconds` | `300` | Durée maximale de la requête (0 à 3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy (`127.0.0.1:3306`) ; requis sur GKE. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
@@ -424,7 +449,7 @@ standards.
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. |
 
-### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -448,8 +473,8 @@ standards.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Appliquer un ResourceQuota d'espace de noms. |
-| `quota_cpu_requests` / `quota_cpu_limits` | `""` | Quota CPU. |
-| `quota_memory_requests` / `quota_memory_limits` | `""` | Quota mémoire — utiliser des unités binaires (`4Gi`, `8192Mi`). |
+| `quota_cpu_requests` / `quota_cpu_limits` | `""` | Quota de CPU. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | Quota de mémoire — utiliser des unités binaires (`4Gi`, `8192Mi`). |
 | `quota_max_pods` / `quota_max_services` / `quota_max_pvcs` | `""` | Quotas de nombre d'objets. |
 
 ### Groupe 9 — Fiabilité {#group-9--reliability}
@@ -465,10 +490,10 @@ standards.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | TCP, chemin `/api/healthcheck`, 30s | Sonde de démarrage (vérification d'écoute de port). |
-| `liveness_probe` | HTTP `/api/healthcheck`, délai 300s | Sonde de vivacité contre le point de terminaison de santé non authentifié de Speedtest Tracker. |
+| `liveness_probe` | HTTP `/api/healthcheck`, délai de 300s | Sonde de vivacité contre le point de terminaison de santé non authentifié de Speedtest Tracker. |
 | `startup_probe_config` / `health_check_config` | Sondes de niveau App_GKE | Sondes de niveau infrastructure. |
-| `uptime_check_config` | désactivé | Vérification de disponibilité Cloud Monitoring optionnelle. |
-| `alert_policies` | `[]` | Politiques d'alerte métrique optionnelles. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
+| `alert_policies` | `[]` | Stratégies d'alerte métrique facultatives. |
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
@@ -476,14 +501,13 @@ standards.
 |---|---|---|
 | `initialization_jobs` | `[]` | Laisser vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | Pour les tâches de maintenance non liées — le propre calendrier de tests de vitesse de Speedtest Tracker s'exécute en interne via `SPEEDTEST_SCHEDULE`. |
-| `additional_services` | `[]` | Services sidecar ou auxiliaires déployés avec Speedtest Tracker. |
+| `additional_services` | `[]` | Services sidecar ou auxiliaires déployés aux côtés de Speedtest Tracker. |
 
 ### Groupe 12 — CI/CD et autorisation binaire {#group-12--cicd--binary-authorization}
 
 Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
-[App_GKE](App_GKE.md). Entrées clés : `enable_cicd_trigger`,
-`github_repository_url`, `github_token`, `enable_cloud_deploy`,
-`enable_binary_authorization`.
+[App_GKE](App_GKE.md). Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`,
+`enable_cloud_deploy`, `enable_binary_authorization`.
 
 ### Groupe 13 — Système de fichiers (NFS) {#group-13--filesystem-nfs}
 
@@ -513,7 +537,7 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | `enable_redis` | `false` | Injecter `REDIS_HOST`/`REDIS_PORT` afin que Speedtest Tracker puisse utiliser Redis pour le cache/les sessions. Non requis par défaut. |
 | `redis_host` | `""` | Point de terminaison Redis. Laisser vide pour utiliser l'IP du serveur NFS (nécessite `enable_nfs = true`). |
 | `redis_port` | `6379` | Port Redis. |
-| `redis_auth` | `""` | Mot de passe d'authentification Redis optionnel (sensible). |
+| `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
 ### Groupe 16 — Backend de base de données {#group-16--database-backend}
 
@@ -524,28 +548,26 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | `application_database_user` | `speedtesttracker` | Utilisateur de la base de données de l'application (préfixé par le locataire). Immuable après le premier déploiement. |
 | `database_password_length` | `32` | Longueur du mot de passe généré. |
 | `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption de service. |
-| `rotation_propagation_delay_sec` | `90` | Secondes à attendre après la rotation avant de redémarrer les pods. |
+| `rotation_propagation_delay_sec` | `90` | Secondes à attendre après la rotation avant de redémarrer les pods en continu. |
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
-| `backup_retention_days` | `7` | Rétention ; augmenter à 30–90 pour la production/conformité. |
+| `backup_retention_days` | `7` | Rétention ; augmenter à 30-90 pour la production/conformité. |
 | `enable_backup_import` / `backup_source` / `backup_file` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
 ### Groupe 18 — Scripts SQL personnalisés {#group-18--custom-sql-scripts}
 
-`enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`,
-`custom_sql_scripts_use_root` — exécuter du SQL à partir d'un bucket GCS après le
-provisionnement. Voir [App_GKE](App_GKE.md).
+`enable_custom_sql_scripts`, `custom_sql_scripts_bucket`, `custom_sql_scripts_path`, `custom_sql_scripts_use_root` — exécuter du SQL à partir d'un bucket GCS après le provisionnement. Voir [App_GKE](App_GKE.md).
 
 ### Groupe 19 — Domaine personnalisé, IP statique et réseau {#group-19--custom-domain-static-ip--networking}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_custom_domain` | `true` | Provisionner Ingress pour les noms d'hôte personnalisés + certificat géré. |
-| `application_domains` | `[]` | Noms d'hôte à servir. |
+| `enable_custom_domain` | `true` | Provisionner Ingress pour les noms d'hôtes personnalisés + certificat géré. |
+| `application_domains` | `[]` | Noms d'hôtes à servir. |
 | `reserve_static_ip` | `true` | IP externe stable sur les redéploiements. |
 | `network_tags` | `["nfsserver"]` | Tags réseau de nœud/pod (pertinent uniquement si `enable_nfs = true`). |
 
@@ -561,9 +583,9 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Attacher une politique Cloud Armor (WAF) au backend Ingress. |
+| `enable_cloud_armor` | `false` | Attacher une stratégie Cloud Armor (WAF) au backend Ingress. |
 | `admin_ip_ranges` | `[]` | CIDR autorisés à un accès privilégié. |
-| `cloud_armor_policy_name` | `default-waf-policy` | Nom de la politique. |
+| `cloud_armor_policy_name` | `default-waf-policy` | Nom de la stratégie. |
 | `enable_cdn` | `false` | Activer Cloud CDN sur le backend GKE Ingress. |
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
@@ -571,7 +593,7 @@ provisionnement. Voir [App_GKE](App_GKE.md).
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation (dry-run). |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
 | `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 ---
@@ -587,7 +609,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
 | `service_cluster_ip` | ClusterIP intra-cluster. |
 | `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à l'étape. |
-| `service_external_ip` | IP externe de l'équilibreur de charge (lorsqu'une IP statique est réservée). |
+| `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `service_url` | URL pour atteindre Speedtest Tracker. |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` | Nom de la base de données de l'application. |
@@ -598,7 +620,7 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
-| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (optionnels). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants de projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
@@ -612,48 +634,36 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
-> (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible**
-> (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée au moment de la planification.** Ce module transmet sa
-> configuration via le moteur de fondation [App_GKE](App_GKE.md), qui valide
-> les valeurs *et les combinaisons* au moment de la planification — un réplica
-> en lecture sans son primaire, IAP sans identités autorisées, un runtime
-> `gen1` avec des montages NFS/GCS, un `database_type` qui ne
-> correspond pas au moteur requis par Speedtest Tracker, un `redis_port`/`backup_retention_days`
-> hors de portée. Ce module valide en outre que `max_instance_count <= 1` chaque fois que
-> `speedtest_schedule` est défini. Une configuration invalide fait échouer le
-> **plan** avec une erreur claire et nommée avant la création de toute
-> ressource.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration au moteur de socle [App_GKE](App_GKE.md), qui valide les valeurs *et les combinaisons* au moment du plan — un réplica en lecture sans son primaire, IAP sans identités autorisées, un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas au moteur requis par Speedtest Tracker, un `redis_port`/`backup_retention_days` hors limites. Ce module valide en outre `max_instance_count <= 1` chaque fois que `speedtest_schedule` est défini. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `APP_KEY` (auto-générée) | Ne jamais faire tourner après le premier démarrage | Critique | La faire tourner rend toutes les valeurs chiffrées de la base de données indéchiffrables de manière permanente. |
-| `application_database_name` / `application_database_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans un `backup_uri` valide fait échouer le job d'importation. |
-| `database_type` | `MYSQL_8_0` | Critique | Speedtest Tracker nécessite MySQL dans ce module ; tout autre moteur empêche le démarrage. |
+| `APP_KEY` (auto-généré) | Ne jamais faire pivoter après le premier démarrage | Critique | Le faire pivoter rend toutes les valeurs de la base de données chiffrées indéchiffrables de manière permanente. |
+| `application_database_name` / `application_database_user` | Définir une seule fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans `backup_uri` valide fait échouer le job d'importation. |
+| `database_type` | `MYSQL_8_0` | Critique | Speedtest Tracker nécessite MySQL dans ce module ; tout autre moteur interrompt le démarrage. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont des octets et bloquent toute planification de pod dans l'espace de noms. |
-| `max_instance_count` | `1` | Élevé | La mise à l'échelle au-delà de 1 avec un `speedtest_schedule` actif risque de déclencher des tests de vitesse en double sur le même tick de planification — le planificateur Laravel n'a pas de verrouillage inter-pods. |
-| `memory_limit` | `1Gi` | Élevé | Des valeurs plus faibles risquent des arrêts OOM pendant les migrations ou l'utilisation concurrente du tableau de bord. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité MySQL sur GKE ; sa désactivation est bloquée par une protection de validation au moment de la planification. |
-| `min_instance_count` | `1` | Élevé | GKE nécessite min ≥ 1 ; maintenir 1 permet également au planificateur cron de fonctionner en continu. |
+| `max_instance_count` | `1` | Élevé | Mettre à l'échelle au-delà de 1 avec un `speedtest_schedule` actif risque de déclencher des tests de vitesse en double sur le même tick de planification — le planificateur Laravel n'a pas de verrouillage inter-pods. |
+| `memory_limit` | `1Gi` | Élevé | Des valeurs inférieures risquent des arrêts OOM pendant les migrations ou l'utilisation concurrente du tableau de bord. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité MySQL sur GKE ; sa désactivation est bloquée par une protection de validation au moment du plan. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; maintenir 1 permet également de maintenir le planificateur cron en fonctionnement continu. |
 | Chemin `liveness_probe` | `/api/healthcheck` (par défaut) | Moyen | Pointer la sonde vers tout autre chemin ne renvoie jamais un état sain — `/api/healthcheck` est le point de terminaison de santé JSON non authentifié de Speedtest Tracker. |
 | `enable_iap` | uniquement lorsque les lecteurs doivent s'authentifier | Élevé | IAP bloque tout accès anonyme. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — IAM et Workload
-Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
-**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Speedtest
-Tracker partagée avec la variante Cloud Run est décrite dans
+Pour le comportement du socle référencé partout — IAM et Workload Identity,
+autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
+**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Speedtest Tracker
+partagée avec la variante Cloud Run est décrite dans
 **[SpeedtestTracker_Common](SpeedtestTracker_Common.md)**.
 
-<!-- related-guides -->
-
-## Guides associées {#related-guides}
+## Guides associés {#related-guides}
 
 - [Lab pratique : Speedtest Tracker sur GKE Autopilot](../labs/SpeedtestTracker_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Speedtest Tracker sur Google Cloud Run](SpeedtestTracker_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.

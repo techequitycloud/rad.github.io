@@ -29,8 +29,8 @@ IAP, Binary Authorization, VPC Service Controls, backups, and the deployment lif
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 175 credits (US$17.50 at the top-up price) | 157.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$129.18 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **107 credits a day**, about 3,210 a month |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$129.18 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **137 credits a day**, about 4,110 a month (about US$411 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database and network are shared by every application in the project, so a second application does not add a second set of them.
@@ -68,7 +68,7 @@ One real gap: nightly backups are written to a bucket inside the project, and th
 
 In your own project, or once the 30-day restore window has passed, the alternative is to delete Superset outright and redeploy it later. A redeploy costs the module fee again (builds are included) — 175 credits (US$17.50) in your own project, or 157.5 credits in a RAD-managed one.
 
-Deleting saves money only once Superset would otherwise sit unused long enough to clear that redeploy cost against its own daily running cost — against the own-project total above (about US$4.31 a day), that works out to about 5 days or more, or about 2 days or more in a RAD-managed one (107 credits a day). Most of the running cost here is the database and the GKE pod; they stop only when nothing else in the project uses them, so deleting Superset while something else shares the project saves only this app's own compute part.
+Deleting saves money only once Superset would otherwise sit unused long enough to clear that redeploy cost against its own daily running cost — against the own-project total above (about US$4.31 a day), that works out to about 5 days or more, or about 2 days or more in a RAD-managed one (137 credits a day). Most of the running cost here is the database and the GKE pod; they stop only when nothing else in the project uses them, so deleting Superset while something else shares the project saves only this app's own compute part.
 
 Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it, so copy the latest backup out before deleting if you want to keep it.
 
