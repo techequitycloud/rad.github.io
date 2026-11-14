@@ -65,7 +65,7 @@ Your client can see what you deploy for them, but can't change or delete it whil
 Everything the project costs is taken from its wallet:
 
 - **module fees**. The module's publisher earns their usual share of these;
-- **build costs** for each deploy, update and delete;
+- **build costs** for each deploy, update and delete (a client project's wallet is still charged for build time by the minute);
 - the project's **Google Cloud running costs**, metered hourly.
 
 If RAD's finance team has set a VAT rate for you, every charge from the wallet includes it, at **your** rate, not your client's: you fund the wallet, so you are the customer.

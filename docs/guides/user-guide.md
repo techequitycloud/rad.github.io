@@ -33,7 +33,7 @@ After you sign in you land on **Solutions**: on **Build Solution with AI** if yo
   - **RAD solutions** — ready-made bundles curated by RAD.
   - **RAD modules** — the full catalog of individual applications.
 
-Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Solutions**, **Pricing** and **Help**, with an **Ask AI** button and a language selector (English or French) beside your profile menu. **Ask AI** opens an assistant you can question in plain language about modules, pricing and deployments; its answers can be wrong, so check anything important, and the conversation starts afresh each time you open it.
+Your top navigation shows **Credits** (when credits are enabled), **Deployments**, **Solutions**, **Pricing** and **Help**, with an **Ask AI** button and a language selector (English or French) beside your profile menu. **Ask AI** opens an assistant you can question in plain language about modules, pricing and deployments; opened on a deployment's page, it knows which module that is and its status (never your settings or secrets), so you can ask about it directly. It answers from these guides and ends with a link to the section it used, so you can read the whole of it; when the guides do not cover a question, it says so rather than guessing. It is available with purchased credits or a staff role and is limited to a number of questions over time. Its answers can be wrong, so check anything important, and the conversation starts afresh each time you open it.
 
 ## Building a solution from a description
 
@@ -47,17 +47,43 @@ On **Solutions → Build Solution with AI** — also reachable directly at **/bu
 
 If the applications RAD proposes aren't quite right, use **Not quite? Tell us what to change** underneath them — say what to add or drop, and RAD reworks the set instead of starting from scratch. You can also remove a single application, or **Start over** to clear your answers and the proposal together.
 
-A panel beside the questions shows **what you'll get**, **what it costs** and **how long it takes** — the whole cost, including the shared services RAD adds for you, split into what is taken when you build and what is metered as each part finishes, alongside a build-duration estimate such as "about 1h 20m". **Build this** saves it under **My solutions** and opens its deploy page with your answers already filled in; review it there and choose **Deploy Solution**. **Show the engineering detail** saves it the same way but opens it on the full configuration form, if you would rather set everything yourself.
+A panel beside the questions shows **what you'll get**, **what it costs** and **how long it takes** — the whole cost, including the shared services RAD adds for you, with what is reserved when you build, alongside a build-duration estimate such as "about 1h 20m". **Build this** saves it under **My solutions** and opens its deploy page with your answers already filled in; review it there and choose **Deploy Solution**. **Show the engineering detail** saves it the same way but opens it on the full configuration form, if you would rather set everything yourself.
 
 ### Bringing your own Google Cloud project
 
 Deploying into a project you already own means RAD's deployment service account does the work inside it, so it needs access first. Before anything deploys, you prove you control the project: choose **Get verification code**, run the commands shown as a project Owner (for example in Cloud Shell) — they add a verification label and give RAD read-only **Browser** access — then choose **Verify**; the code expires in one hour. You then grant the deployment service account the **Owner** role on the project; RAD names the exact account and shows the command. If another RAD account has already registered the same project, you are added to it as a collaborator. Free (awarded) credits can pay for a deployment into your own project.
+
+**Connect it before you start.** If you have not bought credits, your own project is where your deployments go, so signing in opens on **Connect your Google Cloud project** until you have connected one. Enter the project ID and RAD runs the same checks it runs when you deploy — the verification label, the Owner role for the deployment service account, and billing switched on — and shows how to fix anything missing, including a link to set up billing. A project connected here is not asked for a new label when you deploy. **Skip for now** goes straight to the catalogue for the rest of your visit, and the page is always at `/connect`.
 
 Every deploy and update into a project you own starts with a quick check, before anything is changed: that the project exists and is active, that billing is enabled on it, and that RAD's deployment service account can turn on the Google Cloud services the module needs. If any of those fails, the build stops straight away and **Build Status** says which check failed and how to fix it, usually with the exact command to run. The check is skipped when the deployment creates the project itself, and it never blocks a deployment just because it could not get an answer.
 
 ### What a RAD-managed project needs
 
 A RAD-managed project asks for two things before RAD can create it: a **verified email address**, and a minimum balance of **purchased** credits for the purpose you chose. Free (awarded) credits — such as the ones you receive when you sign up — do not count toward that minimum. The page shows how many purchased credits you have against what is needed, with a **Buy credits** link, as soon as you choose the option. The header shows your balance split into purchased and free credits for the same reason.
+
+### Choosing a purpose: sandbox, development or production
+
+A RAD-managed project is created for a **purpose**, and you can have one of each:
+
+- **Sandbox** — *Trying things out.* The smallest budget and the lowest purchased-credit balance to get started.
+- **Development** — *For our developers.* A larger budget, and a higher purchased-credit balance required.
+- **Production** — *For our end users.* The largest budget, and the highest purchased-credit balance required.
+
+The purpose decides three things: which of RAD's folders the project sits in (and so which Google Cloud organization policies apply to it), the monthly **budget alert** on the project, and the **minimum purchased-credit balance** you must hold to create it and keep it running. It does **not** change what a deployment costs — the same application costs the same credits in a sandbox as in production. The budget alert only notifies; it never stops anything. In a RAD-managed project you can deploy only to the lowest-cost region in each of eight geographies, and the region picker offers exactly those.
+
+### Shared services (Services_GCP) and what they cost
+
+The first application you deploy into a RAD-managed project also creates its **shared services** (the **Services_GCP** deployment): the private network your applications run on and, when an application needs one, its database and other shared components. They are created **once per project**; every later application in that project attaches to them at no extra charge.
+
+What shared services cost:
+
+- **When RAD creates them beneath an application:** nothing extra — they are included in the application's price. The confirmation dialog still lists them under *"RAD also sets these up for you"*, so you can see what is built. Deployed **on their own**, Services_GCP costs a flat 20 credits.
+- **When they are updated** — for example, RAD adds a database a new application needs — like any other update: free up to the monthly allowance (see **Credits**).
+- **When they are deleted:** free. If the deletion fails for a known Google delay, RAD retries it for you; see **Deleting shared services** below.
+
+### Google Cloud usage in a RAD-managed project
+
+What runs in a RAD-managed project — Cloud Run services, databases, storage — uses Google Cloud, and RAD pays Google for it. That usage is charged to your **purchased** credits as Google reports it, and **Credits** > **Project Transactions** shows it per project. If your purchased balance, less usage not yet charged, falls below the minimum for the project's purpose — or you owe credits — RAD switches the project's billing off: its services stop, but your data is kept. Buying credits switches it back on.
 
 ## Finding a module
 
@@ -69,7 +95,7 @@ Open **Solutions**, choose the **Solution Catalog** tab and select **RAD modules
 - **Page through:** **All** shows four of each kind per page; a single type shows more (24 RAD modules or RAD solutions, 12 of your own solutions). Change the number per page, up to 72, beneath the list.
 - **Pin:** Click the pin on a card to keep a favourite module at the top of your catalog for quick access.
 - **Read each card:** Every card shows the module description, a **documentation** link, an average star rating, how many times it has been deployed, and its **price**.
-- **Read the price:** Every catalogue card — module, platform solution or custom solution — shows its price the same way: the **fee** (charged once, when the deployment is created) plus an estimate of the **build** (metered on every build), for example `50 cr fee + ~19 cr build`. A module with no fee reads **Free module**; its build is still charged. A solution that qualifies for a bundle discount shows it: the fee before the discount is struck through beside the fee you pay. A deployment into a RAD-managed project may also set up a project and shared services first; that cost is shown before you deploy.
+- **Read the price:** Every catalogue card — module, platform solution or custom solution — shows its price the same way: the **fee**, charged once, when the deployment first succeeds — for example `50 cr fee`. Build time is included in the price. A module with no fee reads **Free module**. A solution that qualifies for a bundle discount shows it: the fee before the discount is struck through beside the fee you pay. A deployment into a RAD-managed project may also set up a project and shared services first; that cost is shown before you deploy.
 - **Get help on a module:** Click **Help** on a card to open the Get Support dialog. It has three tabs: **End User Support** raises a support ticket about the module, **End User Training** requests paid help setting it up (RAD gets in touch within one business day), and **Contact Publisher** emails the module's publisher with a question.
 
 A stats strip at the top shows total deployments, your current credit balance (when credits are enabled), and how long deployment history is retained.
@@ -103,11 +129,11 @@ Your own solutions (**Solution Catalog → My solutions**) are composed in conve
 
 Click **Deployments** to see your deployments. Each row shows the module, the deployment ID, an editable **star rating**, when it was created, how long it took, the status, and the action. There's no project or credits column — open a deployment for its project, and its **Builds** tab for what each build consumed.
 
-Deployment statuses include Queued, Pending, Working, Waiting (on a prerequisite deployment to finish), Success, Failure, Internal Error, Deleting, Deleted, Cancelled, Timeout, and Expire. A **Deleted** deployment stays in your list only while you can still purge it; a lab environment your trainer tore down, for example, drops out of your list because only the trainer or an administrator can purge it.
+Deployment statuses include Queued, Pending, Working, Waiting (on a prerequisite deployment to finish), Success, Failure, Internal Error, Deleting, Deleted, Cancelled, Timeout, and Expire. A deployment **Cancelled** because something it depends on failed says which one — even when the failure is a level further down, such as the project behind your shared services — and links to it; that deployment's page explains the failure and what to do. A **Deleted** deployment stays in your list only while you can still purge it; a lab environment your trainer tore down, for example, drops out of your list because only the trainer or an administrator can purge it.
 
 Open a deployment to see its details, which has these tabs:
 
-- **Outputs** — starts with the page to open: **First-time setup** when the application needs setting up before its first use, **Open application** otherwise, or — for a module with no web interface — the API address to connect to. Below that are the rest of the non-sensitive results (such as addresses and endpoints exported by the module). These appear once the deployment succeeds.
+- **Outputs** — starts with the page to open: **First-time setup** when the application needs setting up before its first use, **Open application** otherwise, or — for a module with no web interface — the API address to connect to. Below that are the rest of the non-sensitive results (such as addresses and endpoints exported by the module). These appear once the deployment succeeds. The email RAD sends when a deployment or update succeeds carries the same first link, plus a link to the module's guide.
 - **Build Status** — live logs, useful for watching progress or troubleshooting a failure. Once the deployment has succeeded, **Explain this** opens a plain-English explanation of the Google Cloud resources it created, written for someone who does not read Terraform. It sends only the *kinds* of resource involved and how many of each — never your project ID, resource names, email addresses or any configured values. It also links the module's own documentation page, so the explanation is grounded in how that module actually works rather than in general knowledge. On a step that has *failed*, **Search for a fix** opens a search built from the actual error the step printed, and **Ask for help** raises a support request with that same output attached. If RAD already recognises the failure — or an AI suggestion has already been generated for this build — **Ask for help** shows that first and asks **Does this solve it?**: choose **Yes, I'll try this** and nothing is sent, or **No, send to support** and the diagnosis you saw goes with your request. Where a module's script failed, the search uses what the script printed rather than the script itself, and it leaves out what identifies you: email addresses, project IDs, service addresses, IP addresses and the names RAD gave your resources. **Download** saves the whole log as a text file, with secrets masked.
 - **Builds** — the build history for the deployment.
 
@@ -126,7 +152,7 @@ From the details view you can also:
 ### When a deployment fails
 
 - **A known cause is explained for you.** When RAD recognises why a step failed — billing switched off on the project, a missing permission, a Google Cloud service not yet enabled, and many more — the failed step on **Build Status** says what went wrong and what to do about it. The failure email names the same cause and fix, so you often know what to do before opening the page.
-- **Suggested fixes.** For a failure RAD does not recognise, **Suggest fixes** on **Build Status** asks AI for the likely causes and the steps to try, worked out from the build's error output with your secrets masked. It needs purchased credits on your account (or a staff role). RAD may already have prepared it by the time you open the page. Suggestions can be wrong: check them before acting.
+- **Suggested fixes.** For a failure RAD does not recognise, **Suggest fixes** on **Build Status** asks AI for the likely causes and the steps to try, worked out from the build's error output with your secrets masked. It needs purchased credits on your account (or a staff role), except that without purchased credits you get it free on your first few failed builds of your own deployments (currently three, and the panel shows how many you have left; labs excluded); a build counts once however often you ask, and a failure RAD already recognises never uses one up. RAD may already have prepared it by the time you open the page, and when it is ready within moments of the failure the failure email carries the likely causes and the first steps too. Suggestions can be wrong: check them before acting.
 - **Apply suggested fix.** Some suggestions include a change to one or two settings — for example more memory, more CPU, a higher instance count or timeout, a larger machine size, or another choice from a setting's own list. **Apply suggested fix** opens the update form with those values filled in and highlighted; nothing changes until you review the form and submit it. RAD only ever suggests simple settings like these that are safe to change on a running deployment — never an address, a container image, a command, a network range, a secret, a region, or anything to do with your project, billing or access. You get one suggested fix per failure: if the update it led to fails again, the button is no longer offered and RAD points you to support instead.
 - **Before you ask for help**, RAD shows you what it already knows (see **Build Status** above), so you are not left waiting for an answer you could have had straight away.
 - **Deleting shared services.** Deleting a project's shared services (**Services_GCP**) can fail while Google is still releasing the network addresses Cloud Run used — this takes about 20-30 minutes after the last application is removed. RAD retries that delete automatically, no sooner than 30 minutes later and at most twice, emails you that it is doing so, and **Build Status** shows when the next attempt runs. There is nothing for you to do.
@@ -148,22 +174,27 @@ Open the **Credits** page to manage your balance.
 
 Your credits sit in four separate balances, and they behave differently:
 
-- **Awards** — free credits: your signup grant, monthly grants, and referral rewards. These are reset each month.
+- **Awards** — free credits: your signup grant, monthly grants, and referral rewards. These are reset each month (unused awards never carry over), except that a new account keeps its sign-up credits for at least 30 days. From **1 December 2026** the monthly grant goes only to accounts that were active in the previous 30 days — a successful deployment or a credit purchase.
 - **Event credits** — free credits you claimed with an event code (see below). They expire on their own date, shown when you claim them, rather than with the monthly reset.
 - **Subscription** — credits from a subscription plan. Where the platform is set to reset them, a renewal replaces the allowance rather than adding to it.
 - **Top-up** — credits you bought outright as a one-off. These never expire.
 
 Spending draws on awards first, then event credits, then subscription, then top-up — so the credits that expire soonest are used first, and the ones you bought outright are kept until last.
 
-Deploying a module charges two things. The **module fee** is reserved when you confirm and charged when the deployment first succeeds — including when a failed deployment is later fixed by an update. The **build cost** is metered from how long each build actually runs, at the platform's credits-per-build-hour rate, and charged as each build finishes.
+Deploying a module charges its **module fee** and nothing for build time: **builds are included in the price, so you pay only for success.** The fee is reserved when you confirm and charged when the deployment first succeeds — including when a failed deployment is later fixed by an update.
 
-**The confirmation dialog quotes the whole chain, not just the application you picked.** Deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and those carry their own costs — the dialog lists them under *"RAD also sets these up for you"* with a combined total. It also separates what is reserved when you confirm from what is metered as each build finishes, so the second charge is not a surprise. Build costs are estimates until the build completes, so the final figure can differ a little.
+- **Create** — the module fee. **Your first successful deployment is free** when its module fee is 110 credits or less: once per account, for a single module you deploy yourself (not a solution, a lab session, a client project or a module published by a partner, whose fee is the partner's income).
+- **Update** — the first 5 successful updates of each deployment in a calendar month (UTC) are free; each further successful update costs 2 credits.
+- **Teardown, purge and any build that fails** — free.
+- **The project and shared services RAD sets up beneath an application** — included. Deployed on their own, **Project_GCP** costs 10 credits and **Services_GCP** 20.
 
-Updating a deployment charges the build cost only.
+These figures are set by RAD's finance team, who can also switch back to charging build time by the minute; the confirmation dialog always shows what applies to your deployment.
 
-**VAT.** If RAD's finance team has set a VAT rate for your account, it is added to every module fee and build cost you pay, and to the Google Cloud usage of your RAD-managed and linked projects. The confirmation dialog shows the net figures with a separate **VAT** line, and VAT must be paid from purchased credits — the dialog tells you how many more to buy if you are short. A rate change applies from your next deployment; it never re-prices one you have already confirmed.
+**The confirmation dialog quotes the whole chain, not just the application you picked.** Deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and the dialog lists them under *"RAD also sets these up for you"* with a combined total. It shows the price in two parts: **credits to deploy (updates included)** and, for a RAD-managed project, **about how much it costs a month to run** — an estimate from what similar RAD-managed projects have cost at Google's list price, not a charge.
 
-**Failed deployments.** Whether a deployment that fails is charged is a platform setting rather than a fixed rule: Finance decides, separately for the build cost and the module fee, whether either is taken when a new deployment fails or is cancelled. **In the current release neither is charged — a failed deployment costs you nothing.** A failed update or teardown is not charged either.
+**VAT.** If RAD's finance team has set a VAT rate for your account, it is added to every module fee and credit charge you pay, and to the Google Cloud usage of your RAD-managed and linked projects. The confirmation dialog shows the net figures with a separate **VAT** line, and VAT must be paid from purchased credits — the dialog tells you how many more to buy if you are short. A rate change applies from your next deployment; it never re-prices one you have already confirmed.
+
+**Failed deployments cost you nothing**: no module fee and no build charge, and the same goes for a failed update or teardown. (Finance can choose to charge the module fee when a new deployment fails; the confirmation dialog says so when it does.)
 
 The Credits page has these tabs:
 
@@ -176,7 +207,7 @@ The Credits page has these tabs:
 
 Whether credits can be bought at all is a single platform switch. While it is off there are no new subscriptions and no one-off top-ups, and the two tabs above are not shown; if you already have a subscription, a notice on **Credit Transactions** still lets you cancel it.
 
-**To buy credits:** open the **Buy Credits** tab, pick a payment provider, choose a currency and amount, and complete checkout on the provider's secure page. The form shows the minimum top-up (set by RAD's finance team, in USD) converted into your currency, and the form tells you how many credits the amount will buy before you pay. Your credits are added automatically once the payment confirms.
+**To buy credits:** open the **Buy Credits** tab, pick a payment provider, choose a currency and amount, and complete checkout on the provider's secure page. The form shows the minimum top-up (set by RAD's finance team, in USD) converted into your currency, and the form tells you how many credits the amount will buy before you pay. The first option offered is the **starter pack** — 100 credits for $10, enough for a live app and a few days of running it. Your credits are added automatically once the payment confirms.
 
 **Refunds and chargebacks.** If a payment is refunded, or you dispute it with your card issuer (a chargeback), RAD takes back the credits that payment added, from the balance they went into — in proportion, for a partial refund. Your history shows it as a negative purchase line. That balance can go below zero, and then RAD switches off the Google Cloud projects it pays for on your behalf until you top up. If a dispute is decided in your favour, the credits are put back.
 
@@ -234,7 +265,7 @@ Approval checks the floor against your recent spend across all your linked proje
 
 ## Email notifications
 
-Choose which emails RAD sends you on your **Profile** page, under **Email Notification Settings**. **Deployments** covers every email about your deployments — build results, lab emails, and the warnings RAD sends before it permanently removes something of yours. **Billing** covers credit and payment emails. (Support staff also see **Support ticket assigned to me**.) One email ignores these settings: if a build costs more credits than you have, you are always told what you owe, because it explains why your next top-up gives you less.
+Choose which emails RAD sends you on your **Profile** page, under **Email Notification Settings**. **Deployments** covers every email about your deployments — build results, lab emails, and the warnings RAD sends before it permanently removes something of yours. It also covers one follow-up: if a deployment of yours fails and you have not been back for a day, RAD sends a single note with the likely cause and what to try (at most one per deployment, and one a week). **Billing** covers credit and payment emails. (Support staff also see **Support ticket assigned to me**.) One email ignores these settings: if a build costs more credits than you have, you are always told what you owe, because it explains why your next top-up gives you less.
 
 Turning **Deployments** off stops all of those emails, including the warnings. Because RAD never permanently removes anything without warning you first, those removals are **held** while the setting is off: a RAD-managed project whose billing was switched off for lack of credits is not deleted, and a deployment removed from your list after the retention period is kept rather than permanently erased. When you turn deployment emails back on, the warnings are sent. For a held deployment record, the full notice period starts from that warning. For a held RAD-managed project, the project can be deleted as soon as the following day, so act on that warning straight away.
 

@@ -15,7 +15,7 @@ This is the shared overview for everyone who uses RAD. It covers signing in, fin
 
 RAD (Rapid Application Deployment) is a web portal for deploying ready-made Google Cloud modules without writing any infrastructure code. You pick a module, fill in a guided configuration form, and the platform provisions it on Google Cloud for you.
 
-Usage is metered in **credits**: most modules cost a set number of credits to deploy, and your balance is checked before a deployment runs.
+Usage is priced in **credits**: most modules cost a set number of credits to deploy, build time is included, and your balance is checked before a deployment runs.
 
 ---
 
@@ -42,7 +42,7 @@ The top navigation bar shows only the items relevant to your role (or roles). Wh
 
 - A **profile dropdown** (top-right) with **Your Profile** and **Sign Out**.
 - A **language selector** in the top bar, beside the light/dark theme control.
-- **Ask AI** in the top bar (in the menu on a phone): ask RAD's AI assistant about modules, pricing or deployments in plain language. It is also on the sign-in, pricing and guide pages. Its answers can be wrong, so check anything important; each time you open it, the conversation starts afresh.
+- **Ask AI** in the top bar (in the menu on a phone): ask RAD's AI assistant about modules, pricing or deployments in plain language. It is also on the sign-in, pricing and guide pages. Inside the console it answers from these guides and links the section it used. Its answers can be wrong, so check anything important; each time you open it, the conversation starts afresh.
 - **Pricing**, just before **Help** in the top navigation — RAD's prices, shown inside the console.
 - In the footer: **Contact Us** (to the **Help** page), **Feedback** (RAD's public feedback board, at fider.radmodules.dev, where you can suggest and vote on improvements), the Terms and Privacy documents, **Cookie settings**, and **Pricing** again.
 
@@ -136,18 +136,18 @@ A solution's modules are grouped into **waves**, a rough deploy order — but wh
 
 Usage is metered in credits, held in four separate balances:
 
-- **Awards** — free credits (signup, monthly, referral), reset each month.
+- **Awards** — free credits (signup, monthly, referral), reset each month. From 1 December 2026 the monthly grant goes only to accounts active in the previous 30 days.
 - **Event credits** — free credits claimed with a code from a RAD partner event. They expire on their own date.
 - **Subscription** — credits from a subscription plan. Where the platform is set to reset them, a renewal replaces the allowance rather than adding to it.
 - **Top-up** — credits bought outright as a one-off. These never expire.
 
 Spending draws on awards first, then event credits, then subscription, then top-up, so the credits that expire soonest go first. Your **balance** is all of them together and is checked before each deployment.
 
-Deploying a module costs that module's fee plus a build cost. The fee is reserved when you confirm and charged when the deployment first succeeds; the build cost is metered from how long each build actually runs and charged once it finishes — so the final figure can differ a little from the estimate in the confirmation dialog. That dialog quotes the WHOLE chain — deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use, and both are listed with the total. If the build cost exceeds your balance, the remainder carries over and is settled from your next purchase. A partner deploying their own module isn't charged the module cost, but does pay the build cost. An update charges the build cost only. If RAD's finance team has set a VAT rate for your account, it is added to every module fee, build cost and project usage charge, the confirmation dialog shows it as its own **VAT** line, and it must be paid from purchased credits. A solution of three or more modules gets a bundle discount on its module fees — by default 15% for three or four, 20% for five or six, 25% for seven or more.
+Deploying a module costs that module's fee, and **build time is included in the price** — you pay only for success. The fee is reserved when you confirm and charged when the deployment first succeeds. Your first successful deployment is free when its fee is 110 credits or less. Each deployment gets 5 free updates a month, then 2 credits per update; teardowns, purges and failed builds are free. The project and shared services RAD sets up beneath an application are included (on their own, Project_GCP costs 10 credits and Services_GCP 20). Finance sets these figures and can switch back to charging build time by the minute; the confirmation dialog always shows what applies. That dialog quotes the WHOLE chain — deploying into a RAD-managed project also creates your private Google Cloud project and the shared services your applications use — and, for a RAD-managed project, an estimate of what it costs a month to run. A partner deploying their own module isn't charged the module fee. If RAD's finance team has set a VAT rate for your account, it is added to every module fee, credit charge and project usage charge, the confirmation dialog shows it as its own **VAT** line, and it must be paid from purchased credits. A solution of three or more modules gets a bundle discount on its module fees — by default 15% for three or four, 20% for five or six, 25% for seven or more.
 
 You choose which emails RAD sends on your **Profile** page. Turning **Deployments** emails off stops every deployment email, including the warning RAD sends before it permanently deletes something — so while they are off, those deletions are held rather than made without warning. See the [User Guide](user-guide.md#email-notifications).
 
-What a **failed** deployment costs is a platform setting, not a fixed rule: Finance can choose, separately for the build cost and the module fee, whether either is charged when a new deployment fails or is cancelled. **In the current release neither is charged, so a failed deployment costs you nothing.** Failed updates and teardowns are not charged either.
+A **failed** deployment costs you nothing, and neither do failed updates and teardowns. (Finance can choose to charge the module fee when a new deployment fails; the confirmation dialog says so when it does.)
 
 The **Credits** page has:
 
