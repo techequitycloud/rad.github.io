@@ -32,9 +32,11 @@ than repeating them here.
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 75 credits (US$7.50) | 67.5 credits (10% lower) |
-| Build time | A few credits per build | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$42.08 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **67 credits a day** |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 10 credits cost US$1 on a one-off top-up, less on a plan. In a project RAD manages, the
 database, file server and network are shared by every application in the project, so a second
@@ -78,8 +80,7 @@ Restoring, within 30 days and only by the project's owner, asks Google to undele
 project and reattaches its billing account, then asks you to run Update on each deployment
 to confirm everything came back. Because nothing was individually destroyed, that Update
 finds the same resources already there — it is a check, not a rebuild, and an Update never
-charges the module fee again. This costs only a handful of credits (under US$1) in build time
-for a typical chain of deployments.
+charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 
 What this needs: you must own the project (not one RAD only manages billing for), you must
 restore it yourself within 30 days — after that Google deletes it for good — and restoring is
@@ -96,8 +97,7 @@ delete the project, even though the project itself is recoverable for 30 days. K
 In your own project, or once the 30-day window above has passed, the fallback is to delete
 Kavita outright and redeploy it later.
 
-- **What a redeploy costs:** the module fee again, plus the builds — roughly the module fee
-  shown above plus 3–6 credits of build time.
+- **What a redeploy costs:** the module fee again (builds are included) — the module fee shown above.
 - **When it's worth it:** deleting saves money only once Kavita would otherwise sit unused
   for about 6 days or more in your own project (about 1 day or more in a RAD-managed one). Most of the running cost here is the GKE cluster management fee, so deleting Kavita alone saves only its own pod's share if other apps share the cluster.
 - **Keep data first.** Nightly backups are written to a bucket inside the deployment, and

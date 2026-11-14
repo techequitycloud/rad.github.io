@@ -24,16 +24,18 @@ Service Controls, backups, and the deployment lifecycle — refer to the
 
 ## What Tandoor costs on RAD, and how that compares
 
-**Tandoor on RAD's GKE Autopilot module costs about US$91.31 a month in a Google Cloud project you own, with a one-time 75-credit module fee (US$7.50, or 67.5 credits in a RAD-managed project, 10% lower).** GKE suits Tandoor that needs to sit beside other Kubernetes workloads; for the lowest cost, the [Cloud Run module](Tandoor_CloudRun.md) runs the same Tandoor for about US$68.61 a month instead, with a lower module fee to match. If you only need Tandoor occasionally — planning meals for a season, trying it before committing — a RAD-managed project can be deleted and restored within 30 days for a handful of credits (under US$1) instead of paying for it to sit idle. See **Pause it for free**, below. Figures are as at 8 October 2026; sources are listed at the end of this section.
+**Tandoor on RAD's GKE Autopilot module costs about US$91.31 a month in a Google Cloud project you own, with a one-time 75-credit module fee (US$7.50, or 67.5 credits in a RAD-managed project, 10% lower).** GKE suits Tandoor that needs to sit beside other Kubernetes workloads; for the lowest cost, the [Cloud Run module](Tandoor_CloudRun.md) runs the same Tandoor for about US$68.61 a month instead, with a lower module fee to match. If you only need Tandoor occasionally — planning meals for a season, trying it before committing — a RAD-managed project can be deleted and restored within 30 days at no extra charge instead of paying for it to sit idle. See **Pause it for free**, below. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
 ### What you pay on RAD
 
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 75 credits (US$7.50 at the top-up price) | 67.5 credits (10% lower) |
-| Build time | About 3-6 credits per build | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$91.31 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **85 credits a day**, about 2,550 a month |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database and network are shared by every application in the project, so a second application does not add a second set of them.
 
@@ -60,7 +62,7 @@ If Tandoor runs in a project RAD manages for you, deleting the whole project unl
 
 > **A restore is not guaranteed — keep your own backups.** Google Cloud's terms do not guarantee that a restored project, or the resources in it, will be usable after it is restored, so restoring cannot be relied on as a way to recover a deleted project. Before you delete, make sure you have taken appropriate backups of the application's data and configuration and stored them outside the project. If a restore fails, or the restored project does not work, the fall-back is to redeploy the application (see the next section) and restore its configuration and data from those backups.
 
-Restoring, within 30 days and only by the project's owner, asks Google to undelete the project and reattaches its billing account, then asks you to run Update on each deployment to confirm everything came back. Because nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a rebuild, and an Update never charges the module fee again. This costs only a handful of credits (under US$1) in total for a typical 2-3-deployment chain.
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the project and reattaches its billing account, then asks you to run Update on each deployment to confirm everything came back. Because nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 
 What this needs: you must own the project (not one RAD only manages billing for), you must restore it yourself within 30 days — after that Google deletes it for good — and restoring is admitted like creating a new project, so your purchased credit balance must still clear the tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most services are fully working again within 36 hours of a restore.
 
@@ -68,7 +70,7 @@ One real gap: nightly backups are written to a bucket inside the project, and th
 
 ### Pay only while you use it, the other way: delete and redeploy
 
-In your own project, or once the 30-day restore window has passed, the alternative is to delete Tandoor outright and redeploy it later. A redeploy costs the module fee again, plus the builds — roughly 80 credits (about US$8) in your own project, or 72.5 credits in a RAD-managed one.
+In your own project, or once the 30-day restore window has passed, the alternative is to delete Tandoor outright and redeploy it later. A redeploy costs the module fee again (builds are included) — 75 credits (US$7.50) in your own project, or 67.5 credits in a RAD-managed one.
 
 Deleting saves money only once Tandoor would otherwise sit unused long enough to clear that redeploy cost against its own daily running cost — against the own-project total above (about US$3.04 a day), that works out to about 3 days or more, or about 1 days or more in a RAD-managed one (85 credits a day). Most of the running cost here is the database and the shared cluster fee; they stop only when nothing else in the project uses them, so deleting Tandoor while something else shares the project saves only this app's own compute part.
 

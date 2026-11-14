@@ -19,14 +19,14 @@ Most configuration options in `Paperless GKE` map directly to the same options i
 
 **For an office archive, Paperless on RAD's GKE Autopilot module costs about US$143 a month with no per-user licence.** GKE suits a Paperless-ngx that must stay up, scale across pods, or run beside other Kubernetes workloads. For the lowest cost, the [Cloud Run module](Paperless_CloudRun.md) runs the same Paperless for about US$99 a month. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
-If you only need it occasionally — studying for a certification, a demo, a seasonal business — a RAD-managed project can be deleted and restored within 30 days for a few credits, so that US$143 becomes a few dollars a month instead. See **Pause it for free**, below.
+If you only need it occasionally — studying for a certification, a demo, a seasonal business — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that US$143 becomes a few dollars a month instead. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 175 credits (US$17.50 at the top-up price) | 157.5 credits (10% lower) |
-| Build time | About 19 credits per build (RAD's average build takes about 19 minutes) | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account (table below) | Metered hourly in credits; RAD publishes **113 credits a day**, about 3,390 credits a month (about US$339 at the top-up price, US$271 at the Scale plan's rate) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
@@ -69,18 +69,16 @@ continuously.
   it, recoverable, for 30 days. Because billing is already unlinked, nothing is charged
   while it waits. Unlike deleting one module, this does not tear down Cloud SQL, any VM or the GKE cluster
   one by one — the whole project, and everything in it, simply stops.
-- **Restoring costs a handful of credits, not a rebuild.** Within 30 days, the project's
+- **Restoring is a check, not a rebuild.** Within 30 days, the project's
   owner can restore it. RAD asks Google to undelete the project and reattaches its
   billing account, then asks you to run **Update** on each deployment to confirm
   everything came back. Because nothing was individually destroyed, that Update finds
   the same resources already there — it is a check, not a rebuild, and an Update never
-  charges the module fee again. That costs a handful of credits (under US$1) for a
-  typical 2–3-deployment chain, against the 180 credits
-  (US$18) a full redeploy costs below.
+  charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 - **So a month of occasional use can cost a few dollars, not US$143.**
   Deploy Paperless, use it for a while, delete the project. Restore it next time you
   want it, confirm with Update, and delete it again when you're done. You pay only for
-  the module fee once, the builds, and whatever time Paperless was actually live.
+  the module fee once and whatever time Paperless was actually live.
 - **What this needs.** You must own the project (not a bring-your-own one RAD only
   manages billing for), and you restore it yourself within the 30 days — after that,
   Google deletes it for good. Restoring is admitted like creating a new project: your
@@ -99,8 +97,7 @@ continuously.
 
 GKE Autopilot does not scale to zero between requests. The option above only applies to a RAD-managed project; **in your own project, or once the 30-day window has passed, the way to stop paying is to delete the deployment and deploy it again when you need it.**
 
-- **What a redeploy costs.** The module fee again plus the builds: about 180
-  credits (US$18), because RAD recreates the project and shared
+- **What a redeploy costs.** The module fee again (builds are included): 175 credits (US$17.50), because RAD recreates the project and shared
   services before Paperless. Deleting saves money only once Paperless would otherwise
   sit unused for about 4 days or more, both in your own project (about
   US$4.75 a day) and in a RAD-managed one (113 credits a day).

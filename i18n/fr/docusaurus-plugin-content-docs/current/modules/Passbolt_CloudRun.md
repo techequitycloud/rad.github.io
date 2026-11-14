@@ -3,7 +3,7 @@ title: "Passbolt sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Passbolt sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Passbolt_CloudRun.md @ 1665a43e sha256:8844d9853dc3 -->
+<!-- translated-from: docs/modules/Passbolt_CloudRun.md @ 60462a86 sha256:2d8ebb154766 -->
 
 # Passbolt sur Google Cloud Run {#passbolt-on-google-cloud-run}
 
@@ -44,7 +44,7 @@ fin de cette section.
 
 Si vous n'en avez besoin qu'occasionnellement — pour préparer une
 certification, une démo, une activité saisonnière — un projet géré par RAD peut
-être supprimé et restauré dans les 30 jours pour quelques crédits, de sorte que
+être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que
 ces 84 US$ deviennent quelques dollars par mois. Voir **Mettre en pause
 gratuitement**, ci-dessous.
 
@@ -53,9 +53,11 @@ gratuitement**, ci-dessous.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 75 crédits (7,50 US$ au prix de la recharge) | 67,5 crédits (10 % de moins) |
-| Temps de build | Environ 19 crédits par build (le build moyen de RAD prend environ 19 minutes) | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **32 crédits par jour**, soit environ 960 crédits par mois (environ 96 US$ au prix de la recharge, 77 US$ au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est maintenu en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 US$ pour une recharge unique, et moins avec un plan
 mensuel. Dans un projet géré par RAD, la base de données, le serveur de
@@ -126,21 +128,19 @@ l'exécution continue de Passbolt.
   cette attente. Contrairement à la suppression d'un seul module, cela ne
   détruit pas Cloud SQL, aucune VM ou Cloud Run un par un — l'ensemble du
   projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.**
+- **La restauration est une vérification, pas une reconstruction.**
   Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à
   Google de récupérer le projet et de rattacher son compte de facturation, puis
   vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que
   tout est revenu. Comme rien n'a été détruit individuellement, cette mise à
   jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas
   une reconstruction, et une mise à jour ne facture jamais les frais de module
-  à nouveau. Cela coûte une poignée de crédits (moins de 1 US$) pour une chaîne
-  typique de 2 à 3 déploiements, contre les 80 crédits (8 US$) que coûte un
-  redéploiement complet ci-dessous.
+  à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
   pas 84 US$.** Déployez Passbolt, utilisez-le un certain temps, supprimez le
   projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez
   avec **Update**, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne
-  payez les frais de module qu'une seule fois, les builds, et le temps pendant
+  payez les frais de module qu'une seule fois, et le temps pendant
   lequel Passbolt a été réellement actif.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet
   que vous apportez et dont RAD ne gère que la facturation), et vous le
@@ -170,8 +170,7 @@ projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de pay
 est de supprimer le déploiement et de le redéployer lorsque vous en avez
 besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les
-  builds : environ 80 crédits (8 US$), car RAD recrée le projet et les services
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 75 crédits (7,50 US$), car RAD recrée le projet et les services
   partagés avant Passbolt. La suppression ne permet d'économiser de l'argent
   que si Passbolt devait rester inutilisé pendant environ 3 jours ou plus,
   aussi bien dans votre propre projet (environ 2,79 US$ par jour) que dans un

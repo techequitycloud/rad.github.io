@@ -3,7 +3,7 @@ title: "Moodle sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Moodle sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Moodle_GKE.md @ 1665a43e sha256:0ad66a07c368 -->
+<!-- translated-from: docs/modules/Moodle_GKE.md @ 60462a86 sha256:9f33d4839d8b -->
 
 # Moodle sur GKE Autopilot {#moodle-on-gke-autopilot}
 
@@ -34,7 +34,7 @@ répéter ici.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 175 crédits, une fois | 157,5 crédits, une fois (10 % de moins) |
-| Temps de build | facturé en crédits pendant l'exécution du build (quelques crédits, généralement) | idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | ~149,81 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~116 crédits/jour, facturé à l'heure par RAD au prix catalogue plus marge |
 
 **Coût d'exécution par défaut dans votre propre projet**
@@ -85,8 +85,7 @@ facturation, puis vous demande d'exécuter la mise à jour sur chaque déploieme
 pour confirmer que tout est revenu. Comme rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà présentes
 — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits
-(moins de 1 $ US) au total pour une chaîne de déploiement typique de 2-3.
+jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD
 ne gère que la facturation), vous devez le restaurer vous-même dans les 30
@@ -111,8 +110,7 @@ rien d'irremplaçable, cela n'a pas d'importance.
 Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de
 restauration de 30 jours ci-dessus), l'alternative est de supprimer Moodle
 complètement et de le redéployer plus tard. Un redéploiement coûte à nouveau
-les frais de module, plus les builds — environ 175 + 3-6 crédits de temps de
-build.
+les frais de module (les builds sont inclus) — 175 crédits.
 
 La suppression ne permet d'économiser de l'argent que si Moodle reste inutilisé
 assez longtemps pour compenser ce coût de redéploiement par rapport à son coût

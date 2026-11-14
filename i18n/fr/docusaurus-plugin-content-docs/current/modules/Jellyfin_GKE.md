@@ -3,7 +3,7 @@ title: "Jellyfin sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Jellyfin sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Jellyfin_GKE.md @ 1665a43e sha256:dd83a346dbff -->
+<!-- translated-from: docs/modules/Jellyfin_GKE.md @ 60462a86 sha256:9f39cfc98f1e -->
 
 # Jellyfin sur GKE Autopilot {#jellyfin-on-gke-autopilot}
 
@@ -43,9 +43,11 @@ applications.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 75 crédits (7,50 $ US) | 67,5 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **42,08 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **67 crédits par jour** |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde d'achat minimum est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge unique, moins sur un plan. Dans un
 projet géré par RAD, la base de données, le serveur de fichiers et le réseau
@@ -102,9 +104,7 @@ facturation, puis vous demande d'exécuter une mise à jour sur chaque
 déploiement pour confirmer que tout est revenu. Parce que rien n'a été
 détruit individuellement, cette mise à jour trouve les mêmes ressources déjà
 présentes — c'est une vérification, pas une reconstruction, et une mise à jour
-ne facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée
-de crédits (moins de 1 $ US) en temps de build pour une chaîne de déploiements
-typique.
+ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un projet dont RAD gère
 uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours
@@ -130,9 +130,7 @@ Dans votre propre projet, ou une fois que la fenêtre de 30 jours ci-dessus est
 passée, la solution de repli est de supprimer Jellyfin purement et simplement
 et de le redéployer plus tard.
 
-- **Ce que coûte un redéploiement :** les frais de module à nouveau, plus les
-  builds — environ les frais de module indiqués ci-dessus plus 3 à 6 crédits de
-  temps de build.
+- **Ce que coûte un redéploiement :** les frais de module à nouveau (les builds sont inclus) — les frais de module indiqués ci-dessus.
 - **Quand cela en vaut la peine :** la suppression ne permet d'économiser de
   l'argent que si Jellyfin devait rester inutilisé pendant environ 6 jours ou
   plus dans votre propre projet (environ 1 jour ou plus dans un projet géré par

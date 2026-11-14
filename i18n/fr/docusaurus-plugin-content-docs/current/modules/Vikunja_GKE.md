@@ -3,7 +3,7 @@ title: "Vikunja sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Vikunja sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Vikunja_GKE.md @ 1665a43e sha256:8837e728ef09 -->
+<!-- translated-from: docs/modules/Vikunja_GKE.md @ 60462a86 sha256:b2470c0c3da7 -->
 
 # Vikunja sur GKE Autopilot {#vikunja-on-gke-autopilot}
 
@@ -44,8 +44,10 @@ ci-dessous.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (une seule fois) | 75 crédits | 67,5 crédits (10 % de moins) |
-| Temps de build | ~3-6 crédits par build, dans les deux cas | ~3-6 crédits par build, dans les deux cas |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | 91,31 $ US/mois, facturé par Google au prix catalogue | ~86 crédits/jour (environ 2580/mois, 258 $ US au prix de la recharge), mesuré au prix catalogue plus la marge de RAD |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge unique, et moins pour un abonnement
 mensuel.
@@ -99,8 +101,7 @@ facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiem
 pour confirmer que tout est revenu. Comme rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà présentes
 — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits
-(moins de 1 $ US) au total pour une chaîne de déploiement typique de 2-3.
+jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD
 gère uniquement la facturation), vous devez le restaurer vous-même dans les 30

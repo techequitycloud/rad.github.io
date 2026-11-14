@@ -26,16 +26,18 @@ repeating them here.
 
 ## What Spoolman costs on RAD, and how that compares
 
-**Spoolman on RAD's Cloud Run module costs about US$67.80 a month in a Google Cloud project you own, with the module fee charged once in RAD credits.** Spoolman is a lightweight tracker, so most of that is the managed database it keeps its spool inventory in, not the compute itself. For the lowest running cost this stays on Cloud Run; GKE Autopilot is only worth it if Spoolman needs to sit beside other Kubernetes workloads — see the [GKE guide](Spoolman_GKE.md) for that option, at about US$91.31 a month instead. If you only need Spoolman occasionally — between print jobs, or while trying it out — a RAD-managed project can be deleted and restored within 30 days for a handful of credits (under US$1) instead of paying for it to sit idle. See **Pause it for free**, below. Figures are as at 8 October 2026; sources are listed at the end of this section.
+**Spoolman on RAD's Cloud Run module costs about US$67.80 a month in a Google Cloud project you own, with the module fee charged once in RAD credits.** Spoolman is a lightweight tracker, so most of that is the managed database it keeps its spool inventory in, not the compute itself. For the lowest running cost this stays on Cloud Run; GKE Autopilot is only worth it if Spoolman needs to sit beside other Kubernetes workloads — see the [GKE guide](Spoolman_GKE.md) for that option, at about US$91.31 a month instead. If you only need Spoolman occasionally — between print jobs, or while trying it out — a RAD-managed project can be deleted and restored within 30 days at no extra charge instead of paying for it to sit idle. See **Pause it for free**, below. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
 ### What you pay on RAD
 
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 40 credits (US$4 at the top-up price) | 36 credits (10% lower) |
-| Build time | About 3-6 credits per build | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$67.80 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **26 credits a day**, about 780 a month |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database and network are shared by every application in the project, so a second application does not add a second set of them.
 
@@ -61,7 +63,7 @@ If Spoolman runs in a project RAD manages for you, deleting the whole project un
 
 > **A restore is not guaranteed — keep your own backups.** Google Cloud's terms do not guarantee that a restored project, or the resources in it, will be usable after it is restored, so restoring cannot be relied on as a way to recover a deleted project. Before you delete, make sure you have taken appropriate backups of the application's data and configuration and stored them outside the project. If a restore fails, or the restored project does not work, the fall-back is to redeploy the application (see the next section) and restore its configuration and data from those backups.
 
-Restoring, within 30 days and only by the project's owner, asks Google to undelete the project and reattaches its billing account, then asks you to run Update on each deployment to confirm everything came back. Because nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a rebuild, and an Update never charges the module fee again. This costs only a handful of credits (under US$1) in total for a typical 2-3-deployment chain.
+Restoring, within 30 days and only by the project's owner, asks Google to undelete the project and reattaches its billing account, then asks you to run Update on each deployment to confirm everything came back. Because nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 
 What this needs: you must own the project (not one RAD only manages billing for), you must restore it yourself within 30 days — after that Google deletes it for good — and restoring is admitted like creating a new project, so your purchased credit balance must still clear the tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most services are fully working again within 36 hours of a restore.
 
@@ -69,7 +71,7 @@ One real gap: nightly backups are written to a bucket inside the project, and th
 
 ### Pay only while you use it, the other way: delete and redeploy
 
-In your own project, or once the 30-day restore window has passed, the alternative is to delete Spoolman outright and redeploy it later. A redeploy costs the module fee again, plus the builds — roughly 45 credits (about US$4.50) in your own project, or 41 credits in a RAD-managed one.
+In your own project, or once the 30-day restore window has passed, the alternative is to delete Spoolman outright and redeploy it later. A redeploy costs the module fee again (builds are included) — 40 credits (US$4.00) in your own project, or 36 credits in a RAD-managed one.
 
 Deleting saves money only once Spoolman would otherwise sit unused long enough to clear that redeploy cost against its own daily running cost — against the own-project total above (about US$2.26 a day), that works out to about 2 days or more, or about 2 days or more in a RAD-managed one (26 credits a day). Most of the running cost here is the database; it stops only when nothing else in the project uses it, so deleting Spoolman while something else shares the project saves only this app's own compute part.
 

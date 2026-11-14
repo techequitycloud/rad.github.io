@@ -3,7 +3,7 @@ title: "Invoice Ninja sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Invoice Ninja sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/InvoiceNinja_CloudRun.md @ 1665a43e sha256:f2c07d5ed032 -->
+<!-- translated-from: docs/modules/InvoiceNinja_CloudRun.md @ 60462a86 sha256:d9af245cebcb -->
 
 # Invoice Ninja sur Google Cloud Run {#invoice-ninja-on-google-cloud-run}
 
@@ -22,9 +22,11 @@ Ce document fournit une référence complète pour le module `modules/InvoiceNin
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11,00 $ US) | 99 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **98,82 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **32 crédits par jour** |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge unique, moins sur un plan. Dans un projet géré par RAD, la
 base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième
@@ -71,8 +73,7 @@ La restauration, dans les 30 jours et uniquement par le propriétaire du projet,
 projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement
 pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour
 trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne
-facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits (moins de 1 $ US) en temps de build
-pour une chaîne de déploiements typique.
+facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un projet pour lequel RAD ne gère que la facturation), vous devez
 le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est
@@ -89,8 +90,7 @@ supprimez le projet, même si le projet lui-même est récupérable pendant 30 j
 Dans votre propre projet, ou une fois que la fenêtre de 30 jours ci-dessus est passée, la solution de repli est de supprimer
 Invoice Ninja complètement et de le redéployer plus tard.
 
-- **Ce que coûte un redéploiement :** les frais de module à nouveau, plus les builds — environ les frais de module
-  indiqués ci-dessus plus 3 à 6 crédits de temps de build.
+- **Ce que coûte un redéploiement :** les frais de module à nouveau (les builds sont inclus) — les frais de module indiqués ci-dessus.
 - **Quand cela en vaut la peine :** la suppression ne permet d'économiser de l'argent que si Invoice Ninja resterait autrement inutilisé
   pendant environ 3 jours ou plus dans votre propre projet (environ 3 jours ou plus dans un projet géré par RAD). La base de données et le serveur de fichiers NFS représentent la majeure partie du coût de fonctionnement ici, donc la suppression d'Invoice Ninja seul permet d'économiser la totalité de la facture ci-dessus, à moins que quelque chose d'autre dans le projet ne les partage.
 - **Conservez les données en premier.** Les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du déploiement, et

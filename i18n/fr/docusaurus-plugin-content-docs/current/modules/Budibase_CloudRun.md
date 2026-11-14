@@ -3,7 +3,7 @@ title: "Budibase sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Budibase sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Budibase_CloudRun.md @ 1665a43e sha256:30ea78c7b06c -->
+<!-- translated-from: docs/modules/Budibase_CloudRun.md @ 60462a86 sha256:3f8fa5298759 -->
 
 # Budibase sur Google Cloud Run {#budibase-on-google-cloud-run}
 
@@ -35,7 +35,7 @@ déploiement est facturé à **105 crédits par jour** (environ 3 150 par mois,
 environ 315 $ US au prix de la recharge). Ou consultez le [guide GKE](Budibase_GKE.md)
 pour une capacité toujours active sur les pods. Si vous n'avez besoin de Budibase
 qu'occasionnellement — études, démo, projet de courte durée — un projet géré par
-RAD peut être supprimé et restauré dans les 30 jours pour quelques crédits, de
+RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de
 sorte que ce chiffre mensuel devient quelques dollars à la place. Voir **Mettez-le
 en pause gratuitement**, ci-dessous.
 
@@ -47,7 +47,7 @@ trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 300 crédits (30 $ US au prix de la recharge) | 270 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build (environ 3 à 6 crédits) | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **232 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **105 crédits par jour**, environ 3 150 par mois (environ 315 $ US au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde acheté minimum est conservé en réserve |
 
@@ -109,8 +109,7 @@ s'arrête simplement.
   sur chaque déploiement pour confirmer que tout est revenu. Parce que rien n'a
   été détruit individuellement, cette mise à jour trouve les mêmes ressources
   déjà présentes, et une mise à jour ne facture plus jamais les frais de module.
-  Pour une chaîne typique de 2 à 3 déploiements, cela ne coûte qu'une poignée de
-  crédits au total (environ 5 à 10 crédits, moins de 1 $ US).
+Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont
   RAD gère uniquement la facturation), le restaurer vous-même dans les 30 jours
   — après quoi Google le supprime définitivement — et atteindre à nouveau le
@@ -135,10 +134,7 @@ Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jour
 ci-dessus est passée, la façon d'arrêter de payer est de supprimer le
 déploiement et de le redéployer lorsque vous en avez besoin.
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les
-  builds : environ 304 crédits (environ 30,40 $ US) au prix de la recharge, et
-  environ 15 à 20 minutes de temps de build (moyenne de la propre plateforme de
-  RAD). La suppression ne permet d'économiser de l'argent que si Budibase
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 300 crédits (30,00 $ US) au prix de la recharge. La suppression ne permet d'économiser de l'argent que si Budibase
   devait rester inutilisé pendant environ **3 jours ou plus** — dans votre
   propre projet, cela représente environ 7,74 $ US par jour, et dans un projet
   géré par RAD, c'est 105 crédits par jour.

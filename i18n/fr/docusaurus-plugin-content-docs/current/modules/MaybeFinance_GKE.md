@@ -3,7 +3,7 @@ title: "Maybe Finance sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Maybe Finance sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/MaybeFinance_GKE.md @ 1665a43e sha256:a8911dc0f2c4 -->
+<!-- translated-from: docs/modules/MaybeFinance_GKE.md @ 60462a86 sha256:38738f14e958 -->
 
 # Maybe Finance sur GKE Autopilot {#maybe-finance-on-gke-autopilot}
 
@@ -32,12 +32,11 @@ plutôt que de les répéter ici.
 **Le module GKE Autopilot de Maybe sur RAD coûte environ 150 $ US par mois
 dans votre propre projet, sans abonnement mensuel par foyer.** RAD facture
 300 crédits une fois par déploiement dans votre propre projet (270 crédits,
-soit 10 % de moins, dans un projet géré par RAD), plus le temps de build. La
+soit 10 % de moins, dans un projet géré par RAD) ; les builds sont inclus dans le prix. La
 même application se déploie également sur Cloud Run pour environ 102 $ US par
 mois — voir le [guide Cloud Run](MaybeFinance_CloudRun.md) pour l'option à
 moindre coût. Si vous n'en avez besoin qu'occasionnellement, un projet géré
-par RAD peut être supprimé et restauré dans les 30 jours pour quelques
-crédits, de sorte que ce chiffre mensuel devient quelques dollars au lieu de
+par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ce chiffre mensuel devient quelques dollars au lieu de
 cela — voir **Mettre en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
@@ -45,7 +44,7 @@ cela — voir **Mettre en pause gratuitement**, ci-dessous.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 300 crédits (30,00 $ US au prix de la recharge) | 270 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **150 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **111 crédits par jour**, soit environ 3 330 par mois (environ 333,00 $ US au prix de la recharge, moins avec un abonnement) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est maintenu en réserve |
 
@@ -105,24 +104,19 @@ fonctionner en continu.
   suppression d'un module, cela ne détruit pas la base de données, aucune VM
   ou la ressource de calcul une par une — l'ensemble du projet, et tout ce
   qu'il contient, s'arrête simplement.
-- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les
+- **La restauration est une vérification, pas une reconstruction.** Dans les
   30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google
   de restaurer le projet et de rattacher son compte de facturation, puis vous
   demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer
   que tout est revenu. Comme rien n'a été détruit individuellement, cette
   mise à jour trouve les mêmes ressources déjà présentes — c'est une
   vérification, pas une reconstruction, et une mise à jour ne facture jamais
-  les frais de module à nouveau. Pour MaybeFinance derrière Services_GCP (un
-  cluster GKE, une petite VM NFS/cache, une base de données Postgres) et
-  Project_GCP, cela représente environ **une poignée de crédits (moins de 1
-  $ US)** au total, contre environ 305 crédits (30,50 $ US) que coûte un
-  redéploiement complet.
+  les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
   pas 150 $ US.** Déployez MaybeFinance, utilisez-le pendant un certain temps,
   supprimez le projet. Restaurez-le la prochaine fois que vous en avez
   besoin, confirmez avec Mettre à jour, et supprimez-le à nouveau lorsque
-  vous avez terminé. Vous ne payez les frais de module qu'une seule fois, les
-  builds, et le temps pendant lequel il a été réellement actif.
+  vous avez terminé. Vous ne payez les frais de module qu'une seule fois, et le temps pendant lequel il a été réellement actif.
 - **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un
   projet dont RAD ne gère que la facturation), et vous le restaurez vous-même
   dans les 30 jours — après cela, Google le supprime définitivement. La
@@ -150,8 +144,7 @@ propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter
 de payer est de supprimer le déploiement et de le redéployer lorsque vous en
 avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les
-  builds — environ 305 crédits (30,50 $ US) au total. La suppression permet
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) — 300 crédits (30,00 $ US) au total. La suppression permet
   d'économiser de l'argent seulement si MaybeFinance resterait inutilisé
   assez longtemps pour compenser ce coût de redéploiement par rapport à son
   propre coût d'exécution — environ **7 jours ou plus**, à la fois dans votre

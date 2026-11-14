@@ -29,15 +29,17 @@ Controls, backups, and the deployment lifecycle — refer to the
 
 ## What RAGFlow costs on RAD, and how that compares
 
-**Running RAGFlow in your own Google Cloud project costs about US$101.98/month in infrastructure, plus a one-time module fee of 110 RAD credits** (sized at 2 vCPU / 4 GiB on a scale-to-zero Cloud Run instance). RAD charges the module fee once, at deploy time — never again on Update — plus build time metered in credits; Google Cloud usage itself is billed to your own billing account at Google's list price. On a **RAD-managed** project the same resources are metered hourly in credits at list price plus RAD's margin — about 32 credits/day — and the module fee is 10% lower, at 99 credits. See "Pause it for free" below for how a RAD-managed RAGFlow deployment can be stopped, at no running cost, until you need it again. (or see the [GKE guide](RAGFlow_GKE.md) if you need Kubernetes)
+**Running RAGFlow in your own Google Cloud project costs about US$101.98/month in infrastructure, plus a one-time module fee of 110 RAD credits** (sized at 2 vCPU / 4 GiB on a scale-to-zero Cloud Run instance). RAD charges the module fee once, at deploy time — never again on Update — and builds are included in the price; Google Cloud usage itself is billed to your own billing account at Google's list price. On a **RAD-managed** project the same resources are metered hourly in credits at list price plus RAD's margin — about 32 credits/day — and the module fee is 10% lower, at 99 credits. See "Pause it for free" below for how a RAD-managed RAGFlow deployment can be stopped, at no running cost, until you need it again. (or see the [GKE guide](RAGFlow_GKE.md) if you need Kubernetes)
 
 ### What you pay on RAD
 
 | Item | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | 110 credits (once) | 99 credits (once) |
-| Build time | ~3-6 credits, metered per build minute | same, metered in credits at list price + RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | ~$101.98/month, billed to your own billing account at Google's list price | ~32 credits/day, metered hourly at list price + RAD's margin |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 **Default running cost in your own project**
 
@@ -70,8 +72,7 @@ Restoring — within 30 days, and only by the project's owner — asks Google to
 project and reattaches its billing account, then asks you to run Update on each deployment to
 confirm everything came back. Because nothing was individually destroyed, that Update finds the
 same resources already there: it is a check, not a rebuild, and an Update never charges the
-module fee again. The whole restore costs only a handful of credits (under US$1) in build time
-for a typical chain of deployments. What this needs: you must own the project (not merely have
+module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits. What this needs: you must own the project (not merely have
 RAD manage its billing), you must restore it yourself within the 30 days — after that Google
 deletes it for good — and restoring is admitted like creating a new project, so your purchased
 credit balance must still clear the tier's floor (100 credits for the sandbox tier most study and
@@ -87,8 +88,7 @@ irreplaceable in it, this does not matter.
 ### Pay only while you use it, the other way: delete and redeploy
 
 The other lever, for an **own project** (or a RAD-managed one past its 30-day restore window),
-is to delete RAGFlow outright and redeploy it later. A redeploy costs the module fee again
-plus the builds — roughly **113-116 credits** in total for this module.
+is to delete RAGFlow outright and redeploy it later. A redeploy costs the module fee again (builds are included) — **110 credits** in total for this module.
 
 Deleting only saves money once RAGFlow would otherwise sit unused long enough to clear that
 redeploy cost against its own running cost — for this module, that is about 4 days or more of being idle,

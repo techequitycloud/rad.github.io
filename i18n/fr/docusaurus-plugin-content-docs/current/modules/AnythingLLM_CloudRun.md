@@ -3,7 +3,7 @@ title: "AnythingLLM sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'AnythingLLM sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/AnythingLLM_CloudRun.md @ 1665a43e sha256:ba96620ab899 -->
+<!-- translated-from: docs/modules/AnythingLLM_CloudRun.md @ 60462a86 sha256:437ada089673 -->
 
 # AnythingLLM sur Google Cloud Run {#anythingllm-on-google-cloud-run}
 
@@ -31,7 +31,7 @@ plutôt que de les répéter ici.
 
 **AnythingLLM sur le module Cloud Run de RAD coûte environ 102 $ US par mois dans un projet que vous possédez, sans frais de licence pour le logiciel lui-même.** RAD facture des frais de module uniques de 110 crédits (11 $ US au prix de la recharge) dans un projet que vous possédez, et 99 crédits (10 % de moins) dans un projet géré par RAD. Si AnythingLLM doit fonctionner en continu sur plusieurs pods ou à côté d'autres charges de travail Kubernetes, consultez plutôt le [guide GKE](AnythingLLM_GKE.md). Les chiffres sont ceux du 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits, de sorte que les quelque 102 $ US par mois deviennent presque rien. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les quelque 102 $ US par mois deviennent presque rien. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -40,9 +40,11 @@ Vous payez pour trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 $ US au prix de la recharge) | 99 crédits (10 % de moins) |
-| Temps de build | Quelques crédits, facturés à la minute de build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ 102 $ US par mois pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **32 crédits par jour**, soit environ 960 par mois (environ 96 $ US au prix de la recharge, 77 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge unique, et moins pour un plan mensuel. Dans un projet géré par RAD, la base de données et le serveur de fichiers/cache sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'en ajoute pas une deuxième.
 
@@ -80,15 +82,13 @@ saisonnier — que l'exécution continue d'AnythingLLM.
   attend. Contrairement à la suppression d'un seul module, cela ne détruit pas la base de
   données, aucune VM ou la ressource de calcul une par une — l'ensemble du projet
   s'arrête simplement, et rien n'est facturé entre-temps.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30
   jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de
   réactiver le projet et de rattacher son compte de facturation, puis vous demande
   d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu.
   Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes
   ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise
-  à jour ne facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de
-  crédits au total (moins de 1 $ US), contre le paiement des frais de module et une
-  reconstruction complète.
+  à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet dont
   RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours —
   après quoi Google le supprime définitivement — et la restauration est admise comme la
@@ -111,8 +111,8 @@ C'est la solution de secours pour un projet que vous possédez, ou une fois que 
 de restauration de 30 jours ci-dessus est passée : **supprimez le déploiement et
 redéployez-le lorsque vous en aurez de nouveau besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les builds :
-  environ 115 crédits (environ 11,50 $ US) dans votre propre projet, ou 104 crédits dans
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) :
+  110 crédits (11,00 $ US) dans votre propre projet, ou 99 crédits dans
   un projet géré par RAD, car RAD reconstruit les ressources à partir de zéro. La
   suppression permet d'économiser de l'argent une fois qu'AnythingLLM resterait
   inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son

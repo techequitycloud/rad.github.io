@@ -3,7 +3,7 @@ title: "Forgejo sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Forgejo sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Forgejo_CloudRun.md @ 1665a43e sha256:43f0bd278c22 -->
+<!-- translated-from: docs/modules/Forgejo_CloudRun.md @ 60462a86 sha256:0453cef74daa -->
 
 # Forgejo sur Google Cloud Run {#forgejo-on-google-cloud-run}
 
@@ -41,7 +41,7 @@ demandes de tirage et un exécuteur Actions intégré. Les chiffres sont valable
 au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
 Si cela s'exécute dans un projet géré par RAD pour vous, il peut être supprimé
-et restauré dans les 30 jours pour quelques crédits au lieu de rester en
+et restauré dans les 30 jours sans frais supplémentaires au lieu de rester en
 fonctionnement — ainsi, un déploiement à usage occasionnel coûte quelques
 dollars par mois, et non 84 US$. Voir **Mettez-le en pause gratuitement**,
 ci-dessous.
@@ -51,9 +51,11 @@ ci-dessous.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 US$ au prix de la recharge) | 99 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **84 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **32 crédits par jour**, environ 960 par mois (environ 96 US$ au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 US$ pour une recharge ponctuelle, et moins avec un plan
 mensuel. Dans un projet géré par RAD, la base de données, le serveur de
@@ -121,21 +123,19 @@ fonctionner en continu.
   attente. Contrairement à la suppression d'un seul module, cela ne détruit
   pas Cloud SQL, la VM ou Cloud Run un par un — l'ensemble du projet, et tout
   ce qu'il contient, s'arrête simplement.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.**
+- **La restauration est une vérification, pas une reconstruction.**
   Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande
   à Google de récupérer le projet et de rattacher son compte de facturation,
   puis vous demande d'exécuter **Update** sur chaque déploiement pour
   confirmer que tout est revenu. Comme rien n'a été détruit
   individuellement, cette mise à jour trouve les mêmes ressources déjà
   présentes — c'est une vérification, pas une reconstruction, et une mise à
-  jour ne facture jamais les frais de module à nouveau. Cela coûte une
-  poignée de crédits de temps de build au total (moins de 1 US$) pour une
-  chaîne typique de 2 à 3 déploiements.
+  jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
   pas 84 US$.** Déployez Forgejo, utilisez-le pour une session, supprimez le
   projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez
   avec Update, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne
-  payez que les frais de module une seule fois, les builds, et les heures
+  payez que les frais de module une seule fois, et les heures
   pendant lesquelles il était réellement actif.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet
   que vous apportez et dont RAD ne gère que la facturation), et vous le
@@ -165,8 +165,7 @@ ne l'utilise. L'option ci-dessus ne s'applique qu'à un projet géré par RAD ;
 manière d'arrêter de payer est de supprimer le déploiement et de le déployer à
 nouveau lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les
-  builds : environ 115 crédits (11,50 US$). La suppression permet d'économiser
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 US$). La suppression permet d'économiser
   de l'argent si Forgejo devait rester inutilisé pendant environ 5 jours ou
   plus dans votre propre projet (environ 2,79 US$ par jour), ou environ 4
   jours ou plus dans un projet géré par RAD (32 crédits par jour).

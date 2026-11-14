@@ -3,7 +3,7 @@ title: "Healthchecks sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Healthchecks sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Healthchecks_CloudRun.md @ 1665a43e sha256:8c913fd7f8ee -->
+<!-- translated-from: docs/modules/Healthchecks_CloudRun.md @ 60462a86 sha256:77b5117bc3ba -->
 
 # Healthchecks sur Google Cloud Run {#healthchecks-on-google-cloud-run}
 
@@ -38,8 +38,10 @@ ici.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (une fois) | 75 crédits | 67,5 crédits (10 % de moins) |
-| Temps de build | ~3-6 crédits par build, dans les deux cas | ~3-6 crédits par build, dans les deux cas |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | 115,17 $/mois, facturé par Google au prix catalogue | ~54 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 **Coût d'exécution par défaut dans votre propre projet**
 
@@ -73,8 +75,7 @@ La restauration, dans les 30 jours et uniquement par le propriétaire du projet,
 projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour
 confirmer que tout est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour trouve
 les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais
-les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits (moins de 1 $ US) au total pour une chaîne
-typique de 2-3 déploiements.
+les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez
 le restaurer vous-même dans les 30 jours — après quoi Google le supprime définitivement — et la restauration est
@@ -93,7 +94,7 @@ cela n'a pas d'importance.
 
 Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un projet géré par RAD, il n'y a pas de pause gratuite —
 la suppression supprime les ressources définitivement, et la remise en service de Healthchecks signifie un redéploiement
-à partir de zéro. Cela coûte environ 78-81 crédits (les frais de module de 75 crédits plus un build).
+à partir de zéro. Cela coûte 75 crédits (les frais de module ; les builds sont inclus).
 
 La suppression ne permet d'économiser de l'argent que si Healthchecks restait inutilisé suffisamment longtemps pour compenser
 ce coût de redéploiement par rapport à son propre coût d'exécution — pour Healthchecks, cela représente environ 3 jours ou

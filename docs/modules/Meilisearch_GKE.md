@@ -32,8 +32,10 @@ If you deploy into a RAD-managed project, you can pause the whole thing for free
 | | Your own project | RAD-managed project |
 |---|---|---|
 | Module fee | 75 credits, once | 67.5 credits, once (10% lower) |
-| Build time | metered in credits as the build runs (a few credits, typically) | same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | ~$42.08/month, billed to your own billing account at Google's list price | ~67 credits/day, metered hourly by RAD at list price plus margin |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 **Default running cost in your own project**
 
@@ -65,8 +67,7 @@ Restoring, within 30 days and only by the project's owner, asks Google to undele
 and reattaches its billing account, then asks you to run Update on each deployment to confirm
 everything came back. Because nothing was individually destroyed, that Update finds the same
 resources already there -- it is a check, not a rebuild, and an Update never charges the module
-fee again. This costs only a handful of credits (under US$1) in total for a typical 2-3-deployment
-chain.
+fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 
 What this needs: you must own the project (not one RAD only manages billing for), you must
 restore it yourself within 30 days -- after that Google deletes it for good -- and restoring is
@@ -84,8 +85,7 @@ matter.
 ### Pay only while you use it, the other way: delete and redeploy
 
 In your own project (or once you are past the 30-day restore window above), the alternative is
-to delete Meilisearch outright and redeploy it later. A redeploy costs the module fee again, plus
-the builds -- roughly 75 + 3-6 credits of build time.
+to delete Meilisearch outright and redeploy it later. A redeploy costs the module fee again (builds are included) -- 75 credits.
 
 Deleting saves money only once Meilisearch would otherwise sit unused long enough to clear that
 redeploy cost against its own daily running cost -- against the own-project total above, that

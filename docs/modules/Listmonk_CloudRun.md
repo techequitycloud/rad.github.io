@@ -13,16 +13,18 @@ This document provides a comprehensive reference for the `modules/Listmonk_Cloud
 
 ## What Listmonk costs on RAD, and how that compares
 
-**Listmonk on RAD's Cloud Run module costs about US$68 a month in a Google Cloud project you own, plus a one-off 75-credit (US$7.50) module fee.** Listmonk itself is free and open source (AGPL), with no subscriber limit, so this is the infrastructure cost of your own mailing-list manager rather than a per-subscriber SaaS fee. If you only need it occasionally — a seasonal campaign, a one-off newsletter run — a RAD-managed project can be deleted and restored within 30 days for a handful of credits, so that US$68 becomes a few dollars a month instead. See **Pause it for free**, below.
+**Listmonk on RAD's Cloud Run module costs about US$68 a month in a Google Cloud project you own, plus a one-off 75-credit (US$7.50) module fee.** Listmonk itself is free and open source (AGPL), with no subscriber limit, so this is the infrastructure cost of your own mailing-list manager rather than a per-subscriber SaaS fee. If you only need it occasionally — a seasonal campaign, a one-off newsletter run — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that US$68 becomes a few dollars a month instead. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 75 credits (US$7.50 at the top-up price) | 67.5 credits (10% lower) |
-| Build time | A few credits per build | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$68 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **26 credits a day**, about 780 a month (about US$78 at the top-up price, US$62 at the Scale plan's rate) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project
 RAD manages, the database, file server and network are shared by every
@@ -62,15 +64,12 @@ continuously.
   unlinked, nothing is charged while it waits. Unlike deleting one module, this does
   not tear down Cloud SQL or Listmonk's own compute one by one — the whole
   project, and everything in it, simply stops.
-- **Restoring costs a handful of credits, not a rebuild.** Within 30 days, the
+- **Restoring is a check, not a rebuild.** Within 30 days, the
   project's owner can restore it. RAD asks Google to undelete the project and
   reattaches its billing account, then asks you to run **Update** on each
   deployment to confirm everything came back. Because nothing was individually
   destroyed, that Update finds the same resources already there — it is a check,
-  not a rebuild, and an Update never charges the module fee again. For Listmonk
-  behind a small Services_GCP and Project_GCP, that is **a handful of credits
-  (under US$1)** in total, against the 80 credits a full
-  redeploy costs.
+  not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 - **What this needs.** You must own the project (not a bring-your-own one RAD only
   manages billing for), and you restore it yourself within the 30 days — after
   that, Google deletes it for good. Restoring is admitted like creating a new
@@ -92,8 +91,7 @@ Cloud Run already scales to zero between requests. The option above only applies
 own project, or once the 30-day window has passed, the way to stop paying is to
 delete the deployment and deploy it again when you need it.**
 
-- **What a redeploy costs.** The module fee again plus the builds: about
-  80 credits (US$8.00), because RAD
+- **What a redeploy costs.** The module fee again (builds are included): 75 credits (US$7.50), because RAD
   recreates the project and shared services before Listmonk. Deleting saves money
   only once Listmonk would otherwise sit unused for about four days
   or more, both in your own project (about US$2.26 a day) and in

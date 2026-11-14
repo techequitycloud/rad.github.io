@@ -3,7 +3,7 @@ title: "Navidrome sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Navidrome sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Navidrome_CloudRun.md @ 1665a43e sha256:4f502eade6b9 -->
+<!-- translated-from: docs/modules/Navidrome_CloudRun.md @ 60462a86 sha256:4e153cb2fbb5 -->
 
 # Navidrome sur Google Cloud Run {#navidrome-on-google-cloud-run}
 
@@ -30,7 +30,7 @@ répéter ici.
 
 ## Coût de Navidrome sur RAD et comparaison {#what-navidrome-costs-on-rad-and-how-that-compares}
 
-**Le module Cloud Run de Navidrome sur RAD coûte environ 33 $ US par mois, les frais de module étant facturés une fois en crédits RAD.** Si vous avez besoin que Navidrome reste opérationnel en permanence, qu'il s'adapte à plusieurs pods ou qu'il fonctionne aux côtés d'autres charges de travail Kubernetes, consultez le [guide GKE](Navidrome_GKE.md) pour cette option. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 $ US) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont valables au 8 octobre 2026 ; les sources sont énumérées à la fin de cette section.
+**Le module Cloud Run de Navidrome sur RAD coûte environ 33 $ US par mois, les frais de module étant facturés une fois en crédits RAD.** Si vous avez besoin que Navidrome reste opérationnel en permanence, qu'il s'adapte à plusieurs pods ou qu'il fonctionne aux côtés d'autres charges de travail Kubernetes, consultez le [guide GKE](Navidrome_GKE.md) pour cette option. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont valables au 8 octobre 2026 ; les sources sont énumérées à la fin de cette section.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -40,9 +40,11 @@ licence par utilisateur. Vous payez pour trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4 $ US au prix de la recharge) | 36 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **33 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **15 crédits par jour**, soit environ 450 par mois (environ 45 $ US au prix de la recharge, 36 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est mis en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins avec un plan
 mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers
@@ -101,15 +103,13 @@ continu.
   cette attente. Contrairement à la suppression d'un module, cela ne détruit
   pas la VM ou la ressource de calcul une par une — tout le projet, et tout ce
   qu'il contient, s'arrête simplement.
-- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les
+- **La restauration est une vérification, pas une reconstruction.** Dans les
   30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google
   de récupérer le projet et de rattacher son compte de facturation, puis vous
   demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout
   est revenu. Comme rien n'a été détruit individuellement, cette mise à jour
   trouve les mêmes ressources déjà présentes — c'est une vérification, pas une
-  reconstruction, et une mise à jour ne facture plus les frais de module. Cela
-  coûte environ une poignée de crédits (moins de 1 $ US) au total pour une
-  chaîne de déploiement typique de 2-3 éléments.
+  reconstruction, et une mise à jour ne facture plus les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
   pas 33 $ US.** Déployez Navidrome, utilisez-le un certain temps, supprimez le
   projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec
@@ -142,8 +142,7 @@ propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter
 payer est de supprimer le déploiement et de le redéployer lorsque vous en avez
 besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les
-  builds : environ 45 crédits (4,50 $ US) dans votre propre projet, ou 41
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 40 crédits (4,00 $ US) dans votre propre projet, ou 36
   crédits dans un projet géré par RAD. La suppression permet d'économiser de
   l'argent une fois que Navidrome resterait inutilisé pendant environ 4 jours
   ou plus dans votre propre projet (environ 1,09 $ US par jour), ou environ 3

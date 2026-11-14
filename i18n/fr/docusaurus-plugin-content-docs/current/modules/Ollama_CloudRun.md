@@ -3,7 +3,7 @@ title: "Ollama sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Ollama sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ollama_CloudRun.md @ 1665a43e sha256:978c1991b00f -->
+<!-- translated-from: docs/modules/Ollama_CloudRun.md @ 60462a86 sha256:4a74f7375489 -->
 
 # Ollama sur Google Cloud Run {#ollama-on-google-cloud-run}
 
@@ -25,7 +25,7 @@ que de les répéter ici.
 
 ## Ce que coûte Ollama sur RAD, et comment cela se compare {#what-ollama-costs-on-rad-and-how-that-compares}
 
-**Le module Cloud Run d'Ollama sur RAD coûte environ 85 $ US par mois, les frais de module étant facturés une seule fois en crédits RAD.** Si vous avez besoin qu'Ollama reste opérationnel en continu, qu'il s'adapte à plusieurs pods ou qu'il fonctionne avec d'autres charges de travail Kubernetes, consultez le [guide GKE](Ollama_GKE.md) pour cette option. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 $ US) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont ceux du 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Le module Cloud Run d'Ollama sur RAD coûte environ 85 $ US par mois, les frais de module étant facturés une seule fois en crédits RAD.** Si vous avez besoin qu'Ollama reste opérationnel en continu, qu'il s'adapte à plusieurs pods ou qu'il fonctionne avec d'autres charges de travail Kubernetes, consultez le [guide GKE](Ollama_GKE.md) pour cette option. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont ceux du 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -35,7 +35,7 @@ trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (18 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **85 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **38 crédits par jour**, environ 1 140 par mois (environ 114 $ US au prix de la recharge, 91 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
@@ -71,15 +71,14 @@ projet saisonnier — que de le faire fonctionner en continu.
   pendant 30 jours. La facturation étant déjà dissociée, rien n'est facturé pendant cette période. Contrairement
   à la suppression d'un module, cela ne détruit pas la ressource de calcul
   une par une — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer.
   RAD demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande de
   exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été
   détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une
-  reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela coûte environ une poignée de crédits (moins de 1 $ US) au
-  total pour une chaîne typique de 2-3 déploiements.
+  reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 85 $ US.** Déployez Ollama, utilisez-le
   pendant un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre à jour, et
-  supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, les builds, et le temps
+  supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, et le temps
   pendant lequel Ollama était réellement actif.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet que vous apportez et que RAD ne gère que pour la facturation),
   et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement.
@@ -99,8 +98,7 @@ L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre p
 passée, la façon d'arrêter de payer est de supprimer le déploiement et de le déployer à nouveau lorsque vous
 en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds : environ 180
-  crédits (18 $ US) dans votre propre projet, ou 162
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 175 crédits (17,50 $ US) dans votre propre projet, ou 157,5
   crédits dans un projet géré par RAD. La suppression permet d'économiser de l'argent une fois qu'Ollama resterait autrement inutilisé pendant
   environ 6 jours ou plus dans votre propre projet (environ 2,83 $ US par
   jour), ou environ 4 jours ou plus dans un projet géré par RAD (38 crédits par

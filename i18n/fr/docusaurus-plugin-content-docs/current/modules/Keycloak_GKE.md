@@ -3,7 +3,7 @@ title: "Keycloak sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Keycloak sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Keycloak_GKE.md @ 1665a43e sha256:66ee625f42e8 -->
+<!-- translated-from: docs/modules/Keycloak_GKE.md @ 60462a86 sha256:1b6e667c39c8 -->
 
 # Keycloak sur GKE Autopilot {#keycloak-on-gke-autopilot}
 
@@ -36,8 +36,7 @@ disponible et s'adapter à travers les pods ; pour le coût le plus bas, le
 [module Cloud Run](Keycloak_CloudRun.md) exécute le même Keycloak pour environ
 85 $ US par mois. Si vous n'en avez besoin qu'occasionnellement — un projet de
 cours, un locataire de démonstration, un environnement éphémère — un projet
-géré par RAD peut être supprimé et restauré dans les 30 jours pour une
-poignée de crédits, de sorte que 136 $ US deviennent quelques dollars par mois
+géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que 136 $ US deviennent quelques dollars par mois
 à la place. Voir **Mettre en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
@@ -45,7 +44,7 @@ poignée de crédits, de sorte que 136 $ US deviennent quelques dollars par mois
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **136 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **105 crédits par jour**, environ 3150 par mois (environ 315 $ US au prix de la recharge, 252 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
@@ -101,17 +100,14 @@ fonctionner en continu.
   qu'il attend. Contrairement à la suppression d'un seul module, cela ne
   détruit pas Cloud SQL ou le calcul propre à Keycloak un par un — tout le
   projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans
+- **La restauration est une vérification, pas une reconstruction.** Dans
   les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à
   Google de récupérer le projet et de rattacher son compte de facturation,
   puis vous demande d'exécuter **Update** sur chaque déploiement pour
   confirmer que tout est revenu. Comme rien n'a été détruit
   individuellement, cette mise à jour trouve les mêmes ressources déjà
   présentes — c'est une vérification, pas une reconstruction, et une mise à
-  jour ne facture jamais les frais de module à nouveau. Pour Keycloak derrière
-  un petit Services_GCP et Project_GCP, cela représente **une poignée de
-  crédits (moins de 1 $ US)** au total, contre les 180 crédits que coûte un
-  redéploiement complet.
+  jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet
   "apportez votre propre" dont RAD ne gère que la facturation), et vous le
   restaurez vous-même dans les 30 jours — après cela, Google le supprime
@@ -140,8 +136,7 @@ géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours
 passée, la façon d'arrêter de payer est de supprimer le déploiement et de le
 redéployer lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les
-  builds : environ 180 crédits (18,00 $ US), car RAD recrée le projet et les
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 175 crédits (17,50 $ US), car RAD recrée le projet et les
   services partagés avant Keycloak. La suppression ne permet d'économiser de
   l'argent que si Keycloak devait rester inutilisé pendant environ quatre
   jours ou plus, à la fois dans votre propre projet (environ 4,55 $ US par

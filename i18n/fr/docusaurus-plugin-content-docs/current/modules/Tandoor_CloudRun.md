@@ -3,7 +3,7 @@ title: "Tandoor sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Tandoor sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Tandoor_CloudRun.md @ 1665a43e sha256:d9a5cfbcd7e2 -->
+<!-- translated-from: docs/modules/Tandoor_CloudRun.md @ 60462a86 sha256:3fee6c88ed84 -->
 
 # Tandoor sur Google Cloud Run {#tandoor-on-google-cloud-run}
 
@@ -36,7 +36,7 @@ coexister avec d'autres charges de travail Kubernetes — voir le [guide GKE](Ta
 pour cette option, à environ 91,31 $ US par mois. Si vous n'avez besoin de
 Tandoor qu'occasionnellement — pour planifier des repas pour une saison,
 l'essayer avant de vous engager — un projet géré par RAD peut être supprimé
-et restauré dans les 30 jours pour une poignée de crédits (moins de 1 $ US)
+et restauré dans les 30 jours sans frais supplémentaires
 au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause
 gratuitement**, ci-dessous. Les chiffres sont valables au 8 octobre 2026 ;
 les sources sont listées à la fin de cette section.
@@ -46,9 +46,11 @@ les sources sont listées à la fin de cette section.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4 $ US au prix de la recharge) | 36 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **68,61 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **26 crédits par jour**, soit environ 780 par mois |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins avec un plan
 mensuel. Dans un projet géré par RAD, la base de données et le réseau sont
@@ -101,9 +103,7 @@ facturation, puis vous demande d'exécuter la mise à jour sur chaque
 déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà
 présentes — c'est une vérification, pas une reconstruction, et une mise à jour
-ne facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée
-de crédits (moins de 1 $ US) au total pour une chaîne de déploiement typique
-de 2-3.
+ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un que RAD gère
 uniquement pour la facturation), vous devez le restaurer vous-même dans les
@@ -128,8 +128,8 @@ rien d'irremplaçable, cela n'a pas d'importance.
 Dans votre propre projet, ou une fois que la fenêtre de restauration de 30
 jours est passée, l'alternative est de supprimer Tandoor purement et
 simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau
-les frais de module, plus les builds — environ 45 crédits (environ 4,50 $ US)
-dans votre propre projet, ou 41 crédits dans un projet géré par RAD.
+les frais de module (les builds sont inclus) — 40 crédits (4,00 $ US)
+dans votre propre projet, ou 36 crédits dans un projet géré par RAD.
 
 La suppression ne permet d'économiser de l'argent que si Tandoor devait
 rester inutilisé assez longtemps pour compenser ce coût de redéploiement par

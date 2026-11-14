@@ -3,7 +3,7 @@ title: "ToolJet sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de ToolJet sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/ToolJet_CloudRun.md @ 1665a43e sha256:b6ef6fe2b02c -->
+<!-- translated-from: docs/modules/ToolJet_CloudRun.md @ 60462a86 sha256:643a3fc86819 -->
 
 # ToolJet sur Google Cloud Run {#tooljet-on-google-cloud-run}
 
@@ -47,7 +47,7 @@ l'exécuter sur Kubernetes.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 300 crédits | 270 crédits (10 % de moins) |
-| Temps de build | ~3-6 crédits par build, dans les deux cas | ~3-6 crédits par build, dans les deux cas |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | 180,87 $ US/mois, facturé par Google au prix catalogue | ~83 crédits/jour (environ 2490/mois, 249 $ US au prix de la recharge), mesuré au prix catalogue plus la marge de RAD |
 
 10 crédits coûtent 1 $ US pour une recharge unique, et moins pour un plan
@@ -104,9 +104,7 @@ facturation, puis vous demande d'exécuter une mise à jour sur chaque
 déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà présentes
 — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais à nouveau les frais de module. Cela ne coûte qu'une poignée de crédits
-(moins de 1 $ US) au total pour une chaîne de déploiement typique de 2-3
-déploiements.
+jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD
 gère uniquement la facturation), vous devez le restaurer vous-même dans les 30

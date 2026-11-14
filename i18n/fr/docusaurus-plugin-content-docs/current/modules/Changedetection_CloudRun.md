@@ -3,7 +3,7 @@ title: "Changedetection sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Changedetection sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Changedetection_CloudRun.md @ 1665a43e sha256:a80c6f13b925 -->
+<!-- translated-from: docs/modules/Changedetection_CloudRun.md @ 60462a86 sha256:23d81782cfd6 -->
 
 # Changedetection sur Google Cloud Run {#changedetection-on-google-cloud-run}
 
@@ -27,7 +27,7 @@ App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ## Ce que coûte changedetection.io sur RAD, et comment cela se compare {#what-changedetectionio-costs-on-rad-and-how-that-compares}
 
-**changedetection.io sur le module Cloud Run de RAD coûte environ 19 $ US par mois dans votre propre projet Google Cloud, sans frais de licence supplémentaires** — changedetection.io est open source. Dans un projet géré par RAD pour vous, le même déploiement est facturé à **9 crédits par jour** (environ 270 par mois, soit environ 27 $ US au prix de la recharge). Ou consultez le [guide GKE](Changedetection_GKE.md) pour une capacité toujours active sur les pods. Si vous n'avez besoin de changedetection.io qu'occasionnellement — études, démo, projet de courte durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour quelques crédits, de sorte que ce chiffre mensuel devient quelques dollars à la place. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+**changedetection.io sur le module Cloud Run de RAD coûte environ 19 $ US par mois dans votre propre projet Google Cloud, sans frais de licence supplémentaires** — changedetection.io est open source. Dans un projet géré par RAD pour vous, le même déploiement est facturé à **9 crédits par jour** (environ 270 par mois, soit environ 27 $ US au prix de la recharge). Ou consultez le [guide GKE](Changedetection_GKE.md) pour une capacité toujours active sur les pods. Si vous n'avez besoin de changedetection.io qu'occasionnellement — études, démo, projet de courte durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ce chiffre mensuel devient quelques dollars à la place. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -36,9 +36,11 @@ changedetection.io est open source, il n'y a donc pas de frais de licence. Vous 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4 $ US au prix de la recharge) | 36 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build (environ 3–6 crédits) | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **19 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **9 crédits par jour**, environ 270 par mois (environ 27 $ US au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US lors d'une recharge ponctuelle, et moins avec un forfait mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par chaque application du projet, de sorte qu'une deuxième application n'ajoute pas de deuxième base de données.
 
@@ -65,7 +67,7 @@ Si changedetection.io s'exécute dans **un projet géré par RAD pour vous**, la
 
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut demander à Google de restaurer le projet et de rattacher son compte de facturation, puis d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes, et une mise à jour ne facture jamais les frais de module à nouveau. Pour une chaîne de déploiement typique de 2 à 3 déploiements, cela ne coûte qu'une poignée de crédits au total (environ 5 à 10 crédits, moins de 1 $ US).
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut demander à Google de restaurer le projet et de rattacher son compte de facturation, puis d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce dont cela a besoin.** Vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), le restaurer vous-même dans les 30 jours — après quoi Google le supprime définitivement — et effacer à nouveau le seuil d'admission du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 - **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage désactivée, il est donc très probable qu'il disparaisse dès que le projet est supprimé — même si le projet lui-même est récupérable pendant 30 jours. Copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de la supprimer s'il y a quelque chose à conserver ; pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
@@ -75,7 +77,7 @@ Source : [Supprimer et restaurer des projets](https://cloud.google.com/resource
 
 Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée, la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous en avez besoin.
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les builds : environ 44 crédits (environ 4,40 $ US) au prix de la recharge, et environ 15 à 20 minutes de temps de build (moyenne de la propre plateforme de RAD). La suppression ne permet d'économiser de l'argent que si changedetection.io resterait inutilisé pendant environ **6 jours ou plus** — dans votre propre projet, cela représente environ 0,64 $ US par jour, et dans un projet géré par RAD, c'est 9 crédits par jour.
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 40 crédits (4,00 $ US) au prix de la recharge. La suppression ne permet d'économiser de l'argent que si changedetection.io resterait inutilisé pendant environ **6 jours ou plus** — dans votre propre projet, cela représente environ 0,64 $ US par jour, et dans un projet géré par RAD, c'est 9 crédits par jour.
 - Le coût d'exécution de ce module est entièrement le sien — rien dans le tableau ci-dessus n'est partagé avec d'autres applications du projet, donc la suppression de changedetection.io arrête tout.
 - **Conservez d'abord les données.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
 

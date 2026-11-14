@@ -3,7 +3,7 @@ title: "Istio sur GKE"
 description: "Référence de configuration pour le déploiement d'Istio sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Istio_GKE.md @ 1665a43e sha256:738a5d71fdfe -->
+<!-- translated-from: docs/modules/Istio_GKE.md @ 60462a86 sha256:eff3494dfea9 -->
 
 # Istio sur GKE {#istio-on-gke}
 
@@ -26,7 +26,7 @@ Ce module est destiné à des **fins éducatives et d'évaluation**.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | pas de frais | pas de frais |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **24,04 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **43 crédits par jour** |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
@@ -67,8 +67,7 @@ La restauration, dans les 30 jours et uniquement par le propriétaire du projet,
 projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement
 pour confirmer que tout est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour
 trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne
-facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits (moins de 1 US$) en temps de build
-pour une chaîne de déploiements typique.
+facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un projet que RAD gère uniquement pour la facturation), vous devez
 le restaurer vous-même dans les 30 jours — après quoi Google le supprime définitivement — et la restauration est
@@ -85,10 +84,8 @@ supprimez le projet, même si le projet lui-même est récupérable pendant 30 j
 Dans votre propre projet, ou une fois que la fenêtre de 30 jours ci-dessus est passée, la solution de repli est de supprimer
 Istio purement et simplement et de le redéployer plus tard.
 
-- **Ce que coûte un redéploiement :** les frais de module à nouveau, plus les builds — environ les frais de module
-  indiqués ci-dessus plus 3 à 6 crédits de temps de build.
-- **Quand cela en vaut la peine :** la suppression n'économise de l'argent que si Istio devait autrement rester inutilisé
-  — mais comme il n'y a pas de frais de module, le redéploiement ne coûte que quelques crédits de temps de build, il n'y a donc pas de seuil réel à attendre : supprimez-le dès qu'une session est terminée. Il n'y a pas de base de données ou de données persistantes ici, donc la suppression d'Istio supprime son coût d'exécution total par elle-même.
+- **Ce que coûte un redéploiement :** les frais de module à nouveau (les builds sont inclus) — les frais de module indiqués ci-dessus.
+- **Quand cela en vaut la peine :** Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Il n'y a pas de base de données ou de données persistantes ici, donc la suppression d'Istio supprime son coût d'exécution total par elle-même.
 - **Conservez d'abord les données.** Les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du déploiement, et
   ce bucket est supprimé avec lui — copiez la dernière sauvegarde (vers Google Drive, ou un bucket
   que vous conservez) avant de la supprimer si vous voulez la conserver.

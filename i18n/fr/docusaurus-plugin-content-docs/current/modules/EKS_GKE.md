@@ -3,7 +3,7 @@ title: "EKS AWS attaché à une flotte Google Cloud"
 description: "Référence de configuration pour le déploiement d'EKS sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/EKS_GKE.md @ 1665a43e sha256:9c43b6fb45f9 -->
+<!-- translated-from: docs/modules/EKS_GKE.md @ 60462a86 sha256:d0652c7d5e21 -->
 
 # EKS AWS attaché à une flotte Google Cloud {#aws-eks-attached-to-a-google-cloud-fleet}
 
@@ -30,7 +30,7 @@ quoi que ce soit ci-dessous. Les chiffres sont ceux du 8 octobre 2026 ; les sour
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | Aucun | Aucun |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud (Agent Connect + Flotte) | Facturé par Google à votre propre compte de facturation, environ **24,04 US$ par mois** (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **43 crédits par jour**, environ 1 290 par mois (environ 129 US$ au prix de la recharge) |
 | Coût d'exécution AWS (le cluster EKS lui-même) | Facturé par **Amazon**, à votre compte AWS, séparément — non couvert par ce tableau | Idem — RAD ne mesure ni ne revend les dépenses AWS |
 | Qui possède quoi | Vous possédez le projet GCP et sa facturation ; RAD déploie et met à jour l'enregistrement de la flotte | RAD possède le projet GCP, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console |
@@ -66,9 +66,7 @@ sont fixés par la propre tarification d'AWS et facturés directement à votre c
 
 Si le côté GCP de ce module s'exécute dans **un projet géré par RAD pour vous**, la suppression de l'ensemble du projet
 délie d'abord sa facturation, puis demande à Google de le supprimer — récupérable pendant 30 jours, sans
-rien facturer côté GCP pendant l'attente. La restauration (par le propriétaire du projet, dans les 30 jours)
-annule la suppression du projet, rattache la facturation, et une **Mise à jour** sur le déploiement
-reconfirme l'enregistrement de la flotte — une vérification, pas une reconstruction, pour **une poignée de crédits (moins de 1 US$)**.
+rien facturer côté GCP pendant l'attente. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
@@ -85,9 +83,7 @@ reconfirme l'enregistrement de la flotte — une vérification, pas une reconstr
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Puisqu'il n'y a pas de frais de module, redéployer ce module à partir de zéro coûte déjà presque
-rien — environ **4 à 5 crédits** (moins de 1 US$) et environ une heure, car il n'y a pas de frais de module à
-payer à nouveau, seulement le build. Cela fait de l'option "Mettre en pause gratuitement" ci-dessus principalement une commodité
+Puisqu'il n'y a pas de frais de module, redéployer ce module à partir de zéro ne coûte rien, sinon environ une heure : il n'y a pas de frais de module à payer à nouveau, et les builds sont inclus dans le prix. Cela fait de l'option "Mettre en pause gratuitement" ci-dessus principalement une commodité
 (rien à reconfigurer) plutôt qu'une grande économie côté GCP spécifiquement — l'argent réel en jeu
 est presque toujours le cluster AWS EKS, que ni l'une ni l'autre option ne modifie.
 

@@ -3,7 +3,7 @@ title: "Chatwoot sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Chatwoot sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Chatwoot_GKE.md @ 1665a43e sha256:f82d19f045ae -->
+<!-- translated-from: docs/modules/Chatwoot_GKE.md @ 60462a86 sha256:da23364f9d2d -->
 
 # Chatwoot sur GKE Autopilot {#chatwoot-on-gke-autopilot}
 
@@ -36,7 +36,7 @@ par mois, soit environ 333 US$ au prix de la recharge). Ou consultez le [guide
 Cloud Run](Chatwoot_CloudRun.md) pour l'option moins chère. Si vous n'avez
 besoin de Chatwoot qu'occasionnellement — pour des études, une démo, un projet
 éphémère — un projet géré par RAD peut être supprimé et restauré dans les 30
-jours pour quelques crédits, de sorte que ce chiffre mensuel devient quelques
+jours sans frais supplémentaires, de sorte que ce chiffre mensuel devient quelques
 dollars à la place. Voir **Mettre en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
@@ -47,7 +47,7 @@ trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 300 crédits (30 US$ au prix de la recharge) | 270 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build (environ 3 à 6 crédits) | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **150 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **111 crédits par jour**, environ 3 330 par mois (environ 333 US$ au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
@@ -118,8 +118,7 @@ s'arrête simplement.
   chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été
   détruit individuellement, cette mise à jour trouve les mêmes ressources déjà
   présentes, et une mise à jour ne facture jamais les frais de module à nouveau.
-  Pour une chaîne de déploiement typique de 2 à 3 déploiements, cela ne coûte
-  que quelques crédits au total (environ 5 à 10 crédits, moins de 1 US$).
+Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet que
   RAD gère uniquement pour la facturation), le restaurer vous-même dans les 30
   jours — après quoi Google le supprime définitivement — et effacer à nouveau
@@ -144,10 +143,7 @@ Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jour
 ci-dessus est passée, la façon d'arrêter de payer est de supprimer le
 déploiement et de le redéployer lorsque vous en avez besoin.
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les
-  builds : environ 304 crédits (environ 30,40 US$) au prix de la recharge, et
-  environ 15 à 20 minutes de temps de build (moyenne de la propre plateforme de
-  RAD). La suppression ne permet d'économiser de l'argent que si Chatwoot
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 300 crédits (30,00 US$) au prix de la recharge. La suppression ne permet d'économiser de l'argent que si Chatwoot
   resterait inutilisé pendant environ **4 jours ou plus** — dans votre propre
   projet, cela représente environ 4,99 US$ par jour, et dans un projet géré par
   RAD, c'est 111 crédits par jour.

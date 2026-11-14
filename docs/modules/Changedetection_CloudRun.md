@@ -23,7 +23,7 @@ Controls, backups, and the deployment lifecycle — refer to the
 
 ## What changedetection.io costs on RAD, and how that compares
 
-**changedetection.io on RAD's Cloud Run module costs about US$19 a month in your own Google Cloud project, with no extra licence fee** — changedetection.io is open source. In a project RAD manages for you, the same deployment is metered at **9 credits a day** (about 270 a month, about US$27 at the top-up price). Or see the [GKE guide](Changedetection_GKE.md) for always-on capacity across pods. If you only need changedetection.io occasionally — studying, a demo, a short-lived project — a RAD-managed project can be deleted and restored within 30 days for a few credits, so that monthly figure becomes a few dollars instead. See **Pause it for free**, below.
+**changedetection.io on RAD's Cloud Run module costs about US$19 a month in your own Google Cloud project, with no extra licence fee** — changedetection.io is open source. In a project RAD manages for you, the same deployment is metered at **9 credits a day** (about 270 a month, about US$27 at the top-up price). Or see the [GKE guide](Changedetection_GKE.md) for always-on capacity across pods. If you only need changedetection.io occasionally — studying, a demo, a short-lived project — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that monthly figure becomes a few dollars instead. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
@@ -32,9 +32,11 @@ changedetection.io is open source, so there is no licence fee. You pay for three
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 40 credits (US$4 at the top-up price) | 36 credits (10% lower) |
-| Build time | A few credits per build (roughly 3–6 credits) | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$19 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **9 credits a day**, about 270 a month (about US$27 at the top-up price) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the
 database, file server and network are shared by every application in the project, so a second
@@ -70,8 +72,7 @@ by one: the whole project simply stops.
 - **Restoring is a check, not a rebuild.** Within 30 days, the project's owner can ask Google to undelete
   the project and reattach its billing account, then run **Update** on each deployment to confirm
   everything came back. Because nothing was individually destroyed, that Update finds the same resources
-  already there, and an Update never charges the module fee again. For a typical 2–3-deployment chain
-  this costs only a handful of credits in total (roughly 5–10 credits, under US$1).
+  already there, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 - **What this needs.** You must own the project (not one RAD only manages billing for), restore it
   yourself within 30 days — after that Google deletes it for good — and clear the tier's admission floor
   again (100 credits for the sandbox tier most study/demo use fits). Google says most services are fully
@@ -89,9 +90,7 @@ Source: [Delete and restore projects](https://cloud.google.com/resource-manager/
 In your own project, or once the 30-day restore window above has passed, the way to stop paying is to
 delete the deployment and deploy it again when you need it.
 
-- **What a redeploy costs.** The module fee again, plus the builds: about 44 credits
-  (about US$4.40) at the top-up price, and roughly 15–20 minutes of build time (RAD's
-  own platform average). Deleting saves money only once changedetection.io would otherwise sit unused for about
+- **What a redeploy costs.** The module fee again (builds are included): 40 credits (US$4.00) at the top-up price. Deleting saves money only once changedetection.io would otherwise sit unused for about
   **6 days or more** — in your own project that is about US$0.64 a day, and
   in a RAD-managed one it is 9 credits a day.
 - This module's running cost is entirely its own — nothing in the table above is shared with other applications in the project, so deleting changedetection.io stops all of it.

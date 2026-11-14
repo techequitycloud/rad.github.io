@@ -3,7 +3,7 @@ title: "Stirling-PDF sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Stirling-PDF sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/StirlingPDF_CloudRun.md @ 1665a43e sha256:d4ca0dddb609 -->
+<!-- translated-from: docs/modules/StirlingPDF_CloudRun.md @ 60462a86 sha256:8513652a33a5 -->
 
 # Stirling-PDF sur Google Cloud Run {#stirling-pdf-on-google-cloud-run}
 
@@ -17,16 +17,18 @@ Ce guide se concentre sur les services cloud utilisés par Stirling-PDF et sur l
 
 ## Ce que coûte Stirling-PDF sur RAD, et comment cela se compare {#what-stirling-pdf-costs-on-rad-and-how-that-compares}
 
-**Stirling-PDF sur le module Cloud Run de RAD coûte environ 19,16 US$ par mois dans un projet Google Cloud que vous possédez, les frais de module étant facturés une fois en crédits RAD.** Stirling-PDF est sans état et sans base de données, c'est donc la configuration la moins chère du côté Cloud Run de la plateforme. Pour le coût de fonctionnement le plus bas, il reste ici ; GKE Autopilot ne vaut la peine que s'il doit être placé à côté d'autres charges de travail Kubernetes — voir le [guide GKE](StirlingPDF_GKE.md) pour cette option, à environ 45,68 US$ par mois à la place. Si vous n'en avez besoin qu'occasionnellement — un lot de documents, un travail de conversion ponctuel — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 US$) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Stirling-PDF sur le module Cloud Run de RAD coûte environ 19,16 US$ par mois dans un projet Google Cloud que vous possédez, les frais de module étant facturés une fois en crédits RAD.** Stirling-PDF est sans état et sans base de données, c'est donc la configuration la moins chère du côté Cloud Run de la plateforme. Pour le coût de fonctionnement le plus bas, il reste ici ; GKE Autopilot ne vaut la peine que s'il doit être placé à côté d'autres charges de travail Kubernetes — voir le [guide GKE](StirlingPDF_GKE.md) pour cette option, à environ 45,68 US$ par mois à la place. Si vous n'en avez besoin qu'occasionnellement — un lot de documents, un travail de conversion ponctuel — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4 US$ au prix de la recharge) | 36 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **19,16 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **3 crédits par jour**, environ 90 par mois |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde acheté minimum est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 US$ pour une recharge ponctuelle, et moins pour un plan mensuel. Dans un projet géré par RAD, le réseau est partagé par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas un deuxième ensemble de celui-ci.
 
@@ -51,7 +53,7 @@ Si Stirling-PDF s'exécute dans un projet géré par RAD pour vous, la suppressi
 
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits (moins de 1 US$) au total pour une chaîne de déploiement typique de 2-3.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
@@ -59,7 +61,7 @@ Un véritable écart : les sauvegardes nocturnes sont écrites dans un bucket à
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet, ou une fois la fenêtre de restauration de 30 jours passée, l'alternative est de supprimer Stirling-PDF purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module, plus les builds — environ 45 crédits (environ 4,50 US$) dans votre propre projet, ou 41 crédits dans un projet géré par RAD.
+Dans votre propre projet, ou une fois la fenêtre de restauration de 30 jours passée, l'alternative est de supprimer Stirling-PDF purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 40 crédits (4,00 US$) dans votre propre projet, ou 36 crédits dans un projet géré par RAD.
 
 La suppression ne permet d'économiser de l'argent que si Stirling-PDF restait inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût de fonctionnement quotidien — par rapport au total du projet propre ci-dessus (environ 0,64 US$ par jour), cela représente environ 8 jours ou plus, ou environ 14 jours ou plus dans un projet géré par RAD (3 crédits par jour). Il n'y a pas de base de données ici, donc la suppression de cette application libère l'intégralité de son coût de fonctionnement plutôt qu'une simple part de celui-ci.
 

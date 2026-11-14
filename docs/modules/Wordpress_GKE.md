@@ -22,7 +22,7 @@ This guide focuses on the cloud services WordPress uses and how to explore and o
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee (one-off) | 175 credits | 157.5 credits (10% lower) |
-| Build time | ~3-6 credits per build, either way | ~3-6 credits per build, either way |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | $110.13/month, billed by Google at list price | ~99 credits/day, metered at list price plus RAD's margin |
 
 **Default running cost in your own project**
@@ -60,8 +60,7 @@ Restoring, within 30 days and only by the project's owner, asks Google to undele
 project and reattaches its billing account, then asks you to run Update on each deployment to
 confirm everything came back. Because nothing was individually destroyed, that Update finds
 the same resources already there — it is a check, not a rebuild, and an Update never charges
-the module fee again. This costs only a handful of credits (under US$1) in total for a typical
-2-3-deployment chain.
+the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 
 What this needs: you must own the project (not one RAD only manages billing for), you must
 restore it yourself within 30 days — after that Google deletes it for good — and restoring is
@@ -80,7 +79,7 @@ this does not matter.
 
 In your own project, or once 30 days have passed on a RAD-managed one, there is no free pause —
 deleting removes the resources for good, and bringing WordPress back means redeploying from
-scratch. That costs about 178-181 credits (the 175-credit module fee plus a build).
+scratch. That costs 175 credits (the module fee; builds are included).
 
 Deleting only saves money once WordPress would otherwise sit unused long enough to clear that
 redeploy cost against its own running cost — for WordPress, that's about 5 days or more.

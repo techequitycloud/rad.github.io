@@ -3,7 +3,7 @@ title: "Azure AKS attaché à une flotte Google Cloud"
 description: "Référence de configuration pour le déploiement d'AKS sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/AKS_GKE.md @ 1665a43e sha256:59ec809e5bb7 -->
+<!-- translated-from: docs/modules/AKS_GKE.md @ 60462a86 sha256:8eaa08841955 -->
 
 # Azure AKS attaché à une flotte Google Cloud {#azure-aks-attached-to-a-google-cloud-fleet}
 
@@ -19,7 +19,7 @@ Contrairement aux modules d'application de ce catalogue, il s'agit d'un **module
 
 **Le module GKE Autopilot d'AKS sur RAD coûte environ 24 $ US par mois dans un projet que vous possédez, sans frais de licence pour le logiciel lui-même.** Il n'y a aucun frais de module RAD pour AKS — vous ne payez que les ressources Google Cloud qu'il utilise. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour étudier en vue d'une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits, de sorte que les quelque 24 $ US par mois deviennent presque rien. Voir **Mettre en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour étudier en vue d'une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les quelque 24 $ US par mois deviennent presque rien. Voir **Mettre en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -28,7 +28,7 @@ Vous payez trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 0 crédit — gratuit dans un projet possédé et dans un projet géré par RAD | 0 crédit — gratuit |
-| Temps de build | Quelques crédits, facturés à la minute de temps de build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ 24 $ US par mois pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **43 crédits par jour**, soit environ 1 290 par mois (environ 129 $ US au prix de la recharge, 103 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde acheté minimum est conservé en réserve |
 
@@ -47,7 +47,7 @@ Vous payez trois choses :
 ### Comment cela se compare {#how-it-compares}
 
 - **Il n'y a pas d'alternative SaaS à nommer ici — ce module est une fine couche de plan de contrôle, pas une application hébergée.** La véritable alternative est de faire le même travail à la main : créer le cluster Azure AKS vous-même et l'enregistrer avec `gcloud container fleet memberships register`, à partir de deux consoles distinctes, sans coût Google Cloud incrémentiel au-delà du petit pod Autopilot que ce module exécute déjà (montré ci-dessus).
-- **Ce que vous payez, c'est l'automatisation et la configuration de la confiance inter-cloud, pas un moyen moins cher d'exécuter AKS.** La fédération OIDC entre les deux clouds, l'enregistrement de la flotte et le câblage de la journalisation/surveillance gérée sont ce que les frais de module (zéro, ici) et le temps de build achètent réellement — le coût d'exécution continu côté Google est le même dans les deux cas.
+- **Ce que vous payez, c'est l'automatisation et la configuration de la confiance inter-cloud, pas un moyen moins cher d'exécuter AKS.** La fédération OIDC entre les deux clouds, l'enregistrement de la flotte et le câblage de la journalisation/surveillance gérée sont ce que le déploiement (sans frais de module ici, et builds inclus) achète réellement — le coût d'exécution continu côté Google est le même dans les deux cas.
 - **Le cluster AKS lui-même est facturé par Microsoft Azure, pas Google Cloud, et les chiffres de ce module ne l'incluent pas.** La propre tarification AKS d'Azure (nœuds de calcul, et ses frais de gestion par cluster en dehors du niveau gratuit) est une facture distincte sur votre compte Azure — consultez la page de tarification Azure AKS pour ce côté.
 
 ### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
@@ -59,7 +59,7 @@ Si AKS s'exécute dans **un projet géré par RAD pour vous**, vous avez une opt
 - **Cela met en pause uniquement le côté Google Cloud — l'adhésion à la flotte, la surveillance et le petit pod Autopilot montré ci-dessus. Le cluster AKS lui-même s'exécute dans, et est facturé par, Microsoft Azure, et continue de fonctionner (et de coûter de l'argent sur Azure) jusqu'à ce que vous le mettiez en pause ou le supprimiez séparément.**
 
 - **Comment ça marche.** La suppression d'un projet géré par RAD dissocie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet. Google ne le supprime pas immédiatement : il conserve le projet, récupérable, pendant 30 jours, et comme la facturation est déjà dissociée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un module, cela ne détruit pas la base de données, aucune VM ou la ressource de calcul une par une — l'ensemble du projet s'arrête simplement, et rien n'est facturé entre-temps.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30 jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture plus jamais les frais de module. Cela ne coûte qu'une poignée de crédits au total (moins de 1 $ US), contre le paiement des frais de module et d'une reconstruction complète.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture plus jamais les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude et de démo conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
 - **Un véritable manque : les sauvegardes ne survivent pas.** Tout ce qu'AKS écrit dans un compartiment de sauvegarde à l'intérieur du projet est très probablement perdu dès que vous supprimez le projet, même si le projet lui-même est récupérable pendant 30 jours — la suppression logicielle de Cloud Storage est explicitement désactivée pour ce compartiment. Quiconque a personnalisé le déploiement et souhaite conserver ce travail doit copier une sauvegarde (vers Google Drive, ou un compartiment en dehors du projet) avant de la supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
@@ -67,10 +67,10 @@ Si AKS s'exécute dans **un projet géré par RAD pour vous**, vous avez une opt
 
 C'est la solution de secours pour un projet que vous possédez, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée : **supprimez le déploiement, et redéployez-le lorsque vous en aurez à nouveau besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les builds : environ
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : environ
   5 crédits (environ 0,50 $ US) dans votre propre projet, ou
   5 crédits dans un projet géré par RAD, car RAD reconstruit les ressources
-  à partir de zéro. Il n'y a pas de frais de module ici, donc un redéploiement ne coûte que quelques crédits de temps de build — environ 5 crédits (moins de 1 $ US). La suppression entre les utilisations est presque toujours rentable ; il y a très peu de frais à récupérer.
+  à partir de zéro. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. La suppression entre les utilisations est presque toujours rentable ; il y a très peu de frais à récupérer.
 - **Le cluster GKE lui-même est une infrastructure partagée.** Si une autre application utilise le même cluster Autopilot, la suppression d'AKS seule ne sauve que son propre pod ; les frais de gestion du cluster ne diminuent que lorsque plus rien d'autre dans le projet n'en a besoin.
 - **Gardez vos données en premier.** Tout ce qu'AKS écrit dans un compartiment de sauvegarde à l'intérieur du déploiement est supprimé avec lui — copiez la dernière sauvegarde (vers Google Drive, ou un compartiment que vous conservez) avant de la supprimer si vous voulez la conserver.
 - **RAD ne recrée pas un déploiement supprimé pour vous.** Vous saisissez à nouveau les paramètres lorsque vous redéployez.

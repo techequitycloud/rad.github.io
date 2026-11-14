@@ -3,7 +3,7 @@ title: "OpenEMR sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'OpenEMR sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenEMR_CloudRun.md @ 1665a43e sha256:1cda32142820 -->
+<!-- translated-from: docs/modules/OpenEMR_CloudRun.md @ 60462a86 sha256:8a3a2444574f -->
 
 # OpenEMR sur Google Cloud Run {#openemr-on-google-cloud-run}
 
@@ -29,14 +29,14 @@ plutôt que de les répéter ici.
 
 **Pour un petit cabinet, OpenEMR sur le module Cloud Run de RAD coûte environ 181 $ US par mois, sans licence par utilisateur.** Un fournisseur commercial de DSE facture généralement les mêmes fonctionnalités par prestataire par mois, avec l'implémentation et l'hébergement en sus. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, une activité saisonnière — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour quelques crédits, de sorte que les 181 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, une activité saisonnière — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les 181 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 300 crédits (30 $ US au prix de la recharge) | 270 crédits (10 % de moins) |
-| Temps de build | Environ 19 crédits par build (le build moyen de RAD prend environ 19 minutes) | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **83 crédits par jour**, soit environ 2 490 crédits par mois (environ 249 $ US au prix de la recharge, 199 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum de crédits achetés est conservé en réserve |
 
@@ -82,20 +82,17 @@ démonstration, activité saisonnière — qu'à l'exécution continue d'OpenEMR
   Contrairement à la suppression d'un module, cela ne détruit pas Cloud SQL, aucune VM
   ou Cloud Run un par un — l'ensemble du projet, et tout ce qu'il contient, s'arrête
   simplement.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30
   jours, le propriétaire du projet peut le restaurer. RAD demande à Google de
   récupérer le projet et de rattacher son compte de facturation, puis vous demande
   d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est
   revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les
   mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et
-  une mise à jour ne facture jamais les frais de module à nouveau. Cela coûte une
-  poignée de crédits (moins de 1 $ US) pour une chaîne typique de 2 à 3 déploiements,
-  contre les 305 crédits (30,50 $ US) qu'un redéploiement complet coûte ci-dessous.
+  une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 181 $
   US.** Déployez OpenEMR, utilisez-le pendant un certain temps, supprimez le projet.
   Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre à jour,
-  et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module
-  qu'une seule fois, les builds, et le temps réel où OpenEMR était actif.
+  et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, et le temps réel où OpenEMR était actif.
 - **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que
   vous apportez et dont RAD ne gère que la facturation), et vous le restaurez vous-même
   dans les 30 jours — après cela, Google le supprime définitivement. La restauration
@@ -121,8 +118,8 @@ s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une f
 fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le
 déploiement et de le redéployer lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds :
-  environ 305 crédits (30,50 $ US), car RAD recrée le projet et les services partagés
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) :
+  300 crédits (30,00 $ US), car RAD recrée le projet et les services partagés
   avant OpenEMR. La suppression ne permet d'économiser de l'argent que si OpenEMR
   devait rester inutilisé pendant environ 6 jours ou plus, à la fois dans votre propre
   projet (environ 6,03 $ US par jour) et dans un projet géré par RAD (83 crédits par

@@ -3,7 +3,7 @@ title: "Seerr sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Seerr sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Seerr_GKE.md @ 1665a43e sha256:d713a6d7dc1b -->
+<!-- translated-from: docs/modules/Seerr_GKE.md @ 60462a86 sha256:745e70273709 -->
 
 # Seerr sur GKE Autopilot {#seerr-on-gke-autopilot}
 
@@ -38,8 +38,10 @@ Ou consultez le guide Cloud Run pour la cible de déploiement alternative ; dans
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 110 crédits, une fois | 99 crédits, une fois (10 % de moins) |
-| Temps de build | facturé en crédits pendant l'exécution du build (quelques crédits, généralement) | idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | ~149,81 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~111 crédits/jour, facturé à l'heure par RAD au prix catalogue majoré d'une marge |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 **Coût d'exécution par défaut dans votre propre projet**
 
@@ -74,8 +76,7 @@ de restaurer le projet et de rattacher son compte de facturation, puis vous dema
 Update sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été
 individuellement détruit, cette mise à jour trouve les mêmes ressources déjà présentes — c'est
 une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de
-module à nouveau. Cela ne coûte qu'une poignée de crédits (moins de 1 $ US) au total pour une
-chaîne typique de 2-3 déploiements.
+module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet que RAD gère uniquement
 pour la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le
@@ -95,7 +96,7 @@ cela n'a pas d'importance.
 
 ### Ne payez que pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de restauration de 30 jours ci-dessus), l'alternative est de supprimer Seerr purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module, plus les builds — environ 110 + 3-6 crédits de temps de build.
+Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de restauration de 30 jours ci-dessus), l'alternative est de supprimer Seerr purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 110 crédits.
 
 La suppression ne permet d'économiser de l'argent que si Seerr devait rester inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution quotidien — par rapport au total du projet ci-dessus, cela représente environ 2 jours ou plus. La majeure partie du coût d'exécution ici est généralement la base de données et la VM NFS/cache ; elles ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de cette application pendant que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
 

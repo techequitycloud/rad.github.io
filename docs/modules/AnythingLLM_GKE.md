@@ -26,7 +26,7 @@ refer to the [App_GKE foundation guide](App_GKE.md) rather than repeating them h
 
 **AnythingLLM on RAD's GKE Autopilot module costs about US$150 a month in a project you own, with no licence fee for the software itself.** RAD charges a one-off module fee of 175 credits (US$17.50 at the top-up price) in a project you own, and 157.5 credits (10% lower) in a project RAD manages. GKE suits AnythingLLM that must stay up continuously or scale across pods; for the lowest cost, the [Cloud Run module](AnythingLLM_CloudRun.md) runs the same AnythingLLM for about US$102 a month. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
-If you only need it occasionally — studying for a certification, a demo, a seasonal need — a RAD-managed project can be deleted and restored within 30 days for a handful of credits, so that about US$150 a month becomes close to nothing instead. See **Pause it for free**, below.
+If you only need it occasionally — studying for a certification, a demo, a seasonal need — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that about US$150 a month becomes close to nothing instead. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
@@ -35,7 +35,7 @@ You pay for three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 175 credits (US$17.50 at the top-up price) | 157.5 credits (10% lower) |
-| Build time | A few credits, metered per minute of build time | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about US$150 a month for the default configuration (table below) | Metered hourly in credits; RAD publishes **112 credits a day**, about 3,360 a month (about US$336 at the top-up price, US$269 at the Scale plan's rate) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
@@ -74,13 +74,11 @@ need — far better than running AnythingLLM continuously.
   waits. Unlike deleting one module, this does not tear down the database, any VM or the
   compute resource one by one — the whole project simply stops, and nothing is billed in the
   meantime.
-- **Restoring costs a handful of credits, not a rebuild.** Within 30 days, only the project's
+- **Restoring is a check, not a rebuild.** Within 30 days, only the project's
   owner can restore it. RAD asks Google to undelete the project and reattaches its billing
   account, then asks you to run **Update** on each deployment to confirm everything came back.
   Because nothing was individually destroyed, that Update finds the same resources already
-  there — it is a check, not a rebuild, and an Update never charges the module fee again. This
-  costs only a handful of credits in total (under US$1), against paying the module fee and a
-  full build again.
+  there — it is a check, not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 - **What this needs.** You must own the project (not one RAD only manages billing for), you
   must restore it yourself within the 30 days — after that Google deletes it for good — and
   restoring is admitted like creating a new project, so your purchased credit balance must
@@ -98,9 +96,8 @@ need — far better than running AnythingLLM continuously.
 This is the fallback for a project you own, or once the 30-day restore window above has
 passed: **delete the deployment, and deploy it again when you next need it.**
 
-- **What a redeploy costs.** The module fee again, plus the builds: roughly
-  180 credits (about US$18) in your own project, or
-  162.5 credits in a RAD-managed one, because RAD rebuilds the resources
+- **What a redeploy costs.** The module fee again (builds are included): 175 credits (US$17.50) in your own project, or
+  157.5 credits in a RAD-managed one, because RAD rebuilds the resources
   from scratch. Deleting saves money once AnythingLLM would otherwise sit unused long enough to clear that redeploy cost against its own running cost — roughly 4 days or more in your own project (US$4.99/day) or 1 days or more in a RAD-managed one (112 credits/day).
 - **Most of the running cost is usually shared infrastructure.** The database and file or cache VM stop only when nothing else in the project uses them, so deleting AnythingLLM while another application shares the project saves only AnythingLLM's own compute part.
 - **Keep your data first.** Anything AnythingLLM writes to a backup bucket inside the deployment is

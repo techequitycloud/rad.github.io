@@ -3,7 +3,7 @@ title: "Listmonk sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Listmonk sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Listmonk_CloudRun.md @ 1665a43e sha256:bfb234c5e7f4 -->
+<!-- translated-from: docs/modules/Listmonk_CloudRun.md @ 60462a86 sha256:8fe6712c396f -->
 
 # Listmonk sur Google Cloud Run {#listmonk-on-google-cloud-run}
 
@@ -15,16 +15,18 @@ Ce document fournit une référence complète pour le module `modules/Listmonk_C
 
 ## Ce que coûte Listmonk sur RAD, et comment cela se compare {#what-listmonk-costs-on-rad-and-how-that-compares}
 
-**Listmonk sur le module Cloud Run de RAD coûte environ 68 $ US par mois dans un projet Google Cloud que vous possédez, plus des frais de module uniques de 75 crédits (7,50 $ US).** Listmonk lui-même est gratuit et open source (AGPL), sans limite d'abonnés, il s'agit donc du coût d'infrastructure de votre propre gestionnaire de listes de diffusion plutôt que de frais SaaS par abonné. Si vous n'en avez besoin qu'occasionnellement — une campagne saisonnière, un envoi de newsletter unique — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits, de sorte que ces 68 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+**Listmonk sur le module Cloud Run de RAD coûte environ 68 $ US par mois dans un projet Google Cloud que vous possédez, plus des frais de module uniques de 75 crédits (7,50 $ US).** Listmonk lui-même est gratuit et open source (AGPL), sans limite d'abonnés, il s'agit donc du coût d'infrastructure de votre propre gestionnaire de listes de diffusion plutôt que de frais SaaS par abonné. Si vous n'en avez besoin qu'occasionnellement — une campagne saisonnière, un envoi de newsletter unique — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ces 68 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 75 crédits (7,50 $ US au prix de la recharge) | 67,5 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **68 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **26 crédits par jour**, environ 780 par mois (environ 78 $ US au prix de la recharge, 62 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge unique, et moins avec un plan mensuel. Dans un projet
 géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les
@@ -64,15 +66,12 @@ en continu.
   déliée, rien n'est facturé pendant cette période d'attente. Contrairement à la suppression d'un module, cela ne
   détruit pas Cloud SQL ou le propre calcul de Listmonk un par un — l'ensemble du
   projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30 jours, le
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le
   propriétaire du projet peut le restaurer. RAD demande à Google de restaurer le projet et
   de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque
   déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement,
   cette mise à jour trouve les mêmes ressources déjà présentes — il s'agit d'une vérification,
-  pas d'une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Pour Listmonk
-  derrière un petit Services_GCP et Project_GCP, cela représente **une poignée de crédits
-  (moins de 1 $ US)** au total, contre les 80 crédits que coûte un
-  redéploiement complet.
+  pas d'une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que vous apportez et dont RAD ne
   gère que la facturation), et vous le restaurez vous-même dans les 30 jours — après
   cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau
@@ -94,8 +93,7 @@ Cloud Run se met déjà à l'échelle à zéro entre les requêtes. L'option ci-
 propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de
 supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds : environ
-  80 crédits (8,00 $ US), car RAD
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 75 crédits (7,50 $ US), car RAD
   recrée le projet et les services partagés avant Listmonk. La suppression permet d'économiser de l'argent
   seulement une fois que Listmonk resterait inutilisé pendant environ quatre jours
   ou plus, à la fois dans votre propre projet (environ 2,26 $ US par jour) et dans

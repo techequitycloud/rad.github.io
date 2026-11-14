@@ -3,7 +3,7 @@ title: "Miniflux sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Miniflux sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Miniflux_CloudRun.md @ 1665a43e sha256:ae9463340617 -->
+<!-- translated-from: docs/modules/Miniflux_CloudRun.md @ 60462a86 sha256:47e6f3325046 -->
 
 # Miniflux sur Google Cloud Run {#miniflux-on-google-cloud-run}
 
@@ -36,7 +36,7 @@ Si un coût d'exécution inférieur est plus important que la cible de déploiem
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 175 crédits, une fois | 157,5 crédits, une fois (10 % de moins) |
-| Temps de build | mesuré en crédits pendant l'exécution du build (quelques crédits, généralement) | idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | ~167,44 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~77 crédits/jour, mesuré toutes les heures par RAD au prix catalogue majoré d'une marge |
 
 **Coût d'exécution par défaut dans votre propre projet**
@@ -73,8 +73,7 @@ facturation, puis vous demande d'exécuter la mise à jour sur chaque déploieme
 pour confirmer que tout est revenu. Comme rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà présentes
 — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-plus jamais les frais de module. Cela ne coûte qu'une poignée de crédits
-(moins de 1 $ US) au total pour une chaîne typique de 2-3 déploiements.
+plus jamais les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet pour
 lequel RAD ne gère que la facturation), vous devez le restaurer vous-même dans
@@ -99,8 +98,7 @@ rien d'irremplaçable, cela n'a pas d'importance.
 Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de
 restauration de 30 jours ci-dessus), l'alternative est de supprimer Miniflux
 purement et simplement et de le redéployer plus tard. Un redéploiement coûte
-à nouveau les frais de module, plus les builds — environ 175 + 3-6 crédits de
-temps de build.
+à nouveau les frais de module (les builds sont inclus) — 175 crédits.
 
 La suppression ne permet d'économiser de l'argent que si Miniflux restait
 inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport

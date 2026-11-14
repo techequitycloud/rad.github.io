@@ -3,7 +3,7 @@ title: "Ghost sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Ghost sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ghost_GKE.md @ 1665a43e sha256:c5676a68b000 -->
+<!-- translated-from: docs/modules/Ghost_GKE.md @ 60462a86 sha256:e9c2c2e45d3b -->
 
 # Ghost sur GKE Autopilot {#ghost-on-gke-autopilot}
 
@@ -26,7 +26,7 @@ Ce guide se concentre sur les services cloud utilisés par Ghost et sur la mani�
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | **300 crédits** (une seule fois) | **270 crédits** (une seule fois, 10 % de moins) |
-| Temps de build | ~3–6 crédits (une seule fois, par build) | ~3–6 crédits (une seule fois, par build) |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | ~149,81 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~115 crédits/jour (~11,50 $ US/jour), facturé à l'heure au prix catalogue plus la marge de RAD |
 
 **Coût d'exécution par défaut dans votre propre projet**
@@ -53,7 +53,7 @@ Si Ghost est exécuté dans un **projet géré par RAD**, vous pouvez arrêter d
 
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Cela ne coûte qu'une poignée de crédits de temps de build au total — environ 5 à 10 crédits, moins de 1 $ US, pour une chaîne de déploiement typique de 2 à 3. Les frais de module de 270 crédits ne sont pas facturés à nouveau.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Les frais de module de 270 crédits ne sont pas facturés à nouveau.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après quoi Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
 
@@ -63,7 +63,7 @@ Un véritable écart : les sauvegardes nocturnes sont écrites dans un bucket à
 
 Si Ghost se trouve dans votre propre projet (ou si plus de 30 jours se sont écoulés sur un projet géré par RAD), la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer plus tard lorsque vous en aurez à nouveau besoin.
 
-Un redéploiement coûte à nouveau les frais de module, plus les builds : environ **300 + ~3–6 crédits** (~30,45 $ US) dans votre propre projet, ou **270 + ~3–6 crédits** sur un projet géré par RAD.
+Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) : 300 crédits (30,00 $ US) dans votre propre projet, ou **270 crédits** sur un projet géré par RAD.
 
 La suppression ne permet d'économiser de l'argent que si Ghost reste inutilisé suffisamment longtemps pour compenser le coût de ce redéploiement par rapport à son propre coût d'exécution : environ **7 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa facture Google Cloud d'environ 149,81 $ US/mois), ou **environ 3 jours ou plus** d'inactivité dans un projet géré par RAD (par rapport à ses ~115 crédits/jour).
 

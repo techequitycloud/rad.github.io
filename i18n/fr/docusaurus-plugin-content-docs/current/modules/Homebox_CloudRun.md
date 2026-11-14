@@ -3,7 +3,7 @@ title: "Homebox sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Homebox sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Homebox_CloudRun.md @ 1665a43e sha256:8fa348efbc05 -->
+<!-- translated-from: docs/modules/Homebox_CloudRun.md @ 60462a86 sha256:09c8e64cd1e3 -->
 
 # Homebox sur Google Cloud Run {#homebox-on-google-cloud-run}
 
@@ -48,8 +48,10 @@ préférez l'exécuter sur Kubernetes.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 40 crédits | 36 crédits (10 % de moins) |
-| Temps de build | ~3-6 crédits par build, dans les deux cas | ~3-6 crédits par build, dans les deux cas |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | 67,80 $/mois, facturé par Google au prix catalogue | ~26 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 **Coût de fonctionnement par défaut dans votre propre projet**
 
@@ -94,9 +96,7 @@ facturation, puis vous demande d'exécuter une mise à jour sur chaque
 déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà
 présentes — c'est une vérification, pas une reconstruction, et une mise à jour
-ne facture jamais à nouveau les frais de module. Cela ne coûte qu'une poignée
-de crédits (moins de 1 $ US) au total pour une chaîne de déploiement typique
-de 2-3.
+ne facture jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont
 RAD gère uniquement la facturation), vous devez le restaurer vous-même dans
@@ -121,8 +121,7 @@ défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un
 projet géré par RAD, il n'y a pas de pause gratuite — la suppression supprime
 les ressources pour de bon, et ramener Homebox signifie redéployer à partir
-de zéro. Cela coûte environ 43-46 crédits (les frais de module de 40 crédits
-plus un build).
+de zéro. Cela coûte 40 crédits (les frais de module ; les builds sont inclus).
 
 La suppression ne permet d'économiser de l'argent que si Homebox reste
 inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport

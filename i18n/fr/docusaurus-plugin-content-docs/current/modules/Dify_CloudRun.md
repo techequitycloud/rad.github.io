@@ -3,7 +3,7 @@ title: "Dify sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Dify sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Dify_CloudRun.md @ 1665a43e sha256:aad81c44382a -->
+<!-- translated-from: docs/modules/Dify_CloudRun.md @ 60462a86 sha256:55c1b79f077f -->
 
 # Dify sur Google Cloud Run {#dify-on-google-cloud-run}
 
@@ -36,7 +36,7 @@ consultez le [guide GKE](Dify_GKE.md) si vous avez besoin de l'autre.
 
 Si Dify n'est nécessaire qu'occasionnellement — une démo, un essai, une charge de travail
 saisonnière ou d'étude — un projet géré par RAD peut être supprimé et restauré dans les 30 jours
-pour une poignée de crédits, de sorte que les 102 $ US deviennent quelques dollars par mois.
+sans frais supplémentaires, de sorte que les 102 $ US deviennent quelques dollars par mois.
 Voir **Mettre en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
@@ -44,7 +44,7 @@ Voir **Mettre en pause gratuitement**, ci-dessous.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build (environ 3 à 6) | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **102 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **32 crédits par jour**, environ 960 par mois (environ 96 $ US au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
@@ -98,14 +98,13 @@ qu'occasionnellement que de le faire fonctionner en continu.
   déliée, rien n'est facturé pendant qu'il attend. Contrairement à la suppression d'un module,
   cela ne supprime pas Cloud SQL, la VM ou les ressources Cloud Run une par une — l'ensemble du
   projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30 jours,
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours,
   le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de
   rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque
   déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit
   individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une
   vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module
-  à nouveau. Cela représente une poignée de crédits (moins de 1 $ US) au total pour une chaîne
-  Dify typique, contre les 180 crédits que coûte un redéploiement complet.
+  à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 102 $ US.**
   Déployez Dify, utilisez-le, supprimez le projet. Restaurez-le la prochaine fois que vous le
   voulez, confirmez avec Update, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne
@@ -133,8 +132,7 @@ qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fen�
 passée, la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer
 lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds : environ
-  180 crédits (18 $ US) dans votre propre projet. La suppression ne permet d'économiser de
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 175 crédits (17,50 $ US) dans votre propre projet. La suppression ne permet d'économiser de
   l'argent que si Dify resterait inutilisé pendant environ 6 jours ou plus, que ce soit dans
   votre propre projet ou dans un projet géré par RAD.
 - **La majeure partie du coût d'exécution est généralement la base de données et le serveur de

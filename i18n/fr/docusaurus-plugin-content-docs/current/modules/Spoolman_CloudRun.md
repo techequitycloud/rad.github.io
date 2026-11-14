@@ -3,7 +3,7 @@ title: "Spoolman sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Spoolman sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Spoolman_CloudRun.md @ 1665a43e sha256:705f9b9ca9d9 -->
+<!-- translated-from: docs/modules/Spoolman_CloudRun.md @ 60462a86 sha256:28e2b6370196 -->
 
 # Spoolman sur Google Cloud Run {#spoolman-on-google-cloud-run}
 
@@ -30,16 +30,18 @@ répéter ici.
 
 ## Ce que coûte Spoolman sur RAD, et comment cela se compare {#what-spoolman-costs-on-rad-and-how-that-compares}
 
-**Spoolman sur le module Cloud Run de RAD coûte environ 67,80 US$ par mois dans un projet Google Cloud que vous possédez, avec les frais de module facturés une fois en crédits RAD.** Spoolman est un traqueur léger, donc la majeure partie de ce coût provient de la base de données gérée dans laquelle il conserve son inventaire de bobines, et non du calcul lui-même. Pour un coût de fonctionnement le plus bas, cela reste sur Cloud Run ; GKE Autopilot ne vaut la peine que si Spoolman doit être placé à côté d'autres charges de travail Kubernetes — voir le [guide GKE](Spoolman_GKE.md) pour cette option, à environ 91,31 US$ par mois à la place. Si vous n'avez besoin de Spoolman qu'occasionnellement — entre les travaux d'impression, ou pendant que vous l'essayez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 US$) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Spoolman sur le module Cloud Run de RAD coûte environ 67,80 US$ par mois dans un projet Google Cloud que vous possédez, avec les frais de module facturés une fois en crédits RAD.** Spoolman est un traqueur léger, donc la majeure partie de ce coût provient de la base de données gérée dans laquelle il conserve son inventaire de bobines, et non du calcul lui-même. Pour un coût de fonctionnement le plus bas, cela reste sur Cloud Run ; GKE Autopilot ne vaut la peine que si Spoolman doit être placé à côté d'autres charges de travail Kubernetes — voir le [guide GKE](Spoolman_GKE.md) pour cette option, à environ 91,31 US$ par mois à la place. Si vous n'avez besoin de Spoolman qu'occasionnellement — entre les travaux d'impression, ou pendant que vous l'essayez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4 US$ au prix de la recharge) | 36 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **67,80 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **26 crédits par jour**, soit environ 780 par mois |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 US$ pour une recharge ponctuelle, et moins pour un plan mensuel. Dans un projet géré par RAD, la base de données et le réseau sont partagés par chaque application du projet, de sorte qu'une deuxième application n'ajoute pas un deuxième ensemble de ces éléments.
 
@@ -65,7 +67,7 @@ Si Spoolman s'exécute dans un projet géré par RAD pour vous, la suppression d
 
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits (moins de 1 US$) au total pour une chaîne typique de 2-3 déploiements.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
 
@@ -73,7 +75,7 @@ Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours est passée, l'alternative est de supprimer Spoolman purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module, plus les builds — environ 45 crédits (environ 4,50 US$) dans votre propre projet, ou 41 crédits dans un projet géré par RAD.
+Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours est passée, l'alternative est de supprimer Spoolman purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 40 crédits (4,00 US$) dans votre propre projet, ou 36 crédits dans un projet géré par RAD.
 
 La suppression ne permet d'économiser de l'argent que si Spoolman resterait inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût de fonctionnement quotidien — par rapport au total du projet propre ci-dessus (environ 2,26 US$ par jour), cela représente environ 2 jours ou plus, ou environ 2 jours ou plus dans un projet géré par RAD (26 crédits par jour). La majeure partie du coût de fonctionnement ici est la base de données ; elle ne s'arrête que si rien d'autre dans le projet ne l'utilise, donc la suppression de Spoolman alors que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
 

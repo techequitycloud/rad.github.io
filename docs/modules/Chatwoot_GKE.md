@@ -24,7 +24,7 @@ rather than repeating them here.
 
 ## What Chatwoot costs on RAD, and how that compares
 
-**Chatwoot on RAD's GKE Autopilot module costs about US$150 a month in your own Google Cloud project, with no extra licence fee** — Chatwoot is open source. In a project RAD manages for you, the same deployment is metered at **111 credits a day** (about 3,330 a month, about US$333 at the top-up price). Or see the [Cloud Run guide](Chatwoot_CloudRun.md) for the lower-cost option. If you only need Chatwoot occasionally — studying, a demo, a short-lived project — a RAD-managed project can be deleted and restored within 30 days for a few credits, so that monthly figure becomes a few dollars instead. See **Pause it for free**, below.
+**Chatwoot on RAD's GKE Autopilot module costs about US$150 a month in your own Google Cloud project, with no extra licence fee** — Chatwoot is open source. In a project RAD manages for you, the same deployment is metered at **111 credits a day** (about 3,330 a month, about US$333 at the top-up price). Or see the [Cloud Run guide](Chatwoot_CloudRun.md) for the lower-cost option. If you only need Chatwoot occasionally — studying, a demo, a short-lived project — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that monthly figure becomes a few dollars instead. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
@@ -33,7 +33,7 @@ Chatwoot is open source, so there is no licence fee. You pay for three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 300 credits (US$30 at the top-up price) | 270 credits (10% lower) |
-| Build time | A few credits per build (roughly 3–6 credits) | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$150 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **111 credits a day**, about 3,330 a month (about US$333 at the top-up price) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
@@ -86,8 +86,7 @@ by one: the whole project simply stops.
 - **Restoring is a check, not a rebuild.** Within 30 days, the project's owner can ask Google to undelete
   the project and reattach its billing account, then run **Update** on each deployment to confirm
   everything came back. Because nothing was individually destroyed, that Update finds the same resources
-  already there, and an Update never charges the module fee again. For a typical 2–3-deployment chain
-  this costs only a handful of credits in total (roughly 5–10 credits, under US$1).
+  already there, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 - **What this needs.** You must own the project (not one RAD only manages billing for), restore it
   yourself within 30 days — after that Google deletes it for good — and clear the tier's admission floor
   again (100 credits for the sandbox tier most study/demo use fits). Google says most services are fully
@@ -105,9 +104,7 @@ Source: [Delete and restore projects](https://cloud.google.com/resource-manager/
 In your own project, or once the 30-day restore window above has passed, the way to stop paying is to
 delete the deployment and deploy it again when you need it.
 
-- **What a redeploy costs.** The module fee again, plus the builds: about 304 credits
-  (about US$30.40) at the top-up price, and roughly 15–20 minutes of build time (RAD's
-  own platform average). Deleting saves money only once Chatwoot would otherwise sit unused for about
+- **What a redeploy costs.** The module fee again (builds are included): 300 credits (US$30.00) at the top-up price. Deleting saves money only once Chatwoot would otherwise sit unused for about
   **4 days or more** — in your own project that is about US$4.99 a day, and
   in a RAD-managed one it is 111 credits a day.
 - Most of the running cost here is usually the database and/or the shared file/cache VM or cluster. They stop only when nothing else in the project uses them, so deleting Chatwoot while another application shares the project saves only Chatwoot's own compute part.
