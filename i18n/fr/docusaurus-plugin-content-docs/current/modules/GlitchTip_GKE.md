@@ -3,7 +3,7 @@ title: "GlitchTip sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de GlitchTip sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/GlitchTip_GKE.md @ 40c83c3f sha256:1254bb4ad9ef -->
+<!-- translated-from: docs/modules/GlitchTip_GKE.md @ 92769a4a sha256:9ffee2159253 -->
 
 # GlitchTip sur GKE Autopilot {#glitchtip-on-gke-autopilot}
 
@@ -37,7 +37,7 @@ Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | **175 crédits** (une seule fois) | **157,5 crédits** (une seule fois, 10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
 | Coût d'exécution Google Cloud | ~149,81 US$/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~141 crédits/jour (~14,10 US$/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
 
 **Coût d'exécution par défaut dans votre propre projet**

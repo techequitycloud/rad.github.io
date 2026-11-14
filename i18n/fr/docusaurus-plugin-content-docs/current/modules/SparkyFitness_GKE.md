@@ -3,7 +3,7 @@ title: "SparkyFitness sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de SparkyFitness sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SparkyFitness_GKE.md @ 40c83c3f sha256:d0d6c26d3329 -->
+<!-- translated-from: docs/modules/SparkyFitness_GKE.md @ 92769a4a sha256:fccdba3c2b4b -->
 
 # SparkyFitness sur GKE Autopilot {#sparkyfitness-on-gke-autopilot}
 
@@ -36,7 +36,7 @@ Si un coût d'exécution inférieur est plus important que la cible de déploiem
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 300 crédits, une fois | 270 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud | ~142,62 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~143 crédits/jour, mesuré à l'heure par RAD au prix catalogue plus marge |
 
 **Coût d'exécution par défaut dans votre propre projet**

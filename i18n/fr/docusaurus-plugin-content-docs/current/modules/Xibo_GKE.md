@@ -3,7 +3,7 @@ title: "Module Xibo GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Xibo sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Xibo_GKE.md @ 40c83c3f sha256:c0a2f7d28e1a -->
+<!-- translated-from: docs/modules/Xibo_GKE.md @ 92769a4a sha256:ac961c7620f2 -->
 
 # Module Xibo GKE — Guide de configuration {#xibo-gke-module--configuration-guide}
 
@@ -28,7 +28,7 @@ La plupart des options de configuration de `Xibo GKE` correspondent directement 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 110 crédits | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Identique |
 | Coût d'exécution Google Cloud | 110,13 $/mois, facturé par Google au prix catalogue | ~118 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).

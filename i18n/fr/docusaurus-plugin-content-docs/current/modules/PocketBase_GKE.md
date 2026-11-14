@@ -3,7 +3,7 @@ title: "PocketBase sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de PocketBase sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/PocketBase_GKE.md @ 40c83c3f sha256:2f438dd3c7a2 -->
+<!-- translated-from: docs/modules/PocketBase_GKE.md @ 92769a4a sha256:36465eaf1ba1 -->
 
 # PocketBase sur GKE Autopilot {#pocketbase-on-gke-autopilot}
 
@@ -33,7 +33,7 @@ App_GKE](App_GKE.md) plutôt que de les répéter ici.
 | Élément | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 75 crédits (une fois) | 67,50 crédits (une fois) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût de fonctionnement Google Cloud | ~42,08 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~75 crédits/jour, mesurés à l'heure au prix catalogue + marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).

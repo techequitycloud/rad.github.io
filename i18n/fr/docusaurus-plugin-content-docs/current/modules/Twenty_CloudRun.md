@@ -3,7 +3,7 @@ title: "Twenty CRM sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Twenty CRM sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Twenty_CloudRun.md @ 40c83c3f sha256:3b32874d6be2 -->
+<!-- translated-from: docs/modules/Twenty_CloudRun.md @ 92769a4a sha256:185703d43934 -->
 
 # Twenty CRM sur Google Cloud Run {#twenty-crm-on-google-cloud-run}
 
@@ -34,7 +34,7 @@ vie du déploiement — veuillez vous référer au
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 110 crédits | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût d'exécution Google Cloud | 83,61 $ US/mois, facturé par Google au prix catalogue | ~67 crédits/jour (environ 2 010/mois, 201 $ US au prix de la recharge), mesuré au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).

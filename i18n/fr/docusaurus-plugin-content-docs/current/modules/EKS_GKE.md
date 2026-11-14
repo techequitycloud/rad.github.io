@@ -3,7 +3,7 @@ title: "AWS EKS attaché à une flotte Google Cloud"
 description: "Référence de configuration pour le déploiement d'EKS sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/EKS_GKE.md @ 40c83c3f sha256:74abb5303656 -->
+<!-- translated-from: docs/modules/EKS_GKE.md @ 92769a4a sha256:77b3d49f6bef -->
 
 # AWS EKS attaché à une flotte Google Cloud {#aws-eks-attached-to-a-google-cloud-fleet}
 
@@ -30,7 +30,7 @@ quoi que ce soit ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les s
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | Aucun | Aucun |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud (Agent Connect + Flotte) | Facturé par Google à votre propre compte de facturation, environ **24,04 $ US par mois** (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **51 crédits par jour**, environ 1 530 par mois (environ 153 $ US au prix de la recharge ; estimé à partir des prix catalogue Google, et incluant les frais de cluster) |
 | Coût d'exécution AWS (le cluster EKS lui-même) | Facturé par **Amazon**, à votre compte AWS, séparément — non couvert par ce tableau | Idem — RAD ne mesure ni ne revend les dépenses AWS |
 | Qui possède quoi | Vous possédez le projet GCP et sa facturation ; RAD déploie et met à jour l'enregistrement de la flotte | RAD possède le projet GCP, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console |

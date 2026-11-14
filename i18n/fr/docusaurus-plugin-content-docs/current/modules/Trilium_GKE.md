@@ -3,7 +3,7 @@ title: "Trilium sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Trilium sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Trilium_GKE.md @ 40c83c3f sha256:736c76b1306b -->
+<!-- translated-from: docs/modules/Trilium_GKE.md @ 92769a4a sha256:83d2f3dc2f2f -->
 
 # Trilium sur GKE Autopilot {#trilium-on-gke-autopilot}
 
@@ -46,7 +46,7 @@ ci-dessous.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 75 crédits | 67,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût d'exécution Google Cloud | 42,08 US$/mois, facturé par Google au prix catalogue | ~75 crédits/jour (environ 2 250/mois, 225 US$ au prix de la recharge), mesuré au prix catalogue plus la marge de RAD |
 
 **Pourquoi les deux colonnes diffèrent.** Le chiffre du projet géré par RAD

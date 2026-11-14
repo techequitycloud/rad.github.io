@@ -35,7 +35,7 @@ Service Controls, backups, and the deployment lifecycle — refer to the
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee (one-off) | 75 credits | 67.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build, up to 10 failed builds a day (UTC). Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
 | Google Cloud running cost | US$53.72/month, billed by Google at list price | ~77 credits/day (about 2,310/month, US$231 at the top-up price), metered at list price plus RAD's margin |
 
 **Why the two columns differ.** The RAD-managed figure includes the GKE cluster's management fee (about US$73 a month) and the project's shared foundation. In your own project, Google's free tier covers the management fee of one cluster per billing account, which the own-project figure assumes. It is estimated from Google's list prices, because there is not yet enough RAD-managed GKE history to measure it, so the deploy confirmation does not quote it. A second GKE application in the same RAD-managed project shares the cluster and adds only its own pods.

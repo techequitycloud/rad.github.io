@@ -3,7 +3,7 @@ title: "Radicale sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Radicale sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Radicale_GKE.md @ 40c83c3f sha256:ec4b4b7d9580 -->
+<!-- translated-from: docs/modules/Radicale_GKE.md @ 92769a4a sha256:9a08514bf92f -->
 
 # Radicale sur GKE Autopilot {#radicale-on-gke-autopilot}
 
@@ -49,7 +49,7 @@ coût)
 | Élément | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 75 crédits (une fois) | 67,50 crédits (une fois) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute. | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute. | Identique |
 | Coût d'exécution Google Cloud | ~42,08 $ US/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~75 crédits/jour, mesuré à l'heure au prix catalogue + marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel

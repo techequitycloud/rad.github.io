@@ -3,7 +3,7 @@ title: "RAGFlow sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de RAGFlow sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/RAGFlow_CloudRun.md @ 40c83c3f sha256:d137b663510d -->
+<!-- translated-from: docs/modules/RAGFlow_CloudRun.md @ 92769a4a sha256:eae9ab1d9e48 -->
 
 # RAGFlow sur Google Cloud Run {#ragflow-on-google-cloud-run}
 
@@ -41,7 +41,7 @@ App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 | Élément | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 110 crédits (une fois) | 99 crédits (une fois) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Identique |
 | Coût d'exécution Google Cloud | ~101,98 $ US/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~67 crédits/jour, mesurés à l'heure au prix catalogue + marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant des frais : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).

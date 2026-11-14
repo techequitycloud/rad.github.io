@@ -3,7 +3,7 @@ title: "Rallly sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Rallly sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Rallly_GKE.md @ 40c83c3f sha256:fc6ae3f07913 -->
+<!-- translated-from: docs/modules/Rallly_GKE.md @ 92769a4a sha256:d4ba7b528471 -->
 
 # Rallly sur GKE Autopilot {#rallly-on-gke-autopilot}
 
@@ -32,7 +32,7 @@ Si un coût d'exécution inférieur est plus important que la cible de déploiem
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 75 crédits, une fois | 67,5 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud | ~129,18 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~131 crédits/jour, mesuré à l'heure par RAD au prix catalogue plus marge |
 
 **Pourquoi les deux colonnes diffèrent.** Le chiffre géré par RAD inclut les frais de gestion du cluster GKE (environ 73 $ US par mois) et la fondation partagée du projet. Dans votre propre projet, le niveau gratuit de Google couvre les frais de gestion d'un cluster par compte de facturation, ce que le chiffre du projet propre suppose. Il est estimé à partir des prix catalogue de Google, car il n'y a pas encore assez d'historique GKE géré par RAD pour le mesurer, donc la confirmation de déploiement ne le cite pas. Une deuxième application GKE dans le même projet géré par RAD partage le cluster et n'ajoute que ses propres pods.

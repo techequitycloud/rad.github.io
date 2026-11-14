@@ -3,7 +3,7 @@ title: "AdGuard Home sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'AdGuard Home sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/AdGuardHome_CloudRun.md @ 40c83c3f sha256:1e445e843e62 -->
+<!-- translated-from: docs/modules/AdGuardHome_CloudRun.md @ 92769a4a sha256:defa6e3a88c9 -->
 
 # AdGuard Home sur Google Cloud Run {#adguard-home-on-google-cloud-run}
 
@@ -30,7 +30,7 @@ Vous payez pour trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4 US$ au prix de la recharge) | 36 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ 17 US$ par mois pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **16 crédits par jour**, environ 480 par mois (environ 48 US$ au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est maintenu en réserve |
 

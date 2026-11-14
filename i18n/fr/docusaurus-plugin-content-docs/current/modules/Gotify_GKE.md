@@ -3,7 +3,7 @@ title: "Gotify sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Gotify sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gotify_GKE.md @ 40c83c3f sha256:571ad69cc9de -->
+<!-- translated-from: docs/modules/Gotify_GKE.md @ 92769a4a sha256:0885d6dd1e8a -->
 
 # Gotify sur GKE Autopilot {#gotify-on-gke-autopilot}
 
@@ -34,7 +34,7 @@ Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 75 crédits | 67,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût d'exécution Google Cloud | 91,31 $/mois, facturé par Google au prix catalogue | ~116 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).

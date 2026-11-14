@@ -3,7 +3,7 @@ title: "Gitea sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Gitea sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gitea_CloudRun.md @ 40c83c3f sha256:f87db6d87b4f -->
+<!-- translated-from: docs/modules/Gitea_CloudRun.md @ 92769a4a sha256:74a0d0be9c66 -->
 
 # Gitea sur Google Cloud Run {#gitea-on-google-cloud-run}
 
@@ -26,7 +26,7 @@ Ce guide se concentre sur les services cloud utilisés par Gitea et sur la mani�
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | **110 crédits** (une fois) | **99 crédits** (une fois, 10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût d'exécution Google Cloud | ~83,61 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~67 crédits/jour (~6,70 $ US/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).

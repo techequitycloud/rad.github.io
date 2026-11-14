@@ -3,7 +3,7 @@ title: "VictoriaMetrics sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de VictoriaMetrics sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/VictoriaMetrics_GKE.md @ 40c83c3f sha256:74e0ef2e54c9 -->
+<!-- translated-from: docs/modules/VictoriaMetrics_GKE.md @ 92769a4a sha256:952724016609 -->
 
 # VictoriaMetrics sur GKE Autopilot {#victoriametrics-on-gke-autopilot}
 
@@ -40,7 +40,7 @@ App_GKE](App_GKE.md) plutôt que de les répéter ici.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 75 crédits | 67,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients font exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients font exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
 | Coût d'exécution Google Cloud | 42,08 $ US/mois, facturé par Google au prix catalogue | ~60 crédits/jour (environ 1 800/mois, 180 $ US au prix de la recharge), mesuré au prix catalogue majoré de la marge de RAD |
 
 **Pourquoi les deux colonnes diffèrent.** Le chiffre pour les projets gérés par RAD inclut les frais de gestion du cluster GKE (environ 73 $ US par mois) et la fondation partagée du projet. Dans votre propre projet, le niveau gratuit de Google couvre les frais de gestion d'un cluster par compte de facturation, ce que le chiffre pour votre propre projet suppose. Il est estimé à partir des prix catalogue de Google, car il n'y a pas encore suffisamment d'historique GKE géré par RAD pour le mesurer, de sorte que la confirmation de déploiement ne le mentionne pas. Une deuxième application GKE dans le même projet géré par RAD partage le cluster et n'ajoute que ses propres pods.

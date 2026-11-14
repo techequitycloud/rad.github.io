@@ -3,7 +3,7 @@ title: "Mixpost sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Mixpost sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Mixpost_GKE.md @ 40c83c3f sha256:021feead58f3 -->
+<!-- translated-from: docs/modules/Mixpost_GKE.md @ 92769a4a sha256:2d8a1a0da6d5 -->
 
 # Mixpost sur GKE Autopilot {#mixpost-on-gke-autopilot}
 
@@ -38,7 +38,7 @@ Si un coût d'exécution inférieur est plus important que la cible de déploiem
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 110 crédits, une fois | 99 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût d'exécution Google Cloud | ~142,62 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~142 crédits/jour, facturé à l'heure par RAD au prix catalogue majoré d'une marge |
 
 **Pourquoi les deux colonnes diffèrent.** Le chiffre pour les projets gérés par RAD inclut les frais de gestion du cluster GKE (environ 73 $ US par mois) et la fondation partagée du projet. Dans votre propre projet, le niveau gratuit de Google couvre les frais de gestion d'un cluster par compte de facturation, ce que le chiffre pour les projets personnels suppose. Il est estimé à partir des prix catalogue de Google, car il n'y a pas encore suffisamment d'historique GKE géré par RAD pour le mesurer, de sorte que la confirmation de déploiement ne le cite pas. Une deuxième application GKE dans le même projet géré par RAD partage le cluster et n'ajoute que ses propres pods.

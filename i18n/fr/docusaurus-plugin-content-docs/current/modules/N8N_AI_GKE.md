@@ -3,7 +3,7 @@ title: "N8N AI sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de N8N AI sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/N8N_AI_GKE.md @ 40c83c3f sha256:13aafcd5185b -->
+<!-- translated-from: docs/modules/N8N_AI_GKE.md @ 92769a4a sha256:933c74b28349 -->
 
 # N8N AI sur GKE Autopilot {#n8n-ai-on-gke-autopilot}
 
@@ -39,7 +39,7 @@ par RAD, vous pouvez tout mettre en pause gratuitement lorsque vous ne l'utilise
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 175 crédits, une fois | 157,5 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
 | Coût de fonctionnement Google Cloud | ~149,81 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~146 crédits/jour, mesuré à l'heure par RAD au prix catalogue plus marge |
 
 **Coût de fonctionnement par défaut dans votre propre projet**

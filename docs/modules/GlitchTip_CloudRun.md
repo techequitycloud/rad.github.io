@@ -34,7 +34,7 @@ backups, and the deployment lifecycle — refer to the
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | **300 credits** (one-time) | **270 credits** (one-time, 10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build, up to 10 failed builds a day (UTC). Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
 | Google Cloud running cost | ~US$180.87/month, billed to your own Google billing account at list price | ~113 credits/day (~US$11.30/day), metered hourly at list price plus RAD's margin |
 
 **Default running cost in your own project**

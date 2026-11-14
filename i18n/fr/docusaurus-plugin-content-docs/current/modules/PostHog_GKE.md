@@ -3,7 +3,7 @@ title: "PostHog sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de PostHog sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/PostHog_GKE.md @ 40c83c3f sha256:0f3e3112a55d -->
+<!-- translated-from: docs/modules/PostHog_GKE.md @ 92769a4a sha256:b24cb1a68942 -->
 
 # PostHog sur GKE Autopilot {#posthog-on-gke-autopilot}
 
@@ -51,7 +51,7 @@ Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
 | Élément | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 300 crédits (une fois) | 270 crédits (une fois) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
 | Coût d'exécution Google Cloud | ~257,89 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~190 crédits/jour, mesurés à l'heure au prix catalogue + marge de RAD |
 
 **Coût d'exécution par défaut dans votre propre projet**

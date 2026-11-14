@@ -3,7 +3,7 @@ title: "WordPress sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de WordPress sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Wordpress_GKE.md @ 40c83c3f sha256:6cd319bdfc67 -->
+<!-- translated-from: docs/modules/Wordpress_GKE.md @ 92769a4a sha256:d6aa06ccdab8 -->
 
 # WordPress sur GKE Autopilot {#wordpress-on-gke-autopilot}
 
@@ -24,7 +24,7 @@ Ce guide se concentre sur les services cloud utilisés par WordPress et sur la m
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (une seule fois) | 175 crédits | 157,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build. | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build. | Identique |
 | Coût d'exécution Google Cloud | 110,13 $/mois, facturé par Google au prix catalogue | ~129 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
 **Coût d'exécution par défaut dans votre propre projet**

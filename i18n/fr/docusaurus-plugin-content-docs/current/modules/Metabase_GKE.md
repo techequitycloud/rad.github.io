@@ -3,7 +3,7 @@ title: "Metabase sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Metabase sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Metabase_GKE.md @ 40c83c3f sha256:0636a7438a22 -->
+<!-- translated-from: docs/modules/Metabase_GKE.md @ 92769a4a sha256:17e5b6211678 -->
 
 # Metabase sur GKE Autopilot {#metabase-on-gke-autopilot}
 
@@ -35,7 +35,7 @@ Si un coût d'exécution inférieur est plus important que la cible de déploiem
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 175 crédits, une fois | 157,5 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud | ~136,37 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~135 crédits/jour, mesuré à l'heure par RAD au prix catalogue plus marge |
 
 **Coût d'exécution par défaut dans votre propre projet**

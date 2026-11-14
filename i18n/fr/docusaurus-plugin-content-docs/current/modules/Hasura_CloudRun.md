@@ -3,7 +3,7 @@ title: "Hasura sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Hasura sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Hasura_CloudRun.md @ 40c83c3f sha256:203a357f9734 -->
+<!-- translated-from: docs/modules/Hasura_CloudRun.md @ 92769a4a sha256:764e798bf999 -->
 
 # Hasura sur Google Cloud Run {#hasura-on-google-cloud-run}
 
@@ -48,7 +48,7 @@ ci-dessous pour le seul avantage géré par RAD qu'un VPS auto-hébergé ne peut
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 75 crédits | 67,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Identique |
 | Coût d'exécution Google Cloud | 67,80 $/mois, facturé par Google au prix catalogue | ~61 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que
