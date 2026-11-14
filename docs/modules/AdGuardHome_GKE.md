@@ -41,7 +41,7 @@ Service Controls, and the deployment lifecycle — refer to the
 
 **AdGuard Home on RAD's GKE Autopilot module costs about US$40 a month in a project you own, with no licence fee for the software itself.** RAD charges a one-off module fee of 40 credits (US$4 at the top-up price) in a project you own, and 36 credits (10% lower) in a project RAD manages. GKE suits AdGuard Home that must stay up continuously or scale across pods; for the lowest cost, the [Cloud Run module](AdGuardHome_CloudRun.md) runs the same AdGuard Home for about US$17 a month. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
-If you only need it occasionally — studying for a certification, a demo, a seasonal need — a RAD-managed project can be deleted and restored within 30 days for a handful of credits, so that about US$40 a month becomes close to nothing instead. See **Pause it for free**, below.
+If you only need it occasionally — studying for a certification, a demo, a seasonal need — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that about US$40 a month becomes close to nothing instead. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
@@ -50,9 +50,11 @@ You pay for three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 40 credits (US$4 at the top-up price) | 36 credits (10% lower) |
-| Build time | A few credits, metered per minute of build time | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about US$40 a month for the default configuration (table below) | Metered hourly in credits; RAD publishes **63 credits a day**, about 1,890 a month (about US$189 at the top-up price, US$151 at the Scale plan's rate) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan.
 
@@ -87,13 +89,11 @@ need — far better than running AdGuard Home continuously.
   waits. Unlike deleting one module, this does not tear down the database, any VM or the
   compute resource one by one — the whole project simply stops, and nothing is billed in the
   meantime.
-- **Restoring costs a handful of credits, not a rebuild.** Within 30 days, only the project's
+- **Restoring is a check, not a rebuild.** Within 30 days, only the project's
   owner can restore it. RAD asks Google to undelete the project and reattaches its billing
   account, then asks you to run **Update** on each deployment to confirm everything came back.
   Because nothing was individually destroyed, that Update finds the same resources already
-  there — it is a check, not a rebuild, and an Update never charges the module fee again. This
-  costs only a handful of credits in total (under US$1), against paying the module fee and a
-  full build again.
+  there — it is a check, not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 - **What this needs.** You must own the project (not one RAD only manages billing for), you
   must restore it yourself within the 30 days — after that Google deletes it for good — and
   restoring is admitted like creating a new project, so your purchased credit balance must
@@ -111,9 +111,8 @@ need — far better than running AdGuard Home continuously.
 This is the fallback for a project you own, or once the 30-day restore window above has
 passed: **delete the deployment, and deploy it again when you next need it.**
 
-- **What a redeploy costs.** The module fee again, plus the builds: roughly
-  45 credits (about US$4.50) in your own project, or
-  41 credits in a RAD-managed one, because RAD rebuilds the resources
+- **What a redeploy costs.** The module fee again (builds are included): 40 credits (US$4.00) in your own project, or
+  36 credits in a RAD-managed one, because RAD rebuilds the resources
   from scratch. Deleting saves money once AdGuard Home would otherwise sit unused long enough to clear that redeploy cost against its own running cost — roughly 3 days or more in your own project (US$1.34/day) or 1 days or more in a RAD-managed one (63 credits/day).
 - **The GKE cluster itself is shared infrastructure.** If another application uses the same Autopilot cluster, deleting AdGuard Home alone saves only its own pod; the cluster management fee only drops once nothing else in the project needs it.
 - **Keep your data first.** Anything AdGuard Home writes to a backup bucket inside the deployment is

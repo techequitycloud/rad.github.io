@@ -17,16 +17,18 @@ This guide focuses on the cloud services Directus uses and how to explore and op
 
 **Directus on RAD's GKE Autopilot module costs about US$142.62 a month with no separate hosting licence.** This compares against US$499 a month (billed annually) or US$599 a month (billed monthly) for Directus Cloud's own hosted Team plan. A self-managed server is cheaper in cash, but then you run the database, backups, security patches and upgrades yourself. For the lowest cost, the [Cloud Run guide](Directus_CloudRun.md) runs the same Directus for about US$82.03 a month. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
-If you only need it occasionally — studying, a demo, a seasonal business — a RAD-managed project can be deleted and restored within 30 days for a handful of credits, so that US$142.62 becomes a few dollars a month instead. See **Pause it for free**, below.
+If you only need it occasionally — studying, a demo, a seasonal business — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that US$142.62 becomes a few dollars a month instead. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 110 credits (US$11 at the top-up price) | 99 credits (10% lower) |
-| Build time | A few credits per build | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$142.62 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **112 credits a day**, about 3,360 a month (about US$336 at the top-up price) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database, file server and network are shared by every application in the project, so a second application does not add a second database.
 
@@ -67,16 +69,14 @@ business — far better than running it continuously.
   for 30 days. Because billing is already unlinked, nothing is charged while it waits. Unlike
   deleting one module, this does not tear down Cloud SQL, the NFS VM or the GKE pod one by one — the whole project,
   and everything in it, simply stops.
-- **Restoring costs a handful of credits, not a rebuild.** Within 30 days, the project's owner
+- **Restoring is a check, not a rebuild.** Within 30 days, the project's owner
   can restore it. RAD asks Google to undelete the project and reattaches its billing account,
   then asks you to run **Update** on each deployment to confirm everything came back. Because
   nothing was individually destroyed, that Update finds the same resources already there — it
-  is a check, not a rebuild, and an Update never charges the module fee again. That costs **a
-  handful of credits (under US$1)** in total for a typical Directus-sized deployment chain, against
-  the 104 credits (US$10.35) a full redeploy costs.
+  is a check, not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 - **So a month of occasional use can cost a few dollars, not US$142.62.** Deploy Directus, use it
   for a while, delete the project. Restore it next time you want it, confirm with Update, and
-  delete it again when you're done. You pay only for the module fee once, the builds, and
+  delete it again when you're done. You pay only for the module fee once and
   whatever hours Directus was actually live.
 - **What this needs.** You must own the project (not a bring-your-own one RAD only manages
   billing for), and you restore it yourself within the 30 days — after that, Google deletes it
@@ -99,8 +99,7 @@ only applies to a RAD-managed project; **in your own project, or once the 30-day
 passed, the way to stop paying is to delete the deployment and deploy it again when you need
 it.**
 
-- **What a redeploy costs.** The module fee again plus the builds: about 114 credits
-  (US$11.45), and about an hour, because RAD recreates the project and shared services before Directus. Deleting saves money once Directus would otherwise sit unused
+- **What a redeploy costs.** The module fee again (builds are included): 110 credits (US$11.00), and about an hour, because RAD recreates the project and shared services before Directus. Deleting saves money once Directus would otherwise sit unused
   for about **2 days or more** in your own project (about US$4.75 a day), or about
   **1 day or more** in a RAD-managed one (112 credits a day).
 - **Delete everything Directus uses.** Most of the running cost is the database and the NFS/cache VM. They stop only when nothing else in the project uses them, so deleting it while something else shares the project saves only Directus's own compute part.

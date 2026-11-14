@@ -3,7 +3,7 @@ title: "Speedtest Tracker sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Speedtest Tracker sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SpeedtestTracker_CloudRun.md @ 1665a43e sha256:8abec5fa2667 -->
+<!-- translated-from: docs/modules/SpeedtestTracker_CloudRun.md @ 60462a86 sha256:b91a9f39bc9e -->
 
 # Speedtest Tracker sur Google Cloud Run {#speedtest-tracker-on-google-cloud-run}
 
@@ -42,8 +42,10 @@ ci-dessous.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 75 crédits, une fois | 67,5 crédits, une fois (10 % de moins) |
-| Temps de build | mesuré en crédits pendant l'exécution du build (quelques crédits, généralement) | idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | ~104,37 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~49 crédits/jour, mesuré à l'heure par RAD au prix catalogue plus marge |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 **Coût d'exécution par défaut dans votre propre projet**
 
@@ -92,8 +94,7 @@ facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiem
 pour confirmer que tout est revenu. Comme rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà présentes
 — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais à nouveau les frais de module. Cela ne coûte qu'une poignée de crédits
-(moins de 1 $ US) au total pour une chaîne de déploiement typique de 2-3.
+jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce que cela nécessite : vous devez être propriétaire du projet (pas un projet
 dont RAD gère uniquement la facturation), vous devez le restaurer vous-même
@@ -118,8 +119,7 @@ rien d'irremplaçable, cela n'a pas d'importance.
 Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de
 restauration de 30 jours ci-dessus), l'alternative est de supprimer Speedtest
 Tracker purement et simplement et de le redéployer plus tard. Un redéploiement
-coûte à nouveau les frais de module, plus les builds — environ 75 + 3-6 crédits
-de temps de build.
+coûte à nouveau les frais de module (les builds sont inclus) — 75 crédits au total.
 
 La suppression ne permet d'économiser de l'argent que si Speedtest Tracker
 devait rester inutilisé suffisamment longtemps pour compenser ce coût de

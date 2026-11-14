@@ -3,7 +3,7 @@ title: "Wallos sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Wallos sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Wallos_GKE.md @ 1665a43e sha256:a4b148460dac -->
+<!-- translated-from: docs/modules/Wallos_GKE.md @ 60462a86 sha256:b43ed1a3343f -->
 
 # Wallos sur GKE Autopilot {#wallos-on-gke-autopilot}
 
@@ -36,8 +36,10 @@ plutôt que de les répéter ici.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (une seule fois) | 40 crédits | 36 crédits (10 % de moins) |
-| Temps de build | ~3-6 crédits par build, dans les deux cas | ~3-6 crédits par build, dans les deux cas |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | 42,08 $/mois, facturé par Google au prix catalogue | ~67 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 **Coût d'exécution par défaut dans votre propre projet**
 
@@ -74,8 +76,7 @@ de récupérer le projet et de rattacher son compte de facturation, puis vous de
 d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu.
 Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources
 déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne
-facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits
-(moins de 1 $ US) au total pour une chaîne de déploiement typique de 2-3.
+facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD ne gère que la
 facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le
@@ -95,7 +96,7 @@ d'irremplaçable, cela n'a pas d'importance.
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un projet géré par RAD, il n'y a pas de pause gratuite — la suppression supprime définitivement les ressources, et ramener Wallos signifie le redéployer à partir de zéro. Cela coûte environ 43-46 crédits (les 40 crédits de frais de module plus un build).
+Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un projet géré par RAD, il n'y a pas de pause gratuite — la suppression supprime définitivement les ressources, et ramener Wallos signifie le redéployer à partir de zéro. Cela coûte 40 crédits (les frais de module ; les builds sont inclus).
 
 La suppression ne permet d'économiser de l'argent que si Wallos reste inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution — pour Wallos, c'est environ 4 jours ou plus. La majeure partie de ce coût d'exécution ici est le calcul lui-même plutôt qu'une ressource partagée, donc le supprimer permet d'économiser presque la totalité du chiffre ci-dessus, à moins que quelque chose d'autre dans le projet ne partage le même cluster ou serveur de fichiers.
 

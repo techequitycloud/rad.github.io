@@ -3,7 +3,7 @@ title: "Gatus sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Gatus sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gatus_GKE.md @ 1665a43e sha256:645533aa167c -->
+<!-- translated-from: docs/modules/Gatus_GKE.md @ 60462a86 sha256:73fdfdb7f555 -->
 
 # Gatus sur GKE Autopilot {#gatus-on-gke-autopilot}
 
@@ -41,8 +41,10 @@ plutôt que de les répéter ici.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | **40 crédits** (une fois) | **36 crédits** (une fois, 10 % de moins) |
-| Temps de build | ~3–6 crédits (une fois, par build) | ~3–6 crédits (une fois, par build) |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | ~40,29 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~63 crédits/jour (~6,30 $ US/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 **Coût d'exécution par défaut dans votre propre projet**
 
@@ -74,8 +76,7 @@ facturé pendant qu'il attend, car la facturation est déjà déliée.
 La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher
 son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Parce que
 rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une
-reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Cela ne coûte qu'une poignée de crédits de temps de build
-au total — environ 5 à 10 crédits, moins de 1 $ US, pour une chaîne de déploiement typique de 2 à 3. Les frais de module de 36 crédits
+reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Les frais de module de 36 crédits
 ne sont pas facturés à nouveau.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet que RAD gère uniquement pour la facturation), vous devez le restaurer vous-même
@@ -93,7 +94,7 @@ sans rien d'irremplaçable, cela n'a pas d'importance.
 
 Si Gatus se trouve dans votre propre projet (ou si plus de 30 jours se sont écoulés sur un projet géré par RAD), la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer plus tard lorsque vous en aurez à nouveau besoin.
 
-Un redéploiement coûte à nouveau les frais de module, plus les builds : environ **40 + ~3–6 crédits** (~4,45 $ US) dans votre propre projet, ou **36 + ~3–6 crédits** sur un projet géré par RAD.
+Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) : 40 crédits (4,00 $ US) dans votre propre projet, ou **36 crédits** sur un projet géré par RAD.
 
 La suppression ne permet d'économiser de l'argent que si Gatus reste inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution : environ **4 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa facture Google Cloud d'environ 40,29 $ US/mois), ou **environ 1 jour ou plus** d'inactivité dans un projet géré par RAD (par rapport à ses environ 63 crédits/jour).
 

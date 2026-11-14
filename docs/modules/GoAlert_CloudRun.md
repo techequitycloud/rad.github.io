@@ -35,8 +35,10 @@ VPC Service Controls, backups, and the deployment lifecycle — refer to the
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | **110 credits** (one-time) | **99 credits** (one-time, 10% lower) |
-| Build time | ~3–6 credits (one-time, per build) | ~3–6 credits (one-time, per build) |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | ~US$101.74/month, billed to your own Google billing account at list price | ~48 credits/day (~US$4.80/day), metered hourly at list price plus RAD's margin |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 **Default running cost in your own project**
 
@@ -68,8 +70,7 @@ charged while it waits, because billing is already unlinked.
 Restoring, within 30 days and only by the project's owner, asks Google to undelete the project and reattaches
 its billing account, then asks you to run Update on each deployment to confirm everything came back. Because
 nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a
-rebuild, and an Update never charges the module fee again. This costs only a handful of build-time credits in
-total — roughly 5–10 credits, under US$1, for a typical 2–3-deployment chain. The 99-credit module
+rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits. The 99-credit module
 fee is not charged again.
 
 What this needs: you must own the project (not one RAD only manages billing for), you must restore it yourself
@@ -88,8 +89,8 @@ with nothing irreplaceable in it, this does not matter.
 If GoAlert is in your own project (or more than 30 days have passed on a RAD-managed one), the way to stop
 paying is to delete the deployment and redeploy later when you need it again.
 
-A redeploy costs the module fee again, plus the builds: roughly **110 + ~3–6 credits** (~US$11.45)
-in your own project, or **99 + ~3–6 credits** on a RAD-managed one.
+A redeploy costs the module fee again (builds are included): 110 credits (US$11.00)
+in your own project, or **99 credits** on a RAD-managed one.
 
 Deleting only saves money once GoAlert would otherwise sit unused long enough to clear that redeploy cost
 against its own running cost: roughly **about 4 days or more** idle in your own project (against its

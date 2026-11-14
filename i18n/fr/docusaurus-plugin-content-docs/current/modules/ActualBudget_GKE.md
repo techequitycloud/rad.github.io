@@ -3,7 +3,7 @@ title: "ActualBudget sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'ActualBudget sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/ActualBudget_GKE.md @ 1665a43e sha256:53e7b2544181 -->
+<!-- translated-from: docs/modules/ActualBudget_GKE.md @ 60462a86 sha256:42b93996e4c6 -->
 
 # ActualBudget sur GKE Autopilot {#actualbudget-on-gke-autopilot}
 
@@ -39,7 +39,7 @@ sont listées à la fin de cette section.
 
 Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo,
 un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30
-jours pour une poignée de crédits, de sorte que les quelque 42 $ US par mois deviennent
+jours sans frais supplémentaires, de sorte que les quelque 42 $ US par mois deviennent
 presque rien. Voir **Mettre en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
@@ -49,9 +49,11 @@ Vous payez pour trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 75 crédits (7,50 $ US au prix de la recharge) | 67,5 crédits (10 % de moins) |
-| Temps de build | Quelques crédits, facturés à la minute de temps de build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ 42 $ US par mois pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **67 crédits par jour**, soit environ 2 010 par mois (environ 201 $ US au prix de la recharge, 161 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde acheté minimum est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge unique, et moins avec un plan mensuel.
 
@@ -99,14 +101,13 @@ d'exécuter ActualBudget en continu.
   suppression d'un module, cela ne détruit pas la base de données, aucune VM ou la ressource
   de calcul une par une — l'ensemble du projet s'arrête simplement, et rien n'est facturé
   entre-temps.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30 jours,
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours,
   seul le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le
   projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update**
   sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit
   individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — il s'agit
   d'une vérification, pas d'une reconstruction, et une mise à jour ne facture jamais les
-  frais de module à nouveau. Cela ne coûte qu'une poignée de crédits au total (moins de 1 $
-  US), contre le paiement des frais de module et une reconstruction complète.
+  frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont RAD gère
   uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après
   cela, Google le supprime définitivement — et la restauration est admise comme la création
@@ -128,8 +129,8 @@ C'est la solution de repli pour un projet que vous possédez, ou une fois que la
 restauration de 30 jours ci-dessus est passée : **supprimer le déploiement, et le redéployer
 lorsque vous en avez à nouveau besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les builds :
-  environ 80 crédits (environ 8 $ US) dans votre propre projet, ou 72,5 crédits dans un projet
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) :
+  75 crédits (7,50 $ US) dans votre propre projet, ou 67,5 crédits dans un projet
   géré par RAD, car RAD reconstruit les ressources à partir de zéro. La suppression permet
   d'économiser de l'argent une fois qu'ActualBudget resterait inutilisé assez longtemps pour
   compenser ce coût de redéploiement par rapport à son propre coût d'exécution — environ 6

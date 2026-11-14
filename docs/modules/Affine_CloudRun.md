@@ -17,7 +17,7 @@ This guide focuses on the cloud services AFFiNE uses and how to explore and oper
 
 **AFFiNE on RAD's Cloud Run module costs about US$181 a month in a project you own, with no licence fee for the software itself.** RAD charges a one-off module fee of 300 credits (US$30 at the top-up price) in a project you own, and 270 credits (10% lower) in a project RAD manages. If AFFiNE needs to run continuously across pods or beside other Kubernetes workloads, see the [GKE guide](Affine_GKE.md) instead. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
-If you only need it occasionally — studying for a certification, a demo, a seasonal need — a RAD-managed project can be deleted and restored within 30 days for a handful of credits, so that about US$181 a month becomes close to nothing instead. See **Pause it for free**, below.
+If you only need it occasionally — studying for a certification, a demo, a seasonal need — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that about US$181 a month becomes close to nothing instead. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
@@ -26,7 +26,7 @@ You pay for three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 300 credits (US$30 at the top-up price) | 270 credits (10% lower) |
-| Build time | A few credits, metered per minute of build time | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about US$181 a month for the default configuration (table below) | Metered hourly in credits; RAD publishes **83 credits a day**, about 2,490 a month (about US$249 at the top-up price, US$199 at the Scale plan's rate) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
@@ -64,13 +64,11 @@ need — far better than running AFFiNE continuously.
   waits. Unlike deleting one module, this does not tear down the database, any VM or the
   compute resource one by one — the whole project simply stops, and nothing is billed in the
   meantime.
-- **Restoring costs a handful of credits, not a rebuild.** Within 30 days, only the project's
+- **Restoring is a check, not a rebuild.** Within 30 days, only the project's
   owner can restore it. RAD asks Google to undelete the project and reattaches its billing
   account, then asks you to run **Update** on each deployment to confirm everything came back.
   Because nothing was individually destroyed, that Update finds the same resources already
-  there — it is a check, not a rebuild, and an Update never charges the module fee again. This
-  costs only a handful of credits in total (under US$1), against paying the module fee and a
-  full build again.
+  there — it is a check, not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 - **What this needs.** You must own the project (not one RAD only manages billing for), you
   must restore it yourself within the 30 days — after that Google deletes it for good — and
   restoring is admitted like creating a new project, so your purchased credit balance must
@@ -88,9 +86,8 @@ need — far better than running AFFiNE continuously.
 This is the fallback for a project you own, or once the 30-day restore window above has
 passed: **delete the deployment, and deploy it again when you next need it.**
 
-- **What a redeploy costs.** The module fee again, plus the builds: roughly
-  305 credits (about US$30.50) in your own project, or
-  275 credits in a RAD-managed one, because RAD rebuilds the resources
+- **What a redeploy costs.** The module fee again (builds are included): 300 credits (US$30.00) in your own project, or
+  270 credits in a RAD-managed one, because RAD rebuilds the resources
   from scratch. Deleting saves money once AFFiNE would otherwise sit unused long enough to clear that redeploy cost against its own running cost — roughly 5 days or more in your own project (US$6.03/day) or 3 days or more in a RAD-managed one (83 credits/day).
 - **Most of the running cost is usually shared infrastructure.** The database and file or cache VM stop only when nothing else in the project uses them, so deleting AFFiNE while another application shares the project saves only AFFiNE's own compute part.
 - **Keep your data first.** Anything AFFiNE writes to a backup bucket inside the deployment is

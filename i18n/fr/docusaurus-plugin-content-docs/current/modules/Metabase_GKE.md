@@ -3,7 +3,7 @@ title: "Metabase sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Metabase sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Metabase_GKE.md @ 1665a43e sha256:487194c63352 -->
+<!-- translated-from: docs/modules/Metabase_GKE.md @ 60462a86 sha256:bf433d24206f -->
 
 # Metabase sur GKE Autopilot {#metabase-on-gke-autopilot}
 
@@ -34,7 +34,7 @@ Si un coût d'exécution inférieur est plus important que la cible de déploiem
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 175 crédits, une fois | 157,5 crédits, une fois (10 % de moins) |
-| Temps de build | mesuré en crédits pendant l'exécution du build (quelques crédits, généralement) | idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | ~136,37 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~105 crédits/jour, mesuré toutes les heures par RAD au prix catalogue plus marge |
 
 **Coût d'exécution par défaut dans votre propre projet**
@@ -70,8 +70,7 @@ de récupérer le projet et de rattacher son compte de facturation, puis vous de
 Update sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été
 individuellement détruit, cette mise à jour trouve les mêmes ressources déjà présentes — c'est
 une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de
-module à nouveau. Cela ne coûte qu'une poignée de crédits (moins de 1 $ US) au total pour une
-chaîne de déploiement typique de 2-3.
+module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce que cela nécessite : vous devez être propriétaire du projet (pas un projet que RAD gère
 uniquement pour la facturation), vous devez le restaurer vous-même dans les 30 jours — après
@@ -91,7 +90,7 @@ cela n'a pas d'importance.
 
 ### Payer uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de restauration de 30 jours ci-dessus), l'alternative est de supprimer Metabase purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module, plus les builds — environ 175 + 3-6 crédits de temps de build.
+Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de restauration de 30 jours ci-dessus), l'alternative est de supprimer Metabase purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 175 crédits.
 
 La suppression ne permet d'économiser de l'argent que si Metabase devait rester inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution quotidien — par rapport au total du projet ci-dessus, cela représente environ 4 jours ou plus. La majeure partie du coût d'exécution ici est généralement la base de données ; elle ne s'arrête que lorsque rien d'autre dans le projet ne l'utilise, donc la suppression de cette application pendant que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
 

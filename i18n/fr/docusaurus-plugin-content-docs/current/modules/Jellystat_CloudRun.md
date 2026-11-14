@@ -3,7 +3,7 @@ title: "Jellystat sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Jellystat sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Jellystat_CloudRun.md @ 1665a43e sha256:52594c58bc86 -->
+<!-- translated-from: docs/modules/Jellystat_CloudRun.md @ 60462a86 sha256:f65209becf5e -->
 
 # Jellystat sur Google Cloud Run {#jellystat-on-google-cloud-run}
 
@@ -37,9 +37,11 @@ répéter ici.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4,00 $ US) | 36 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **67,80 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **26 crédits par jour** |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge unique, moins sur un plan. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
 
@@ -67,7 +69,7 @@ Si Jellystat s'exécute dans un projet géré par RAD pour vous et que vous pré
 
 La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet purement et simplement : la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression de Jellystat en tant que module unique, cela ne démantèle pas le service Cloud Run/GKE, la base de données Cloud SQL et le réseau un par un — l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits (moins de 1 $ US) en temps de build pour une chaîne de déploiements typique.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart utilisent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
@@ -77,7 +79,7 @@ Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à
 
 Dans votre propre projet, ou une fois que la fenêtre de 30 jours ci-dessus est passée, la solution de repli consiste à supprimer Jellystat purement et simplement et à le redéployer plus tard.
 
-- **Ce que coûte un redéploiement :** les frais de module à nouveau, plus les builds — environ les frais de module indiqués ci-dessus plus 3 à 6 crédits de temps de build.
+- **Ce que coûte un redéploiement :** les frais de module à nouveau (les builds sont inclus) — les frais de module indiqués ci-dessus.
 - **Quand cela en vaut la peine :** la suppression ne permet d'économiser de l'argent que si Jellystat devait autrement rester inutilisé pendant environ 2 jours ou plus dans votre propre projet (environ 2 jours ou plus dans un projet géré par RAD). La base de données PostgreSQL représente la majeure partie du coût d'exécution ici, donc la suppression de Jellystat seul permet d'économiser la totalité de la facture ci-dessus, à moins que quelque chose d'autre dans le projet ne la partage.
 - **Conservez d'abord les données.** Les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du déploiement, et ce bucket est supprimé avec lui — copiez la dernière sauvegarde (vers Google Drive, ou un bucket que vous conservez) avant de la supprimer si vous voulez la conserver.
 

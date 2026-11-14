@@ -3,7 +3,7 @@ title: "Grocy sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Grocy sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Grocy_CloudRun.md @ 1665a43e sha256:2fe38fa2921c -->
+<!-- translated-from: docs/modules/Grocy_CloudRun.md @ 60462a86 sha256:9038f8b52bfd -->
 
 # Grocy sur Google Cloud Run {#grocy-on-google-cloud-run}
 
@@ -37,8 +37,10 @@ répéter ici.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 75 crédits | 67,5 crédits (10 % de moins) |
-| Temps de build | ~3-6 crédits par build, dans les deux cas | ~3-6 crédits par build, dans les deux cas |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | 32,57 $/mois, facturé par Google au prix catalogue | ~15 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 **Coût d'exécution par défaut dans votre propre projet**
 
@@ -72,8 +74,7 @@ de récupérer le projet et de rattacher son compte de facturation, puis vous de
 une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Parce que rien n'a
 été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes —
 il s'agit d'une vérification, pas d'une reconstruction, et une mise à jour ne facture plus
-jamais les frais de module. Cela ne coûte qu'une poignée de crédits (moins de 1 $ US) au total
-pour une chaîne de déploiement typique de 2-3.
+jamais les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement
 la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le
@@ -93,7 +94,7 @@ d'irremplaçable, cela n'a pas d'importance.
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un projet géré par RAD, il n'y a pas de pause gratuite — la suppression supprime les ressources pour de bon, et ramener Grocy signifie redéployer à partir de zéro. Cela coûte environ 78-81 crédits (les 75 crédits de frais de module plus un build).
+Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un projet géré par RAD, il n'y a pas de pause gratuite — la suppression supprime les ressources pour de bon, et ramener Grocy signifie redéployer à partir de zéro. Cela coûte 75 crédits (les frais de module ; les builds sont inclus).
 
 La suppression ne permet d'économiser de l'argent que si Grocy reste inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution — pour Grocy, c'est environ 8 jours ou plus. La majeure partie de ce coût d'exécution est généralement la base de données (et, lorsque ce module en utilise un, la VM de serveur de fichiers partagé ou le cluster GKE) — ceux-ci ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de cette application pendant que quelque chose d'autre partage le projet n'économise que sa propre part de calcul.
 

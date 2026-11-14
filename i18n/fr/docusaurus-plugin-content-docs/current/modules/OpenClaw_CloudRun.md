@@ -3,7 +3,7 @@ title: "OpenClaw sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'OpenClaw sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenClaw_CloudRun.md @ 1665a43e sha256:521674725421 -->
+<!-- translated-from: docs/modules/OpenClaw_CloudRun.md @ 60462a86 sha256:a8bbf7507aba -->
 
 # OpenClaw sur Google Cloud Run {#openclaw-on-google-cloud-run}
 
@@ -29,7 +29,7 @@ plutôt que de les répéter ici.
 
 ## Ce que coûte OpenClaw sur RAD, et comment cela se compare {#what-openclaw-costs-on-rad-and-how-that-compares}
 
-**Le module Cloud Run d'OpenClaw sur RAD coûte environ 69 US$ par mois, les frais de module étant facturés une seule fois en crédits RAD.** Si vous avez besoin qu'OpenClaw reste actif en permanence, qu'il s'adapte à plusieurs pods ou qu'il fonctionne avec d'autres charges de travail Kubernetes, consultez le [guide GKE](OpenClaw_GKE.md) pour cette option. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 US$) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Le module Cloud Run d'OpenClaw sur RAD coûte environ 69 US$ par mois, les frais de module étant facturés une seule fois en crédits RAD.** Si vous avez besoin qu'OpenClaw reste actif en permanence, qu'il s'adapte à plusieurs pods ou qu'il fonctionne avec d'autres charges de travail Kubernetes, consultez le [guide GKE](OpenClaw_GKE.md) pour cette option. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -39,9 +39,11 @@ utilisateur. Vous payez pour trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet que RAD gère pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 75 crédits (8 US$ au prix de la recharge) | 67,5 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **69 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **26 crédits par jour**, soit environ 780 par mois (environ 78 US$ au prix de la recharge, 62 US$ au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 US$ pour une recharge ponctuelle, et moins avec un plan mensuel.
 Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau
@@ -96,19 +98,17 @@ un projet saisonnier — que de le faire fonctionner en continu.
   la suppression d'un module, cela ne détruit pas la base de données ou la ressource de
   calcul une par une — l'ensemble du projet, et tout ce qu'il contient, s'arrête
   simplement.
-- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les 30 jours,
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours,
   le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le
   projet et de rattacher son compte de facturation, puis vous demande d'exécuter
   **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a
   été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà
   présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne
-  facture plus jamais les frais de module. Cela coûte environ une poignée de crédits
-  (moins de 1 US$) au total pour une chaîne typique de 2-3 déploiements.
+  facture plus jamais les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 69 US$.**
   Déployez OpenClaw, utilisez-le un certain temps, supprimez le projet. Restaurez-le la
   prochaine fois que vous en avez besoin, confirmez avec Update, et supprimez-le à
-  nouveau lorsque vous avez terminé. Vous ne payez que les frais de module une fois, les
-  builds, et le temps pendant lequel OpenClaw était réellement actif.
+  nouveau lorsque vous avez terminé. Vous ne payez que les frais de module une fois, et le temps pendant lequel OpenClaw était réellement actif.
 - **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que
   RAD gère uniquement pour la facturation), et vous le restaurez vous-même dans les 30
   jours — après cela, Google le supprime définitivement. La restauration est admise
@@ -132,8 +132,8 @@ L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre p
 projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de
 supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds :
-  environ 80 crédits (8 US$) dans votre propre projet, ou 72 crédits dans un projet
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) :
+  75 crédits (7,50 US$) dans votre propre projet, ou 67,5 crédits dans un projet
   géré par RAD. La suppression permet d'économiser de l'argent une fois qu'OpenClaw
   serait autrement inutilisé pendant environ 3 jours ou plus dans votre propre projet
   (environ 2,29 US$ par jour), ou environ 3 jours ou plus dans un projet géré par RAD

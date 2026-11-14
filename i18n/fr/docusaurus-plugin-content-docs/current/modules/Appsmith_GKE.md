@@ -3,7 +3,7 @@ title: "Appsmith sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Appsmith sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Appsmith_GKE.md @ 1665a43e sha256:1f410d0a09ae -->
+<!-- translated-from: docs/modules/Appsmith_GKE.md @ 60462a86 sha256:1bea92293458 -->
 
 # Appsmith sur GKE Autopilot {#appsmith-on-gke-autopilot}
 
@@ -32,7 +32,7 @@ plutôt que de les répéter ici.
 
 **Appsmith sur le module GKE Autopilot de RAD coûte environ 78 US$ par mois dans un projet que vous possédez, sans frais de licence pour le logiciel lui-même.** RAD facture des frais de module uniques de 75 crédits (7,50 US$ au prix de la recharge) dans un projet que vous possédez, et 67,5 crédits (10 % de moins) dans un projet géré par RAD. Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits, de sorte que les quelque 78 US$ par mois deviennent presque rien. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les quelque 78 US$ par mois deviennent presque rien. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -41,9 +41,11 @@ Vous payez pour trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 75 crédits (7,50 US$ au prix de la recharge) | 67,5 crédits (10 % de moins) |
-| Temps de build | Quelques crédits, facturés à la minute de temps de build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ 78 US$ par mois pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **79 crédits par jour**, soit environ 2 370 par mois (environ 237 US$ au prix de la recharge, 190 US$ au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 US$ en recharge unique, et moins avec un plan mensuel.
 
@@ -70,7 +72,7 @@ Si Appsmith s'exécute dans **un projet géré par RAD pour vous**, vous avez un
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
 - **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet purement et simplement. Google ne le supprime pas immédiatement : il conserve le projet, récupérable, pendant 30 jours, et comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend. Contrairement à la suppression d'un module, cela ne détruit pas la base de données, aucune VM ou la ressource de calcul une par une — l'ensemble du projet s'arrête simplement, et rien n'est facturé entre-temps.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30 jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits au total (moins de 1 US$), contre le paiement des frais de module et une reconstruction complète.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet que RAD gère uniquement pour la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude et de démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 - **Un véritable manque : les sauvegardes ne survivent pas.** Tout ce qu'Appsmith écrit dans un bucket de sauvegarde à l'intérieur du projet est très probablement perdu dès que vous supprimez le projet, même si le projet lui-même est récupérable pendant 30 jours — la suppression logicielle de Cloud Storage est explicitement désactivée pour ce bucket. Quiconque a personnalisé le déploiement et souhaite conserver ce travail doit copier une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
@@ -78,7 +80,7 @@ Si Appsmith s'exécute dans **un projet géré par RAD pour vous**, vous avez un
 
 C'est la solution de repli pour un projet que vous possédez, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée : **supprimez le déploiement, et redéployez-le lorsque vous en aurez à nouveau besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les builds : environ 80 crédits (environ 8 US$) dans votre propre projet, ou 72,5 crédits dans un projet géré par RAD, car RAD reconstruit les ressources à partir de zéro. La suppression permet d'économiser de l'argent une fois qu'Appsmith serait autrement inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution — environ 3 jours ou plus dans votre propre projet (2,61 US$/jour) ou 1 jour ou plus dans un projet géré par RAD (79 crédits/jour).
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 75 crédits (7,50 US$) dans votre propre projet, ou 67,5 crédits dans un projet géré par RAD, car RAD reconstruit les ressources à partir de zéro. La suppression permet d'économiser de l'argent une fois qu'Appsmith serait autrement inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution — environ 3 jours ou plus dans votre propre projet (2,61 US$/jour) ou 1 jour ou plus dans un projet géré par RAD (79 crédits/jour).
 - **Le cluster GKE lui-même est une infrastructure partagée.** Si une autre application utilise le même cluster Autopilot, la suppression d'Appsmith seul ne sauve que son propre pod ; les frais de gestion du cluster ne diminuent que si rien d'autre dans le projet n'en a besoin.
 - **Conservez d'abord vos données.** Tout ce qu'Appsmith écrit dans un bucket de sauvegarde à l'intérieur du déploiement est supprimé avec lui — copiez la dernière sauvegarde (vers Google Drive, ou un bucket que vous conservez) avant de la supprimer si vous voulez la conserver.
 - **RAD ne recrée pas un déploiement supprimé pour vous.** Vous saisissez à nouveau les paramètres lorsque vous redéployez.

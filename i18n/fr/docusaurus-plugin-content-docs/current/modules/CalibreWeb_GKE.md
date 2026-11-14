@@ -3,7 +3,7 @@ title: "Calibre-Web sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Calibre-Web sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CalibreWeb_GKE.md @ 1665a43e sha256:24b3610b1982 -->
+<!-- translated-from: docs/modules/CalibreWeb_GKE.md @ 60462a86 sha256:0a6cc34fe14f -->
 
 # Calibre-Web sur GKE Autopilot {#calibre-web-on-gke-autopilot}
 
@@ -30,7 +30,7 @@ plutôt que de les répéter ici.
 
 ## Coût de Calibre-Web sur RAD et comparaison {#what-calibre-web-costs-on-rad-and-how-that-compares}
 
-**Calibre-Web sur le module GKE Autopilot de RAD coûte environ 42 US$ par mois dans votre propre projet Google Cloud, sans frais de licence supplémentaires** — Calibre-Web est open source. Dans un projet géré par RAD pour vous, le même déploiement est facturé à **67 crédits par jour** (environ 2 010 par mois, soit environ 201 US$ au prix de la recharge). Ou consultez le [guide Cloud Run](CalibreWeb_CloudRun.md) pour l'option à moindre coût. Si vous n'avez besoin de Calibre-Web qu'occasionnellement — pour des études, une démo, un projet de courte durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour quelques crédits, de sorte que ce chiffre mensuel devient quelques dollars à la place. Voir **Mettre en pause gratuitement**, ci-dessous.
+**Calibre-Web sur le module GKE Autopilot de RAD coûte environ 42 US$ par mois dans votre propre projet Google Cloud, sans frais de licence supplémentaires** — Calibre-Web est open source. Dans un projet géré par RAD pour vous, le même déploiement est facturé à **67 crédits par jour** (environ 2 010 par mois, soit environ 201 US$ au prix de la recharge). Ou consultez le [guide Cloud Run](CalibreWeb_CloudRun.md) pour l'option à moindre coût. Si vous n'avez besoin de Calibre-Web qu'occasionnellement — pour des études, une démo, un projet de courte durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ce chiffre mensuel devient quelques dollars à la place. Voir **Mettre en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -39,9 +39,11 @@ Calibre-Web est open source, il n'y a donc pas de frais de licence. Vous payez p
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 75 crédits (7,50 US$ au prix de la recharge) | 67,5 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build (environ 3 à 6 crédits) | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **42 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **67 crédits par jour**, soit environ 2 010 par mois (environ 201 US$ au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 US$ pour une recharge unique, et moins pour un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
 
@@ -77,7 +79,7 @@ s'arrête simplement.
 
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut demander à Google de récupérer le projet et de rattacher son compte de facturation, puis d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes, et une mise à jour ne facture plus les frais de module. Pour une chaîne de déploiement typique de 2 à 3 déploiements, cela ne coûte qu'une poignée de crédits au total (environ 5 à 10 crédits, moins de 1 US$).
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut demander à Google de récupérer le projet et de rattacher son compte de facturation, puis d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes, et une mise à jour ne facture plus les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), le restaurer vous-même dans les 30 jours — après quoi Google le supprime définitivement — et franchir à nouveau le seuil d'admission du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
 - **Une lacune réelle : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage désactivée, il est donc très probable qu'il disparaisse dès que le projet est supprimé — même si le projet lui-même est récupérable pendant 30 jours. Copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de la supprimer s'il y a quelque chose d'important à conserver ; pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
@@ -87,9 +89,7 @@ Source : [Supprimer et restaurer des projets](https://cloud.google.com/resource-
 
 Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée, la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous en avez besoin.
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les builds : environ 79 crédits
-  (environ 7,90 US$) au prix de la recharge, et environ 15 à 20 minutes de temps de build (moyenne de la
-  plateforme RAD). La suppression ne permet d'économiser de l'argent que si Calibre-Web resterait
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 75 crédits (7,50 US$) au prix de la recharge. La suppression ne permet d'économiser de l'argent que si Calibre-Web resterait
   inutilisé pendant environ **3 jours ou plus** — dans votre propre projet, cela représente environ 1,40 US$ par jour, et
   dans un projet géré par RAD, c'est 67 crédits par jour.
 - La majeure partie du coût d'exécution ici est généralement la base de données et/ou la VM ou le cluster de fichiers/cache partagé. Ils ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de Calibre-Web alors qu'une autre application partage le projet n'économise que la partie calcul de Calibre-Web.

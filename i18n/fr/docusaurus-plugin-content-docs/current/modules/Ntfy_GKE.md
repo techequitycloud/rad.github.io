@@ -3,7 +3,7 @@ title: "Ntfy sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Ntfy sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ntfy_GKE.md @ 1665a43e sha256:c7219d9a0031 -->
+<!-- translated-from: docs/modules/Ntfy_GKE.md @ 60462a86 sha256:ee45f864eaf7 -->
 
 # Ntfy sur GKE Autopilot {#ntfy-on-gke-autopilot}
 
@@ -26,7 +26,7 @@ reportez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les 
 
 ## Ce que coûte Ntfy sur RAD, et comment cela se compare {#what-ntfy-costs-on-rad-and-how-that-compares}
 
-**Le module Ntfy sur GKE Autopilot de RAD coûte environ 40 à 113 US$ par mois, les frais de module étant facturés une seule fois en crédits RAD.** GKE Autopilot convient à Ntfy qui doit rester opérationnel, s'adapter à travers les pods ou fonctionner aux côtés d'autres charges de travail Kubernetes ; pour le coût le plus bas, le [module Cloud Run](Ntfy_CloudRun.md) exécute le même Ntfy pour environ 51 US$ par mois. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 US$) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Le module Ntfy sur GKE Autopilot de RAD coûte environ 40 à 113 US$ par mois, les frais de module étant facturés une seule fois en crédits RAD.** GKE Autopilot convient à Ntfy qui doit rester opérationnel, s'adapter à travers les pods ou fonctionner aux côtés d'autres charges de travail Kubernetes ; pour le coût le plus bas, le [module Cloud Run](Ntfy_CloudRun.md) exécute le même Ntfy pour environ 51 US$ par mois. Si vous n'en avez besoin qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -36,9 +36,11 @@ trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4 US$ au prix de la recharge) | 36 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **40 US$ par mois** pour la configuration par défaut (tableau ci-dessous) — plus si ce n'est pas votre seul cluster Autopilot | Mesuré à l'heure en crédits ; RAD publie **63 crédits par jour**, environ 1 890 par mois (environ 189 US$ au prix de la recharge, 151 US$ au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 US$ pour une recharge unique, et moins sur un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par chaque application du projet, de sorte qu'une deuxième application n'ajoute pas un deuxième ensemble de ceux-ci.
 
@@ -79,15 +81,14 @@ saisonnier — que de le faire fonctionner en continu.
   pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend. Contrairement
   à la suppression d'un module, cela ne démantèle pas le cluster ou la ressource de calcul
   un par un — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer.
   RAD demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande de
   lancer **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été
   individuellement détruit, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une
-  reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela coûte environ une poignée de crédits (moins de 1 US$) au
-  total pour une chaîne de déploiement typique de 2-3.
+  reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 40 US$.** Déployez Ntfy, utilisez-le
   pendant un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Update, et
-  supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, les builds, et le temps
+  supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, et le temps
   pendant lequel Ntfy était réellement actif.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet que vous apportez et dont RAD ne gère que la facturation),
   et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement.
@@ -107,8 +108,7 @@ L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre p
 passée, la façon d'arrêter de payer est de supprimer le déploiement et de le déployer à nouveau lorsque vous
 en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds : environ 45
-  crédits (4,50 US$) dans votre propre projet, ou 41
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 40 crédits (4,00 US$) dans votre propre projet, ou 36
   crédits dans un projet géré par RAD. La suppression permet d'économiser de l'argent une fois que Ntfy resterait autrement inutilisé pendant
   environ 3 jours ou plus dans votre propre projet (environ 1,34 US$ par
   jour), ou environ 1 jour ou plus dans un projet géré par RAD (63 crédits par

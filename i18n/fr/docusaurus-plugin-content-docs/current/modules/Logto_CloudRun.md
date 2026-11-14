@@ -3,7 +3,7 @@ title: "Logto sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Logto sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Logto_CloudRun.md @ 1665a43e sha256:28e5b224c36e -->
+<!-- translated-from: docs/modules/Logto_CloudRun.md @ 60462a86 sha256:97a291446830 -->
 
 # Logto sur Google Cloud Run {#logto-on-google-cloud-run}
 
@@ -32,11 +32,11 @@ répéter ici.
 **Le module Cloud Run de Logto sur RAD coûte environ 110 $ US par mois dans votre
 propre projet, sans frais par utilisateur ou par MAU.** RAD facture 175 crédits
 une fois par déploiement dans votre propre projet (157,5 crédits, soit 10 % de
-moins, dans un projet géré par RAD), plus le temps de build. Logto se déploie
+moins, dans un projet géré par RAD) ; les builds sont inclus dans le prix. Logto se déploie
 également sur GKE Autopilot pour environ 150 $ US par mois — consultez le
 [guide GKE](Logto_GKE.md) si vous en avez besoin pour qu'il s'exécute là-bas.
 Si vous n'en avez besoin qu'occasionnellement, un projet géré par RAD peut être
-supprimé et restauré dans les 30 jours pour quelques crédits, de sorte que ce
+supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ce
 chiffre mensuel devient quelques dollars au lieu de 110 $ US — voir **Mettez-le
 en pause gratuitement**, ci-dessous.
 
@@ -45,7 +45,7 @@ en pause gratuitement**, ci-dessous.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **110 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **49 crédits par jour**, soit environ 1 470 par mois (environ 147,00 $ US au prix de la recharge, moins avec un abonnement) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est détenu en réserve |
 
@@ -103,17 +103,14 @@ intermittente — que de le faire fonctionner en continu.
   qu'il attend. Contrairement à la suppression d'un module, cela ne détruit
   pas la base de données, aucune VM ou la ressource de calcul une par une —
   l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les
+- **La restauration est une vérification, pas une reconstruction.** Dans les
   30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google
   de restaurer le projet et de rattacher son compte de facturation, puis vous
   demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout
   est revenu. Comme rien n'a été détruit individuellement, cette mise à jour
   trouve les mêmes ressources déjà présentes — c'est une vérification, pas une
   reconstruction, et une mise à jour ne facture jamais à nouveau les frais de
-  module. Pour Logto derrière Services_GCP (une petite VM NFS/cache, une base
-  de données Postgres) et Project_GCP, cela représente environ **une poignée
-  de crédits (moins de 1 $ US)** au total, contre environ 180 crédits (18,00 $
-  US) que coûte un redéploiement complet.
+  module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
   pas 110 $ US.** Déployez Logto, utilisez-le un certain temps, supprimez le
   projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez
@@ -146,8 +143,7 @@ propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter
 de payer est de supprimer le déploiement et de le redéployer lorsque vous en
 avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les
-  builds — environ 180 crédits (18,00 $ US) au total. La suppression ne permet
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) — 175 crédits (17,50 $ US) au total. La suppression ne permet
   d'économiser de l'argent que si Logto reste inutilisé assez longtemps pour
   compenser ce coût de redéploiement par rapport à son propre coût de
   fonctionnement — environ **5 jours ou plus**, à la fois dans votre propre

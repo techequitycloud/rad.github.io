@@ -3,7 +3,7 @@ title: "Module Stalwart GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Stalwart sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Stalwart_GKE.md @ 1665a43e sha256:02e55a404a34 -->
+<!-- translated-from: docs/modules/Stalwart_GKE.md @ 60462a86 sha256:ae3f967ec812 -->
 
 # Module Stalwart GKE — Guide de configuration {#stalwart-gke-module--configuration-guide}
 
@@ -19,16 +19,18 @@ La plupart des options de configuration dans `Stalwart GKE` correspondent direct
 
 ## Ce que coûte Stalwart sur RAD, et comment cela se compare {#what-stalwart-costs-on-rad-and-how-that-compares}
 
-**Stalwart sur le module GKE Autopilot de RAD coûte environ 110,13 US$ par mois dans un projet Google Cloud que vous possédez, avec les frais de module facturés une seule fois en crédits RAD.** Il n'y a pas de variante Cloud Run — les protocoles de messagerie nécessitent les ports TCP de longue durée que Cloud Run ne peut pas transférer — GKE Autopilot est donc la seule façon dont RAD déploie Stalwart. Si vous n'avez besoin d'un serveur de messagerie qu'occasionnellement — pour des tests, un cours, un projet de courte durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 US$) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Stalwart sur le module GKE Autopilot de RAD coûte environ 110,13 US$ par mois dans un projet Google Cloud que vous possédez, avec les frais de module facturés une seule fois en crédits RAD.** Il n'y a pas de variante Cloud Run — les protocoles de messagerie nécessitent les ports TCP de longue durée que Cloud Run ne peut pas transférer — GKE Autopilot est donc la seule façon dont RAD déploie Stalwart. Si vous n'avez besoin d'un serveur de messagerie qu'occasionnellement — pour des tests, un cours, un projet de courte durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 US$ au prix de la recharge) | 99 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **110,13 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **99 crédits par jour**, soit environ 2 970 par mois |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est détenu en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 US$ pour une recharge unique, et moins pour un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas un deuxième ensemble de ces éléments.
 
@@ -56,7 +58,7 @@ Si Stalwart s'exécute dans un projet géré par RAD pour vous, la suppression d
 
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Cela ne coûte qu'une poignée de crédits (moins de 1 US$) au total pour une chaîne de déploiement typique de 2-3.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
@@ -64,7 +66,7 @@ Un véritable écart : les sauvegardes nocturnes sont écrites dans un bucket à
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet, ou une fois la fenêtre de restauration de 30 jours passée, l'alternative est de supprimer Stalwart purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module, plus les builds — environ 115 crédits (environ 11,50 US$) dans votre propre projet, ou 104 crédits dans un projet géré par RAD.
+Dans votre propre projet, ou une fois la fenêtre de restauration de 30 jours passée, l'alternative est de supprimer Stalwart purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 110 crédits (11,00 US$) dans votre propre projet, ou 99 crédits dans un projet géré par RAD.
 
 La suppression ne permet d'économiser de l'argent que si Stalwart devait rester inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution quotidien — par rapport au total du projet ci-dessus (environ 3,67 US$ par jour), cela représente environ 4 jours ou plus, ou environ 2 jours ou plus dans un projet géré par RAD (99 crédits par jour). La majeure partie du coût d'exécution ici est la base de données et le serveur de fichiers NFS ; ils ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de Stalwart pendant que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
 

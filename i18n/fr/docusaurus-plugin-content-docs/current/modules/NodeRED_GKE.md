@@ -3,7 +3,7 @@ title: "Node-RED sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Node-RED sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/NodeRED_GKE.md @ 1665a43e sha256:fb81ab2f64cd -->
+<!-- translated-from: docs/modules/NodeRED_GKE.md @ 60462a86 sha256:8154c5785e15 -->
 
 # Node-RED sur GKE Autopilot {#node-red-on-gke-autopilot}
 
@@ -35,7 +35,7 @@ pour le coût le plus bas, le [module Cloud Run](NodeRED_CloudRun.md) exécute l
 même NodeRED pour environ 31 $ US par mois. Si vous n'en avez besoin
 qu'occasionnellement — une démo, un projet saisonnier, quelque chose que vous
 évaluez — un projet géré par RAD peut être supprimé et restauré dans les 30
-jours pour une poignée de crédits (moins de 1 $ US) au lieu de payer pour qu'il
+jours sans frais supplémentaires au lieu de payer pour qu'il
 reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les
 chiffres sont ceux du 8 octobre 2026 ; les sources sont listées à la fin de
 cette section.
@@ -48,9 +48,11 @@ licence par utilisateur. Vous payez pour trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4 $ US au prix de la recharge) | 36 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Le même |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **37 $ US par mois** pour la configuration par défaut (tableau ci-dessous) — plus si ce n'est pas votre seul cluster Autopilot | Mesuré à l'heure en crédits ; RAD publie **61 crédits par jour**, environ 1 830 par mois (environ 183 $ US au prix de la recharge, 146 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins pour un plan
 mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers
@@ -108,15 +110,14 @@ en continu.
   qu'il attend. Contrairement à la suppression d'un module, cela ne détruit pas
   la VM, le cluster ou la ressource de calcul un par un — l'ensemble du projet,
   et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les
+- **La restauration est une vérification, pas une reconstruction.** Dans les
   30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google
   de restaurer le projet et de rattacher son compte de facturation, puis vous
   demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer
   que tout est revenu. Comme rien n'a été détruit individuellement, cette mise
   à jour trouve les mêmes ressources déjà présentes — c'est une vérification,
   pas une reconstruction, et une mise à jour ne facture plus jamais les frais
-  de module. Cela coûte environ une poignée de crédits (moins de 1 $ US) au
-  total pour une chaîne typique de 2-3 déploiements.
+  de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
   pas 37 $ US.** Déployez NodeRED, utilisez-le pendant un certain temps,
   supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin,
@@ -148,8 +149,7 @@ propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter
 payer est de supprimer le déploiement et de le redéployer lorsque vous en avez
 besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les
-  builds : environ 45 crédits (4,50 $ US) dans votre propre projet, ou 41
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 40 crédits (4,00 $ US) dans votre propre projet, ou 36
   crédits dans un projet géré par RAD. La suppression permet d'économiser de
   l'argent une fois que NodeRED resterait inutilisé pendant environ 4 jours ou
   plus dans votre propre projet (environ 1,25 $ US par jour), ou environ 1 jour

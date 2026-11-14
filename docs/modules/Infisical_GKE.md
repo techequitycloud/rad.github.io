@@ -32,7 +32,7 @@ rather than repeating them here.
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 175 credits (US$17.50) | 157.5 credits (10% lower) |
-| Build time | A few credits per build | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$142.62 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **108 credits a day** |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
@@ -83,8 +83,7 @@ Restoring, within 30 days and only by the project's owner, asks Google to undele
 project and reattaches its billing account, then asks you to run Update on each deployment
 to confirm everything came back. Because nothing was individually destroyed, that Update
 finds the same resources already there — it is a check, not a rebuild, and an Update never
-charges the module fee again. This costs only a handful of credits (under US$1) in build time
-for a typical chain of deployments.
+charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 
 What this needs: you must own the project (not one RAD only manages billing for), you must
 restore it yourself within 30 days — after that Google deletes it for good — and restoring is
@@ -101,8 +100,7 @@ delete the project, even though the project itself is recoverable for 30 days. I
 In your own project, or once the 30-day window above has passed, the fallback is to delete
 Infisical outright and redeploy it later.
 
-- **What a redeploy costs:** the module fee again, plus the builds — roughly the module fee
-  shown above plus 3–6 credits of build time.
+- **What a redeploy costs:** the module fee again (builds are included) — the module fee shown above.
 - **When it's worth it:** deleting saves money only once Infisical would otherwise sit unused
   for about 4 days or more in your own project (about 2 days or more in a RAD-managed one). The database and NFS file server are most of the running cost here, so deleting Infisical alone saves the whole bill above unless something else in the project shares them.
 - **Keep data first.** Nightly backups are written to a bucket inside the deployment, and

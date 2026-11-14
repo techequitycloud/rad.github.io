@@ -3,7 +3,7 @@ title: "PhpMyAdmin sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de PhpMyAdmin sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/PhpMyAdmin_GKE.md @ 1665a43e sha256:2b1557b327d6 -->
+<!-- translated-from: docs/modules/PhpMyAdmin_GKE.md @ 60462a86 sha256:7d8eb81b820c -->
 
 # PhpMyAdmin sur GKE Autopilot {#phpmyadmin-on-gke-autopilot}
 
@@ -28,15 +28,17 @@ répéter ici.
 
 ## Ce que coûte PhpMyAdmin sur RAD, et comment cela se compare {#what-phpmyadmin-costs-on-rad-and-how-that-compares}
 
-**L'exécution de PhpMyAdmin dans votre propre projet Google Cloud coûte environ 24,04 US$/mois en infrastructure, plus des frais de module uniques de 40 crédits RAD** (dimensionnés à 0,5 vCPU / 0,5 GiB sur les pods GKE Autopilot). RAD facture les frais de module une seule fois, au moment du déploiement — jamais plus lors d'une mise à jour — plus le temps de build mesuré en crédits ; l'utilisation de Google Cloud elle-même est facturée à votre propre compte de facturation au prix catalogue de Google. Sur un projet **géré par RAD**, les mêmes ressources sont mesurées toutes les heures en crédits au prix catalogue plus la marge de RAD — environ 55 crédits/jour — et les frais de module sont inférieurs de 10 %, soit 36 crédits. Voir "Mettez-le en pause gratuitement" ci-dessous pour savoir comment un déploiement PhpMyAdmin géré par RAD peut être arrêté, sans frais d'exécution, jusqu'à ce que vous en ayez à nouveau besoin. (ou consultez le [guide Cloud Run](PhpMyAdmin_CloudRun.md) pour l'option à moindre coût)
+**L'exécution de PhpMyAdmin dans votre propre projet Google Cloud coûte environ 24,04 US$/mois en infrastructure, plus des frais de module uniques de 40 crédits RAD** (dimensionnés à 0,5 vCPU / 0,5 GiB sur les pods GKE Autopilot). RAD facture les frais de module une seule fois, au moment du déploiement — jamais plus lors d'une mise à jour — et les builds sont inclus dans le prix ; l'utilisation de Google Cloud elle-même est facturée à votre propre compte de facturation au prix catalogue de Google. Sur un projet **géré par RAD**, les mêmes ressources sont mesurées toutes les heures en crédits au prix catalogue plus la marge de RAD — environ 55 crédits/jour — et les frais de module sont inférieurs de 10 %, soit 36 crédits. Voir "Mettez-le en pause gratuitement" ci-dessous pour savoir comment un déploiement PhpMyAdmin géré par RAD peut être arrêté, sans frais d'exécution, jusqu'à ce que vous en ayez à nouveau besoin. (ou consultez le [guide Cloud Run](PhpMyAdmin_CloudRun.md) pour l'option à moindre coût)
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | Article | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 40 crédits (une fois) | 36 crédits (une fois) |
-| Temps de build | ~3-6 crédits, mesurés par minute de build | idem, mesurés en crédits au prix catalogue + marge de RAD |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | ~24,04 US$/mois, facturés à votre propre compte de facturation au prix catalogue de Google | ~55 crédits/jour, mesurés toutes les heures au prix catalogue + marge de RAD |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 **Coût d'exécution par défaut dans votre propre projet**
 
@@ -75,9 +77,7 @@ facturation, puis vous demande d'exécuter Update sur chaque déploiement pour
 confirmer que tout est revenu. Parce que rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà présentes :
 c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais à nouveau les frais de module. L'ensemble de la restauration ne coûte
-qu'une poignée de crédits (moins de 1 US$) en temps de build pour une chaîne de
-déploiements typique. Ce qu'il faut : vous devez être propriétaire du projet (pas
+jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Ce qu'il faut : vous devez être propriétaire du projet (pas
 seulement faire gérer sa facturation par RAD), vous devez le restaurer vous-même
 dans les 30 jours — après cela, Google le supprime définitivement — et la
 restauration est admise comme la création d'un nouveau projet, de sorte que
@@ -101,7 +101,7 @@ d'importance.
 L'autre levier, pour un **propre projet** (ou un projet géré par RAD au-delà de
 sa fenêtre de restauration de 30 jours), consiste à supprimer PhpMyAdmin
 purement et simplement et à le redéployer plus tard. Un redéploiement coûte à
-nouveau les frais de module plus les builds — environ **43-46 crédits** au total
+nouveau les frais de module (les builds sont inclus) — 40 crédits au total
 pour ce module.
 
 La suppression ne permet d'économiser de l'argent que si PhpMyAdmin devait

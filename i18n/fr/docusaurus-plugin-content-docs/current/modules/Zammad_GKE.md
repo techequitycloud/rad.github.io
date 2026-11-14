@@ -3,7 +3,7 @@ title: "Zammad sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Zammad sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Zammad_GKE.md @ 1665a43e sha256:04efcc4df68a -->
+<!-- translated-from: docs/modules/Zammad_GKE.md @ 60462a86 sha256:78dbbe042aa0 -->
 
 # Zammad sur GKE Autopilot {#zammad-on-gke-autopilot}
 
@@ -42,7 +42,7 @@ moins coûteuse.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 300 crédits | 270 crédits (10 % de moins) |
-| Temps de build | ~3-6 crédits par build, dans les deux cas | ~3-6 crédits par build, dans les deux cas |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | 149,81 $/mois, facturé par Google au prix catalogue | ~111 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
 **Coût d'exécution par défaut dans votre propre projet**
@@ -99,8 +99,7 @@ puis vous demande d'exécuter Update sur chaque déploiement pour confirmer que 
 est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour
 trouve les mêmes ressources déjà là — c'est une vérification, pas une
 reconstruction, et une mise à jour ne facture plus jamais les frais de module.
-Cela ne coûte qu'une poignée de crédits (moins de 1 $ US) au total pour une chaîne
-de déploiement typique de 2-3.
+Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un projet dont RAD gère
 uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours
@@ -125,8 +124,7 @@ n'a pas d'importance.
 Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un projet
 géré par RAD, il n'y a pas de pause gratuite — la suppression supprime les
 ressources pour de bon, et le retour de Zammad signifie un redéploiement à partir
-de zéro. Cela coûte environ 303-306 crédits (les frais de module de 300 crédits
-plus un build).
+de zéro. Cela coûte 300 crédits (les frais de module ; les builds sont inclus).
 
 La suppression ne permet d'économiser de l'argent que si Zammad reste inutilisé
 assez longtemps pour compenser ce coût de redéploiement par rapport à son propre

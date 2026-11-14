@@ -3,7 +3,7 @@ title: "Dolibarr sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Dolibarr sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Dolibarr_CloudRun.md @ 1665a43e sha256:a60b83c2a101 -->
+<!-- translated-from: docs/modules/Dolibarr_CloudRun.md @ 60462a86 sha256:2d3b01cbe8d1 -->
 
 # Dolibarr sur Google Cloud Run {#dolibarr-on-google-cloud-run}
 
@@ -28,16 +28,18 @@ VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-v
 
 **Dolibarr sur le module Cloud Run de RAD coûte environ 83,61 $ US par mois sans licence par utilisateur.** Cela se compare à environ 140 € par mois (10 utilisateurs) sur le plan Basic de DoliCloud, ou 180 € par mois sur son plan Premium. Un serveur auto-géré est moins cher en espèces, mais vous gérez alors vous-même la base de données, les sauvegardes, les correctifs de sécurité et les mises à niveau. GKE Autopilot convient à Dolibarr qui doit rester actif en permanence ou s'adapter à travers les pods ; pour le coût le plus bas, ce module Cloud Run vous offre déjà l'option la moins chère — voir le [guide GKE](Dolibarr_GKE.md) si vous avez besoin de l'autre. Les chiffres sont au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour étudier, une démo, une activité saisonnière — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits, de sorte que les 83,61 $ US deviennent quelques dollars par mois à la place. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour étudier, une démo, une activité saisonnière — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les 83,61 $ US deviennent quelques dollars par mois à la place. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet que RAD gère pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 $ US au prix de la recharge) | 99 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **83,61 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **32 crédits par jour**, soit environ 960 par mois (environ 96 $ US au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins sur un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
 
@@ -78,16 +80,14 @@ saisonnière — que de le faire fonctionner en continu.
   pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend. Contrairement à
   la suppression d'un module, cela ne supprime pas Cloud SQL, la VM NFS ou Cloud Run un par un — l'ensemble du projet,
   et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet
   peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation,
   puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Parce que
   rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est
-  une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela coûte **une
-  poignée de crédits (moins de 1 $ US)** au total pour une chaîne de déploiement de taille Dolibarr typique, contre
-  les 104 crédits (10,35 $ US) que coûte un redéploiement complet.
+  une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 83,61 $ US.** Déployez Dolibarr, utilisez-le
   pendant un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Update, et
-  supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, les builds, et
+  supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, et
   les heures pendant lesquelles Dolibarr a été réellement actif.
 - **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que vous apportez et dont RAD ne gère
   que la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime
@@ -107,8 +107,7 @@ Cloud Run s'adapte déjà à zéro entre les requêtes. L'option ci-dessus ne s'
 une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le déploiement et de le déployer
 à nouveau lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds : environ 114 crédits
-  (11,45 $ US), et environ une heure, car RAD recrée le projet et les services partagés avant Dolibarr. La suppression permet d'économiser de l'argent une fois que Dolibarr resterait autrement inutilisé
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 $ US), et environ une heure, car RAD recrée le projet et les services partagés avant Dolibarr. La suppression permet d'économiser de l'argent une fois que Dolibarr resterait autrement inutilisé
   pendant environ **4 jours ou plus** dans votre propre projet (environ 2,79 $ US par jour), ou environ
   **3 jours ou plus** dans un projet géré par RAD (32 crédits par jour).
 - **Supprimez tout ce que Dolibarr utilise.** La majeure partie du coût de fonctionnement est la base de données et la VM NFS/cache. Elles ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc les supprimer pendant que quelque chose d'autre partage le projet ne sauve que la partie calcul de Dolibarr.

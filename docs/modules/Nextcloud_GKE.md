@@ -23,7 +23,7 @@ IAP, Binary Authorization, VPC Service Controls, backups, and the deployment lif
 
 ## What Nextcloud costs on RAD, and how that compares
 
-**Nextcloud on RAD's GKE Autopilot module costs about US$150–223 a month, with the module fee charged once in RAD credits.** GKE Autopilot suits Nextcloud that must stay up, scale across pods or run beside other Kubernetes workloads; for the lowest cost, the [Cloud Run module](Nextcloud_CloudRun.md) runs the same Nextcloud for about US$102 a month. If you only need it occasionally — a demo, a seasonal project, something you're evaluating — a RAD-managed project can be deleted and restored within 30 days for a handful of credits (under US$1) instead of paying for it to sit idle. See **Pause it for free**, below. Figures are as at 8 October 2026; sources are listed at the end of this section.
+**Nextcloud on RAD's GKE Autopilot module costs about US$150–223 a month, with the module fee charged once in RAD credits.** GKE Autopilot suits Nextcloud that must stay up, scale across pods or run beside other Kubernetes workloads; for the lowest cost, the [Cloud Run module](Nextcloud_CloudRun.md) runs the same Nextcloud for about US$102 a month. If you only need it occasionally — a demo, a seasonal project, something you're evaluating — a RAD-managed project can be deleted and restored within 30 days at no extra charge instead of paying for it to sit idle. See **Pause it for free**, below. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
 ### What you pay on RAD
 
@@ -33,7 +33,7 @@ three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 300 credits (US$30 at the top-up price) | 270 credits (10% lower) |
-| Build time | About 3-6 credits per build | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$150 a month** for the default configuration (table below) — more if this isn't your only Autopilot cluster | Metered hourly in credits; RAD publishes **115 credits a day**, about 3,450 a month (about US$345 at the top-up price, US$276 at the Scale plan's rate) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
@@ -71,15 +71,14 @@ project — far better than running it continuously.
   for 30 days. Because billing is already unlinked, nothing is charged while it waits. Unlike
   deleting one module, this does not tear down the database, the VM, the cluster or the compute resource
   one by one — the whole project, and everything in it, simply stops.
-- **Restoring costs a few credits, not a rebuild.** Within 30 days, the project's owner can restore
+- **Restoring is a check, not a rebuild.** Within 30 days, the project's owner can restore
   it. RAD asks Google to undelete the project and reattaches its billing account, then asks you to
   run **Update** on each deployment to confirm everything came back. Because nothing was
   individually destroyed, that Update finds the same resources already there — it is a check, not a
-  rebuild, and an Update never charges the module fee again. That costs roughly a handful of credits (under US$1) in
-  total for a typical 2-3-deployment chain.
+  rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 - **So a month of occasional use can cost a few dollars, not US$150.** Deploy Nextcloud, use
   it for a while, delete the project. Restore it next time you want it, confirm with Update, and
-  delete it again when you're done. You pay only for the module fee once, the builds, and whatever
+  delete it again when you're done. You pay only for the module fee once and whatever
   time Nextcloud was actually live.
 - **What this needs.** You must own the project (not a bring-your-own one RAD only manages billing
   for), and you restore it yourself within the 30 days — after that, Google deletes it for good.
@@ -99,8 +98,7 @@ The option above only applies to a RAD-managed project; **in your own project, o
 window has passed, the way to stop paying is to delete the deployment and deploy it again when you
 need it.**
 
-- **What a redeploy costs.** The module fee again plus the builds: about 305
-  credits (US$30.50) in your own project, or 275
+- **What a redeploy costs.** The module fee again (builds are included): 300 credits (US$30.00) in your own project, or 270
   credits in a RAD-managed one. Deleting saves money once Nextcloud would otherwise sit unused for
   about 6 days or more in your own project (about US$4.99 a
   day), or about 2 days or more in a RAD-managed one (115 credits a

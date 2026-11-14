@@ -29,8 +29,7 @@ backups, security patches and upgrades yourself. Figures are as at 8 October 202
 are listed at the end of this section.
 
 If you only need it occasionally — studying for a certification, a demo, a seasonal
-business — a RAD-managed project can be deleted and restored within 30 days for a few
-credits, so that US$84 becomes a few dollars a month instead. See **Pause it for free**,
+business — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that US$84 becomes a few dollars a month instead. See **Pause it for free**,
 below.
 
 ### What you pay on RAD
@@ -41,9 +40,11 @@ fee per user. You pay for three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 110 credits (US$11 at the top-up price) | 99 credits (10% lower) |
-| Build time | About 3 credits per build (an Odoo build takes about 27 minutes) | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$84 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **32 credits a day**, about 960 a month (about US$96 at the top-up price, US$77 at the Scale plan's rate) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages,
 the database, file server and network are shared by every application in the project, so a
@@ -115,16 +116,15 @@ environment, a seasonal business — far better than running it continuously.
   for 30 days. Because billing is already unlinked, nothing is charged while it waits. Unlike
   deleting one module, this does not tear down Cloud SQL, the VM or Cloud Run one by one — the
   whole project, and everything in it, simply stops.
-- **Restoring costs a few credits, not a rebuild.** Within 30 days, the project's owner can
+- **Restoring is a check, not a rebuild.** Within 30 days, the project's owner can
   restore it. RAD asks Google to undelete the project and reattaches its billing account, then
   asks you to run **Update** on each deployment to confirm everything came back. Because nothing
   was individually destroyed, that Update finds the same resources already there — it is a check,
   not a rebuild, and an Update never charges the module fee again. For Odoo on Cloud Run behind a
-  small Services_GCP and Project_GCP, that is about **7 credits in total (under US$1)**, against
-  the 120 credits a full redeploy costs.
+  small Services_GCP and Project_GCP, that normally costs **no credits**, since updates are included in the price (5 a month for each deployment), against the 120 credits a full redeploy costs.
 - **So a month of occasional use can cost a few dollars, not US$84.** Deploy Odoo, use it for an
   evening, delete the project. Restore it next time you want it, confirm with Update, and delete
-  it again when you're done. You pay only for the module fee once, the builds, and whatever hours
+  it again when you're done. You pay only for the module fee once and whatever hours
   Odoo was actually live.
 - **What this needs.** You must own the project (not a bring-your-own one RAD only manages
   billing for), and you restore it yourself within the 30 days — after that, Google deletes it
@@ -145,7 +145,7 @@ Cloud Run already scales to zero between requests. The option above only applies
 RAD-managed project; **in your own project, or once the 30-day window has passed, the way to
 stop paying is to delete the deployment and deploy it again when you need it.**
 
-- **What a redeploy costs.** The module fee again plus the builds: about 120 credits (US$12)
+- **What a redeploy costs.** The module fee again (builds are included): 110 credits (US$11.00)
   and about an hour, because RAD recreates the project and shared services before Odoo.
   Deleting saves money if Odoo would otherwise sit unused for about four days or more, both in
   your own project (about US$2.80 a day) and in a RAD-managed one (32 credits a day).

@@ -3,7 +3,7 @@ title: "AFFiNE sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'AFFiNE sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Affine_CloudRun.md @ 1665a43e sha256:8556645baf74 -->
+<!-- translated-from: docs/modules/Affine_CloudRun.md @ 60462a86 sha256:a0b91a49dfae -->
 
 # AFFiNE sur Google Cloud Run {#affine-on-google-cloud-run}
 
@@ -19,7 +19,7 @@ Ce guide se concentre sur les services cloud qu'AFFiNE utilise et sur la manièr
 
 **AFFiNE sur le module Cloud Run de RAD coûte environ 181 US$ par mois dans un projet que vous possédez, sans frais de licence pour le logiciel lui-même.** RAD facture des frais de module uniques de 300 crédits (30 US$ au prix de la recharge) dans un projet que vous possédez, et 270 crédits (10 % de moins) dans un projet géré par RAD. Si AFFiNE doit fonctionner en continu sur plusieurs pods ou à côté d'autres charges de travail Kubernetes, consultez plutôt le [guide GKE](Affine_GKE.md). Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits, de sorte que les quelque 181 US$ par mois deviennent presque nuls. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les quelque 181 US$ par mois deviennent presque nuls. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -28,7 +28,7 @@ Vous payez trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 300 crédits (30 US$ au prix de la recharge) | 270 crédits (10 % de moins) |
-| Temps de build | Quelques crédits, facturés à la minute de temps de build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ 181 US$ par mois pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **83 crédits par jour**, environ 2 490 par mois (environ 249 US$ au prix de la recharge, 199 US$ au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
@@ -58,7 +58,7 @@ Si AFFiNE s'exécute dans **un projet géré par RAD pour vous**, vous avez une 
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
 - **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet purement et simplement. Google ne le supprime pas immédiatement : il conserve le projet, récupérable, pendant 30 jours, et comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend. Contrairement à la suppression d'un seul module, cela ne supprime pas la base de données, aucune VM ou la ressource de calcul une par une — l'ensemble du projet s'arrête simplement, et rien n'est facturé entre-temps.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30 jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits au total (moins de 1 US$), contre le paiement des frais de module et une reconstruction complète.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude et de démo conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
 - **Un véritable manque : les sauvegardes ne survivent pas.** Tout ce qu'AFFiNE écrit dans un bucket de sauvegarde à l'intérieur du projet est très probablement perdu dès que vous supprimez le projet, même si le projet lui-même est récupérable pendant 30 jours — ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée. Quiconque a personnalisé le déploiement et souhaite conserver ce travail doit copier une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de la supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
@@ -66,9 +66,8 @@ Si AFFiNE s'exécute dans **un projet géré par RAD pour vous**, vous avez une 
 
 C'est la solution de repli pour un projet que vous possédez, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée : **supprimez le déploiement et redéployez-le lorsque vous en aurez à nouveau besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les builds : environ
-  305 crédits (environ 30,50 US$) dans votre propre projet, ou
-  275 crédits dans un projet géré par RAD, car RAD reconstruit les ressources
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 300 crédits (30,00 US$) dans votre propre projet, ou
+  270 crédits dans un projet géré par RAD, car RAD reconstruit les ressources
   à partir de zéro. La suppression permet d'économiser de l'argent une fois qu'AFFiNE resterait inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution — environ 5 jours ou plus dans votre propre projet (6,03 US$/jour) ou 3 jours ou plus dans un projet géré par RAD (83 crédits/jour).
 - **La majeure partie du coût d'exécution est généralement l'infrastructure partagée.** La base de données et la VM de fichier ou de cache ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, de sorte que la suppression d'AFFiNE pendant qu'une autre application partage le projet n'économise que la partie calcul d'AFFiNE.
 - **Gardez vos données en premier.** Tout ce qu'AFFiNE écrit dans un bucket de sauvegarde à l'intérieur du déploiement est

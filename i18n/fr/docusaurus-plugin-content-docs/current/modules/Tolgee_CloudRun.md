@@ -3,7 +3,7 @@ title: "Tolgee sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Tolgee sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Tolgee_CloudRun.md @ 1665a43e sha256:1fa95efe0198 -->
+<!-- translated-from: docs/modules/Tolgee_CloudRun.md @ 60462a86 sha256:8a427f86d679 -->
 
 # Tolgee sur Google Cloud Run {#tolgee-on-google-cloud-run}
 
@@ -26,14 +26,14 @@ plutôt que de les répéter ici.
 
 ## Ce que coûte Tolgee sur RAD, et comment cela se compare {#what-tolgee-costs-on-rad-and-how-that-compares}
 
-**Le module Cloud Run de Tolgee sur RAD coûte environ 180,87 US$ par mois dans un projet Google Cloud que vous possédez, avec des frais de module uniques de 175 crédits (17,50 US$, ou 157,5 crédits dans un projet géré par RAD, soit 10 % de moins).** Cette configuration maintient le service en fonctionnement continu plutôt que de le mettre à l'échelle à zéro. GKE Autopilot est l'option la moins chère ; voir le [guide GKE](Tolgee_GKE.md), à environ 149,81 US$ par mois pour les mêmes frais de module. Si vous n'avez besoin de Tolgee qu'occasionnellement — une poussée de traduction avant une version, une évaluation avant de l'adopter — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 US$) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont ceux du 8 octobre 2026 ; les sources sont énumérées à la fin de cette section.
+**Le module Cloud Run de Tolgee sur RAD coûte environ 180,87 US$ par mois dans un projet Google Cloud que vous possédez, avec des frais de module uniques de 175 crédits (17,50 US$, ou 157,5 crédits dans un projet géré par RAD, soit 10 % de moins).** Cette configuration maintient le service en fonctionnement continu plutôt que de le mettre à l'échelle à zéro. GKE Autopilot est l'option la moins chère ; voir le [guide GKE](Tolgee_GKE.md), à environ 149,81 US$ par mois pour les mêmes frais de module. Si vous n'avez besoin de Tolgee qu'occasionnellement — une poussée de traduction avant une version, une évaluation avant de l'adopter — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont ceux du 8 octobre 2026 ; les sources sont énumérées à la fin de cette section.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 US$ au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **180,87 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **83 crédits par jour**, soit environ 2 490 par mois |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde acheté minimum est conservé en réserve |
 
@@ -62,7 +62,7 @@ Si Tolgee s'exécute dans un projet géré par RAD pour vous, la suppression de 
 
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture plus les frais de module. Cela ne coûte qu'une poignée de crédits (moins de 1 US$) au total pour une chaîne de déploiement typique de 2-3.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture plus les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
 
@@ -70,7 +70,7 @@ Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours est passée, l'alternative est de supprimer Tolgee purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module, plus les builds — environ 180 crédits (environ 18 US$) dans votre propre projet, ou 162,5 crédits dans un projet géré par RAD.
+Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours est passée, l'alternative est de supprimer Tolgee purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 175 crédits (17,50 US$) dans votre propre projet, ou 157,5 crédits dans un projet géré par RAD.
 
 La suppression ne permet d'économiser de l'argent que si Tolgee reste inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût de fonctionnement quotidien — par rapport au total du projet propre ci-dessus (environ 6,03 US$ par jour), cela représente environ 3 jours ou plus, ou environ 2 jours ou plus dans un projet géré par RAD (83 crédits par jour). La majeure partie du coût de fonctionnement ici est l'instance Cloud Run toujours active, plus la base de données et le serveur de fichiers NFS ; ils ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de Tolgee pendant que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
 

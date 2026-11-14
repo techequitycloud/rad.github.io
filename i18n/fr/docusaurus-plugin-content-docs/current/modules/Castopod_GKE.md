@@ -3,7 +3,7 @@ title: "Castopod sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Castopod sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Castopod_GKE.md @ 1665a43e sha256:9bad70d40136 -->
+<!-- translated-from: docs/modules/Castopod_GKE.md @ 60462a86 sha256:f564e78b76a4 -->
 
 # Castopod sur GKE Autopilot {#castopod-on-gke-autopilot}
 
@@ -34,7 +34,7 @@ facturé à **99 crédits par jour** (environ 2 970 par mois, soit environ 297 U
 prix de la recharge). Ou consultez le [guide Cloud Run](Castopod_CloudRun.md) pour
 l'option moins chère. Si vous n'avez besoin de Castopod qu'occasionnellement —
 études, démo, projet de courte durée — un projet géré par RAD peut être supprimé et
-restauré dans les 30 jours pour quelques crédits, de sorte que ce chiffre mensuel
+restauré dans les 30 jours sans frais supplémentaires, de sorte que ce chiffre mensuel
 devient quelques dollars. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
@@ -45,9 +45,11 @@ trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 US$ au prix de la recharge) | 99 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build (environ 3 à 6 crédits) | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **110 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **99 crédits par jour**, environ 2 970 par mois (environ 297 US$ au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 US$ en recharge unique, et moins avec un abonnement mensuel.
 Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau
@@ -108,9 +110,7 @@ par une : l'ensemble du projet s'arrête simplement.
   de rattacher son compte de facturation, puis d'exécuter **Mettre à jour** sur
   chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été
   détruit individuellement, cette mise à jour trouve les mêmes ressources déjà
-  présentes, et une mise à jour ne facture jamais les frais de module à nouveau. Pour
-  une chaîne typique de 2 à 3 déploiements, cela ne coûte qu'une poignée de crédits
-  au total (environ 5 à 10 crédits, moins de 1 US$).
+  présentes, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet
   dont RAD ne gère que la facturation), le restaurer vous-même dans les 30 jours —
   après quoi Google le supprime définitivement — et franchir à nouveau le seuil
@@ -134,9 +134,8 @@ Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jour
 ci-dessus est passée, la façon d'arrêter de payer est de supprimer le déploiement et
 de le redéployer lorsque vous en avez besoin.
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les builds
-  : environ 114 crédits (environ 11,40 US$) au prix de la recharge, et environ 15 à
-  20 minutes de temps de build (moyenne de la propre plateforme de RAD). La
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus)
+  : 110 crédits (11,00 US$) au prix de la recharge. La
   suppression ne permet d'économiser de l'argent que si Castopod devait rester
   inutilisé pendant environ **2 jours ou plus** — dans votre propre projet, cela
   représente environ 3,67 US$ par jour, et dans un projet géré par RAD, c'est 99

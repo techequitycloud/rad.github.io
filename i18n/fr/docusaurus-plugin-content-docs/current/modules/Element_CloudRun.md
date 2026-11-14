@@ -3,7 +3,7 @@ title: "Element sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Element sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Element_CloudRun.md @ 1665a43e sha256:5289e800aa37 -->
+<!-- translated-from: docs/modules/Element_CloudRun.md @ 60462a86 sha256:acf8e44d6529 -->
 
 # Element sur Google Cloud Run {#element-on-google-cloud-run}
 
@@ -46,7 +46,7 @@ cette section.
 
 Si vous n'en avez besoin qu'occasionnellement — pour étudier, une démo, une
 activité saisonnière — un projet géré par RAD peut être supprimé et restauré
-dans les 30 jours pour une poignée de crédits, de sorte que les 16,78 $ US
+dans les 30 jours sans frais supplémentaires, de sorte que les 16,78 $ US
 deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**,
 ci-dessous.
 
@@ -55,9 +55,11 @@ ci-dessous.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4 $ US au prix de la recharge) | 36 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Le même |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **16,78 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **3 crédits par jour**, environ 90 par mois (environ 9 $ US au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est détenu en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins pour un plan
 mensuel. Dans un projet géré par RAD, la base de données, le serveur de
@@ -104,21 +106,19 @@ fonctionner en continu.
   cette attente. Contrairement à la suppression d'un seul module, cela ne
   détruit pas Cloud Run ou son réseau un par un — l'ensemble du projet, et tout
   ce qu'il contient, s'arrête simplement.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.**
+- **La restauration est une vérification, pas une reconstruction.**
   Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à
   Google de restaurer le projet et de rattacher son compte de facturation, puis
   vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que
   tout est revenu. Comme rien n'a été détruit individuellement, cette mise à
   jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas
   une reconstruction, et une mise à jour ne facture jamais les frais de module
-  à nouveau. Cela coûte **une poignée de crédits (moins de 1 $ US)** au total
-  pour une chaîne de déploiement typique de la taille d'Element, contre les 40
-  crédits (4,05 $ US) qu'un redéploiement complet coûte.
+  à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
   pas 16,78 $ US.** Déployez Element, utilisez-le pendant un certain temps,
   supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin,
   confirmez avec Update, et supprimez-le à nouveau lorsque vous avez terminé.
-  Vous ne payez que les frais de module une seule fois, les builds, et les
+  Vous ne payez que les frais de module une seule fois, et les
   heures pendant lesquelles Element était réellement en ligne.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet que
   vous apportez et dont RAD ne gère que la facturation), et vous le restaurez
@@ -141,8 +141,7 @@ s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une
 fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de
 supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les
-  builds : environ 44 crédits (4,45 $ US), et environ une heure, car RAD
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 40 crédits (4,00 $ US), et environ une heure, car RAD
   recrée le projet et les services partagés avant Element. La suppression
   permet d'économiser de l'argent une fois qu'Element resterait inutilisé
   pendant environ **8 jours ou plus** dans votre propre projet (environ 0,56 $

@@ -3,7 +3,7 @@ title: "Payload CMS sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Payload CMS sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Payload_GKE.md @ 1665a43e sha256:98df14999ea4 -->
+<!-- translated-from: docs/modules/Payload_GKE.md @ 60462a86 sha256:e88baf6fb47c -->
 
 # Payload CMS sur GKE Autopilot {#payload-cms-on-gke-autopilot}
 
@@ -31,14 +31,14 @@ les répéter ici.
 
 **Pour une petite équipe, le module GKE Autopilot de Payload sur RAD coûte environ 107 $ US par mois, sans licence par utilisateur.** GKE convient à une application Payload qui doit rester disponible, s'adapter à travers les pods ou fonctionner aux côtés d'autres charges de travail Kubernetes. Pour un coût minimal, le [module Cloud Run](Payload_CloudRun.md) exécute le même Payload pour environ 84 $ US par mois. Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, une activité saisonnière — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour quelques crédits, de sorte que les 107 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, une activité saisonnière — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les 107 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Temps de build | Environ 19 crédits par build (un build moyen de RAD prend environ 19 minutes) | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **92 crédits par jour**, soit environ 2 760 crédits par mois (environ 276 $ US au prix de la recharge, 221 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
@@ -82,20 +82,17 @@ saisonnière — que l'exécution continue de Payload.
   déliée, rien n'est facturé pendant cette période d'attente. Contrairement à la suppression
   d'un seul module, cela ne détruit pas Cloud SQL, aucune VM ni le cluster GKE un par un —
   l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30 jours,
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours,
   le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et
   de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur
   chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit
   individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une
   vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de
-  module à nouveau. Cela coûte une poignée de crédits (moins de 1 $ US) pour une chaîne de
-  déploiement typique de 2 à 3 éléments, contre les 180 crédits (18 $ US) qu'un redéploiement
-  complet coûte ci-dessous.
+  module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 107 $ US.**
   Déployez Payload, utilisez-le un certain temps, supprimez le projet. Restaurez-le la
   prochaine fois que vous en avez besoin, confirmez avec Mettre à jour, et supprimez-le à
-  nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, les
-  builds, et le temps pendant lequel Payload a été réellement actif.
+  nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, et le temps pendant lequel Payload a été réellement actif.
 - **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que vous
   apportez et dont RAD ne gère que la facturation), et vous le restaurez vous-même dans les
   30 jours — après cela, Google le supprime définitivement. La restauration est admise comme
@@ -116,8 +113,7 @@ saisonnière — que l'exécution continue de Payload.
 
 GKE Autopilot ne se met pas à l'échelle à zéro entre les requêtes. L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds : environ 180
-  crédits (18 $ US), car RAD recrée le projet et les services partagés avant Payload. La
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 175 crédits (17,50 $ US), car RAD recrée le projet et les services partagés avant Payload. La
   suppression ne permet d'économiser de l'argent que si Payload devait rester inutilisé pendant
   environ 6 jours ou plus, à la fois dans votre propre projet (environ 3,55 $ US par jour) et
   dans un projet géré par RAD (92 crédits par jour).

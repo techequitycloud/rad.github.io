@@ -3,7 +3,7 @@ title: "Open WebUI sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'Open WebUI sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenWebUI_CloudRun.md @ 1665a43e sha256:6a0060522864 -->
+<!-- translated-from: docs/modules/OpenWebUI_CloudRun.md @ 60462a86 sha256:0f9323aae3bd -->
 
 # Open WebUI sur Google Cloud Run {#open-webui-on-google-cloud-run}
 
@@ -39,7 +39,7 @@ section.
 
 Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification,
 une démo, une activité saisonnière — un projet géré par RAD peut être supprimé
-et restauré dans les 30 jours pour quelques crédits, de sorte que ces 102 $ US
+et restauré dans les 30 jours sans frais supplémentaires, de sorte que ces 102 $ US
 deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**,
 ci-dessous.
 
@@ -48,9 +48,11 @@ ci-dessous.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 $ US au prix de la recharge) | 99 crédits (10 % de moins) |
-| Temps de build | Environ 19 crédits par build (le build moyen de RAD prend environ 19 minutes) | Identique |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **32 crédits par jour**, soit environ 960 crédits par mois (environ 96 $ US au prix de la recharge, 77 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge unique, et moins avec un plan
 mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers
@@ -114,21 +116,19 @@ l'exécution continue d'OpenWebUI.
   cette période d'attente. Contrairement à la suppression d'un seul module,
   cela ne détruit pas Cloud SQL, aucune VM ou Cloud Run un par un — l'ensemble
   du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte une poignée de crédits, pas un rebuild.** Dans les 30
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30
   jours, le propriétaire du projet peut le restaurer. RAD demande à Google de
   réactiver le projet et de rattacher son compte de facturation, puis vous
   demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout
   est revenu. Comme rien n'a été détruit individuellement, cette mise à jour
   trouve les mêmes ressources déjà présentes — c'est une vérification, pas un
   rebuild, et une mise à jour ne facture jamais les frais de module à nouveau.
-  Cela coûte une poignée de crédits (moins de 1 $ US) pour une chaîne typique
-  de 2 à 3 déploiements, contre les 115 crédits (11,50 $ US) qu'un redéploiement
-  complet coûte ci-dessous.
+Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
   pas 102 $ US.** Déployez OpenWebUI, utilisez-le pendant un certain temps,
   supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin,
   confirmez avec Update, et supprimez-le à nouveau lorsque vous avez terminé.
-  Vous ne payez les frais de module qu'une seule fois, les builds, et le temps
+  Vous ne payez les frais de module qu'une seule fois, et le temps
   pendant lequel OpenWebUI était réellement actif.
 - **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un
   projet que vous apportez et dont RAD ne gère que la facturation), et vous le
@@ -158,8 +158,7 @@ projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de pay
 est de supprimer le déploiement et de le redéployer lorsque vous en avez
 besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les
-  builds : environ 115 crédits (11,50 $ US), car RAD recrée le projet et les
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 $ US), car RAD recrée le projet et les
   services partagés avant OpenWebUI. La suppression ne permet d'économiser de
   l'argent que si OpenWebUI devait rester inutilisé pendant environ 4 jours ou
   plus, à la fois dans votre propre projet (environ 3,40 $ US par jour) et dans

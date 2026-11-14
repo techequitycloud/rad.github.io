@@ -3,7 +3,7 @@ title: "Odoo sur Cloud Run"
 description: "Référence de configuration pour le déploiement d'Odoo sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Odoo_CloudRun.md @ 1665a43e sha256:437df9629add -->
+<!-- translated-from: docs/modules/Odoo_CloudRun.md @ 60462a86 sha256:6c546ea62ce8 -->
 
 # Odoo sur Cloud Run {#odoo-on-cloud-run}
 
@@ -35,7 +35,7 @@ ceux du 8 octobre 2026 ; les sources sont énumérées à la fin de cette sectio
 
 Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une
 démonstration, une activité saisonnière — un projet géré par RAD peut être supprimé et
-restauré dans les 30 jours pour quelques crédits, de sorte que 84 $ US ne représentent
+restauré dans les 30 jours sans frais supplémentaires, de sorte que 84 $ US ne représentent
 plus que quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
@@ -46,9 +46,11 @@ de frais de licence par utilisateur. Vous payez pour trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 $ US au prix de la recharge) | 99 crédits (10 % de moins) |
-| Temps de build | Environ 3 crédits par build (un build Odoo prend environ 27 minutes) | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **84 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **32 crédits par jour**, soit environ 960 par mois (environ 96 $ US au prix de la recharge, 77 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US en recharge unique, et moins avec un plan mensuel. Dans un
 projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont
@@ -129,15 +131,14 @@ de démonstration, une activité saisonnière — que de le faire fonctionner en
   déjà déliée, rien n'est facturé pendant qu'il attend. Contrairement à la suppression d'un
   seul module, cela ne détruit pas Cloud SQL, la VM ou Cloud Run un par un — l'ensemble du
   projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les 30 jours, le
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le
   propriétaire du projet peut le restaurer. RAD demande à Google de restaurer le projet et
   de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque
   déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit
   individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est
   une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau
   les frais de module. Pour Odoo sur Cloud Run derrière un petit Services_GCP et
-  Project_GCP, cela représente environ **7 crédits au total (moins de 1 $ US)**, contre les
-  120 crédits que coûte un redéploiement complet.
+  Project_GCP, cela ne coûte normalement **aucun crédit**, puisque les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), contre les 120 crédits que coûte un redéploiement complet.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 84 $ US.**
   Déployez Odoo, utilisez-le pendant une soirée, supprimez le projet. Restaurez-le la
   prochaine fois que vous en avez besoin, confirmez avec Update, et supprimez-le à nouveau
@@ -167,8 +168,7 @@ projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 3
 la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous
 en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds : environ
-  120 crédits (12 $ US) et environ une heure, car RAD recrée le projet et les services
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 $ US) et environ une heure, car RAD recrée le projet et les services
   partagés avant Odoo. La suppression permet d'économiser de l'argent si Odoo devait rester
   inutilisé pendant environ quatre jours ou plus, à la fois dans votre propre projet
   (environ 2,80 $ US par jour) et dans un projet géré par RAD (32 crédits par jour).

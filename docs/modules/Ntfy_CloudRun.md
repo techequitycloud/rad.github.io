@@ -25,7 +25,7 @@ Controls, backups, and the deployment lifecycle — refer to the
 
 ## What Ntfy costs on RAD, and how that compares
 
-**Ntfy on RAD's Cloud Run module costs about US$51 a month, with the module fee charged once in RAD credits.** Need Ntfy to stay up continuously, scale across pods, or run beside other Kubernetes workloads — or see the [GKE guide](Ntfy_GKE.md) for that option. If you only need it occasionally — a demo, a seasonal project, something you're evaluating — a RAD-managed project can be deleted and restored within 30 days for a handful of credits (under US$1) instead of paying for it to sit idle. See **Pause it for free**, below. Figures are as at 8 October 2026; sources are listed at the end of this section.
+**Ntfy on RAD's Cloud Run module costs about US$51 a month, with the module fee charged once in RAD credits.** Need Ntfy to stay up continuously, scale across pods, or run beside other Kubernetes workloads — or see the [GKE guide](Ntfy_GKE.md) for that option. If you only need it occasionally — a demo, a seasonal project, something you're evaluating — a RAD-managed project can be deleted and restored within 30 days at no extra charge instead of paying for it to sit idle. See **Pause it for free**, below. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
 ### What you pay on RAD
 
@@ -35,9 +35,11 @@ three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 40 credits (US$4 at the top-up price) | 36 credits (10% lower) |
-| Build time | About 3-6 credits per build | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$51 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **25 credits a day**, about 750 a month (about US$75 at the top-up price, US$60 at the Scale plan's rate) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the network and storage are shared by every application in the project, so a second application does not add a second set of them.
 
@@ -77,15 +79,14 @@ project — far better than running it continuously.
   for 30 days. Because billing is already unlinked, nothing is charged while it waits. Unlike
   deleting one module, this does not tear down the compute resource
   one by one — the whole project, and everything in it, simply stops.
-- **Restoring costs a few credits, not a rebuild.** Within 30 days, the project's owner can restore
+- **Restoring is a check, not a rebuild.** Within 30 days, the project's owner can restore
   it. RAD asks Google to undelete the project and reattaches its billing account, then asks you to
   run **Update** on each deployment to confirm everything came back. Because nothing was
   individually destroyed, that Update finds the same resources already there — it is a check, not a
-  rebuild, and an Update never charges the module fee again. That costs roughly a handful of credits (under US$1) in
-  total for a typical 2-3-deployment chain.
+  rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
 - **So a month of occasional use can cost a few dollars, not US$51.** Deploy Ntfy, use
   it for a while, delete the project. Restore it next time you want it, confirm with Update, and
-  delete it again when you're done. You pay only for the module fee once, the builds, and whatever
+  delete it again when you're done. You pay only for the module fee once and whatever
   time Ntfy was actually live.
 - **What this needs.** You must own the project (not a bring-your-own one RAD only manages billing
   for), and you restore it yourself within the 30 days — after that, Google deletes it for good.
@@ -105,8 +106,7 @@ The option above only applies to a RAD-managed project; **in your own project, o
 window has passed, the way to stop paying is to delete the deployment and deploy it again when you
 need it.**
 
-- **What a redeploy costs.** The module fee again plus the builds: about 45
-  credits (US$4.50) in your own project, or 41
+- **What a redeploy costs.** The module fee again (builds are included): 40 credits (US$4.00) in your own project, or 36
   credits in a RAD-managed one. Deleting saves money once Ntfy would otherwise sit unused for
   about 3 days or more in your own project (about US$1.69 a
   day), or about 2 days or more in a RAD-managed one (25 credits a

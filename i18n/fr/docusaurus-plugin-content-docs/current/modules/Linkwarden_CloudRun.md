@@ -3,7 +3,7 @@ title: "Linkwarden sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Linkwarden sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Linkwarden_CloudRun.md @ 1665a43e sha256:08bf2ba2e71f -->
+<!-- translated-from: docs/modules/Linkwarden_CloudRun.md @ 60462a86 sha256:a7da47d46ac4 -->
 
 # Linkwarden sur Google Cloud Run {#linkwarden-on-google-cloud-run}
 
@@ -31,16 +31,18 @@ plutôt que de les répéter ici.
 
 ## Ce que coûte Linkwarden sur RAD, et comment cela se compare {#what-linkwarden-costs-on-rad-and-how-that-compares}
 
-**Linkwarden sur le module Cloud Run de RAD coûte environ 157 $ US par mois dans un projet Google Cloud que vous possédez, plus des frais de module uniques de 110 crédits (11,00 $ US).** Linkwarden lui-même est gratuit et open source (AGPL), il s'agit donc du coût d'infrastructure de l'exécution de votre propre archive, sans frais par utilisateur et sans limite de liens. Si vous n'en avez besoin qu'occasionnellement, un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits, de sorte que ces 157 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+**Linkwarden sur le module Cloud Run de RAD coûte environ 157 $ US par mois dans un projet Google Cloud que vous possédez, plus des frais de module uniques de 110 crédits (11,00 $ US).** Linkwarden lui-même est gratuit et open source (AGPL), il s'agit donc du coût d'infrastructure de l'exécution de votre propre archive, sans frais par utilisateur et sans limite de liens. Si vous n'en avez besoin qu'occasionnellement, un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ces 157 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet que RAD gère pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11,00 $ US au prix de la recharge) | 99,0 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **157 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **72 crédits par jour**, soit environ 2160 par mois (environ 216 $ US au prix de la recharge, 173 $ US au tarif du plan Scale) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge unique, et moins pour un plan mensuel. Dans un projet
 géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par chaque
@@ -80,15 +82,12 @@ que de l'exécuter en continu.
   déliée, rien n'est facturé pendant qu'il attend. Contrairement à la suppression d'un module, cela ne
   détruit pas Cloud SQL ou le calcul propre de Linkwarden un par un — l'ensemble du
   projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte une poignée de crédits, pas une reconstruction.** Dans les 30 jours, le
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le
   propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et
   rattache son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque
   déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette
   mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification,
-  pas une reconstruction, et une mise à jour ne facture plus les frais de module. Pour Linkwarden
-  derrière un petit Services_GCP et Project_GCP, cela représente **une poignée de crédits
-  (moins de 1 $ US)** au total, contre les 115 crédits que coûte un
-  redéploiement complet.
+  pas une reconstruction, et une mise à jour ne facture plus les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet que RAD gère uniquement
   pour la facturation), et vous le restaurez vous-même dans les 30 jours — après
   cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau
@@ -108,8 +107,7 @@ que de l'exécuter en continu.
 
 La configuration par défaut de ce module maintient Cloud Run en fonctionnement continu (CPU toujours alloué), il ne se met donc pas à l'échelle à zéro de lui-même. L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau plus les builds : environ
-  115 crédits (11,50 $ US), car RAD
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 $ US), car RAD
   recrée le projet et les services partagés avant Linkwarden. La suppression permet d'économiser de l'argent
   seulement si Linkwarden resterait inutilisé pendant environ trois jours
   ou plus, à la fois dans votre propre projet (environ 5,23 $ US par jour) et dans

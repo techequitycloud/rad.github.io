@@ -3,7 +3,7 @@ title: "Mautic sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Mautic sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Mautic_GKE.md @ 1665a43e sha256:a58566a0c737 -->
+<!-- translated-from: docs/modules/Mautic_GKE.md @ 60462a86 sha256:32ae3e35961e -->
 
 # Mautic sur GKE Autopilot {#mautic-on-gke-autopilot}
 
@@ -27,14 +27,14 @@ répéter ici.
 
 ## Ce que coûte Mautic sur RAD, et comment cela se compare {#what-mautic-costs-on-rad-and-how-that-compares}
 
-**Le module Mautic sur GKE Autopilot de RAD coûte environ 150 $ US par mois dans votre propre projet, sans licence par contact.** RAD facture 175 crédits une fois par déploiement dans votre propre projet (157,5 crédits, soit 10 % de moins, dans un projet géré par RAD), plus le temps de build. La même application se déploie également sur Cloud Run pour environ 102 $ US par mois — voir le [guide Cloud Run](Mautic_CloudRun.md) pour l'option la moins chère. Si vous n'en avez besoin qu'occasionnellement, un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour quelques crédits, de sorte que ce chiffre mensuel devient quelques dollars au lieu de 150 $ US — voir **Mettez-le en pause gratuitement**, ci-dessous.
+**Le module Mautic sur GKE Autopilot de RAD coûte environ 150 $ US par mois dans votre propre projet, sans licence par contact.** RAD facture 175 crédits une fois par déploiement dans votre propre projet (157,5 crédits, soit 10 % de moins, dans un projet géré par RAD) ; les builds sont inclus dans le prix. La même application se déploie également sur Cloud Run pour environ 102 $ US par mois — voir le [guide Cloud Run](Mautic_CloudRun.md) pour l'option la moins chère. Si vous n'en avez besoin qu'occasionnellement, un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ce chiffre mensuel devient quelques dollars au lieu de 150 $ US — voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **150 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **115 crédits par jour**, soit environ 3 450 par mois (environ 345,00 $ US au prix de la recharge, moins avec un abonnement) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
@@ -88,22 +88,19 @@ intermittente — que de le faire fonctionner en continu.
   cette attente. Contrairement à la suppression d'un seul module, cela ne
   détruit pas la base de données, les VM ou les ressources de calcul une par
   une — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les
+- **La restauration est une vérification, pas une reconstruction.** Dans les
   30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google
   de récupérer le projet et de rattacher son compte de facturation, puis vous
   demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout
   est revenu. Comme rien n'a été détruit individuellement, cette mise à jour
   trouve les mêmes ressources déjà présentes — c'est une vérification, pas une
   reconstruction, et une mise à jour ne facture jamais à nouveau les frais de
-  module. Pour Mautic derrière Services_GCP (un cluster GKE, une petite VM
-  NFS/cache, une base de données MySQL) et Project_GCP, cela représente
-  environ **une poignée de crédits (moins de 1 $ US)** au total, contre les
-  environ 180 crédits (18,00 $ US) que coûte un redéploiement complet.
+  module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
   pas 150 $ US.** Déployez Mautic, utilisez-le un certain temps, supprimez le
   projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez
   avec Update, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne
-  payez les frais de module qu'une seule fois, les builds, et le temps réel
+  payez les frais de module qu'une seule fois, et le temps réel
   d'exécution.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont
   RAD gère uniquement la facturation), et vous le restaurez vous-même dans les
@@ -130,8 +127,7 @@ propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter
 payer est de supprimer le déploiement et de le redéployer lorsque vous en avez
 besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les
-  builds — environ 180 crédits (18,00 $ US) au total. La suppression ne permet
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) — 175 crédits (17,50 $ US) au total. La suppression ne permet
   d'économiser de l'argent que si Mautic devait rester inutilisé assez
   longtemps pour compenser ce coût de redéploiement par rapport à son propre
   coût d'exécution — environ **4 jours ou plus**, à la fois dans votre propre

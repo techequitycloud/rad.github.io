@@ -3,7 +3,7 @@ title: "Saleor sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Saleor sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Saleor_GKE.md @ 1665a43e sha256:2cf6f19dc422 -->
+<!-- translated-from: docs/modules/Saleor_GKE.md @ 60462a86 sha256:b68c5c679be1 -->
 
 # Saleor sur GKE Autopilot {#saleor-on-gke-autopilot}
 
@@ -36,8 +36,10 @@ Si un coût d'exécution inférieur est plus important que la cible de déploiem
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 110 crédits, une fois | 99 crédits, une fois (10 % de moins) |
-| Temps de build | facturé en crédits au fur et à mesure de l'exécution du build (quelques crédits, généralement) | idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | ~106,53 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~97 crédits/jour, facturé à l'heure par RAD au prix catalogue majoré d'une marge |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 **Coût d'exécution par défaut dans votre propre projet**
 
@@ -75,8 +77,7 @@ facturation, puis vous demande d'exécuter une mise à jour sur chaque
 déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà présentes
 — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais à nouveau les frais de module. Cela ne coûte que quelques crédits (moins
-de 1 $ US) au total pour une chaîne de déploiement typique de 2-3.
+jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet que RAD
 gère uniquement pour la facturation), vous devez le restaurer vous-même dans
@@ -101,8 +102,7 @@ rien d'irremplaçable, cela n'a pas d'importance.
 Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de
 restauration de 30 jours ci-dessus), l'alternative est de supprimer Saleor
 purement et simplement et de le redéployer plus tard. Un redéploiement coûte à
-nouveau les frais de module, plus les builds — environ 110 + 3-6 crédits de
-temps de build.
+nouveau les frais de module (les builds sont inclus) — 110 crédits.
 
 La suppression ne permet d'économiser de l'argent que si Saleor reste inutilisé
 assez longtemps pour compenser ce coût de redéploiement par rapport à son coût

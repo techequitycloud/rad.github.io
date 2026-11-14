@@ -3,7 +3,7 @@ title: "LiteLLM sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de LiteLLM sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LiteLLM_CloudRun.md @ 1665a43e sha256:411dc1bccd2e -->
+<!-- translated-from: docs/modules/LiteLLM_CloudRun.md @ 60462a86 sha256:15bf38d91173 -->
 # LiteLLM sur Google Cloud Run {#litellm-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/LiteLLM_CloudRun.png" alt="LiteLLM sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
@@ -29,16 +29,18 @@ de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ## Ce que coûte LiteLLM sur RAD, et comment cela se compare {#what-litellm-costs-on-rad-and-how-that-compares}
 
-**Le module Cloud Run de LiteLLM sur RAD coûte environ 77 $ US par mois dans votre propre projet, sans facturation par requête.** RAD facture 75 crédits une fois par déploiement dans votre propre projet (67,5 crédits, 10 % de moins, dans un projet géré par RAD), plus le temps de build. LiteLLM se déploie également sur GKE Autopilot pour environ 129 $ US par mois — consultez le [guide GKE](LiteLLM_GKE.md) si vous avez besoin qu'il y soit exécuté à la place. Si vous n'en avez besoin qu'occasionnellement, un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour quelques crédits, de sorte que ce chiffre mensuel devient quelques dollars à la place — voir **Mettez-le en pause gratuitement**, ci-dessous.
+**Le module Cloud Run de LiteLLM sur RAD coûte environ 77 $ US par mois dans votre propre projet, sans facturation par requête.** RAD facture 75 crédits une fois par déploiement dans votre propre projet (67,5 crédits, 10 % de moins, dans un projet géré par RAD) ; les builds sont inclus dans le prix. LiteLLM se déploie également sur GKE Autopilot pour environ 129 $ US par mois — consultez le [guide GKE](LiteLLM_GKE.md) si vous avez besoin qu'il y soit exécuté à la place. Si vous n'en avez besoin qu'occasionnellement, un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ce chiffre mensuel devient quelques dollars à la place — voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet que RAD gère pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 75 crédits (7,50 $ US au prix de la recharge) | 67,5 crédits (10 % de moins) |
-| Temps de build | Quelques crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **77 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **34 crédits par jour**, soit environ 1 020 par mois (environ 102,00 $ US au prix de la recharge, moins sur un plan) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge unique, et moins sur un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas de deuxième base de données.
 
@@ -88,22 +90,19 @@ intermittente — que de l'exécuter en continu.
   qu'il attend. Contrairement à la suppression d'un module, cela ne détruit pas
   la base de données, aucune VM ou la ressource de calcul une par une —
   l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration coûte quelques crédits, pas une reconstruction.** Dans les
+- **La restauration est une vérification, pas une reconstruction.** Dans les
   30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google
   de restaurer le projet et de rattacher son compte de facturation, puis vous
   demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer
   que tout est revenu. Comme rien n'a été détruit individuellement, cette
   mise à jour trouve les mêmes ressources déjà présentes — c'est une
   vérification, pas une reconstruction, et une mise à jour ne facture jamais
-  les frais de module à nouveau. Pour LiteLLM derrière Services_GCP (une base
-  de données Postgres) et Project_GCP, cela représente environ **une poignée de
-  crédits (moins de 1 $ US)** au total, contre environ 80 crédits (8,00 $ US)
-  que coûte un redéploiement complet.
+  les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 - **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars,
   pas 77 $ US.** Déployez LiteLLM, utilisez-le pendant un certain temps,
   supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin,
   confirmez avec Mettre à jour, et supprimez-le à nouveau lorsque vous avez
-  terminé. Vous ne payez que les frais de module une fois, les builds, et le
+  terminé. Vous ne payez que les frais de module une fois, et le
   temps réel où il était actif.
 - **Ce que cela nécessite.** Vous devez posséder le projet (pas seulement un
   projet dont RAD gère la facturation), et vous le restaurez vous-même dans les
@@ -130,8 +129,7 @@ propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter
 payer est de supprimer le déploiement et de le redéployer lorsque vous en avez
 besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau, plus les
-  builds — environ 80 crédits (8,00 $ US) au total. La suppression ne permet
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) — 75 crédits (7,50 $ US) au total. La suppression ne permet
   d'économiser de l'argent que si LiteLLM reste inutilisé assez longtemps pour
   compenser ce coût de redéploiement par rapport à son propre coût
   d'exécution — environ **4 jours ou plus**, à la fois dans votre propre

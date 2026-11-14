@@ -3,7 +3,7 @@ title: "Tandoor sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Tandoor sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Tandoor_GKE.md @ 1665a43e sha256:b28331ee05fa -->
+<!-- translated-from: docs/modules/Tandoor_GKE.md @ 60462a86 sha256:9be350b755c7 -->
 
 # Tandoor sur GKE Autopilot {#tandoor-on-gke-autopilot}
 
@@ -27,16 +27,18 @@ plutôt que de les répéter ici.
 
 ## Ce que coûte Tandoor sur RAD, et comment cela se compare {#what-tandoor-costs-on-rad-and-how-that-compares}
 
-**Le module Tandoor sur GKE Autopilot de RAD coûte environ 91,31 $ US par mois dans un projet Google Cloud que vous possédez, avec des frais de module uniques de 75 crédits (7,50 $ US, ou 67,5 crédits dans un projet géré par RAD, soit 10 % de moins).** GKE convient à Tandoor qui doit coexister avec d'autres charges de travail Kubernetes ; pour le coût le plus bas, le [module Cloud Run](Tandoor_CloudRun.md) exécute le même Tandoor pour environ 68,61 $ US par mois, avec des frais de module inférieurs en conséquence. Si vous n'avez besoin de Tandoor qu'occasionnellement — pour planifier des repas pour une saison, l'essayer avant de vous engager — un projet géré par RAD peut être supprimé et restauré dans les 30 jours pour une poignée de crédits (moins de 1 $ US) au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Le module Tandoor sur GKE Autopilot de RAD coûte environ 91,31 $ US par mois dans un projet Google Cloud que vous possédez, avec des frais de module uniques de 75 crédits (7,50 $ US, ou 67,5 crédits dans un projet géré par RAD, soit 10 % de moins).** GKE convient à Tandoor qui doit coexister avec d'autres charges de travail Kubernetes ; pour le coût le plus bas, le [module Cloud Run](Tandoor_CloudRun.md) exécute le même Tandoor pour environ 68,61 $ US par mois, avec des frais de module inférieurs en conséquence. Si vous n'avez besoin de Tandoor qu'occasionnellement — pour planifier des repas pour une saison, l'essayer avant de vous engager — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires au lieu de payer pour qu'il reste inactif. Voir **Mettez-le en pause gratuitement**, ci-dessous. Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 75 crédits (7,50 $ US au prix de la recharge) | 67,5 crédits (10 % de moins) |
-| Temps de build | Environ 3-6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **91,31 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **85 crédits par jour**, soit environ 2 550 par mois |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins pour un plan mensuel. Dans un projet géré par RAD, la base de données et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas un deuxième ensemble de ceux-ci.
 
@@ -63,7 +65,7 @@ Si Tandoor s'exécute dans un projet géré par RAD pour vous, la suppression de
 
 > **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Cela ne coûte qu'une poignée de crédits (moins de 1 $ US) au total pour une chaîne de déploiement typique de 2-3.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez posséder le projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
 
@@ -71,7 +73,7 @@ Une lacune réelle : les sauvegardes nocturnes sont écrites dans un bucket à l
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours est passée, l'alternative est de supprimer Tandoor purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module, plus les builds — environ 80 crédits (environ 8 $ US) dans votre propre projet, ou 72,5 crédits dans un projet géré par RAD.
+Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours est passée, l'alternative est de supprimer Tandoor purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 75 crédits (7,50 $ US) dans votre propre projet, ou 67,5 crédits dans un projet géré par RAD.
 
 La suppression ne permet d'économiser de l'argent que si Tandoor devait rester inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution quotidien — par rapport au total du projet ci-dessus (environ 3,04 $ US par jour), cela représente environ 3 jours ou plus, ou environ 1 jour ou plus dans un projet géré par RAD (85 crédits par jour). La majeure partie du coût d'exécution ici est la base de données et les frais de cluster partagés ; ils ne s'arrêtent que si rien d'autre dans le projet ne les utilise, donc la suppression de Tandoor alors que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
 

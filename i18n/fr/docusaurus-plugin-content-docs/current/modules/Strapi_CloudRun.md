@@ -3,7 +3,7 @@ title: "Strapi sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Strapi sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Strapi_CloudRun.md @ 1665a43e sha256:fa770638b86a -->
+<!-- translated-from: docs/modules/Strapi_CloudRun.md @ 60462a86 sha256:b62f5d7de543 -->
 
 # Strapi sur Google Cloud Run {#strapi-on-google-cloud-run}
 
@@ -39,7 +39,7 @@ travail Kubernetes — voir le [guide GKE](Strapi_GKE.md) pour cette option, à
 environ 104,74 $ US par mois à la place. Si vous n'avez besoin de Strapi
 qu'occasionnellement — un projet de contenu entre deux lancements, un site
 client en cours d'évaluation — un projet géré par RAD peut être supprimé et
-restauré dans les 30 jours pour une poignée de crédits (moins de 1 $ US) au lieu
+restauré dans les 30 jours sans frais supplémentaires au lieu
 de payer pour qu'il reste inactif. Voir **Mettre en pause gratuitement**,
 ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont
 énumérées à la fin de cette section.
@@ -49,9 +49,11 @@ ci-dessous. Les chiffres sont à jour au 8 octobre 2026 ; les sources sont
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 $ US au prix de la recharge) | 99 crédits (10 % de moins) |
-| Temps de build | Environ 3 à 6 crédits par build | Idem |
+| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **98,82 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **32 crédits par jour**, soit environ 960 par mois |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est détenu en réserve |
+
+Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
 
 10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins pour un plan
 mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers
@@ -108,9 +110,7 @@ facturation, puis vous demande d'exécuter la mise à jour sur chaque déploieme
 pour confirmer que tout est revenu. Étant donné que rien n'a été détruit
 individuellement, cette mise à jour trouve les mêmes ressources déjà présentes
 — il s'agit d'une vérification, pas d'une reconstruction, et une mise à jour ne
-facture plus jamais les frais de module. Cela ne coûte qu'une poignée de
-crédits (moins de 1 $ US) au total pour une chaîne de déploiement typique de 2-3
-éléments.
+facture plus jamais les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
 
 Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD
 ne gère que la facturation), vous devez le restaurer vous-même dans les 30
@@ -134,9 +134,8 @@ installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
 Dans votre propre projet, ou une fois la fenêtre de restauration de 30 jours
 passée, l'alternative est de supprimer Strapi purement et simplement et de le
-redéployer plus tard. Un redéploiement coûte à nouveau les frais de module, plus
-les builds — environ 115 crédits (environ 11,50 $ US) dans votre propre projet,
-ou 104 crédits dans un projet géré par RAD.
+redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — 110 crédits (11,00 $ US) dans votre propre projet,
+ou 99 crédits dans un projet géré par RAD.
 
 La suppression ne permet d'économiser de l'argent que si Strapi devait rester
 inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par

@@ -27,16 +27,18 @@ the [App_GKE foundation guide](App_GKE.md) rather than repeating them here.
 
 **In a Google Cloud project you own, Excalidraw on RAD's GKE Autopilot module costs about US$24 a month, plus US$4 once per deployment and no per-user licence.** For the lowest cost, the [Cloud Run module](Excalidraw_CloudRun.md) runs the same Excalidraw for about US$17 a month. Excalidraw is a static, open-source whiteboard for hand-drawn-style diagrams, with no database, Redis or persistent storage of its own. Figures are as at 8 October 2026; sources are listed at the end of this section.
 
-If this runs in a project RAD manages for you, it can be deleted and restored within 30 days for a few credits instead of sitting there running — so an occasional-use deployment costs a few dollars a month, not US$24. See **Pause it for free**, below.
+If this runs in a project RAD manages for you, it can be deleted and restored within 30 days at no extra charge instead of sitting there running — so an occasional-use deployment costs a few dollars a month, not US$24. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 40 credits (US$4 at the top-up price) | 36 credits (10% lower) |
-| Build time | A few credits per build | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
 | Google Cloud running cost | Billed by Google to your own billing account, about **US$24 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **55 credits a day**, about 1,650 a month (about US$165 at the top-up price) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
+
+Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database, file server and network are shared by every application in the project, so a second application does not add a second database.
 
@@ -76,15 +78,15 @@ If Excalidraw runs in **a project RAD manages for you**, you have an option beyo
 > **A restore is not guaranteed — keep your own backups.** Google Cloud's terms do not guarantee that a restored project, or the resources in it, will be usable after it is restored, so restoring cannot be relied on as a way to recover a deleted project. Before you delete, make sure you have taken appropriate backups of the application's data and configuration and stored them outside the project. If a restore fails, or the restored project does not work, the fall-back is to redeploy the application (see the next section) and restore its configuration and data from those backups.
 
 - **How it works.** Deleting a RAD-managed project unlinks its billing first, then asks Google to delete the project. Google does not remove it immediately: it keeps it, recoverable, for 30 days, and because billing is already unlinked, nothing is charged while it waits. Unlike deleting one module, this does not tear down GKE Autopilot one by one — the whole project, and everything in it, simply stops.
-- **Restoring costs a handful of credits, not a rebuild.** Within 30 days, the project's owner can restore it. RAD asks Google to undelete the project and reattaches its billing account, then asks you to run **Update** on each deployment to confirm everything came back. Because nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a rebuild, and an Update never charges the module fee again. That costs a handful of build-time credits in total (under US$1) for a typical 2–3-deployment chain.
-- **So a month of occasional use can cost a few dollars, not US$24.** Deploy Excalidraw, use it for a session, delete the project. Restore it next time you want it, confirm with Update, and delete it again when you're done. You pay only for the module fee once, the builds, and whatever hours it was actually live.
+- **Restoring is a check, not a rebuild.** Within 30 days, the project's owner can restore it. RAD asks Google to undelete the project and reattaches its billing account, then asks you to run **Update** on each deployment to confirm everything came back. Because nothing was individually destroyed, that Update finds the same resources already there — it is a check, not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
+- **So a month of occasional use can cost a few dollars, not US$24.** Deploy Excalidraw, use it for a session, delete the project. Restore it next time you want it, confirm with Update, and delete it again when you're done. You pay only for the module fee once and whatever hours it was actually live.
 - **What this needs.** You must own the project (not a bring-your-own one RAD only manages billing for), and you restore it yourself within the 30 days — after that, Google deletes it for good. Restoring is admitted like creating a new project: your purchased credit balance must still clear the tier's floor (100 credits for the sandbox tier most study/demo use fits). Google says most services are fully working again within 36 hours of a restore.
 
 ### Pay only while you use it, the other way: delete and redeploy
 
 GKE keeps at least one pod running, so Excalidraw never scales to zero on its own. The option above only applies to a RAD-managed project; **in your own project, or once the 30-day window has passed, the way to stop paying is to delete the deployment and deploy it again when you need it.**
 
-- **What a redeploy costs.** The module fee again plus the builds: about 45 credits (US$4.50). Deleting saves money if Excalidraw would otherwise sit unused for about 6 days or more in your own project (about US$0.80 a day), or about 1 day or more in a RAD-managed one (55 credits a day).
+- **What a redeploy costs.** The module fee again (builds are included): 40 credits (US$4.00). Deleting saves money if Excalidraw would otherwise sit unused for about 6 days or more in your own project (about US$0.80 a day), or about 1 day or more in a RAD-managed one (55 credits a day).
 - **Note your settings.** RAD does not recreate a deleted deployment for you; you enter the settings again when you deploy.
 
 ### Lab sessions and Managed Environments
