@@ -3,84 +3,84 @@ title: "Module Invoice Ninja GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement d'InvoiceNinja sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/InvoiceNinja_GKE.md @ 60462a86 sha256:b90e2f42fb26 -->
+<!-- translated-from: docs/modules/InvoiceNinja_GKE.md @ 40c83c3f sha256:1dc73f44f743 -->
 
 # Module Invoice Ninja GKE — Guide de configuration {#invoice-ninja-gke-module--configuration-guide}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/InvoiceNinja_GKE.png" alt="Module Invoice Ninja GKE — Guide de configuration" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Ce guide décrit chaque variable de configuration disponible dans le module `InvoiceNinja_GKE`. `InvoiceNinja_GKE` est un **module enveloppe** qui combine le module d'infrastructure générique `App_GKE` avec la configuration d'application partagée `InvoiceNinja_Common` pour déployer [Invoice Ninja](https://invoiceninja.com/) — la plateforme de facturation et de devis open-source — sur Google Kubernetes Engine (GKE) Autopilot.
+Ce guide décrit toutes les variables de configuration disponibles dans le module `InvoiceNinja_GKE`. `InvoiceNinja_GKE` est un **module wrapper** qui combine le module d'infrastructure générique `App_GKE` avec la configuration d'application partagée `InvoiceNinja_Common` pour déployer [Invoice Ninja](https://invoiceninja.com/) — la plateforme open-source de facturation — sur Google Kubernetes Engine (GKE) Autopilot.
 
 Invoice Ninja fournit une suite complète de facturation auto-hébergée : devis, factures, reçus, paiements clients, facturation récurrente, suivi des dépenses, suivi du temps, gestion de projet et un portail client en libre-service. C'est une alternative auto-hébergée à FreshBooks ou QuickBooks.
 
-La plupart des options de configuration dans `InvoiceNinja GKE` correspondent directement aux mêmes options dans `App GKE`. Lorsqu'une variable a un comportement identique, ce guide renvoie au guide `App GKE` plutôt que de répéter la même documentation. Seules les variables et les valeurs par défaut **spécifiques à Invoice Ninja** sont décrites en détail ici.
+La plupart des options de configuration dans `InvoiceNinja GKE` correspondent directement aux mêmes options dans `App GKE`. Lorsqu'une variable a un comportement identique, ce guide fait référence au guide `App GKE` plutôt que de répéter la même documentation. Seules les variables et les valeurs par défaut **spécifiques à Invoice Ninja** sont décrites en détail ici.
 
 > **Note :** Les variables marquées comme *gérées par la plateforme* sont définies et maintenues par la plateforme. Vous n'avez normalement pas besoin de les modifier.
 
 ---
 
-## Ce que coûte Invoice Ninja sur RAD, et comment cela se compare {#what-invoice-ninja-costs-on-rad-and-how-that-compares}
+## Ce que coûte Invoice Ninja sur RAD et comparaison {#what-invoice-ninja-costs-on-rad-and-how-that-compares}
 
-**Invoice Ninja sur le module GKE de RAD coûte environ 143 $ US par mois dans votre propre projet, plus des frais de module de 175 crédits (18 $ US) une fois par déploiement.** Si vous n'en avez besoin que de façon saisonnière, consultez la section "Mettez-le en pause gratuitement" ci-dessous pour arrêter de payer sans perdre vos factures. Invoice Ninja est également proposé en tant que module Cloud Run, qui est l'option la moins chère ici (environ 99 $ US/mois) — consultez le guide Cloud Run, sauf si vous utilisez déjà GKE Autopilot pour d'autres applications.
+**Invoice Ninja sur le module GKE de RAD coûte environ 143 $ US par mois dans votre propre projet, plus des frais de module de 175 crédits (18 $ US) une fois par déploiement.** Si vous n'en avez besoin que de manière saisonnière, consultez la section « Mettez-le en pause gratuitement » ci-dessous pour arrêter de payer sans perdre vos factures. Invoice Ninja est également disponible en tant que module Cloud Run, qui est l'option la moins chère ici (environ 99 $ US/mois) — consultez le guide Cloud Run, sauf si vous utilisez déjà GKE Autopilot pour d'autres applications.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 $ US) | 157,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **142,62 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **112 crédits par jour** |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **142,62 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **142 crédits par jour**, soit environ 4 260 par mois (environ 426 $ US au prix de la recharge ; estimé à partir des prix catalogue Google, et incluant les frais de cluster) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
-10 crédits coûtent 1 $ US pour une recharge ponctuelle, moins sur un plan. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
+10 crédits coûtent 1 $ US pour une recharge ponctuelle, moins sur un abonnement. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
 
 **Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
 
 | Ressource (valeur par défaut du module) | Par mois |
 |---|---|
-| Pod GKE Autopilot, 2x vCPU / 2 Gio | 72,16 $ US |
+| Pod GKE Autopilot, 2x vCPU / 2 GiB | 72,16 $ US |
 | Cloud SQL pour MySQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
 | Serveur de fichiers NFS/cache (petite VM) | 13,43 $ US |
 | Cloud NAT et réseau | 5,00 $ US |
 | Cloud Storage (modules complémentaires, sauvegardes) | 1,00 $ US |
-| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 $ |
+| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 |
 | **Total** | **environ 142,62 $ US** |
 
-### Comment cela se compare {#how-it-compares}
+### Comparaison {#how-it-compares}
 
 - Les plans hébergés d'Invoice Ninja sont **Ninja Pro à 14 $/mois** et **Enterprise à partir de 18 $/mois** pour 1 à 2 utilisateurs de compte, augmentant avec la taille de l'équipe — 94 $/mois pour 11 à 20 utilisateurs et jusqu'à 300 $/mois pour 51 à 100 utilisateurs ([invoiceninja.com/pricing-plans](https://invoiceninja.com/pricing-plans/), 8 octobre 2026).
-- Le coût d'exécution du projet RAD (environ 99 $/mois) est un coût d'infrastructure fixe qui ne varie pas lorsque vous ajoutez du personnel en contact avec les clients, il coûte donc plus cher que Ninja Pro pour un seul utilisateur, mais est plus compétitif qu'Enterprise dès qu'une poignée de personnes ont besoin de comptes.
-- Un VPS nu (Hetzner CPX22 ou DigitalOcean 2 vCPU/4 Go, environ 24 $/mois) est moins cher en espèces, mais vous devez alors gérer MySQL, les sauvegardes, les correctifs de sécurité et les dépendances de rendu PDF vous-même — sur un système qui contient les paiements des clients et les enregistrements de facturation, où ce compromis est réel.
+- Le coût d'exécution du propre projet de RAD ici (environ 99 $/mois) est un coût d'infrastructure fixe qui ne change pas lorsque vous ajoutez du personnel en contact avec les clients, il coûte donc plus cher que Ninja Pro pour un seul utilisateur mais est plus compétitif que Enterprise dès qu'une poignée de personnes ont besoin de comptes.
+- Un VPS nu (Hetzner CPX22 ou DigitalOcean 2 vCPU/4 Go, environ 24 $/mois) est moins cher en espèces, mais vous devez alors gérer MySQL, les sauvegardes, les correctifs de sécurité et les dépendances de rendu PDF vous-même — sur un système qui contient les enregistrements de paiement et de facturation des clients, où ce compromis est réel.
 
-### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-Si Invoice Ninja s'exécute dans un projet géré par RAD pour vous et que vous prévoyez d'y revenir — une pause entre les cours, une accalmie saisonnière, ou simplement ne sachant pas encore si vous en aurez besoin le mois prochain — c'est la meilleure option, et cela ne coûte presque rien.
+Si Invoice Ninja fonctionne dans un projet géré par RAD pour vous et que vous prévoyez d'y revenir — une pause entre les cours, un creux saisonnier, ou simplement ne pas savoir si vous en aurez besoin le mois prochain — c'est la meilleure option, et elle ne coûte presque rien.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet : la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression d'Invoice Ninja en tant que module unique, cela ne démantèle pas le service Cloud Run/GKE, la base de données Cloud SQL, le serveur de fichiers NFS et le réseau un par un — l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
+La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet purement et simplement : la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression d'Invoice Ninja en tant que module unique, cela ne supprime pas le service Cloud Run/GKE, la base de données Cloud SQL, le serveur de fichiers NFS et le réseau un par un — l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
 
-Ce qu'il faut : vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart utilisent). Google affirme que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox que la plupart utilisent convient). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
 Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez le projet, même si le projet lui-même est récupérable pendant 30 jours. L'exportation nocturne de la base de données et des documents téléchargés d'Invoice Ninja est conservée dans ce bucket ; copiez-la d'abord si vous voulez un instantané restaurable au-delà des 30 jours du projet.
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet, ou une fois que la fenêtre de 30 jours ci-dessus est passée, la solution de repli est de supprimer Invoice Ninja purement et simplement et de le redéployer plus tard.
+Dans votre propre projet, ou une fois que la fenêtre de 30 jours ci-dessus est passée, la solution de repli consiste à supprimer Invoice Ninja purement et simplement et à le redéployer plus tard.
 
 - **Ce que coûte un redéploiement :** les frais de module à nouveau (les builds sont inclus) — les frais de module indiqués ci-dessus.
-- **Quand cela en vaut la peine :** la suppression ne permet d'économiser de l'argent que si Invoice Ninja resterait autrement inutilisé pendant environ 4 jours ou plus dans votre propre projet (environ 2 jours ou plus dans un projet géré par RAD). La base de données et le serveur de fichiers NFS représentent la majeure partie du coût d'exécution ici, donc la suppression d'Invoice Ninja seule permet d'économiser la totalité de la facture ci-dessus, à moins que quelque chose d'autre dans le projet ne les partage.
-- **Conservez d'abord les données.** Les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du déploiement, et ce bucket est supprimé avec lui — copiez la dernière sauvegarde (vers Google Drive, ou un bucket que vous conservez) avant de supprimer si vous voulez la conserver.
+- **Quand cela en vaut la peine :** la suppression ne permet d'économiser de l'argent que si Invoice Ninja resterait inutilisé pendant environ 4 jours ou plus dans votre propre projet (environ 2 jours ou plus dans un projet géré par RAD). La base de données et le serveur de fichiers NFS représentent la majeure partie du coût d'exécution ici, donc la suppression d'Invoice Ninja seul permet d'économiser la totalité de la facture ci-dessus, à moins que quelque chose d'autre dans le projet ne les partage.
+- **Conservez les données en premier.** Les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du déploiement, et ce bucket est supprimé avec lui — copiez la dernière sauvegarde (vers Google Drive, ou un bucket que vous conservez) avant de supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés retournent au formateur.
+- **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est interrompue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 - Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais RAD et estimation des crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Google Cloud : supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour le mécanisme de pause/restauration ; [Tarifs Invoice Ninja](https://invoiceninja.com/pricing-plans/) pour la comparaison Ninja Pro/Enterprise hébergée. Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
+**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais RAD et estimation des crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Google Cloud : supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour le mécanisme de pause/restauration ; [Tarification Invoice Ninja](https://invoiceninja.com/pricing-plans/) pour la comparaison Ninja Pro/Enterprise hébergée. Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
 
 ---
 
@@ -101,12 +101,12 @@ Les zones de configuration suivantes sont fournies par le module sous-jacent `Ap
 | Configuration de la base de données | **MySQL 8.0 requis** ; voir [Groupe 18 : Configuration de la base de données](#group-18-database-configuration). |
 | Planification et rétention des sauvegardes | Identique à `App_GKE`. |
 | Scripts SQL personnalisés | Identique à `App_GKE`. |
-| Observabilité et santé | Réglage de la sonde Invoice Ninja ; voir [Groupe 13 : Observabilité et santé](#group-13-observability--health). |
+| Observabilité et santé | Réglage des sondes Invoice Ninja ; voir [Groupe 13 : Observabilité et santé](#group-13-observability--health). |
 | Cloud Armor WAF | Identique à `App_GKE`. |
 | Proxy conscient de l'identité | Identique à `App_GKE`. |
 | Autorisation binaire | Identique à `App_GKE`. |
 | Contrôles de service VPC | Identique à `App_GKE`. |
-| Cache Redis | Invoice Ninja **nécessite** Redis ; `enable_redis = true` par défaut ; voir [Groupe : Cache Redis](#redis-cache). |
+| Cache Redis | Invoice Ninja **requiert** Redis ; `enable_redis = true` par défaut ; voir [Groupe : Cache Redis](#redis-cache). |
 
 ---
 
@@ -114,15 +114,15 @@ Les zones de configuration suivantes sont fournies par le module sous-jacent `Ap
 
 `InvoiceNinja GKE` transmet toutes les variables à `App GKE` et ajoute un sous-module `InvoiceNinja Common` qui fournit des valeurs par défaut et une configuration d'application spécifiques à Invoice Ninja. Les principaux effets sont les suivants :
 
-1.  **MySQL 8.0 est requis.** L'application Laravel d'Invoice Ninja ne prend en charge que MySQL. La valeur par défaut `database_type` est `"MYSQL_8_0"`.
-2.  **`DB_CONNECTION=mysql` est injecté automatiquement.** Laravel nécessite cette variable d'environnement pour sélectionner le pilote PDO MySQL.
-3.  **`TRUSTED_PROXIES=*` est injecté automatiquement.** Sans cela, Laravel génère des liens `http://` derrière l'équilibreur de charge GKE même lorsque les clients accèdent via HTTPS, ce qui rompt les liens de facture.
-4.  **Les variables de génération de PDF snappdf sont injectées.** `PDF_GENERATOR=snappdf` et `SNAPPDF_EXECUTABLE_PATH=/usr/local/bin/chrome` sont définis automatiquement. Le conteneur `invoiceninja/invoiceninja:5` contient Chromium à ce chemin.
-5.  **`APP_KEY` est auto-généré et stocké dans Secret Manager.** `InvoiceNinja Common` crée la clé de chiffrement Laravel lors de la première application et l'injecte au moment de l'exécution. Elle n'est jamais écrite en clair dans l'état.
-6.  **Un bucket GCS `data` est provisionné automatiquement.** `InvoiceNinja Common` fournit une définition de bucket `data` pour le stockage de documents.
-7.  **Deux jobs d'initialisation s'exécutent lors du premier déploiement.** `db-init` crée le schéma et l'utilisateur MySQL ; `artisan-migrate` exécute les migrations Laravel, y compris les données d'amorçage initiales. Les deux s'exécutent à chaque application (`execute_on_apply = true`) afin que les mises à niveau de version appliquent automatiquement les modifications de schéma.
-8.  **Les valeurs par défaut des ressources sont dimensionnées pour Invoice Ninja.** Le `cpu_limit` (2 vCPU) et le `memory_limit` (2 Gio) par défaut tiennent compte de la génération de PDF Chromium. 4 Gio sont recommandés pour les déploiements à volume élevé.
-9.  **Redis est requis et activé par défaut.** Invoice Ninja utilise Redis pour `QUEUE_CONNECTION`, `CACHE_DRIVER` et `SESSION_DRIVER`. Sans Redis, la génération de PDF en arrière-plan et la livraison d'e-mails bloquent le cycle de requête HTTP et échouent sous une charge concurrente.
+1. **MySQL 8.0 est requis.** L'application Laravel d'Invoice Ninja ne prend en charge que MySQL. La valeur par défaut `database_type` est `"MYSQL_8_0"`.
+2. **`DB_CONNECTION=mysql` est injecté automatiquement.** Laravel nécessite cette variable d'environnement pour sélectionner le pilote PDO MySQL.
+3. **`TRUSTED_PROXIES=*` est injecté automatiquement.** Sans cela, Laravel génère des liens `http://` derrière l'équilibreur de charge GKE même lorsque les clients accèdent via HTTPS, ce qui rompt les liens de facture.
+4. **Les variables de génération de PDF snappdf sont injectées.** `PDF_GENERATOR=snappdf` et `SNAPPDF_EXECUTABLE_PATH=/usr/local/bin/chrome` sont définis automatiquement. Le conteneur `invoiceninja/invoiceninja:5` contient Chromium à ce chemin.
+5. **`APP_KEY` est auto-généré et stocké dans Secret Manager.** `InvoiceNinja Common` crée la clé de chiffrement Laravel lors du premier apply et l'injecte au moment de l'exécution. Elle n'est jamais écrite en clair dans l'état.
+6. **Un bucket GCS `data` est provisionné automatiquement.** `InvoiceNinja Common` fournit une définition de bucket `data` pour le stockage de documents.
+7. **Deux jobs d'initialisation s'exécutent lors du premier déploiement.** `db-init` crée le schéma et l'utilisateur MySQL ; `artisan-migrate` exécute les migrations Laravel, y compris les données d'amorçage initiales. Les deux s'exécutent à chaque apply (`execute_on_apply = true`) afin que les mises à niveau de version appliquent automatiquement les modifications de schéma.
+8. **Les valeurs par défaut des ressources sont dimensionnées pour Invoice Ninja.** Le `cpu_limit` (2 vCPU) et le `memory_limit` (2 Gi) par défaut tiennent compte de la génération de PDF Chromium. 4 Gi sont recommandés pour les déploiements à volume élevé.
+9. **Redis est requis et activé par défaut.** Invoice Ninja utilise Redis pour `QUEUE_CONNECTION`, `CACHE_DRIVER` et `SESSION_DRIVER`. Sans Redis, la génération de PDF en arrière-plan et la livraison d'e-mails bloquent le cycle de requête HTTP et échouent sous une charge concurrente.
 10. **L'affinité de session est par défaut `"ClientIP"`.** Invoice Ninja utilise des sessions PHP côté serveur. Sans routage persistant, les utilisateurs administrateurs sont déconnectés lors des requêtes qui sont acheminées vers un pod différent.
 
 ---
@@ -133,8 +133,8 @@ Identique à `App_GKE`.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | — | ID du projet GCP. **Obligatoire.** |
-| `region` | `"us-central1"` | Région GCP. Utilisée comme solution de secours lorsque la découverte de réseau ne peut pas déterminer la région à partir des sous-réseaux VPC existants. |
+| `project_id` | — | ID du projet GCP. **Requis.** |
+| `region` | `"us-central1"` | Région GCP. Utilisé comme solution de repli lorsque la découverte réseau ne peut pas déterminer la région à partir des sous-réseaux VPC existants. |
 
 ---
 
@@ -157,9 +157,9 @@ Identique à `App_GKE`.
 | `application_name` | `"invoiceninja"` | `"gkeapp"` | Nom de base pour les ressources GCP et Kubernetes. **Ne pas modifier après le déploiement.** |
 | `application_display_name` | `"Invoice Ninja"` | `"App GKE Application"` | Affiché dans l'interface utilisateur et les tableaux de bord de la plateforme. |
 | `application_description` | `"Invoice Ninja Invoicing on GKE Autopilot"` | `"App GKE Custom Application…"` | Étiquette descriptive. |
-| `application_version` | `"5"` | `"1.0.0"` | La version d'Invoice Ninja à déployer. |
-| `display_name` | `"Invoice Ninja"` | *(non dans App GKE)* | Alias lisible par l'homme. |
-| `description` | `"Invoice Ninja - Open-source invoicing platform on GKE Autopilot"` | *(non dans App GKE)* | Description transmise à `InvoiceNinja Common` pour les métadonnées du job d'initialisation. |
+| `application_version` | `"5"` | `"1.0.0"` | La version de publication d'Invoice Ninja à déployer. |
+| `display_name` | `"Invoice Ninja"` | *(pas dans App GKE)* | Alias lisible par l'homme. |
+| `description` | `"Invoice Ninja - Open-source invoicing platform on GKE Autopilot"` | *(pas dans App GKE)* | Description transmise à `InvoiceNinja Common` pour les métadonnées du job d'initialisation. |
 
 ---
 
@@ -169,11 +169,11 @@ Identique à `App_GKE`.
 
 | Variable | Valeur par défaut InvoiceNinja GKE | Valeur par défaut App GKE | Notes |
 |---|---|---|---|
-| `container_port` | `80` | `8080` | Invoice Ninja utilise nginx sur le port 80. Ne pas modifier, sauf si votre Dockerfile personnalisé lie nginx à un port différent. |
-| `container_resources` | `{ cpu_limit = "2000m", memory_limit = "2Gi" }` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Invoice Ninja nécessite un minimum de 2 vCPU / 2 Gio pour la génération de PDF Chromium. |
+| `container_port` | `80` | `8080` | Invoice Ninja utilise nginx sur le port 80. Ne pas modifier sauf si votre Dockerfile personnalisé lie nginx à un port différent. |
+| `container_resources` | `{ cpu_limit = "2000m", memory_limit = "2Gi" }` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Invoice Ninja nécessite un minimum de 2 vCPU / 2 Gi pour la génération de PDF Chromium. |
 | `cpu_limit` | `"2000m"` | — | Alias abrégé pour `container_resources.cpu_limit`. Transmis à `InvoiceNinja Common`. |
-| `memory_limit` | `"2Gi"` | — | Alias abrégé pour `container_resources.memory_limit`. Minimum 2 Gio pour Chromium. |
-| `min_instance_count` | `1` | `1` | Identique à la valeur par défaut de `App_GKE` — Invoice Ninja est maintenu en veille. Les démarrages à froid impliquent le démarrage de PHP-FPM + Laravel + une migration facultative. |
+| `memory_limit` | `"2Gi"` | — | Alias abrégé pour `container_resources.memory_limit`. Minimum 2 Gi pour Chromium. |
+| `min_instance_count` | `1` | `1` | Identique à la valeur par défaut de `App_GKE` — Invoice Ninja est maintenu chaud. Les démarrages à froid impliquent PHP-FPM + bootstrap Laravel + migration optionnelle. |
 | `max_instance_count` | `5` | `3` | Plafond plus élevé pour les pics de traitement des factures. |
 | `container_image_source` | `"prebuilt"` | `"custom"` | L'image officielle `invoiceninja/invoiceninja:5` est prête pour la production sans personnalisation. |
 | `enable_cloudsql_volume` | `true` | `true` | Sidecar Cloud SQL Auth Proxy requis pour la connexion au socket Unix MySQL. |
@@ -199,15 +199,15 @@ Les variables suivantes sont injectées automatiquement par `InvoiceNinja Common
 | `PDF_GENERATOR` | `"snappdf"` | Sélection du moteur de rendu PDF d'Invoice Ninja. |
 | `SNAPPDF_EXECUTABLE_PATH` | `"/usr/local/bin/chrome"` | Chemin vers Chromium intégré dans le conteneur. |
 | `MAIL_FROM_NAME` | `var.mail_from_name` | Nom d'affichage de l'expéditeur de l'e-mail. |
-| `MAIL_FROM_ADDRESS` | `var.mail_from_address` | Adresse e-mail de l'expéditeur. |
+| `MAIL_FROM_ADDRESS` | `var.mail_from_address` | Adresse de l'expéditeur de l'e-mail. |
 
-**La `APP_KEY` est injectée en tant que référence Secret Manager** via `secret_environment_variables`, et non en tant que variable d'environnement en texte clair. Elle est résolue au démarrage du pod et n'est jamais écrite dans l'état Terraform.
+**Le `APP_KEY` est injecté en tant que référence Secret Manager** via `secret_environment_variables`, et non en tant que variable d'environnement en texte clair. Il est résolu au démarrage du pod et n'est jamais écrit dans l'état Terraform.
 
 **Variables configurables par l'utilisateur :**
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Variables d'environnement supplémentaires en texte clair injectées dans le pod. À utiliser pour la configuration SMTP : `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`. Les variables principales sont définies automatiquement. |
+| `environment_variables` | `{}` | Variables d'environnement en texte clair supplémentaires injectées dans le pod. À utiliser pour la configuration SMTP : `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`. Les variables principales sont définies automatiquement. |
 | `secret_environment_variables` | `{}` | Références Secret Manager. À utiliser pour `MAIL_PASSWORD` et d'autres valeurs sensibles. |
 | `secret_rotation_period` | `"2592000s"` | Fréquence de notification de rotation des secrets. Par défaut : 30 jours. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant le démarrage du pod. Augmenter si les déploiements échouent avec des erreurs de secret introuvable. |
@@ -236,7 +236,7 @@ secret_environment_variables = {
 | Variable | Valeur par défaut | Notes |
 |---|---|---|
 | `backup_schedule` | `"0 2 * * *"` | Quotidiennement à 02:00 UTC. Ajuster pour correspondre à votre objectif de point de récupération. |
-| `backup_retention_days` | `7` | Rétention de 7 jours. Augmenter considérablement pour les données de facturation — de nombreuses juridictions exigent une rétention de 5 à 7 ans des enregistrements de factures. Minimum recommandé : 90 jours. |
+| `backup_retention_days` | `7` | Rétention de 7 jours. Augmenter significativement pour les données de facturation — de nombreuses juridictions exigent une rétention de 5 à 7 ans des enregistrements de factures. Minimum recommandé : 90 jours. |
 
 **Importation de sauvegarde :**
 
@@ -254,7 +254,7 @@ secret_environment_variables = {
 
 Identique à `App_GKE`. Variables disponibles : `enable_cicd_trigger`, `github_repository_url`, `github_token`, `github_app_installation_id`, `cicd_trigger_config`, `enable_cloud_deploy`, `cloud_deploy_stages`.
 
-**Cas d'utilisation typique :** `container_image_source = "prebuilt"` est la valeur par défaut, donc les déclencheurs CI/CD sont plus utiles lors du passage à `"custom"` pour créer une image Invoice Ninja avec une configuration spécifique à l'entreprise, des éléments de marque ou des plugins étendus intégrés dans l'image.
+**Cas d'utilisation typique :** `container_image_source = "prebuilt"` est la valeur par défaut, donc les déclencheurs CI/CD sont plus utiles lors du passage à `"custom"` pour construire une image Invoice Ninja avec une configuration spécifique à l'entreprise, des éléments de marque ou des plugins étendus intégrés dans l'image.
 
 ---
 
@@ -262,9 +262,9 @@ Identique à `App_GKE`. Variables disponibles : `enable_cicd_trigger`, `github_r
 
 Identique à `App_GKE`.
 
-Variables disponibles : `enable_pod_disruption_budget` (valeur par défaut `true`), `pdb_min_available` (valeur par défaut `"1"`), `enable_topology_spread` (valeur par défaut `false`), `topology_spread_strict` (valeur par défaut `false`).
+Variables disponibles : `enable_pod_disruption_budget` (par défaut `true`), `pdb_min_available` (par défaut `"1"`), `enable_topology_spread` (par défaut `false`), `topology_spread_strict` (par défaut `false`).
 
-> **Note :** Avec `pdb_min_available = "1"` et un seul réplica, le PDB empêche les interruptions volontaires indéfiniment. Utilisez au moins 2 réplicas en production pour permettre une maintenance progressive.
+> **Note :** Avec `pdb_min_available = "1"` et un seul réplica, le PDB empêche les interruptions volontaires indéfiniment. Utilisez au moins 2 réplicas en production pour permettre une maintenance continue.
 
 ---
 
@@ -277,7 +277,7 @@ Variables disponibles : `enable_pod_disruption_budget` (valeur par défaut `true
 | `service_type` | `"LoadBalancer"` | Expose Invoice Ninja via un équilibreur de charge externe GKE. |
 | `workload_type` | `null` | Par défaut à `Deployment`. La définition de `stateful_pvc_enabled = true` se résout automatiquement en `StatefulSet`. |
 | `session_affinity` | `"ClientIP"` | **Requis pour Invoice Ninja.** Les sessions PHP sont stockées par pod. Sans `"ClientIP"`, les utilisateurs administrateurs sont déconnectés lors des requêtes acheminées vers un réplica différent. |
-| `namespace_name` | `""` | Auto-généré à partir de `application_name` et `tenant_id` lorsque vide. |
+| `namespace_name` | `""` | Auto-généré à partir de `application_name` et `tenant_id` lorsqu'il est vide. |
 | `gke_cluster_name` | `""` | Laisser vide pour découvrir automatiquement un cluster géré par Services_GCP. |
 | `deployment_timeout` | `1800` | Délai d'expiration de déploiement de 30 minutes. Invoice Ninja peut nécessiter un temps prolongé pour les migrations initiales de grandes bases de données. |
 | `enable_network_segmentation` | `false` | Définir `true` pour créer des ressources Kubernetes NetworkPolicy limitant le trafic inter-pod. |
@@ -289,14 +289,14 @@ Variables disponibles : `enable_pod_disruption_budget` (valeur par défaut `true
 
 **Jobs d'initialisation par défaut d'Invoice Ninja :**
 
-Lorsque `initialization_jobs` est laissé comme valeur par défaut (liste vide `[]`), `InvoiceNinja Common` fournit automatiquement deux jobs :
+Lorsque `initialization_jobs` est laissé par défaut (liste vide `[]`), `InvoiceNinja Common` fournit deux jobs automatiquement :
 
-| Job | Image | Objectif | S'exécute à chaque application |
+| Job | Image | Objectif | S'exécute à chaque apply |
 |---|---|---|---|
 | `db-init` | `mysql:8.0-debian` | Crée la base de données et l'utilisateur MySQL avec le jeu de caractères et les privilèges corrects | Oui |
 | `artisan-migrate` | `invoiceninja/invoiceninja:5` | Exécute `php artisan migrate --seed --force` pour appliquer le schéma et les données d'amorçage | Oui |
 
-`artisan-migrate` dépend de `db-init` et s'exécute après sa complétion. L'exécution à chaque application est intentionnelle — les mises à niveau de version d'Invoice Ninja incluent des migrations de base de données qui doivent être appliquées lorsque `application_version` est incrémenté.
+`artisan-migrate` dépend de `db-init` et s'exécute après sa complétion. L'exécution à chaque apply est intentionnelle — les mises à niveau de version d'Invoice Ninja incluent des migrations de base de données qui doivent être appliquées lorsque `application_version` est incrémenté.
 
 Remplacez `initialization_jobs` par une liste non vide pour remplacer les deux jobs par défaut par des jobs personnalisés.
 
@@ -310,32 +310,32 @@ Des **services supplémentaires** (conteneurs sidecar) sont également disponibl
 
 **Valeurs par défaut des sondes spécifiques à Invoice Ninja :**
 
-L'initialisation de PHP-FPM d'Invoice Ninja, le démarrage de Laravel et la migration de base de données au premier démarrage en font une application à démarrage lent. Les valeurs par défaut des sondes de santé sont ajustées pour s'adapter à cela.
+L'initialisation de PHP-FPM d'Invoice Ninja, le bootstrap de Laravel et la migration de la base de données au premier démarrage en font une application à démarrage lent. Les valeurs par défaut des sondes de santé sont ajustées pour tenir compte de cela.
 
-`InvoiceNinja_GKE` déclare **deux** ensembles de variables de sonde, mais un seul atteint réellement la spécification du pod Kubernetes :
+`InvoiceNinja_GKE` déclare **deux** ensembles de variables de sonde, mais un seul atteint réellement la spécification de pod Kubernetes :
 
--   **`startup_probe` / `liveness_probe`** — ce sont ELLES qui contrôlent la vraie sonde K8s. `main.tf` fusionne inconditionnellement un objet codé en dur dans `application_config`, remplaçant tout ce que `Invoice Ninja Common` fournit :
+- **`startup_probe` / `liveness_probe`** — ce sont ELLES qui contrôlent la vraie sonde K8s. `main.tf` fusionne inconditionnellement un objet codé en dur dans `application_config`, remplaçant tout ce que `Invoice Ninja Common` fournit :
 
-    | Variable | Valeur |
-    |---|---|
-    | `startup_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=90, timeout_seconds=10, period_seconds=15, failure_threshold=20 }` |
-    | `liveness_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` |
+  | Variable | Valeur |
+  |---|---|
+  | `startup_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=90, timeout_seconds=10, period_seconds=15, failure_threshold=20 }` |
+  | `liveness_probe` | `{ enabled=true, type="HTTP", path="/", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` |
 
-    Invoice Ninja n'a pas de point de terminaison de santé dédié ; le chemin racine `/` renvoyant HTTP 200 (une fois que PHP-FPM/nginx sont en service) est le signal de disponibilité. 20 × 15s = 300s de tolérance supplémentaire après le délai initial de 90s pour les migrations au premier démarrage.
+  Invoice Ninja n'a pas de point de terminaison de santé dédié ; le chemin racine `/` renvoyant HTTP 200 (une fois que PHP-FPM/nginx servent) est le signal de disponibilité. 20 × 15s = 300s de tolérance supplémentaire après le délai initial de 90s pour les migrations au premier démarrage.
 
--   **`startup_probe_config` / `health_check_config`** — déclarées avec des valeurs par défaut **TCP** (leur propre description explique pourquoi : le `/` d'Invoice Ninja redirige parfois 302 vers `https://<app_url>/`, et une sonde kubelet HTTP qui suit la redirection atteint `https://<pod-ip>:443` sans rien écouter, provoquant une fausse défaillance). **Cependant, le traçage du câblage montre que ces deux variables ne sont jamais lues par le chemin de sonde K8s réel de `App_GKE` pour ce module** — la surcharge codée en dur `startup_probe`/`liveness_probe` ci-dessus l'emporte toujours. Traitez-les comme actuellement inertes pour GKE ; ne comptez pas sur leur modification pour altérer le type de sonde déployé.
+- **`startup_probe_config` / `health_check_config`** — déclarées avec des valeurs par défaut **TCP** (leur propre description explique pourquoi : `/` d'Invoice Ninja redirige parfois 302 vers `https://<app_url>/`, et une sonde kubelet HTTP qui suit la redirection atteint `https://<pod-ip>:443` sans rien écouter, provoquant un faux échec). **Cependant, le traçage du câblage montre que ces deux variables ne sont jamais lues par le chemin de sonde K8s réel de `App_GKE` pour ce module** — la surcharge codée en dur `startup_probe`/`liveness_probe` ci-dessus l'emporte toujours. Considérez-les comme actuellement inertes pour GKE ; ne comptez pas sur leur modification pour altérer le type de sonde déployé.
 
 | Variable | Valeur par défaut |
 |---|---|
 | `startup_probe_config` | `{ enabled=true, type="TCP", path="/", initial_delay_seconds=90, timeout_seconds=10, period_seconds=15, failure_threshold=20 }` |
 | `health_check_config` | `{ enabled=true, type="TCP", path="/", initial_delay_seconds=120, timeout_seconds=10, period_seconds=30, failure_threshold=3 }` |
 
-**`uptime_check_config` :** Par défaut à `{ enabled = false, path = "/" }` — les vérifications de disponibilité sont **désactivées par défaut** dans la variante GKE. Activez-les explicitement pour la surveillance de production.
+**`uptime_check_config` :** Par défaut à `{ enabled = false, path = "/" }` — les tests de disponibilité sont **désactivés par défaut** dans la variante GKE. Activez-les explicitement pour la surveillance en production.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `uptime_check_config` | `{ enabled=false, path="/" }` | Vérification de disponibilité Cloud Monitoring à partir des emplacements de sonde globaux. Activer pour la production. |
-| `alert_policies` | `[]` | Politiques d'alerte de métriques personnalisées Cloud Monitoring. |
+| `uptime_check_config` | `{ enabled=false, path="/" }` | Test de disponibilité Cloud Monitoring à partir des emplacements de sonde globaux. Activer pour la production. |
+| `alert_policies` | `[]` | Politiques d'alerte de métriques Cloud Monitoring personnalisées. |
 
 ---
 
@@ -345,7 +345,7 @@ Identique à `App_GKE`.
 
 Variables disponibles : `enable_resource_quota`, `quota_cpu_requests`, `quota_cpu_limits`, `quota_memory_requests`, `quota_memory_limits`, `quota_max_pods`, `quota_max_services`, `quota_max_pvcs`.
 
-> **Critique :** `quota_memory_requests` et `quota_memory_limits` doivent utiliser des suffixes d'unité binaire (`Gi`, `Mi`) lorsqu'ils sont définis. Les entiers nus sont traités comme des octets par Kubernetes et empêchent tous les pods d'être planifiés.
+> **Critique :** `quota_memory_requests` et `quota_memory_limits` doivent utiliser des suffixes d'unité binaire (`Gi`, `Mi`) lorsqu'ils sont définis. Les entiers nus sont traités comme des octets par Kubernetes et empêchent la planification de tous les pods.
 
 ---
 
@@ -358,7 +358,7 @@ Variables disponibles : `enable_resource_quota`, `quota_cpu_requests`, `quota_cp
 | `enable_nfs` | `true` | NFS est activé par défaut. Invoice Ninja écrit les documents téléchargés, les logos clients et les PDF générés dans le système de fichiers du conteneur. Sans NFS, les fichiers sont isolés par pod et perdus lors du redémarrage ou de la replanification du pod. |
 | `nfs_mount_path` | `"/var/www/app/public/storage"` | Chemin du conteneur où le volume NFS est monté. |
 | `nfs_volume_name` | `"nfs-data-volume"` | Nom du volume Kubernetes pour le montage NFS. |
-| `nfs_instance_name` | `""` | Nom d'une VM NFS GCE existante. Laisser vide pour la découverte automatique. |
+| `nfs_instance_name` | `""` | Nom d'une VM GCE NFS existante. Laisser vide pour la découverte automatique. |
 | `nfs_instance_base_name` | `"app-nfs"` | Nom de base pour la VM NFS intégrée. L'ID de déploiement est ajouté. |
 
 ---
@@ -376,8 +376,8 @@ Variables disponibles : `enable_resource_quota`, `quota_cpu_requests`, `quota_cp
 | `create_cloud_storage` | `true` | Définir `false` pour ignorer la création du bucket GCS. |
 | `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets GCS supplémentaires à provisionner. |
 | `gcs_volumes` | `[]` | Buckets GCS à monter via le pilote CSI GCS Fuse. |
-| `manage_storage_kms_iam` | `false` | Crée une clé CMEK KMS et active CMEK sur tous les buckets de stockage. |
-| `enable_artifact_registry_cmek` | `false` | Crée une clé KMS Artifact Registry pour le chiffrement des images au repos. |
+| `manage_storage_kms_iam` | `false` | Crée la clé KMS CMEK et active CMEK sur tous les buckets de stockage. |
+| `enable_artifact_registry_cmek` | `false` | Crée la clé KMS Artifact Registry pour le chiffrement des images au repos. |
 
 ---
 
@@ -387,12 +387,12 @@ Variables disponibles : `enable_resource_quota`, `quota_cpu_requests`, `quota_cp
 
 | Variable | Valeur par défaut InvoiceNinja GKE | Valeur par défaut App GKE | Notes |
 |---|---|---|---|
-| `database_type` | `"MYSQL_8_0"` | `"POSTGRES"` | **Invoice Ninja nécessite MySQL 8.0.** Ne pas modifier — le pilote PDO d'Invoice Ninja est uniquement MySQL. |
-| `application_database_name` | `"invoiceninja"` | `"gkeappdb"` | Nom de la base de données MySQL. **Immuable après le premier déploiement** — la modification recrée la base de données et détruit toutes les données de facturation et de devis. |
+| `database_type` | `"MYSQL_8_0"` | `"POSTGRES"` | **Invoice Ninja requiert MySQL 8.0.** Ne pas modifier — le pilote PDO d'Invoice Ninja est uniquement MySQL. |
+| `application_database_name` | `"invoiceninja"` | `"gkeappdb"` | Nom de la base de données MySQL. **Immuable après le premier déploiement** — la modification recrée la base de données et détruit toutes les données de facturation. |
 | `application_database_user` | `"invoiceninja"` | `"gkeappuser"` | Utilisateur de l'application MySQL. **Immuable après le premier déploiement.** |
-| `db_name` | `"invoiceninja"` | *(non dans App GKE)* | Raccourci transmis à `InvoiceNinja Common` pour les jobs `db-init` et `artisan-migrate`. Doit correspondre à `application_database_name`. |
-| `db_user` | `"invoiceninja"` | *(non dans App GKE)* | Raccourci transmis à `InvoiceNinja Common`. Doit correspondre à `application_database_user`. |
-| `database_password_length` | `32` | `32` | Plage : 16 à 64 caractères. |
+| `db_name` | `"invoiceninja"` | *(pas dans App GKE)* | Raccourci transmis à `InvoiceNinja Common` pour les jobs `db-init` et `artisan-migrate`. Doit correspondre à `application_database_name`. |
+| `db_user` | `"invoiceninja"` | *(pas dans App GKE)* | Raccourci transmis à `InvoiceNinja Common`. Doit correspondre à `application_database_user`. |
+| `database_password_length` | `32` | `32` | Plage : 16–64 caractères. |
 
 **Découverte d'instance Cloud SQL :**
 
@@ -414,7 +414,7 @@ Variables disponibles : `enable_resource_quota`, `quota_cpu_requests`, `quota_cp
 
 Identique à `App_GKE`.
 
-> **Note de configuration d'URL d'Invoice Ninja :** Invoice Ninja stocke l'URL de son application dans la base de données lors de la configuration initiale. Lors de l'utilisation d'un domaine personnalisé, la variable d'environnement `APP_URL` doit être définie sur l'URL du domaine avant le premier démarrage. Définissez-la via `environment_variables` :
+> **Note de configuration d'URL Invoice Ninja :** Invoice Ninja stocke l'URL de son application dans la base de données lors de la configuration initiale. Lors de l'utilisation d'un domaine personnalisé, la variable d'environnement `APP_URL` doit être définie sur l'URL du domaine avant le premier démarrage. Définissez-la via `environment_variables` :
 >
 > ```hcl
 > environment_variables = {
@@ -429,14 +429,14 @@ Identique à `App_GKE`.
 | `enable_custom_domain` | `true` | Provisionne une ressource Kubernetes Ingress pour les noms d'hôtes dans `application_domains`. Activé par défaut. |
 | `application_domains` | `[]` | Noms de domaine personnalisés. Le DNS doit pointer vers l'IP de l'équilibreur de charge après le déploiement. |
 | `reserve_static_ip` | `true` | Provisionne une IP externe statique globale pour un mappage DNS stable. |
-| `static_ip_name` | `""` | Nom de l'IP réservée. Auto-généré si vide. |
-| `network_tags` | `["nfsserver"]` | Balises réseau appliquées aux nœuds GKE. La balise `nfsserver` est requise pour les règles de pare-feu NFS lorsque `enable_nfs = true`. |
+| `static_ip_name` | `""` | Nom de l'IP réservée. Auto-généré lorsqu'il est vide. |
+| `network_tags` | `["nfsserver"]` | Tags réseau appliqués aux nœuds GKE. Le tag `nfsserver` est requis pour les règles de pare-feu NFS lorsque `enable_nfs = true`. |
 
 ---
 
-## Groupe 20 : Proxy conscient de l'identité (IAP) {#group-20-identity-aware-proxy-iap}
+## Groupe 20 : Identity-Aware Proxy (IAP) {#group-20-identity-aware-proxy-iap}
 
-Lorsque `enable_iap = true`, IAP nécessite une authentification d'identité Google avant que les utilisateurs puissent accéder à Invoice Ninja. Utile pour restreindre le système de facturation aux employés authentifiés.
+Lorsque `enable_iap = true`, IAP exige une authentification Google Identity avant que les utilisateurs puissent accéder à Invoice Ninja. Utile pour restreindre le système de facturation aux employés authentifiés.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -453,10 +453,10 @@ Lorsque `enable_iap = true`, IAP nécessite une authentification d'identité Goo
 
 | Variable | Valeur par défaut | Notes |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Attache une politique Cloud Armor WAF au backend Ingress de GKE. |
+| `enable_cloud_armor` | `false` | Attache une politique Cloud Armor WAF au backend GKE Ingress. |
 | `admin_ip_ranges` | `[]` | Plages CIDR autorisées par les règles Cloud Armor WAF. |
 | `cloud_armor_policy_name` | `"default-waf-policy"` | Nom de la politique de sécurité Cloud Armor à attacher. |
-| `enable_cdn` | `false` | Acheminer le trafic via l'API Gateway pour la préparation de Cloud CDN. Remarque : après le déploiement, le CDN doit être activé sur le service de backend hors bande via `gcloud compute backend-services update --enable-cdn`. Cloud CDN et IAP s'excluent mutuellement sur la même passerelle. Nécessite `enable_custom_domain = true`. |
+| `enable_cdn` | `false` | Route le trafic via l'API Gateway pour la préparation de Cloud CDN. Remarque : après le déploiement, le CDN doit être activé sur le service backend hors bande via `gcloud compute backend-services update --enable-cdn`. Cloud CDN et IAP sont mutuellement exclusifs sur la même Gateway. Nécessite `enable_custom_domain = true`. |
 
 ---
 
@@ -464,7 +464,7 @@ Lorsque `enable_iap = true`, IAP nécessite une authentification d'identité Goo
 
 Redis est **obligatoire pour les déploiements Invoice Ninja en production** et est activé par défaut. Invoice Ninja utilise Redis pour trois rôles critiques :
 
-- **`QUEUE_CONNECTION=redis`** — Génération de PDF en arrière-plan, envoi d'e-mails et traitement de webhooks. Sans Redis, ces opérations bloquent le cycle de requête HTTP et provoquent des délais d'attente en cas de charge concurrente.
+- **`QUEUE_CONNECTION=redis`** — Génération de PDF en arrière-plan, livraison d'e-mails et traitement de webhooks. Sans Redis, ceux-ci bloquent le cycle de requête HTTP et provoquent des délais d'attente sous une charge concurrente.
 - **`CACHE_DRIVER=redis`** — Mise en cache au niveau de l'application pour les paramètres de l'entreprise, les données client et les calculs de taxes.
 - **`SESSION_DRIVER=redis`** — Stockage de session. Combiné à `session_affinity = "ClientIP"`, cela permet aux sessions d'administration de survivre aux redémarrages de pods (car les données de session résident dans Redis, et non sur le pod).
 
@@ -472,10 +472,10 @@ Redis est **obligatoire pour les déploiements Invoice Ninja en production** et 
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `true` | Active Redis pour la file d'attente, le cache et la session. **Obligatoire pour la production.** À désactiver uniquement dans les environnements de développement où le traitement des tâches en arrière-plan n'est pas nécessaire. |
+| `enable_redis` | `true` | Active Redis pour la file d'attente, le cache et la session. **Obligatoire pour la production.** Désactiver uniquement dans les environnements de développement où le traitement des jobs en arrière-plan n'est pas nécessaire. |
 | `redis_host` | `""` (par défaut, IP du serveur NFS) | Nom d'hôte ou IP du serveur Redis. Laisser vide pour utiliser l'IP du serveur NFS découverte automatiquement. Remplacer par une instance Memorystore pour Redis pour une fiabilité en production. Exemple : `"10.128.0.10"`. |
 | `redis_port` | `"6379"` | Chaîne du port TCP Redis. |
-| `redis_auth` | `""` | Mot de passe d'authentification Redis. Sensible — jamais stocké en clair dans l'état. À définir pour les instances Memorystore avec AUTH activé. |
+| `redis_auth` | `""` | Mot de passe d'authentification Redis. Sensible — jamais stocké en clair dans l'état. Définir pour les instances Memorystore avec AUTH activé. |
 
 **Validation de la connectivité Redis :**
 
@@ -499,7 +499,7 @@ kubectl logs -n NAMESPACE -l app=invoiceninja --tail=50 | grep -i queue
 
 ---
 
-## Groupe 22 : Contrôles de service VPC {#group-22-vpc-service-controls}
+## Groupe 22 : VPC Service Controls {#group-22-vpc-service-controls}
 
 Identique à `App_GKE`.
 
@@ -507,7 +507,7 @@ Identique à `App_GKE`.
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre VPC-SC autour des appels d'API GCP. Nécessite un périmètre existant. |
 | `vpc_cidr_ranges` | `[]` | Plages CIDR de sous-réseau VPC pour le niveau d'accès VPC-SC. Découvertes automatiquement si vides. |
-| `vpc_sc_dry_run` | `true` | Enregistre les violations sans les bloquer. Définir `false` pour appliquer. |
+| `vpc_sc_dry_run` | `true` | Enregistre les violations sans bloquer. Définir `false` pour appliquer. |
 | `organization_id` | `""` | ID d'organisation GCP. Découvert automatiquement à partir du projet. Requis pour les projets imbriqués dans des dossiers. |
 | `enable_audit_logging` | `false` | Active les journaux d'audit Cloud détaillés DATA_READ, DATA_WRITE et ADMIN_READ. |
 
@@ -519,8 +519,8 @@ Ces variables sont spécifiques à Invoice Ninja et ne sont pas présentes dans 
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `invoiceninja_admin_email` | `"admin@example.com"` | Adresse e-mail de l'administrateur. Utilisée pour la connexion et les notifications système. À modifier pour une adresse réelle avant la mise en production. |
-| `mail_from_name` | `"Invoice Ninja"` | Nom d'affichage apparaissant comme expéditeur sur les e-mails Invoice Ninja sortants (livraison de factures, confirmations de paiement, devis). |
+| `invoiceninja_admin_email` | `"admin@example.com"` | Adresse e-mail de l'administrateur. Utilisée pour la connexion et les notifications système. À remplacer par une adresse réelle avant la mise en production. |
+| `mail_from_name` | `"Invoice Ninja"` | Nom d'affichage figurant comme expéditeur sur les e-mails Invoice Ninja sortants (livraison de factures, confirmations de paiement, devis). |
 | `mail_from_address` | `"ninja@example.com"` | Adresse e-mail utilisée comme expéditeur. Doit correspondre à un domaine d'envoi vérifié pour la délivrabilité. |
 
 ---
@@ -529,15 +529,15 @@ Ces variables sont spécifiques à Invoice Ninja et ne sont pas présentes dans 
 
 Pour les déploiements où un stockage persistant par pod est requis en plus de NFS (par exemple, chaque pod met en cache les PDF générés localement avant de les télécharger), Invoice Ninja GKE prend en charge le mode StatefulSet.
 
-La définition de `stateful_pvc_enabled = true` résout automatiquement `workload_type` en `"StatefulSet"`. Ne définissez pas `workload_type = "Deployment"` en même temps que `stateful_pvc_enabled = true` — cela échouerait au moment de la planification.
+La définition de `stateful_pvc_enabled = true` résout automatiquement `workload_type` en `"StatefulSet"`. Ne définissez pas `workload_type = "Deployment"` en même temps que `stateful_pvc_enabled = true` — cela échouera au moment de la planification.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `null` | Active les modèles de PVC dans le StatefulSet. Sélectionne automatiquement StatefulSet lorsque `true`. |
-| `stateful_pvc_size` | `"10Gi"` | Stockage par réplica de pod. Le stockage temporaire de PDF d'Invoice Ninja peut augmenter rapidement — prévoyez 20 à 50 Gi pour les déploiements actifs. La taille du PVC peut être étendue mais pas réduite. |
+| `stateful_pvc_enabled` | `null` | Active les modèles PVC dans le StatefulSet. Sélectionne automatiquement StatefulSet lorsque `true`. |
+| `stateful_pvc_size` | `"10Gi"` | Stockage par réplica de pod. Le stockage temporaire de PDF d'Invoice Ninja peut augmenter rapidement — prévoyez 20 à 50 Gio pour les déploiements actifs. La taille du PVC peut être étendue mais pas réduite. |
 | `stateful_pvc_mount_path` | `"/data"` | Chemin du conteneur pour le PVC par pod. |
-| `stateful_pvc_storage_class` | `"standard-rwo"` | Classe de stockage Kubernetes. `"standard-rwo"` (Balanced PD, ReadWriteOnce) est la valeur par défaut de GKE Autopilot. |
-| `stateful_headless_service` | `null` | Crée un service sans tête pour un DNS de pod stable. À définir lorsque les pods Invoice Ninja nécessitent la découverte de pairs. |
+| `stateful_pvc_storage_class` | `"standard-rwo"` | Kubernetes StorageClass. `"standard-rwo"` (PD équilibré, ReadWriteOnce) est la valeur par défaut de GKE Autopilot. |
+| `stateful_headless_service` | `null` | Crée un service sans tête pour un DNS de pod stable. Définir lorsque les pods Invoice Ninja nécessitent une découverte de pairs. |
 | `stateful_pod_management_policy` | `null` | `"OrderedReady"` ou `"Parallel"`. Par défaut `"OrderedReady"`. |
 | `stateful_update_strategy` | `null` | `"RollingUpdate"` ou `"OnDelete"`. Par défaut `"RollingUpdate"`. |
 
@@ -563,7 +563,7 @@ La définition de `stateful_pvc_enabled = true` résout automatiquement `workloa
 | `container_image` | Image de conteneur utilisée pour le déploiement. |
 | `cicd_enabled` | Indique si le pipeline CI/CD est activé. |
 | `github_repository_url` | URL du dépôt GitHub connecté pour le CI/CD. |
-| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est accessible et que toutes les ressources Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster inline — réexécutez apply pour terminer le déploiement. |
+| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est accessible et que toutes les ressources Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster intégré — relancer l'apply pour terminer le déploiement. |
 
 ---
 
@@ -573,7 +573,7 @@ La définition de `stateful_pvc_enabled = true` résout automatiquement `workloa
 - Accédez à **Kubernetes Engine** → **Charges de travail**.
 - Filtrez par l'espace de noms Invoice Ninja (généré automatiquement comme `invoiceninja-<deployment-id>` lorsque `namespace_name` est vide).
 - Le déploiement ou le StatefulSet pour `invoiceninja` affiche le nombre actuel de pods en cours d'exécution, l'état du déploiement et l'image du conteneur.
-- Cliquez sur le nom de la charge de travail pour afficher les conditions des pods, les événements et l'utilisation des ressources. Recherchez les événements `OOMKilled` sous 2 Gi de mémoire — ils indiquent que la génération de PDF Chromium atteint les limites de mémoire.
+- Cliquez sur le nom de la charge de travail pour voir les conditions des pods, les événements et l'utilisation des ressources. Surveillez les événements `OOMKilled` sous 2 Gio de mémoire — ils indiquent que la génération de PDF Chromium atteint les limites de mémoire.
 
 **Services et Ingress GKE**
 - Accédez à **Kubernetes Engine** → **Services et Ingress**.
@@ -589,7 +589,7 @@ La définition de `stateful_pvc_enabled = true` résout automatiquement `workloa
 - Accédez à **Kubernetes Engine** → **Jobs** (ou **Charges de travail** filtrées sur Jobs).
 - Filtrez par l'espace de noms Invoice Ninja.
 - Trouvez les jobs `db-init` et `artisan-migrate`. Leur statut affiche `Complete` après un déploiement réussi ou `Failed` si l'initialisation a rencontré une erreur.
-- Cliquez sur un job pour afficher son historique d'exécution, les journaux des pods et les codes de sortie. La sortie de la migration Artisan est la plus utile pour déboguer les problèmes liés au schéma après les mises à niveau de version.
+- Cliquez sur un job pour voir son historique d'exécution, les journaux des pods et les codes de sortie. La sortie de la migration Artisan est la plus utile pour déboguer les problèmes liés au schéma après les mises à niveau de version.
 
 **Cloud SQL**
 - Accédez à **SQL** → sélectionnez l'instance MySQL 8.0.
@@ -608,8 +608,8 @@ La définition de `stateful_pvc_enabled = true` résout automatiquement `workloa
 
 **Surveillance**
 - Accédez à **Surveillance** → **Explorateur de métriques**.
-- Sélectionnez la métrique `kubernetes.io/container/memory/used_bytes` filtrée sur l'espace de noms Invoice Ninja. Surveillez la pression de la mémoire pendant la génération de PDF.
-- Accédez à **Surveillance** → **Tests de disponibilité** pour afficher l'état de disponibilité (si `uptime_check_config.enabled = true`).
+- Sélectionnez la métrique `kubernetes.io/container/memory/used_bytes` filtrée sur l'espace de noms Invoice Ninja. Surveillez la pression mémoire pendant la génération de PDF.
+- Accédez à **Surveillance** → **Tests de disponibilité** pour voir l'état de disponibilité (si `uptime_check_config.enabled = true`).
 - Accédez à **Surveillance** → **Alertes** pour les politiques d'alerte configurées.
 
 ---
@@ -759,7 +759,7 @@ gcloud secrets versions access latest \
   --format=json | head -c 20
 ```
 
-**Inspecter Memorystore Redis (si vous utilisez une instance dédiée)**
+**Inspecter Memorystore Redis (si utilisation d'une instance dédiée)**
 ```bash
 # List Redis instances
 gcloud redis instances list \
@@ -811,33 +811,31 @@ gcloud alpha monitoring policies list \
 
 ## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
-> Niveaux de risque : **Critique** (perte de données, panne totale, violation de sécurité) — **Élevé** (service indisponible ou dégradation significative) — **Moyen** (fonction dégradée ou coût accru) — **Faible** (impact mineur).
+> Niveaux de risque : **Critique** (perte de données, panne totale, faille de sécurité) — **Élevé** (service indisponible ou dégradation significative) — **Moyen** (fonction dégradée ou coût accru) — **Faible** (impact mineur).
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | _(obligatoire)_ | **Critique** | Pas de valeur par défaut — le déploiement échoue immédiatement. |
-| `database_type` | `"MYSQL_8_0"` | **Critique** | Invoice Ninja nécessite exclusivement MySQL. La définition de `POSTGRES` entraîne l'échec de l'application au démarrage avec une erreur de pilote PDO. Le module GKE connecte automatiquement les identifiants MySQL — un type de base de données non concordant interrompt toute injection d'identifiants. |
-| `application_database_name` | `"invoiceninja"` | **Critique** | Immuable après le premier déploiement. La modification de cette valeur entraîne la recréation de la base de données par Terraform, détruisant toutes les données de factures, de clients et de paiements. |
+| `database_type` | `"MYSQL_8_0"` | **Critique** | Invoice Ninja nécessite exclusivement MySQL. La définition à `POSTGRES` entraîne l'échec de l'application au démarrage avec une erreur de pilote PDO. Le module GKE connecte automatiquement les identifiants MySQL — un type de base de données non concordant interrompt toute injection d'identifiants. |
+| `application_database_name` | `"invoiceninja"` | **Critique** | Immuable après le premier déploiement. La modification de cette valeur entraîne la recréation de la base de données par Terraform, détruisant toutes les données de facture, de client et de paiement. |
 | `application_database_user` | `"invoiceninja"` | **Critique** | Immuable après le premier déploiement. La modification de cette valeur recrée l'utilisateur MySQL, invalide les identifiants et interrompt la connexion de l'application. |
-| `enable_redis` | `true` | **Critique** | Invoice Ninja REQUIERT Redis pour le traitement des files d'attente en arrière-plan. Sans Redis, la génération de PDF et l'envoi d'e-mails sont synchrones — ils bloquent les requêtes HTTP, provoquent des délais d'attente côté client et échouent sous une charge concurrente. La livraison des factures devient peu fiable. |
-| `redis_host` | `""` | **Élevé** | Se résout automatiquement à l'IP du serveur NFS. Si NFS est désactivé et qu'aucun `redis_host` explicite n'est défini, Invoice Ninja ne peut pas se connecter à son backend de file d'attente au démarrage. Les pods démarrent mais les jobs de file d'attente échouent silencieusement. |
-| `enable_nfs` | `true` | **Élevé** | Invoice Ninja écrit les documents téléchargés, les logos des clients et les données mises en cache dans le système de fichiers du conteneur. Sans NFS, le répertoire `/var/www/app/public/storage` est isolé par pod — le contenu téléchargé sur un pod est invisible pour les autres et perdu lors du redémarrage du pod. |
-| `session_affinity` | `"ClientIP"` | **Élevé** | Invoice Ninja utilise des sessions PHP côté serveur stockées dans Redis. Sans `"ClientIP"`, les requêtes d'administration peuvent être acheminées vers un pod sans le contexte de session actif, déconnectant les utilisateurs en cours de session. Gardez toujours `"ClientIP"` pour tout déploiement multi-répliques. |
-| `container_resources.memory_limit` | `"2Gi"` | **Élevé** | En dessous de 1 Gi, Chromium tue les processus par manque de mémoire lors de la génération de PDF, renvoyant des PDF vierges ou corrompus aux clients. Les environnements de facturation actifs avec des rendus PDF concurrents nécessitent 4 Gi. |
-| `invoiceninja_admin_email` | `"admin@example.com"` | **Moyen** | L'espace réservé par défaut doit être remplacé par une adresse réelle. L'administrateur ne peut pas recevoir de notifications système ni effectuer de réinitialisation de mot de passe avec une adresse e-mail d'espace réservé. |
+| `enable_redis` | `true` | **Critique** | Invoice Ninja NÉCESSITE Redis pour le traitement des files d'attente en arrière-plan. Sans Redis, la génération de PDF et la livraison d'e-mails sont synchrones — elles bloquent les requêtes HTTP, provoquent des délais d'attente côté client et échouent sous une charge concurrente. La livraison des factures devient peu fiable. |
+| `redis_host` | `""` | **Élevé** | Se résout automatiquement en IP du serveur NFS. Si NFS est désactivé et qu'aucun `redis_host` explicite n'est défini, Invoice Ninja ne peut pas se connecter à son backend de file d'attente au démarrage. Les pods démarrent mais les jobs de file d'attente échouent silencieusement. |
+| `enable_nfs` | `true` | **Élevé** | Invoice Ninja écrit les documents téléchargés, les logos des clients et les données mises en cache dans le système de fichiers du conteneur. Sans NFS, le répertoire `/var/www/app/public/storage` est isolé par pod — le contenu téléchargé sur un pod est invisible pour les autres et perdu au redémarrage du pod. |
+| `session_affinity` | `"ClientIP"` | **Élevé** | Invoice Ninja utilise des sessions PHP côté serveur stockées dans Redis. Sans `"ClientIP"`, les requêtes d'administration peuvent être acheminées vers un pod sans le contexte de session actif, déconnectant les utilisateurs en cours de session. Gardez toujours `"ClientIP"` pour tout déploiement multi-réplica. |
+| `container_resources.memory_limit` | `"2Gi"` | **Élevé** | En dessous de 1 Gio, Chromium tue les processus OOM pendant la génération de PDF, renvoyant des PDF vierges ou corrompus aux clients. Les environnements de facturation actifs avec des rendus PDF concurrents nécessitent 4 Gio. |
+| `invoiceninja_admin_email` | `"admin@example.com"` | **Moyen** | L'espace réservé par défaut doit être remplacé par une adresse réelle. L'administrateur ne peut pas recevoir de notifications système ni effectuer de réinitialisation de mot de passe avec un e-mail d'espace réservé. |
 | `mail_from_address` | `"ninja@example.com"` | **Élevé** | Les e-mails de livraison de factures provenant d'un domaine non vérifié sont rejetés par les serveurs de messagerie des clients ou marqués comme spam. Configurez un domaine d'expéditeur vérifié avant d'envoyer des factures aux clients. |
-| `backup_retention_days` | `7` | **Moyen** | Gravement insuffisant pour les données de facturation. De nombreuses juridictions exigent une conservation des registres de factures de 5 à 7 ans. Augmentez à un minimum de 90 jours ; envisagez 365 jours ou plus pour la conformité. |
-| `pdb_min_available` | `"1"` | **Moyen** | Avec un seul réplica, PDB empêche les perturbations volontaires indéfiniment — les mises à niveau de nœuds et la maintenance du cluster stagnent. Utilisez au moins 2 réplicas en production pour permettre une maintenance continue. |
-| `startup_probe` initial_delay_seconds | `90` | **Élevé** | Invoice Ninja exécute le démarrage PHP + les migrations facultatives au premier démarrage. La réduction en dessous de 60 secondes entraîne le redémarrage du pod par Kubernetes avant qu'Invoice Ninja ne soit prêt, créant une boucle de redémarrage avec un backoff croissant. |
-| `enable_cloud_armor` | `false` | **Moyen** | Sans Cloud Armor, le panneau d'administration d'Invoice Ninja (`/`) n'est protégé que par une authentification au niveau de l'application. Les attaques de bots et de credential stuffing contre le formulaire de connexion sont courantes. Activez-le pour tout déploiement accessible publiquement. |
+| `backup_retention_days` | `7` | **Moyen** | Gravement insuffisant pour les données de facturation. De nombreuses juridictions exigent une conservation des enregistrements de factures de 5 à 7 ans. Augmentez à un minimum de 90 jours ; envisagez 365 jours ou plus pour la conformité. |
+| `pdb_min_available` | `"1"` | **Moyen** | Avec un seul réplica, PDB empêche les perturbations volontaires indéfiniment — les mises à niveau de nœuds et la maintenance du cluster stagnent. Utilisez au moins 2 réplicas en production pour permettre une maintenance progressive. |
+| `startup_probe` initial_delay_seconds | `90` | **Élevé** | Invoice Ninja exécute le démarrage PHP + des migrations facultatives au premier démarrage. Réduire en dessous de 60 secondes entraîne le redémarrage du pod par Kubernetes avant qu'Invoice Ninja ne soit prêt, créant une boucle de redémarrage avec un backoff croissant. |
+| `enable_cloud_armor` | `false` | **Moyen** | Sans Cloud Armor, le panneau d'administration d'Invoice Ninja (`/`) est protégé uniquement par une authentification au niveau de l'application. Le trafic de bots et les attaques par bourrage d'identifiants contre le formulaire de connexion sont courants. Activez-le pour tout déploiement accessible publiquement. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Critique** (spécifique à GKE) | Doit utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'il est défini. Les entiers bruts sont traités comme des octets, empêchant la planification de tous les pods et provoquant une panne complète du déploiement. |
 | `enable_topology_spread` | `false` | **Moyen** | Sans répartition topologique, tous les réplicas peuvent atterrir dans la même zone GKE. Une défaillance de zone entraîne la panne de l'ensemble du déploiement Invoice Ninja. Activez-le pour les déploiements de production avec `min_instance_count > 1`. |
-| `APP_URL env var` | _(non défini par défaut)_ | **Moyen** | Si Invoice Ninja s'initialise sans un `APP_URL` correct, tous les liens dans les factures envoyées et les e-mails du portail client feront référence à `localhost` ou à une URL incorrecte. Définissez `APP_URL` dans `environment_variables` avant le premier démarrage. |
-
-<!-- related-guides -->
+| `APP_URL env var` | _(non défini par défaut)_ | **Moyen** | Si Invoice Ninja s'initialise sans un `APP_URL` correct, tous les liens dans les factures envoyées et les e-mails du portail client référencent `localhost` ou une URL incorrecte. Définissez `APP_URL` dans `environment_variables` avant le premier démarrage. |
 
 ## Guides associés {#related-guides}
 
-- [Labo pratique : InvoiceNinja sur GKE Autopilot](../labs/InvoiceNinja_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
-- [Invoice Ninja sur Google Cloud Run](InvoiceNinja_CloudRun.md) — la même application sur Cloud Run, pour lorsque vous avez besoin de l'autre cible de déploiement.
-- [Module de configuration partagée commune d'InvoiceNinja](InvoiceNinja_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- [Lab pratique : InvoiceNinja sur GKE Autopilot](../labs/InvoiceNinja_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
+- [Invoice Ninja sur Google Cloud Run](InvoiceNinja_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.
+- [Module de configuration partagée commune InvoiceNinja](InvoiceNinja_Common.md) — la configuration partagée par les deux cibles de déploiement.

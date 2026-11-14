@@ -3,43 +3,42 @@ title: "Crawl4AI sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Crawl4AI sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Crawl4AI_GKE.md @ 60462a86 sha256:1dd1fccb2c63 -->
+<!-- translated-from: docs/modules/Crawl4AI_GKE.md @ 40c83c3f sha256:8e703f0e5ec2 -->
 
 # Crawl4AI sur GKE Autopilot {#crawl4ai-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Crawl4AI_GKE.png" alt="Crawl4AI sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Crawl4AI est un robot d'exploration et de scraping web open-source, compatible
-avec les LLM. Ce module déploie Crawl4AI sur **GKE Autopilot** au-dessus de la
-fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure
-partagée de Google Cloud et Kubernetes.
+Crawl4AI est un crawler et scraper web open source compatible LLM. Ce module
+déploie Crawl4AI sur **GKE Autopilot** au-dessus du socle [App_GKE](App_GKE.md),
+qui provisionne et gère l'infrastructure partagée Google Cloud et Kubernetes.
 
 Ce guide se concentre sur les services cloud utilisés par Crawl4AI et sur la
-manière de les explorer et de les opérer depuis la Google Cloud Console et la
-ligne de commande. Pour les mécanismes communs à toutes les applications GKE —
+manière de les explorer et de les opérer depuis la console Google Cloud et la
+ligne de commande. Pour les mécanismes communs à chaque application GKE —
 Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement
-— veuillez vous référer au [guide de la fondation App_GKE](App_GKE.md) plutôt
-que de les répéter ici.
+Authorization, VPC Service Controls, sauvegardes et cycle de vie du
+déploiement — veuillez vous référer au [guide du socle App_GKE](App_GKE.md)
+plutôt que de les répéter ici.
 
 ---
 
-## Ce que coûte Crawl4AI sur RAD, et comment cela se compare {#what-crawl4ai-costs-on-rad-and-how-that-compares}
+## Ce que coûte Crawl4AI sur RAD, et comparaison {#what-crawl4ai-costs-on-rad-and-how-that-compares}
 
-**Le module Crawl4AI sur GKE Autopilot de RAD coûte environ 164,69 $ US par mois dans un projet Google Cloud que vous possédez, plus des frais de module uniques de 175 crédits (17,50 $ US).** Crawl4AI est un robot d'exploration et de scraping web open-source, compatible avec les LLM, pour les pipelines d'ingestion RAG. Pour le coût le plus bas, le [guide Cloud Run](Crawl4AI_CloudRun.md) exécute le même Crawl4AI pour environ 22,33 $ US par mois ; choisissez GKE ici uniquement si Crawl4AI doit rester actif en permanence, s'adapter à travers les pods ou fonctionner à côté d'autres charges de travail Kubernetes.
+**Le module GKE Autopilot de Crawl4AI sur RAD coûte environ 164,69 $ US par mois dans un projet Google Cloud que vous possédez, plus des frais de module uniques de 175 crédits (17,50 $ US).** Crawl4AI est un crawler et scraper web open source, compatible LLM, pour les pipelines d'ingestion RAG. Pour le coût le plus bas, le [guide Cloud Run](Crawl4AI_CloudRun.md) exécute le même Crawl4AI pour environ 22,33 $ US par mois ; choisissez GKE ici seulement si Crawl4AI doit rester actif en continu, s'adapter à travers plusieurs pods, ou fonctionner aux côtés d'autres charges de travail Kubernetes.
 
-Si Crawl4AI n'est nécessaire qu'occasionnellement — une démo, un essai, une charge de travail saisonnière ou d'étude — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que 164,69 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si Crawl4AI n'est nécessaire qu'occasionnellement — une démo, un essai, une charge de travail saisonnière ou d'étude — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les 164,69 $ US deviennent quelques dollars par mois à la place. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **164,69 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **117 crédits par jour**, soit environ 3510 par mois (environ 351 $ US au prix de la recharge) |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **164,69 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **125 crédits par jour**, environ 3 750 par mois (environ 375 $ US au prix de la recharge ; estimé à partir des prix catalogue Google, et incluant les frais de cluster) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
-10 crédits coûtent 1 $ US pour une recharge unique, moins sur un plan. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
+10 crédits coûtent 1 $ US pour une recharge ponctuelle, moins sur un plan. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par chaque application du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
 
 **Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
 
@@ -51,61 +50,72 @@ Si Crawl4AI n'est nécessaire qu'occasionnellement — une démo, un essai, une 
 | Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 |
 | **Total** | **environ 164,69 $ US** |
 
-### Comment cela se compare {#how-it-compares}
+### Comparaison {#how-it-compares}
 
-- Si vous l'exécutez vous-même, un VPS exécutant le propre conteneur de Crawl4AI coûte moins cher en espèces : dimensionné à environ 4 vCPU/8 Gio, un VPS comparable (Hetzner ou DigitalOcean) coûte environ 24–48 $ par mois, ou une VM GCP de classe `e2-standard-2` environ 49 $ — plus votre propre temps pour les sauvegardes, les correctifs de sécurité et les mises à niveau, que le Cloud SQL géré par RAD, Secret Manager et la surveillance couvrent pour vous.
-- RAD ne prétend jamais être moins cher que l'infrastructure nue en termes monétaires — ce n'est généralement pas le cas. La différence réside dans ce que RAD gère pour vous : les correctifs, les sauvegardes, les secrets et la surveillance, ainsi que la possibilité de mettre Crawl4AI en pause gratuitement plutôt que de payer pour une capacité inactive (voir ci-dessous).
+- Si vous l'exécutez vous-même, un VPS exécutant le conteneur de Crawl4AI coûte moins cher en espèces : dimensionné à environ 4 vCPU/8 Gio, un VPS comparable (Hetzner ou DigitalOcean) coûte environ 24 à 48 $ par mois, ou une VM GCP de classe `e2-standard-2` environ 49 $ — plus votre propre temps pour les sauvegardes, les correctifs de sécurité et les mises à niveau, que Cloud SQL géré, Secret Manager et la surveillance de RAD couvrent pour vous.
+- RAD ne prétend jamais être moins cher que l'infrastructure nue en termes d'argent — ce n'est généralement pas le cas. La différence est ce que RAD gère pour vous : les correctifs, les sauvegardes, les secrets et la surveillance, ainsi que la possibilité de mettre Crawl4AI en pause gratuitement plutôt que de payer pour une capacité inactive (voir ci-dessous).
 
 ### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 Si Crawl4AI s'exécute dans **un projet géré par RAD pour vous**, vous avez une deuxième option qui va bien au-delà de la mise à l'échelle à zéro : **supprimez l'ensemble du projet et restaurez-le dans les 30 jours pour presque rien.** Cela convient bien mieux à Crawl4AI dont vous n'avez besoin qu'occasionnellement que de le faire fonctionner en continu.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable, pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un seul module, cela ne démantèle pas les ressources GKE Autopilot une par une — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
-- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, et non 164,69 $ US.** Déployez Crawl4AI, utilisez-le, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Update, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, et les heures pendant lesquelles il était réellement actif.
-- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que vous apportez et dont RAD ne gère que la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude et de démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable, pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un module, cela ne détruit pas les ressources GKE Autopilot une par une — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
+- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, et non les 375 $ US par mois pour le maintenir en fonctionnement.** Déployez Crawl4AI, utilisez-le, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre à jour, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois et pour les heures où il était réellement actif.
+- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que vous apportez et dont RAD ne gère que la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude et de démo). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 - **Une lacune réelle : le bucket de sauvegarde ne survit pas.** Les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket n'est **pas** protégé par la suppression logicielle de Cloud Storage, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé Crawl4AI et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
 GKE Autopilot maintient au moins un pod en cours d'exécution, il ne se met donc jamais à l'échelle à zéro de lui-même. L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 175 crédits (17,50 $ US) dans votre propre projet. La suppression ne permet d'économiser de l'argent que si Crawl4AI resterait inutilisé pendant environ 4 jours ou plus dans votre propre projet (5,49 $ US par jour), ou environ 2 jours ou plus dans un projet géré par RAD (117 crédits par jour).
-- **Conservez d'abord vos données.** Les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du déploiement et sont supprimées avec celui-ci, alors copiez la dernière sauvegarde avant de la supprimer si vous souhaitez la conserver.
-- **Notez vos paramètres.** RAD ne recrée pas un déploiement supprimé pour vous ; vous saisissez à nouveau les paramètres lors du déploiement.
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 175 crédits (17,50 $ US) dans votre propre projet. La suppression ne permet d'économiser de l'argent que si Crawl4AI resterait inutilisé pendant environ 4 jours ou plus dans votre propre projet (5,49 $ US par jour), ou environ 2 jours ou plus dans un projet géré par RAD (125 crédits par jour).
+- **Conservez d'abord vos données.** Les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du déploiement et sont supprimées avec celui-ci, donc copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
+- **Notez vos paramètres.** RAD ne recrée pas un déploiement supprimé pour vous ; vous entrez les paramètres à nouveau lorsque vous déployez.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose de l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits non utilisés sont reversés au formateur.
-- **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est interrompue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits non utilisés sont reversés au formateur.
+- **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais propres de RAD et estimations de crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour la fenêtre de récupération de 30 jours et ce qu'elle dit sur les objets Cloud Storage sans suppression logicielle. Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
+**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais propres à RAD et estimations de crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour la fenêtre de récupération de 30 jours et ce qu'il dit sur les objets Cloud Storage sans suppression logicielle. Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Crawl4AI s'exécute en tant que service Python/ASGI géré par supervisord. Le
-déploiement relie un ensemble ciblé de services Google Cloud :
+Crawl4AI s'exécute comme un service Python/ASGI géré par supervisord. Le déploiement
+relie un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | GKE Autopilot | Pods Python, 4 vCPU / 8 Gio par défaut, mise à l'échelle horizontale automatique |
+| Calcul | GKE Autopilot | Pods Python, 4 vCPU / 8 Gio par défaut, autoscaling horizontal |
 | File d'attente de tâches | Redis intégré (dans le pod) | Supervisord démarre Redis à l'intérieur du conteneur ; éphémère par pod |
 | Serveur ASGI | Gunicorn intégré (dans le pod) | Port 11235, géré par supervisord avec Redis |
-| Stockage d'objets | Cloud Storage | Buckets optionnels pour la mise en cache des résultats d'exploration (aucun par défaut) |
-| Secrets | Secret Manager | Clés API et secret JWT injectés au moment de l'exécution |
-| Ingress | Cloud Load Balancing | Équilibreur de charge externe, domaine personnalisé optionnel + certificat géré |
+| Stockage d'objets | Cloud Storage | Buckets optionnels pour la mise en cache des résultats de crawl (aucun par défaut) |
+| Secrets | Secret Manager | Clés API et secret JWT injectés à l'exécution |
+| Ingress | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé optionnel + certificat géré |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **Pas de base de données externe.** `database_type` est fixé à `NONE` — Cloud SQL n'est pas provisionné. Tout l'état des tâches réside dans l'instance Redis intégrée au pod et est perdu lorsque le pod redémarre.
-- **Gen2 n'est pas un problème sur GKE.** Contrairement à Cloud Run, GKE fournit un arbre de processus Linux approprié, de sorte que supervisord s'exécute sans contrainte. Chromium obtient un véritable volume emptyDir `/dev/shm` — la solution de contournement Cloud Run `--disable-dev-shm-usage` n'est pas nécessaire.
-- **Redis s'exécute à l'intérieur du pod.** Ne définissez pas `REDIS_HOST` ou `REDIS_PORT` comme variables d'environnement — elles doivent rester à `localhost:6379` pour atteindre l'instance groupée.
-- **L'affinité de session est `None`.** Les ID de tâche émis par un pod ne sont pas visibles par les autres pods ; les clients interrogeant l'état des tâches doivent acheminer les requêtes vers le pod d'origine ou utiliser des appels d'exploration synchrones (`POST /crawl/sync`).
-- **La sécurité est désactivée par défaut.** L'authentification JWT nécessite de fournir un `SECRET_KEY` via `secret_environment_variables` et un `config.yml` personnalisé avec `security.jwt_enabled=true`.
+- **Pas de base de données externe.** `database_type` est fixé à `NONE` — Cloud SQL n'est
+  pas provisionné. Tout l'état des tâches réside dans l'instance Redis du pod et est
+  perdu lorsque le pod redémarre.
+- **Gen2 n'est pas un problème sur GKE.** Contrairement à Cloud Run, GKE fournit un véritable
+  arbre de processus Linux, de sorte que supervisord s'exécute sans contrainte. Chromium obtient un
+  vrai volume `/dev/shm` emptyDir — la solution de contournement `--disable-dev-shm-usage` Cloud Run
+  n'est pas nécessaire.
+- **Redis s'exécute à l'intérieur du pod.** Ne définissez pas `REDIS_HOST` ou `REDIS_PORT` comme
+  variables d'environnement — elles doivent rester à `localhost:6379` pour atteindre l'instance
+  intégrée.
+- **L'affinité de session est `None`.** Les ID de tâche émis par un pod ne sont pas visibles par
+  d'autres pods ; les clients interrogeant l'état des tâches doivent acheminer les requêtes vers le
+  pod d'origine ou utiliser des appels de crawl synchrones (`POST /crawl/sync`).
+- **La sécurité est désactivée par défaut.** L'authentification JWT nécessite de fournir un
+  `SECRET_KEY` via `secret_environment_variables` et un `config.yml` personnalisé
+  avec `security.jwt_enabled=true`.
 
 ---
 
@@ -114,19 +124,18 @@ déploiement relie un ensemble ciblé de services Google Cloud :
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
 et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
-identifiants sont signalés dans les [Sorties](#5-outputs) du déploiement.
+identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Crawl4AI {#a-gke-autopilot--the-crawl4ai-workload}
 
-Les pods Crawl4AI s'exécutent sur Autopilot, qui facture le CPU/la mémoire que
-les pods demandent réellement. L'autoscaling horizontal des pods dimensionne le
-déploiement entre le nombre minimal et maximal de réplicas. Chaque pod exécute
-son propre arbre supervisord : Redis (priorité 10) démarre en premier, puis
-Gunicorn (priorité 20).
+Les pods Crawl4AI s'exécutent sur Autopilot, qui facture le CPU/la mémoire que les pods
+demandent réellement. L'autoscaling horizontal des pods dimensionne le déploiement entre les
+nombres minimum et maximum de réplicas. Chaque pod exécute son propre arbre supervisord :
+Redis (priorité 10) démarre en premier, puis Gunicorn (priorité 20).
 
-- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
-  travail Crawl4AI pour voir les pods, les révisions et les événements.
-  Kubernetes Engine → Services & Ingress affiche l'adresse IP externe.
+- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de travail Crawl4AI pour
+  voir les pods, les révisions et les événements. Kubernetes Engine → Services et Ingress affiche
+  l'IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -136,17 +145,16 @@ Gunicorn (priorité 20).
   kubectl exec -n "$NAMESPACE" deploy/<service-name> -- supervisorctl status
   ```
 
-Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle
-et du type de charge de travail (Deployment vs StatefulSet).
+Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et du type de charge de travail
+(Déploiement vs StatefulSet).
 
 ### B. Redis intégré et file d'attente de tâches {#b-embedded-redis-and-task-queue}
 
-Redis s'exécute à l'intérieur de chaque pod en tant que processus géré par
-supervisord sur `localhost:6379`. Il stocke les résultats des tâches avec un TTL
-configurable (`redis_task_ttl_seconds`, 3600 s par défaut). Les résultats des tâches sont
-perdus lorsque le pod redémarre — c'est normal pour une API d'exploration
-éphémère. Il n'y a pas d'instance Memorystore ; le Redis intégré n'apparaît pas
-dans la Console.
+Redis s'exécute à l'intérieur de chaque pod en tant que processus géré par supervisord sur
+`localhost:6379`. Il stocke les résultats des tâches avec un TTL configurable
+(`redis_task_ttl_seconds`, par défaut 3600 s). Les résultats des tâches sont perdus lorsque le pod
+redémarre — c'est attendu pour une API de crawl éphémère. Il n'y a pas d'instance Memorystore ;
+le Redis intégré n'apparaît pas dans la Console.
 
 - **CLI (depuis l'intérieur d'un pod) :**
   ```bash
@@ -155,11 +163,11 @@ dans la Console.
   kubectl exec -n "$NAMESPACE" deploy/<service-name> -- redis-cli dbsize
   ```
 
-### C. Cloud Storage (optionnel) {#c-cloud-storage-optional}
+### C. Cloud Storage (facultatif) {#c-cloud-storage-optional}
 
-Crawl4AI n'a pas de bucket GCS par défaut — il est sans état. Des buckets
-optionnels peuvent être provisionnés via `storage_buckets` pour stocker les résultats
-d'exploration ou des fichiers `config.yml` personnalisés.
+Crawl4AI n'a pas de bucket GCS par défaut — il est sans état. Des buckets optionnels peuvent être
+provisionnés via `storage_buckets` pour stocker les résultats de crawl ou des fichiers
+`config.yml` personnalisés.
 
 - **Console :** Cloud Storage → Buckets.
 - **CLI :**
@@ -172,10 +180,10 @@ Voir [App_GKE](App_GKE.md) pour les montages GCS Fuse et les options CMEK.
 
 ### D. Secret Manager {#d-secret-manager}
 
-Les clés API LLM et le secret de signature JWT sont stockés en tant que secrets
-Secret Manager et injectés dans les pods au moment de l'exécution ; le texte en
-clair n'apparaît jamais dans la configuration. Crawl4AI n'a pas de secrets
-auto-générés — tous les secrets doivent être fournis via `secret_environment_variables`.
+Les clés API LLM et le secret de signature JWT sont stockés en tant que secrets Secret Manager
+et injectés dans les pods à l'exécution ; le texte en clair n'apparaît jamais dans la configuration.
+Crawl4AI n'a pas de secrets auto-générés — tous les secrets doivent être fournis via
+`secret_environment_variables`.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -184,40 +192,35 @@ auto-générés — tous les secrets doivent être fournis via `secret_environme
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Noms de secrets reconnus (passez le nom du secret Secret Manager, pas la
-valeur) : `SECRET_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `DEEPSEEK_API_KEY`,
+Noms de secrets reconnus (passez le nom du secret Secret Manager, pas la valeur) :
+`SECRET_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `DEEPSEEK_API_KEY`,
 `GROQ_API_KEY`, `GEMINI_API_KEY`, `LLM_API_KEY`.
 
-Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation de Secret Store
-CSI.
+Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation de Secret Store CSI.
 
 ### E. Réseau et ingress {#e-networking--ingress}
 
-Par défaut, la charge de travail est exposée via une adresse IP externe Cloud
-Load Balancing. Un domaine personnalisé avec un certificat géré par Google peut
-être activé, et une adresse IP statique peut être réservée afin que l'adresse
-survive aux redéploiements.
+Par défaut, la charge de travail est exposée via une IP externe de Cloud Load Balancing.
+Un domaine personnalisé avec un certificat géré par Google peut être activé, et une IP statique
+peut être réservée afin que l'adresse survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses
-  IP.
+- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les
-détails des adresses IP statiques.
+Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN,
+et les détails de l'IP statique.
 
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
-Les sorties stdout/stderr des pods (journaux Python via `PYTHONUNBUFFERED=1`) sont
-acheminées vers Cloud Logging. Les métriques GKE sont acheminées vers Cloud
-Monitoring. Des vérifications de disponibilité et des politiques d'alerte
-optionnelles sont disponibles.
+Les sorties stdout/stderr des pods (logs Python via `PYTHONUNBUFFERED=1`) sont acheminées vers Cloud Logging.
+Les métriques GKE sont acheminées vers Cloud Monitoring. Des tests de disponibilité et des stratégies d'alerte optionnels
+sont disponibles.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -228,71 +231,63 @@ optionnelles sont disponibles.
 
 ## 3. Comportement de l'application Crawl4AI {#3-crawl4ai-application-behaviour}
 
-- **Séquence de démarrage de Supervisord.** À chaque démarrage de pod,
-  supervisord (PID 1) démarre d'abord Redis (priorité 10), puis Gunicorn
-  (priorité 20). Le point de terminaison `/health` ne répond qu'après que les
-  deux processus soient prêts — prévoyez au moins 40 secondes de délai initial
-  avant le début des vérifications de santé.
+- **Séquence de démarrage de Supervisord.** À chaque démarrage de pod, supervisord (PID 1)
+  démarre Redis en premier (priorité 10), puis Gunicorn (priorité 20). Le point de terminaison `/health`
+  ne répond qu'après que les deux processus sont prêts — prévoyez au moins 40
+  secondes de délai initial avant le début des vérifications de santé.
 - **Points de terminaison de l'API REST.** Crawl4AI expose :
 
   | Point de terminaison | Méthode | Objectif |
   |---|---|---|
-  | `/crawl` | POST | Soumettre un job d'exploration asynchrone ; renvoie un `task_id` |
+  | `/crawl` | POST | Soumettre un job de crawl asynchrone ; renvoie un `task_id` |
   | `/task/{id}` | GET | Interroger l'état et récupérer les résultats d'une tâche |
-  | `/crawl/sync` | POST | Exploration synchrone (bloque jusqu'à la fin) |
-  | `/health` | GET | Vérification de santé — renvoie `{"status":"ok"}` lorsqu'il est prêt |
-  | `/playground` | GET | Interface utilisateur d'exploration interactive basée sur le navigateur |
+  | `/crawl/sync` | POST | Crawl synchrone (bloque jusqu'à la fin) |
+  | `/health` | GET | Vérification de santé — renvoie `{"status":"ok"}` quand prêt |
+  | `/playground` | GET | Interface utilisateur de crawl interactive basée sur le navigateur |
 
-- **Cycle de vie des résultats de tâche.** Les résultats d'exploration
-  asynchrone sont stockés dans le Redis intégré avec un TTL de `redis_task_ttl_seconds` (1
-  heure par défaut). Après l'expiration du TTL, le résultat est perdu. Il n'y a
-  pas de stockage de résultats durable.
-- **Pas de migrations de base de données ni de jobs d'initialisation.**
-  Crawl4AI est entièrement sans état — `Crawl4AI_Common` ne fournit aucun job
-  d'initialisation. Aucune configuration de base de données n'est requise.
-- **Extraction basée sur LLM.** Fournissez les clés API LLM via `secret_environment_variables` et
-  définissez `LLM_PROVIDER` (ou des clés spécifiques au fournisseur telles que
-  `OPENAI_API_KEY`) via `environment_variables` pour activer l'extraction de contenu
-  pilotée par l'IA.
-- **Authentification JWT (optionnelle).** La sécurité est désactivée par
-  défaut. Pour l'activer, fournissez `SECRET_KEY` via `secret_environment_variables` et un
-  `config.yml` personnalisé avec `security.jwt_enabled=true`. Le point de terminaison
-  `/token` émet des JWT de courte durée lorsque l'authentification est
-  activée.
+- **Cycle de vie des résultats de tâche.** Les résultats de crawl asynchrones sont stockés dans le
+  Redis intégré avec un TTL de `redis_task_ttl_seconds` (par défaut 1 heure). Après l'expiration du TTL,
+  le résultat est perdu. Il n'y a pas de stockage de résultats durable.
+- **Pas de migrations de base de données ni de jobs d'initialisation.** Crawl4AI est entièrement
+  sans état — `Crawl4AI_Common` ne fournit aucun job d'initialisation. Aucune configuration de base de données
+  n'est requise.
+- **Extraction basée sur LLM.** Fournissez les clés API LLM via `secret_environment_variables`
+  et définissez `LLM_PROVIDER` (ou des clés spécifiques au fournisseur telles que `OPENAI_API_KEY`)
+  via `environment_variables` pour activer l'extraction de contenu basée sur l'IA.
+- **Authentification JWT (facultatif).** La sécurité est désactivée par défaut.
+  Pour l'activer, fournissez `SECRET_KEY` via `secret_environment_variables` et fournissez
+  un `config.yml` personnalisé avec `security.jwt_enabled=true`. Le point de terminaison `/token`
+  émet des JWT de courte durée lorsque l'authentification est activée.
 - **Avertissement `CRAWL4AI_HOOKS_ENABLED`.** La définition de cette variable à `"true"`
-  active l'exécution de code Python arbitraire via des hooks de webhook.
-  N'activez que dans un environnement entièrement fiable.
+  active l'exécution arbitraire de code Python via des hooks de webhook. N'activez que dans
+  un environnement entièrement fiable.
 
 ---
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la
-plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
-Crawl4AI sont listés ; toutes les autres entrées sont héritées de
-[App_GKE](App_GKE.md) avec leur comportement et leurs valeurs par défaut
-standard.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour Crawl4AI sont listés ; toute autre entrée est héritée de [App_GKE](App_GKE.md) avec son comportement standard et ses valeurs par défaut.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(requis)_ | Projet Google Cloud cible. |
+| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région pour la charge de travail et les ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail ayant accès au projet et aux alertes de surveillance. |
+| `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
+| `support_users` | `[]` | E-mails ayant accès au projet et aux alertes de surveillance. |
 | `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources pour le suivi des coûts/propriétés. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `application_name` | `crawl4ai` | Nom de base pour les ressources. Ne pas modifier après le premier déploiement. |
+| `application_name` | `crawl4ai` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
 | `application_display_name` | `Crawl4AI Web Crawler` | Nom convivial affiché dans la Console. |
 | `application_description` | _(défini)_ | Annotation de description de la charge de travail. |
 | `application_version` | `0.7.8` | Tag de version de l'image Crawl4AI ; épingler à un tag spécifique pour la production. |
@@ -306,10 +301,10 @@ standard.
 | `container_resources` | `{ cpu_limit="4", memory_limit="8Gi", cpu_request="2", mem_request="4Gi" }` | CPU et mémoire du conteneur. Minimum 4 Gio de mémoire pour un fonctionnement stable de Chromium. |
 | `min_instance_count` | `1` | Réplicas minimum. Gardez ≥ 1 pour qu'un pool Chromium chaud soit toujours disponible. |
 | `max_instance_count` | `5` | Réplicas maximum (plafond de l'autoscaler). |
-| `timeout_seconds` | `1800` | Délai de grâce de terminaison du pod ; définissez ≥ 1800 pour permettre aux longues explorations par lots de se vider. |
+| `timeout_seconds` | `1800` | Période de grâce de terminaison du pod ; définissez ≥ 1800 pour permettre aux longs crawls par lots de se vider. |
 | `termination_grace_period_seconds` | `60` | Secondes pendant lesquelles Kubernetes attend après SIGTERM avant de tuer de force. |
 | `service_type` | `LoadBalancer` | Comment le Service est exposé. Utilisez `ClusterIP` pour un accès interne au cluster uniquement. |
-| `session_affinity` | `None` | Pas de routage persistant — les ID de tâche sont locaux au pod ; utilisez `/crawl/sync` pour une fiabilité inter-pod. |
+| `session_affinity` | `None` | Pas de routage persistant — les ID de tâche sont locaux au pod ; utilisez `/crawl/sync` pour la fiabilité inter-pods. |
 | `container_image_source` | `prebuilt` | `"prebuilt"` utilise `unclecode/crawl4ai` directement ; `"custom"` construit via Cloud Build. |
 | `container_image` | `unclecode/crawl4ai` | URI de l'image lorsque `container_image_source = "prebuilt"`. |
 | `enable_image_mirroring` | `true` | Mettez l'image en miroir dans Artifact Registry pour éviter les limites de débit de Docker Hub. |
@@ -320,7 +315,7 @@ standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. `PYTHONUNBUFFERED` et `REDIS_TASK_TTL` sont définis automatiquement. **Ne définissez pas `REDIS_HOST` ou `REDIS_PORT`**. Surcharges reconnues : `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_TEMPERATURE`, `CRAWL4AI_HOOKS_ENABLED`. |
-| `secret_environment_variables` | `{}` | Mappage de var d'env → nom de secret Secret Manager. Utilisez pour `SECRET_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc. |
+| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager. Utilisez pour `SECRET_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc. |
 
 ### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
 
@@ -328,15 +323,15 @@ standard.
 |---|---|---|
 | `gke_cluster_name` | `""` | Nom du cluster cible. Laissez vide pour la découverte automatique. |
 | `gke_cluster_selection_mode` | `primary` | Stratégie de sélection de cluster. |
-| `namespace_name` | `""` | Espace de noms Kubernetes. Généré à partir du préfixe de ressource s'il est vide. |
+| `namespace_name` | `""` | Espace de noms Kubernetes. Généré à partir du préfixe de ressource si vide. |
 | `enable_multi_cluster_service` | `false` | Activer Multi-Cluster Services ServiceExport. |
-| `reserve_static_ip` | `true` | Réservez une IP externe statique pour l'équilibreur de charge afin que l'adresse survive aux redéploiements (par défaut pour la flotte selon la campagne GKE — une IP éphémère peut autrement laisser `GKE_SERVICE_URL`/une configuration auto-référencée pointant vers un DNS interne inaccessible). |
+| `reserve_static_ip` | `true` | Réserver une IP externe statique pour l'équilibreur de charge afin que l'adresse survive aux redéploiements (par défaut à l'échelle de la flotte selon la campagne GKE — une IP éphémère peut sinon laisser `GKE_SERVICE_URL`/une configuration auto-référente pointer vers un DNS interne inaccessible). |
 | `static_ip_name` | `""` | Nom d'une IP statique existante à utiliser. Laissez vide pour la création automatique. |
 
 ### Groupe 7 — Sauvegarde et maintenance {#group-7--backup--maintenance}
 
-Non applicable pour Crawl4AI — le service est sans état et ne contient pas de
-base de données. `backup_schedule`, `backup_retention_days` et `enable_backup_import` sont
+Non applicable pour Crawl4AI — le service est sans état et ne contient pas de base de données.
+`backup_schedule`, `backup_retention_days` et `enable_backup_import` sont
 présents pour la compatibilité de l'interface mais n'ont aucun effet.
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
@@ -346,7 +341,7 @@ présents pour la compatibilité de l'interface mais n'ont aucun effet.
 | `enable_resource_quota` | `false` | Plafonner les comptes CPU/mémoire/objets de l'espace de noms. |
 | `quota_cpu_requests` | `8` | Total des requêtes CPU autorisées sur tous les pods. |
 | `quota_cpu_limits` | `16` | Total des limites CPU autorisées. |
-| `quota_memory_requests` | `32Gi` | **Doit utiliser des unités binaires (`32Gi`, `8192Mi`)** — les entiers bruts sont lus comme des octets et bloquent la planification. |
+| `quota_memory_requests` | `32Gi` | **Doit utiliser des unités binaires (`32Gi`, `8192Mi`)** — les entiers nus sont lus comme des octets et bloquent la planification. |
 | `quota_memory_limits` | `64Gi` | **Doit utiliser des unités binaires** — même contrainte que `quota_memory_requests`. |
 | `quota_max_pods` | `20` | Nombre maximal de pods dans l'espace de noms. |
 
@@ -361,14 +356,14 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Crawl4AI_Common ne fournit pas de job d'initialisation par défaut — laissez vide sauf si une étape de configuration personnalisée est nécessaire. |
-| `cron_jobs` | `[]` | CronJobs Kubernetes optionnels (par exemple, explorations périodiques de préchauffage du cache). |
+| `cron_jobs` | `[]` | CronJobs Kubernetes optionnels (par exemple, des crawls périodiques de préchauffage du cache). |
 
 ### Groupe 11 — Cloud Storage et Artifact Registry {#group-11--cloud-storage--artifact-registry}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `create_cloud_storage` | `true` | Provisionner tous les buckets listés dans `storage_buckets`. |
-| `storage_buckets` | `[]` | Aucun bucket par défaut — Crawl4AI est sans état. Ajoutez des entrées pour provisionner des buckets de résultats d'exploration. |
+| `storage_buckets` | `[]` | Aucun bucket par défaut — Crawl4AI est sans état. Ajoutez des entrées pour provisionner des buckets de résultats de crawl. |
 | `gcs_volumes` | `[]` | Montages GCS Fuse. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
 | `max_images_to_retain` / `delete_untagged_images` / `image_retention_days` | _(défini)_ | Politique de nettoyage d'Artifact Registry. |
@@ -386,16 +381,16 @@ etc.) sont présentes pour la compatibilité de l'interface et n'ont aucun effet
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe_config` / `startup_probe` | HTTP `/health`, délai initial de 40 s | Laissez le temps à supervisord de démarrer Redis puis Gunicorn avant que la première sonde ne se déclenche. |
+| `startup_probe_config` / `startup_probe` | HTTP `/health`, délai initial de 40 s | Laisser le temps à supervisord de démarrer Redis puis Gunicorn avant le déclenchement de la première sonde. |
 | `health_check_config` / `liveness_probe` | HTTP `/health`, délai initial de 60 s | Sonde de vivacité après le démarrage. |
-| `uptime_check_config` | désactivé | Vérification de disponibilité optionnelle de Cloud Monitoring. |
-| `alert_policies` | `[]` | Politiques d'alerte métrique optionnelles. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring optionnel. |
+| `alert_policies` | `[]` | Stratégies d'alerte métrique optionnelles. |
 
 ### Groupe 16 — Fonctionnalités GKE avancées {#group-16--advanced-gke-features}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_pod_disruption_budget` | `true` | Protéger la disponibilité pendant les mises à niveau des nœuds. Ignoré automatiquement lorsque `max_instance_count ≤ 1`. |
+| `enable_pod_disruption_budget` | `true` | Protéger la disponibilité pendant les mises à niveau de nœuds. Ignoré automatiquement lorsque `max_instance_count ≤ 1`. |
 | `pdb_min_available` | `1` | Augmentez `min_instance_count` au-dessus de 1 si vous avez besoin d'une marge d'éviction. |
 | `enable_topology_spread` | `false` | Répartir les pods sur plusieurs zones. |
 | `enable_network_segmentation` | `false` | Appliquer des NetworkPolicies Kubernetes pour isoler l'espace de noms. |
@@ -407,41 +402,41 @@ etc.) sont présentes pour la compatibilité de l'interface et n'ont aucun effet
 | `stateful_pvc_enabled` | `null` | Activer les modèles PVC si la persistance du cache local est requise. |
 | `stateful_pvc_size` | `20Gi` | Taille du PVC par pod. |
 | `stateful_pvc_mount_path` | `/mnt/data` | Chemin du conteneur pour le PVC. |
-| `stateful_pvc_storage_class` | `standard-rwo` | Kubernetes StorageClass. |
+| `stateful_pvc_storage_class` | `standard-rwo` | StorageClass Kubernetes. |
 
 ### Groupe 19 — Paramètres de l'application Crawl4AI {#group-19--crawl4ai-application-settings}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `redis_task_ttl_seconds` | `3600` | TTL en secondes pour les résultats de tâche dans Redis intégré. Plage valide : 300–86400. Trop court, les résultats expirent avant que les clients ne les interrogent ; trop long, cela entraîne une croissance illimitée de la mémoire Redis. |
+| `redis_task_ttl_seconds` | `3600` | TTL en secondes pour les résultats de tâche dans Redis intégré. Plage valide : 300–86400. Trop court, les résultats expirent avant que les clients ne les interrogent ; trop long, cela entraîne une croissance illimitée de la mémoire. |
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen
-le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
+Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le plus rapide
+de localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Kubernetes. |
 | `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
 | `service_cluster_ip` | ClusterIP intra-cluster. |
-| `stage_service_cluster_ips` | Mappage des ClusterIPs pour les services spécifiques à l'étape (Cloud Deploy). |
+| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à l'étape (Cloud Deploy). |
 | `service_external_ip` | IP externe de l'équilibreur de charge (lorsqu'une IP statique est réservée). |
 | `service_url` | URL pour atteindre Crawl4AI. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
-| `initialization_jobs` | Noms de tous les jobs de configuration. |
+| `monitoring_enabled` / `monitoring_notification_channels` | Statut et canaux de surveillance. |
+| `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants de projet. |
-| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails CI/CD. |
+| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | Statut et détails CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
 | `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | Statut VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et statut CMEK. |
 
 ---
 
@@ -453,30 +448,30 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 | Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
 | `memory_limit` (dans `container_resources`) | `8Gi` | Critique | En dessous de 4 Gio, les processus Chromium sont tués par OOM en plein crawl, renvoyant des résultats partiels ; en dessous de 2 Gio, le conteneur ne démarre pas. |
-| `quota_memory_requests` / `quota_memory_limits` | unités binaires (`32Gi`) | Critique | Les entiers bruts sont lus comme des octets par Kubernetes et bloquent toute planification de pod. |
-| `REDIS_HOST` / `REDIS_PORT` (variables d'environnement) | ne pas définir | Critique | Surcharger ces valeurs rompt la connexion Redis intégrée ; tous les jobs d'exploration asynchrone échouent immédiatement. |
+| `quota_memory_requests` / `quota_memory_limits` | unités binaires (`32Gi`) | Critique | Les entiers nus sont lus comme des octets par Kubernetes et bloquent toute planification de pod. |
+| `REDIS_HOST` / `REDIS_PORT` (variables d'environnement) | ne pas définir | Critique | Surcharger ces valeurs rompt la connexion Redis intégrée ; tous les jobs de crawl asynchrones échouent immédiatement. |
 | `database_type` | `NONE` | Critique | Crawl4AI n'a pas de base de données ; modifier cela entraîne un provisionnement Cloud SQL inutile et un échec de démarrage. |
-| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro (`0`) entraîne des démarrages à froid de 30 à 60 s (supervisord doit démarrer Redis puis Gunicorn) ; la première requête expire généralement. |
-| `cpu_limit` (dans `container_resources`) | `4` | Élevé | En dessous de 2 vCPU, le rendu JavaScript de Chromium déclenche des timeouts internes sur les pages complexes, ralentissant considérablement le débit d'exploration. |
-| `enable_iap` / `enable_cloud_armor` | activer pour la production | Élevé | Sans IAP ou un jeton d'API d'exploration, l'IP de l'équilibreur de charge est accessible publiquement et n'importe qui peut soumettre des jobs d'exploration. |
-| `LLM_API_KEY` / clés API du fournisseur | via `secret_environment_variables` | Élevé | Des clés manquantes ou expirées entraînent l'échec silencieux de l'extraction basée sur LLM (`extracted_content` vide). Injecter comme secrets, pas comme variables d'environnement en texte clair. |
+| `min_instance_count` | `1` | Élevé | La mise à l'échelle à zéro (`0`) provoque des démarrages à froid de 30 à 60 s (supervisord doit démarrer Redis puis Gunicorn) ; la première requête expire généralement. |
+| `cpu_limit` (dans `container_resources`) | `4` | Élevé | En dessous de 2 vCPU, le rendu JavaScript de Chromium déclenche des timeouts internes sur des pages complexes, ralentissant considérablement le débit de crawl. |
+| `enable_iap` / `enable_cloud_armor` | activer pour la production | Élevé | Sans IAP ou un jeton d'API de crawl, l'IP du LoadBalancer est accessible publiquement et n'importe qui peut soumettre des jobs de crawl. |
+| `LLM_API_KEY` / clés API du fournisseur | via `secret_environment_variables` | Élevé | Les clés manquantes ou expirées entraînent l'échec silencieux de l'extraction basée sur LLM (`extracted_content` vide). Injecter comme secrets, pas comme variables d'environnement en texte clair. |
 | `redis_task_ttl_seconds` | `3600` | Moyen | Trop court (< 300 s) entraîne l'expiration des résultats avant que les clients asynchrones ne les interrogent ; trop long entraîne une croissance illimitée de la mémoire Redis. |
 | `session_affinity` | `None` | Moyen | Définir à `ClientIP` lie les clients à un seul pod et rompt la distribution de charge sans aider au routage des tâches (les ID de tâche sont déjà locaux au pod). |
-| `application_version` | tag épinglé | Moyen | L'utilisation de `"latest"` n'est pas reproductible ; une reconstruction peut entraîner un changement d'API Crawl4AI incompatible. |
+| `application_version` | tag épinglé | Moyen | L'utilisation de `"latest"` n'est pas reproductible ; une reconstruction peut entraîner un changement d'API Crawl4AI cassant. |
 | `enable_image_mirroring` | `true` | Faible | Les images Crawl4AI sont volumineuses ; sans mise en miroir, chaque démarrage de pod tire de Docker Hub et risque des échecs de limite de débit. |
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — IAM et Workload
-Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
+Pour le comportement du socle référencé tout au long — IAM et Workload Identity,
+autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC et mise en miroir d'images — voir
-**[App_GKE](App_GKE.md)**. La configuration d'application partagée spécifique à
-Crawl4AI est décrite dans **[Crawl4AI_Common](Crawl4AI_Common.md)**.
+**[App_GKE](App_GKE.md)**. La configuration d'application partagée spécifique à Crawl4AI est
+décrite dans **[Crawl4AI_Common](Crawl4AI_Common.md)**.
 
 <!-- related-guides -->
 
-## Guides associés {#related-guides}
+## Guides connexes {#related-guides}
 
-- [Lab pratique : Crawl4AI sur GKE Autopilot](../labs/Crawl4AI_GKE.md) — déployez-le étape par étape, avec les écrans de console et les commandes à chaque étape.
+- [Lab pratique : Crawl4AI sur GKE Autopilot](../labs/Crawl4AI_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Crawl4AI sur Google Cloud Run](Crawl4AI_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.
 - [Crawl4AI Common — Configuration d'application partagée](Crawl4AI_Common.md) — la configuration partagée par les deux cibles de déploiement.

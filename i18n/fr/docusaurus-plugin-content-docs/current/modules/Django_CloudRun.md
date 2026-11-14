@@ -3,7 +3,7 @@ title: "Django sur Cloud Run"
 description: "Référence de configuration pour le déploiement de Django sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Django_CloudRun.md @ 60462a86 sha256:dfb3e570aedf -->
+<!-- translated-from: docs/modules/Django_CloudRun.md @ 40c83c3f sha256:3d87047203de -->
 
 # Django sur Cloud Run {#django-on-cloud-run}
 
@@ -13,39 +13,39 @@ Django est un framework web Python éprouvé qui encourage le développement rap
 une conception propre et pragmatique, alimentant certaines des applications web les plus exigeantes au monde.
 Ce module déploie Django sur **Cloud Run v2** en s'appuyant sur la
 fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère l'infrastructure
-partagée de Google Cloud.
+Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud utilisés par Django et sur la manière de les explorer et de les
-opérer depuis la console Google Cloud et la ligne de commande. Pour les mécanismes
-communs à toute application Cloud Run — Workload Identity, ingress, autoscaling,
+Ce guide se concentre sur les services cloud utilisés par Django et sur la manière de les explorer et de les opérer
+depuis la console Google Cloud et la ligne de commande. Pour les mécanismes
+communs à toutes les applications Cloud Run — Workload Identity, ingress, autoscaling,
 CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et
-cycle de vie du déploiement — veuillez vous référer au [guide de la fondation App_CloudRun](App_CloudRun.md)
+cycle de vie du déploiement — reportez-vous au [guide de la fondation App_CloudRun](App_CloudRun.md)
 plutôt que de les répéter ici.
 
 ---
 
 ## Ce que coûte Django sur RAD, et comment cela se compare {#what-django-costs-on-rad-and-how-that-compares}
 
-**Le module Cloud Run de Django sur RAD coûte environ 81,23 $ US par mois.** Un serveur autogéré est moins cher en espèces, mais vous devez alors gérer vous-même la base de données, les sauvegardes, les correctifs de sécurité et les mises à niveau. GKE Autopilot convient aux applications Django qui doivent rester actives en permanence ou s'adapter à plusieurs pods ; pour le coût le plus bas, ce module Cloud Run vous offre déjà l'option la moins chère — voir le [guide GKE](Django_GKE.md) si vous avez besoin de l'autre option. Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Le module Django sur Cloud Run de RAD coûte environ 81,23 $ US par mois.** Un serveur autogéré est moins cher en espèces, mais vous devez alors gérer vous-même la base de données, les sauvegardes, les correctifs de sécurité et les mises à niveau. GKE Autopilot convient aux applications Django qui doivent rester actives en permanence ou s'adapter à plusieurs pods ; pour le coût le plus bas, ce module Cloud Run vous offre déjà l'option la moins chère — consultez le [guide GKE](Django_GKE.md) si vous avez besoin de l'autre option. Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour étudier, une démo, une activité saisonnière — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ces 81,23 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour étudier, une démo, une activité saisonnière — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les 81,23 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 $ US au prix de la recharge) | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **81,23 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **32 crédits par jour**, soit environ 960 par mois (environ 96 $ US au prix de la recharge) |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients font exception : le temps de build est toujours facturé à la minute | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **81,23 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **67 crédits par jour**, soit environ 2 010 par mois (environ 201 $ US au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt des frais de module, quel que soit le montant des frais : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
-10 crédits coûtent 1 $ US pour une recharge unique, et moins avec un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
+10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins pour un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas de deuxième base de données.
 
 **Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
 
-| Ressource (par défaut du module) | Par mois |
+| Ressource (module par défaut) | Par mois |
 |---|---|
 | Cloud Run, 1x vCPU / 0,5 GiB (scaleToZero) | 10,78 $ US |
 | Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
@@ -56,8 +56,8 @@ Votre premier déploiement réussi sur RAD est exempté des frais de module lors
 
 ### Comment cela se compare {#how-it-compares}
 
-- Django est un framework, pas un produit packagé, il n'y a donc pas de plan d'« hébergement Django » commercial à comparer — la comparaison honnête est un serveur nu : un Hetzner CPX22 ou un droplet DigitalOcean 2 vCPU/4 Go coûte environ 24 $ US par mois, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) environ 49 $ US — plus votre propre temps pour la base de données, les sauvegardes, les correctifs de sécurité et les mises à niveau du système d'exploitation, que Cloud SQL géré, Secret Manager et la surveillance de RAD couvrent pour vous.
-- Ce que vous évaluez réellement, c'est la part de la couche applicative qui est personnalisée. Pour une API légère ou un outil d'administration, un petit VPS peut suffire ; pour tout ce qui a de réelles exigences d'intégrité des données, une base de données gérée vaut plus que la différence de prix ne le suggère.
+- Django est un framework, pas un produit packagé, il n'y a donc pas de plan commercial "hébergement Django" à comparer — la comparaison honnête est un serveur nu : un Hetzner CPX22 ou un droplet DigitalOcean 2 vCPU/4 Go coûte environ 24 $ US par mois, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) environ 49 $ US — plus votre propre temps pour la base de données, les sauvegardes, les correctifs de sécurité et les mises à niveau du système d'exploitation, que Cloud SQL géré, Secret Manager et la surveillance de RAD couvrent pour vous.
+- Ce que vous évaluez réellement, c'est la part de la couche applicative qui est personnalisée. Pour une API mince ou un outil d'administration, un petit VPS peut suffire ; pour tout ce qui a de réelles exigences d'intégrité des données, une base de données gérée vaut plus que ce que suggère la différence de prix.
 
 ### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
@@ -66,32 +66,32 @@ au-delà de la mise à l'échelle à zéro : **supprimez l'ensemble du projet et
 rien.** Cela convient bien mieux à Django dont vous n'avez besoin qu'occasionnellement — pour étudier, une démo, une activité
 saisonnière — que de le faire fonctionner en continu.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, sera utilisable après sa restauration. Par conséquent, la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
 - **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google
   de supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable,
-  pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement à
-  la suppression d'un seul module, cela ne supprime pas Cloud SQL, la VM NFS ou Cloud Run un par un — l'ensemble du projet,
+  pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement
+  à la suppression d'un module, cela ne détruit pas Cloud SQL, la VM NFS ou Cloud Run un par un — l'ensemble du projet,
   et tout ce qu'il contient, s'arrête simplement.
 - **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet
   peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation,
-  puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Parce que
+  puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Parce que
   rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est
-  une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
-- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, et non 81,23 $ US.** Déployez Django, utilisez-le
-  pendant un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Update, et
-  supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, et
-  les heures pendant lesquelles Django était réellement en ligne.
+  une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
+- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, et non les 201 $ US par mois pour le maintenir en fonctionnement.** Déployez Django, utilisez-le
+  pendant un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre à jour, et
+  supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois et
+  les heures pendant lesquelles Django a été réellement actif.
 - **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que vous apportez et dont RAD ne gère
   que la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime
   définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés
-  doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude et de démo
-  conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+  doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des études et démos).
+  Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 - **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes sont écrites dans un bucket à l'intérieur
   du projet, et ce bucket n'est **pas** protégé par la suppression logicielle de Cloud Storage, il est donc
-  très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est
+  très probablement parti dès que vous supprimez le projet — même si le projet lui-même est
   récupérable pendant 30 jours. Si vous avez personnalisé les données et souhaitez les conserver, copiez une sauvegarde
-  (vers Google Drive ou un bucket en dehors du projet) avant de supprimer, comme pour le
+  (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer, comme pour le
   flux de travail de redéploiement ci-dessous. Pour une installation par défaut sans rien d'irremplaçable, cela
   n'a pas d'importance.
 
@@ -101,23 +101,23 @@ Cloud Run se met déjà à l'échelle à zéro entre les requêtes. L'option ci-
 une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le déploiement et de le déployer
 à nouveau lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 $ US), et environ une heure, car RAD recrée le projet et les services partagés avant Django. La suppression permet d'économiser de l'argent une fois que Django resterait inutilisé
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 $ US), et environ une heure, car RAD recrée le projet et les services partagés avant Django. La suppression permet d'économiser de l'argent une fois que Django resterait autrement inutilisé
   pendant environ **4 jours ou plus** dans votre propre projet (environ 2,71 $ US par jour), ou environ
-  **3 jours ou plus** dans un projet géré par RAD (32 crédits par jour).
-- **Supprimez tout ce que Django utilise.** La majeure partie du coût d'exécution est la base de données et la VM NFS/cache. Elles ne s'arrêtent que si rien d'autre dans le projet ne les utilise, donc les supprimer alors que quelque chose d'autre partage le projet n'économise que la partie calcul de Django.
+  **2 jours ou plus** dans un projet géré par RAD (67 crédits par jour).
+- **Supprimez tout ce que Django utilise.** La majeure partie du coût d'exécution est la base de données et la VM NFS/cache. Elles ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc les supprimer alors que quelque chose d'autre partage le projet n'économise que la partie calcul de Django.
 - **Conservez d'abord vos données.** Les sauvegardes nocturnes de la base de données sont écrites dans un bucket à l'intérieur du déploiement, et ce bucket est supprimé avec lui. Avant de supprimer, copiez la dernière sauvegarde sur Google Drive, ou dans un bucket que vous conservez.
-- **Notez vos paramètres.** RAD ne recrée pas un déploiement supprimé pour vous ; vous entrez à nouveau les
-  paramètres lors du déploiement.
+- **Notez vos paramètres.** RAD ne recrée pas un déploiement supprimé pour vous ; vous saisissez les
+  paramètres à nouveau lorsque vous déployez.
 
-### Sessions de labo et environnements gérés {#lab-sessions-and-managed-environments}
+### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de labo, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose
-  de Django dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par
-  le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose
+  de Django dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
+  définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
   Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute Django pour un client à partir d'un
   portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,
-  la facturation est interrompue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le
+  la facturation est suspendue et les données sont conservées, afin que personne ne reçoive de frais inattendus. À la fin, le
   partenaire transfère le projet et les déploiements deviennent la propriété du client.
 
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR,
@@ -130,25 +130,25 @@ pour les mécanismes et la fenêtre de pause/restauration.
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Django s'exécute en tant que conteneur Python/Gunicorn sur Cloud Run v2. Le déploiement relie
-un ensemble ciblé de services Google Cloud :
+Django s'exécute en tant que conteneur Python/Gunicorn sur Cloud Run v2. Le déploiement
+relie un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | Cloud Run v2 | Conteneur Python/Gunicorn, 1 vCPU / 512 Mio par défaut ; autoscalé à zéro |
+| Calcul | Cloud Run v2 | Conteneur Python/Gunicorn, 1 vCPU / 512 Mio par défaut ; mise à l'échelle automatique à zéro |
 | Base de données | Cloud SQL pour PostgreSQL 15 | Requis — `DB_ENGINE` de Django est fixé à `django.db.backends.postgresql` |
-| Fichiers partagés | Filestore (NFS) | Média partagé entre toutes les instances de conteneur (nécessite un environnement d'exécution gen2) |
-| Stockage d'objets | Cloud Storage | Un bucket média dédié provisionné par Django_Common |
+| Fichiers partagés | Filestore (NFS) | Médias partagés entre toutes les instances de conteneur (nécessite un environnement d'exécution gen2) |
+| Stockage d'objets | Cloud Storage | Un bucket de médias dédié provisionné par Django_Common |
 | Secrets | Secret Manager | `SECRET_KEY` Django et mot de passe de base de données auto-générés |
-| Cache (facultatif) | Redis / Cloud Memorystore | Désactivé par défaut ; activer pour le stockage de session et la mise en cache |
-| Ingress | Cloud Load Balancing | Équilibreur de charge HTTPS externe avec domaine personnalisé facultatif + certificat géré |
+| Cache (optionnel) | Redis / Cloud Memorystore | Désactivé par défaut ; activer pour le stockage de session et la mise en cache |
+| Ingress | Cloud Load Balancing | Équilibreur de charge HTTPS externe avec domaine personnalisé optionnel + certificat géré |
 
-**Valeurs par défaut judicieuses à connaître à l'avance :**
+**Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est fixe.** `Django_Common` fixe `DB_ENGINE` à PostgreSQL ;
   MySQL et `NONE` ne sont pas pris en charge par ce module.
-- **La `SECRET_KEY` de Django est auto-générée** et stockée dans Secret Manager ;
-  elle est injectée au moment de l'exécution et n'est jamais définie en texte clair.
+- **Le `SECRET_KEY` de Django est auto-généré** et stocké dans Secret Manager ;
+  il est injecté au moment de l'exécution et n'est jamais défini en texte clair.
 - **Quatre extensions PostgreSQL sont installées automatiquement** (`pg_trgm`, `unaccent`,
   `hstore`, `citext`) par le job `db-init`, vous n'avez donc pas besoin de les configurer.
 - **Deux jobs d'initialisation s'exécutent par défaut** — `db-init` (crée la base de données et
@@ -158,8 +158,8 @@ un ensemble ciblé de services Google Cloud :
   pour les fichiers multimédias téléchargés. Les montages NFS nécessitent
   `execution_environment = "gen2"` (défini automatiquement).
 - **Redis est désactivé par défaut.** Activez-le avec `enable_redis = true` et pointez vers une
-  instance Cloud Memorystore pour le stockage de session de production et la mise en cache.
-- **Mise à l'échelle à zéro par défaut.** `min_instance_count` par défaut à `0` ; définissez sur `1`
+  instance Cloud Memorystore pour le stockage de session et la mise en cache en production.
+- **Mise à l'échelle à zéro par défaut.** `min_instance_count` par défaut à `0` ; définissez-le à `1`
   pour la production afin d'éliminer les démarrages à froid.
 
 ---
@@ -167,7 +167,7 @@ un ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT`, `REGION` et `SERVICE` sont définis. Le nom du service et
-les autres identifiants sont signalés dans les [Sorties](#5-outputs) du déploiement.
+les autres identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run v2 — le service Django {#a-cloud-run-v2--the-django-service}
 
@@ -175,7 +175,8 @@ Django s'exécute en tant que service Cloud Run mis à l'échelle automatiquemen
 et `max_instance_count`. Chaque instance exécute un sidecar Cloud SQL Auth Proxy et,
 lorsque NFS est activé, monte le partage Filestore.
 
-- **Console :** Cloud Run → sélectionnez le service pour voir les révisions, les répartitions de trafic, les logs et les métriques.
+- **Console :** Cloud Run → sélectionnez le service pour voir les révisions, les répartitions de trafic, les journaux,
+  et les métriques.
 - **CLI :**
   ```bash
   gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT"
@@ -185,18 +186,18 @@ lorsque NFS est activé, monte le partage Filestore.
     --project "$PROJECT" --limit 50
   ```
 
-Voir [App_CloudRun](App_CloudRun.md) pour les répartitions de trafic de révision, les instances min/max, la concurrence et la configuration de l'environnement d'exécution.
+Voir [App_CloudRun](App_CloudRun.md) pour les répartitions de trafic des révisions, les instances min/max, la concurrence et la configuration de l'environnement d'exécution.
 
 ### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Django stocke toutes les données d'application dans une instance Cloud SQL pour PostgreSQL 15 gérée.
-Les instances de conteneur y accèdent via le **Cloud SQL Auth Proxy** via un socket Unix local,
+Django stocke toutes les données de l'application dans une instance Cloud SQL pour PostgreSQL 15 gérée.
+Les instances de conteneur y accèdent via le **Cloud SQL Auth Proxy** sur un socket Unix local,
 de sorte qu'aucune IP publique n'est exposée. Lors du premier déploiement, le job Cloud Run `db-init`
 crée la base de données et l'utilisateur de l'application, installe les extensions requises et
 accorde les privilèges. Le job `db-migrate` exécute ensuite `manage.py migrate` et
 `manage.py collectstatic`.
 
-- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags et
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs et
   les métriques.
 - **CLI :**
   ```bash
@@ -214,14 +215,14 @@ les sauvegardes automatisées et la rotation des mots de passe, voir [App_CloudR
 
 ### C. Filestore (NFS) et Cloud Storage {#c-filestore-nfs-and-cloud-storage}
 
-Les médias téléchargés sont écrits dans un partage **Filestore (NFS)** monté dans chaque instance de conteneur
-afin que toutes les répliques voient les mêmes fichiers. Un bucket média **Cloud Storage** dédié
+Les médias téléchargés sont écrits sur un partage **Filestore (NFS)** monté dans chaque instance de conteneur
+afin que tous les réplicas voient les mêmes fichiers. Un bucket de médias **Cloud Storage** dédié
 est également provisionné automatiquement par `Django_Common` ; le compte de service de la charge de travail
-se voit accorder l'accès. Les montages NFS sur Cloud Run nécessitent l'environnement d'exécution
-`gen2`, que ce module définit par défaut.
+se voit accorder l'accès. Les montages NFS sur Cloud Run nécessitent l'environnement d'exécution `gen2`,
+que ce module définit par défaut.
 
 - **Console :** Filestore → Instances pour le partage NFS ; Cloud Storage → Buckets pour
-  le bucket média.
+  le bucket de médias.
 - **CLI :**
   ```bash
   gcloud filestore instances list --project "$PROJECT"
@@ -250,8 +251,8 @@ utilisez une instance Cloud Memorystore et définissez `redis_host` sur son IP p
 
 ### E. Secret Manager {#e-secret-manager}
 
-La `SECRET_KEY` de Django et le mot de passe de la base de données sont stockés en tant que secrets Secret Manager
-et injectés dans les instances de conteneur au moment de l'exécution ; le texte clair n'apparaît jamais dans
+Le `SECRET_KEY` de Django et le mot de passe de la base de données sont stockés en tant que secrets Secret Manager
+et injectés dans les instances de conteneur au moment de l'exécution ; le texte en clair n'apparaît jamais dans
 la configuration. Le mot de passe du superutilisateur (si vous en créez un via `DJANGO_SUPERUSER_PASSWORD`)
 doit également être stocké ici.
 
@@ -288,8 +289,8 @@ l'IP statique et les détails de l'egress VPC.
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les sorties standard/erreur des conteneurs sont acheminées vers Cloud Logging ; les métriques Cloud Run et Cloud SQL sont acheminées vers
-Cloud Monitoring. Des vérifications de disponibilité et des politiques d'alerte facultatives sont disponibles.
+Les sorties stdout/stderr des conteneurs sont acheminées vers Cloud Logging ; les métriques Cloud Run et Cloud SQL sont acheminées vers
+Cloud Monitoring. Des tests de disponibilité et des politiques d'alerte optionnels sont disponibles.
 
 - **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
@@ -303,7 +304,10 @@ Cloud Monitoring. Des vérifications de disponibilité et des politiques d'alert
 
 ## 3. Comportement de l'application Django {#3-django-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un job Cloud Run `db-init` crée la base de données et l'utilisateur PostgreSQL, accorde les privilèges et installe les quatre extensions requises (`pg_trgm`, `unaccent`, `hstore`, `citext`) en utilisant le secret superutilisateur `ROOT_PASSWORD`. Le job est idempotent et peut être réexécuté en toute sécurité.
+- **Configuration de la base de données au premier déploiement.** Un job Cloud Run `db-init` crée la base de données
+  PostgreSQL et l'utilisateur, accorde les privilèges et installe les quatre extensions requises
+  (`pg_trgm`, `unaccent`, `hstore`, `citext`) à l'aide du secret superutilisateur `ROOT_PASSWORD`.
+  Le job est idempotent et peut être réexécuté en toute sécurité.
 - **Migrations au premier déploiement.** Un job Cloud Run `db-migrate` exécute
   `manage.py migrate` et `manage.py collectstatic --noinput --clear` après que `db-init`
   soit terminé. Les deux jobs sont déclenchés automatiquement lors de l'apply
@@ -313,8 +317,8 @@ Cloud Monitoring. Des vérifications de disponibilité et des politiques d'alert
   `Django_Common` et stockée dans Secret Manager. Elle est injectée en tant que `SECRET_KEY`.
   Ne définissez pas `SECRET_KEY` dans `environment_variables`.
 - **Création de superutilisateur.** Si `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`,
-  et `DJANGO_SUPERUSER_PASSWORD` sont présents en tant que variables d'environnement lorsque le
-  conteneur démarre, `entrypoint.sh` crée un superutilisateur Django au premier démarrage. Utilisez
+  et `DJANGO_SUPERUSER_PASSWORD` sont présents en tant que variables d'environnement au démarrage du
+  conteneur, `entrypoint.sh` crée un superutilisateur Django au premier démarrage. Utilisez
   `secret_environment_variables` pour le mot de passe :
   ```bash
   # Retrieve the superuser password from Secret Manager:
@@ -342,7 +346,7 @@ Cloud Monitoring. Des vérifications de disponibilité et des politiques d'alert
 
 Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres
 spécifiques ou notables pour Django sont listés ; toutes les autres entrées sont héritées de
-[App_CloudRun](App_CloudRun.md) avec son comportement et ses valeurs par défaut standard.
+[App_CloudRun](App_CloudRun.md) avec son comportement standard et ses valeurs par défaut.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
@@ -356,7 +360,7 @@ spécifiques ou notables pour Django sont listés ; toutes les autres entrées s
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail autorisées à accéder au projet et aux alertes de surveillance. |
+| `support_users` | `[]` | E-mails ayant accès au projet et aux alertes de surveillance. |
 | `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources pour le suivi des coûts/propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -366,7 +370,7 @@ spécifiques ou notables pour Django sont listés ; toutes les autres entrées s
 | `application_name` | `django` | Nom de base des ressources. **Ne pas modifier après le premier déploiement.** |
 | `application_display_name` | `Django Application` | Nom convivial affiché dans la console. |
 | `application_description` | `Django Application - High-level Python Web framework` | Annotation de description du service. |
-| `application_version` | `latest` | Tag de version d'image ; incrémenter pour déployer une nouvelle révision. Épingler à un tag spécifique en production. |
+| `application_version` | `latest` | Tag de version de l'image ; incrémenter pour déployer une nouvelle révision. Épingler à un tag spécifique en production. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
@@ -376,8 +380,8 @@ spécifiques ou notables pour Django sont listés ; toutes les autres entrées s
 | `container_image_source` | `custom` | `custom` construit via Cloud Build ; `prebuilt` déploie une URI d'image existante. |
 | `container_image` | `us-docker.pkg.dev/cloudrun/container/hello` | Remplacer l'URI de l'image du conteneur. |
 | `container_resources` | `{ cpu_limit = "1000m", memory_limit = "512Mi" }` | Limites de CPU et de mémoire par instance. |
-| `min_instance_count` | `0` | Nombre minimum d'instances chaudes. Définir ≥ 1 pour éliminer les démarrages à froid en production. |
-| `max_instance_count` | `1` | Nombre maximum d'instances actives simultanément. |
+| `min_instance_count` | `0` | Nombre minimal d'instances chaudes. Définir ≥ 1 pour éliminer les démarrages à froid en production. |
+| `max_instance_count` | `1` | Nombre maximal d'instances actives simultanément. |
 | `container_port` | `8080` | Django/Gunicorn écoute sur le port 8080. |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions socket. |
 | `execution_environment` | `gen2` | Requis pour les montages NFS. Ne pas modifier sauf si NFS est désactivé. |
@@ -387,16 +391,16 @@ spécifiques ou notables pour Django sont listés ; toutes les autres entrées s
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `ingress_settings` | `all` | Ingress Cloud Run : `all`, `internal`, ou `internal-and-cloud-load-balancing`. |
-| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Egress via le connecteur VPC sans serveur. |
+| `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Egress via le connecteur VPC serverless. |
 | `enable_iap` | `false` | Exiger la connexion Google devant Django. |
-| `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder lorsque IAP est activé. |
+| `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder lorsque l'IAP est activé. |
 
 ### Groupe 6 — Variables d'environnement et secrets {#group-6--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Ne pas inclure `SECRET_KEY` ou `DB_*` ici. |
-| `secret_environment_variables` | `{}` | Mappage de var d'env → nom de secret Secret Manager (par exemple, `DJANGO_SUPERUSER_PASSWORD`). |
+| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager (par exemple, `DJANGO_SUPERUSER_PASSWORD`). |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. |
 
@@ -435,8 +439,8 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 |---|---|---|
 | `enable_nfs` | `true` | Volume Filestore partagé pour les médias Django (garder activé pour les instances multiples). |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage à l'intérieur du conteneur. Doit correspondre à `MEDIA_ROOT` dans `settings.py`. |
-| `create_cloud_storage` | `true` | Provisionner le bucket de données supplémentaire. Le bucket média est toujours provisionné par `Django_Common`. |
-| `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets supplémentaires au-delà du bucket média auto-provisionné. |
+| `create_cloud_storage` | `true` | Provisionner le bucket de données supplémentaire. Le bucket de médias est toujours provisionné par `Django_Common`. |
+| `storage_buckets` | `[{ name_suffix = "data" }]` | Buckets supplémentaires au-delà du bucket de médias auto-provisionné. |
 | `gcs_volumes` | `[]` | Montages GCS Fuse. |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
@@ -447,8 +451,8 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 | `application_database_name` | `django_db` | Nom de la base de données. Immuable après le premier déploiement. |
 | `application_database_user` | `django_user` | Utilisateur de l'application. Immuable après le premier déploiement. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
-| `db_user_env_var_name` / `db_name_env_var_name` | `""` | Remplace le nom de la variable d'environnement utilisée pour injecter l'utilisateur/nom de la base de données. |
-| `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption de service. |
+| `db_user_env_var_name` / `db_name_env_var_name` | `""` | Remplacer le nom de la variable d'environnement utilisée pour injecter l'utilisateur/nom de la base de données. |
+| `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption. |
 
 Les quatre extensions requises (`pg_trgm`, `unaccent`, `hstore`, `citext`) sont installées
 automatiquement par le job `db-init` intégré — aucune variable n'est nécessaire pour elles.
@@ -457,18 +461,18 @@ automatiquement par le job `db-init` intégré — aucune variable n'est nécess
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | _(intégré `db-init`)_ | Par défaut, un job Cloud Run `db-init` est défini. Le job `db-migrate` est toujours ajouté par `Django_Common`. Fournir une liste non vide pour remplacer le `db-init` par défaut par des jobs personnalisés. |
+| `initialization_jobs` | _(intégré `db-init`)_ | Par défaut, un job Cloud Run `db-init` est défini. Le job `db-migrate` est toujours ajouté par `Django_Common`. Fournissez une liste non vide pour remplacer le `db-init` par défaut par des jobs personnalisés. |
 | `cron_jobs` | `[]` | Jobs Cloud Run planifiés (par exemple, `clearsessions`, `cleartokens`). |
 
 ### Groupe 14 — Observabilité et santé {#group-14--observability--health}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `GET /healthz`, délai initial de 60 s | Sonde de démarrage passée à `Django_Common`. Augmenter le délai pour les grands ensembles de migration. **Ne pas utiliser de chemin de redirection.** |
-| `liveness_probe` | HTTP `GET /healthz`, délai initial de 30 s | Sonde de vivacité. Utiliser un point de terminaison léger qui renvoie 200 sans corps. |
+| `startup_probe` | HTTP `GET /healthz`, délai initial de 60s | Sonde de démarrage passée à `Django_Common`. Augmenter le délai pour les grands ensembles de migration. **Ne pas utiliser de chemin de redirection.** |
+| `liveness_probe` | HTTP `GET /healthz`, délai initial de 30s | Sonde de vivacité. Utiliser un point de terminaison léger qui renvoie 200 sans corps. |
 | `startup_probe_config` | activé, HTTP `/healthz` | Sonde de démarrage de l'infrastructure au niveau App_CloudRun. |
-| `health_check_config` | activé, HTTP `/healthz` | Vérification de santé de l'infrastructure au niveau App_CloudRun. |
-| `uptime_check_config` | désactivé (`enabled = false`, chemin `/`) | Vérification de disponibilité Cloud Monitoring facultative. |
+| `health_check_config` | activé, HTTP `/healthz` | Vérification de la santé de l'infrastructure au niveau App_CloudRun. |
+| `uptime_check_config` | désactivé (`enabled = false`, chemin `/`) | Test de disponibilité optionnel de Cloud Monitoring. |
 
 ### Groupe 21 — Cache Redis {#group-21--redis-cache}
 
@@ -477,14 +481,14 @@ automatiquement par le job `db-init` intégré — aucune variable n'est nécess
 | `enable_redis` | `false` | Activer Redis pour le stockage de session et la mise en cache. |
 | `redis_host` | `""` | IP ou nom d'hôte de l'hôte Redis. |
 | `redis_port` | `6379` | Port Redis. |
-| `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
+| `redis_auth` | `""` | Mot de passe d'authentification Redis optionnel (sensible). |
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode de simulation (dry-run). |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
 | `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 ---
@@ -499,7 +503,7 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL HTTPS pour atteindre Django. |
 | `service_location` | Région dans laquelle le service est déployé. |
-| `stage_services` | Mappage des noms de services et des URL des étapes de Cloud Deploy. |
+| `stage_services` | Mappage des noms et URL des services de l'étape Cloud Deploy. |
 | `load_balancer_ip` / `load_balancer_url` | IP externe et URL HTTPS (lorsqu'une IP statique est réservée). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` | Nom de la base de données de l'application. |
@@ -510,15 +514,15 @@ localiser et d'explorer les ressources en cours d'exécution.
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
-| `initialization_jobs` | Noms des jobs Cloud Run configurés. |
+| `initialization_jobs` | Noms des jobs Cloud Run de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants de projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails du dépôt CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `uptime_check_names` | Noms des vérifications de disponibilité Cloud Monitoring provisionnées. |
+| `uptime_check_names` | Noms des tests de disponibilité Cloud Monitoring provisionnés. |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | État de la journalisation d'audit et de CMEK. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
 
 ---
 
@@ -530,35 +534,35 @@ localiser et d'explorer les ressources en cours d'exécution.
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critique | Django nécessite PostgreSQL ; MySQL ou `NONE` feront échouer le job `db-init`. |
-| `application_name` / `tenant_id` | défini une fois | Critique | Intégré aux noms de ressources ; la modification recrée toutes les ressources nommées et détruit les données. |
+| `application_name` / `tenant_id` | défini une fois | Critique | Intégré aux noms de ressources ; toute modification recrée toutes les ressources nommées et détruit les données. |
 | `application_database_name` / `_user` | défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit les données. |
 | Chemin `startup_probe` | `/healthz` (pas de redirection) | Critique | Le trafic de la sonde Cloud Run est en HTTP simple ; une redirection renvoie 301, Cloud Run ne voit jamais 200, le service ne démarre jamais. |
-| `SECURE_SSL_REDIRECT` dans `settings.py` | `False` ou exempter `/healthz` | Critique | `True` redirige chaque requête HTTP, y compris la sonde de démarrage ; le service reste bloqué dans `STARTING`. |
-| `enable_backup_import` | `false` après restauration | Élevé | Laisser `true` réexécute l'importation à chaque apply, écrasant les données en direct avec une sauvegarde obsolète. |
+| `SECURE_SSL_REDIRECT` dans `settings.py` | `False` ou exempter `/healthz` | Critique | `True` redirige chaque requête HTTP, y compris la sonde de démarrage ; le service reste bloqué en `STARTING`. |
+| `enable_backup_import` | `false` après restauration | Élevé | Laisser `true` relance l'importation à chaque apply, écrasant les données en direct avec une sauvegarde obsolète. |
 | `enable_nfs` | `true` (par défaut) | Élevé | La désactivation avec `max_instance_count > 1` signifie que chaque instance a un stockage éphémère isolé ; les téléchargements sont perdus lors de la suppression de l'instance. |
 | `execution_environment` | `gen2` (par défaut lorsque NFS est activé) | Élevé | `gen1` ne prend pas en charge les montages de volume NFS ; le service ne démarre pas. |
-| `nfs_mount_path` | `/mnt/nfs` — doit correspondre à `MEDIA_ROOT` | Élevé | Une non-concordance entraîne l'écriture des médias par Django dans un stockage éphémère ; les fichiers sont perdus lors de la suppression de l'instance. |
-| Mémoire `container_resources` | ≥ `512Mi` ; augmenter pour les charges de travail intensives en ORM | Élevé | Trop peu de mémoire : l'instance se termine avec OOM (exit 137) sur de grands ensembles de requêtes ou le traitement de fichiers. |
-| `min_instance_count` | `1` pour la production | Moyen | `0` provoque des démarrages à froid (>60 s) à la première requête après l'inactivité ; les jobs cron peuvent ne pas trouver d'instance chaude. |
+| `nfs_mount_path` | `/mnt/nfs` — doit correspondre à `MEDIA_ROOT` | Élevé | Une non-concordance entraîne l'écriture des médias par Django dans le stockage éphémère ; les fichiers sont perdus lors de la suppression de l'instance. |
+| Mémoire `container_resources` | ≥ `512Mi` ; augmenter pour les charges de travail intensives en ORM | Élevé | Trop peu de mémoire : l'instance se termine avec OOM (exit 137) sur de grands querysets ou le traitement de fichiers. |
+| `min_instance_count` | `1` pour la production | Moyen | `0` provoque des démarrages à froid (>60 s) à la première requête après l'inactivité ; les jobs cron peuvent ne trouver aucune instance chaude. |
 | `application_version` | tag épinglé, pas `latest` | Moyen | `latest` rend le retour arrière ambigu ; Cloud Run ne peut pas distinguer deux pulls `latest`. |
 | `enable_redis` | `true` lors de l'utilisation de sessions basées sur Redis | Moyen | Laissé `false` avec `settings.py` configuré pour Redis : `ConnectionRefusedError` à chaque accès au cache/session. |
-| `ingress_settings` | `internal-and-cloud-load-balancing` pour les services privés équilibrés en charge | Moyen | `all` permet l'invocation directe de l'URL du point de terminaison Cloud Run en contournant Cloud Armor/IAP. |
-| `enable_iap` / `enable_cloud_armor` | activer pour l'administration | Moyen | L'interface utilisateur d'administration de Django est autrement accessible publiquement à l'URL du service. |
+| `ingress_settings` | `internal-and-cloud-load-balancing` pour les services privés à charge équilibrée | Moyen | `all` permet l'invocation directe de l'URL du point de terminaison Cloud Run en contournant Cloud Armor/IAP. |
+| `enable_iap` / `enable_cloud_armor` | activer pour l'interface d'administration | Moyen | L'interface utilisateur d'administration de Django est autrement accessible publiquement à l'URL du service. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
 
 ---
 
-Pour le comportement de base référencé tout au long — IAM et Workload Identity,
+Pour le comportement du socle référencé partout — IAM et Workload Identity,
 autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_CloudRun](App_CloudRun.md)**. La configuration d'application spécifique à Django partagée
 avec la variante GKE est décrite dans **[Django_Common](Django_Common.md)**.
 
 <!-- related-guides -->
 
-## Guides associées {#related-guides}
+## Guides associés {#related-guides}
 
 - [Lab pratique : Django sur Cloud Run](../labs/Django_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Django sur GKE Autopilot](Django_GKE.md) — la même application sur Kubernetes, pour quand vous avez besoin de l'autre cible de déploiement.
 - [Django Common — Configuration d'application partagée](Django_Common.md) — la configuration partagée par les deux cibles de déploiement.
-- Déployé avec [CloudBeaver sur Google Cloud Run](CloudBeaver_CloudRun.md), [Gitea sur Google Cloud Run](Gitea_CloudRun.md), [GlitchTip sur Google Cloud Run](GlitchTip_CloudRun.md) dans la solution **Custom Application Starter**.
+- Déployé aux côtés de [CloudBeaver sur Google Cloud Run](CloudBeaver_CloudRun.md), [Gitea sur Google Cloud Run](Gitea_CloudRun.md), [GlitchTip sur Google Cloud Run](GlitchTip_CloudRun.md) dans la solution **Custom Application Starter**.

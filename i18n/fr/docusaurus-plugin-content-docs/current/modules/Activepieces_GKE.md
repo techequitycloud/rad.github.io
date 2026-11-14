@@ -3,33 +3,33 @@ title: "Activepieces sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Activepieces sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Activepieces_GKE.md @ 60462a86 sha256:31ae83a465b6 -->
+<!-- translated-from: docs/modules/Activepieces_GKE.md @ 40c83c3f sha256:e4da5e8d9279 -->
 
 # Activepieces sur GKE Autopilot {#activepieces-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Activepieces_GKE.png" alt="Activepieces sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Activepieces est une plateforme open source d'automatisation de flux de travail
-sans code, sous licence Apache 2.0, pour connecter des applications, des API et
-des sources de données. Ce module déploie Activepieces sur **GKE Autopilot**
-sur la base de la fondation [App_GKE](App_GKE.md), qui provisionne et gère
+Activepieces est une plateforme d'automatisation de flux de travail sans code,
+open source et sous licence Apache 2.0, pour connecter des applications, des API
+et des sources de données. Ce module déploie Activepieces sur **GKE Autopilot**
+en s'appuyant sur la fondation [App_GKE](App_GKE.md), qui provisionne et gère
 l'infrastructure partagée de Google Cloud et Kubernetes.
 
-Ce guide se concentre sur les services cloud qu'Activepieces utilise et sur la
-manière de les explorer et de les exploiter depuis la Google Cloud Console et
-la ligne de commande. Pour les mécanismes communs à toutes les applications GKE
-— Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement
-— veuillez vous référer au [guide de la fondation App_GKE](App_GKE.md) plutôt
-que de les répéter ici.
+Ce guide se concentre sur les services cloud utilisés par Activepieces et sur la
+manière de les explorer et de les opérer depuis la console Google Cloud et la
+ligne de commande. Pour les mécanismes communs à chaque application GKE —
+Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
+Authorization, VPC Service Controls, sauvegardes et le cycle de vie du
+déploiement — veuillez vous référer au [guide de la fondation App_GKE](App_GKE.md)
+plutôt que de les répéter ici.
 
 ---
 
 ## Ce que coûte Activepieces sur RAD, et comment cela se compare {#what-activepieces-costs-on-rad-and-how-that-compares}
 
-**Le module Activepieces sur GKE Autopilot de RAD coûte environ 129 $ US par mois dans un projet que vous possédez, sans frais de licence pour le logiciel lui-même.** RAD facture des frais de module uniques de 110 crédits (11 $ US au prix de la recharge) dans un projet que vous possédez, et 99 crédits (10 % de moins) dans un projet géré par RAD. GKE convient aux Activepieces qui doivent rester actifs en permanence ou s'adapter à plusieurs pods ; pour le coût le plus bas, le [module Cloud Run](Activepieces_CloudRun.md) exécute les mêmes Activepieces pour environ 83 $ US par mois. Les chiffres sont ceux du 8 octobre 2026 ; les sources sont énumérées à la fin de cette section.
+**Le module Activepieces sur GKE Autopilot de RAD coûte environ 129 $ US par mois dans un projet que vous possédez, sans frais de licence pour le logiciel lui-même.** RAD facture des frais de module uniques de 110 crédits (11 $ US au prix de la recharge) dans un projet que vous possédez, et de 99 crédits (10 % de moins) dans un projet géré par RAD. GKE convient aux Activepieces qui doivent rester opérationnels en continu ou s'adapter à travers plusieurs pods ; pour le coût le plus bas, le [module Cloud Run](Activepieces_CloudRun.md) exécute les mêmes Activepieces pour environ 83 $ US par mois. Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les quelque 129 $ US par mois deviennent presque rien. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les quelque 129 $ US par mois deviennent presque nuls. Voir **Mettre en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -38,13 +38,15 @@ Vous payez pour trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 $ US au prix de la recharge) | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ 129 $ US par mois pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **107 crédits par jour**, soit environ 3 210 par mois (environ 321 $ US au prix de la recharge, 257 $ US au tarif du plan Scale) |
-| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites, puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ 129 $ US par mois pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **137 crédits par jour**, soit environ 4 110 par mois (environ 411 $ US au prix de la recharge ; estimé à partir des prix catalogue Google, et incluant les frais de cluster) |
+| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est maintenu en réserve |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+**Pourquoi les deux colonnes diffèrent.** Le chiffre géré par RAD inclut les frais de gestion du cluster GKE (environ 73 $ US par mois) et la fondation partagée du projet. Dans votre propre projet, le niveau gratuit de Google couvre les frais de gestion d'un cluster par compte de facturation, ce que le chiffre du projet propre suppose. Il est estimé à partir des prix catalogue de Google, car il n'y a pas encore suffisamment d'historique GKE géré par RAD pour le mesurer, de sorte que la confirmation de déploiement ne le cite pas. Une deuxième application GKE dans le même projet géré par RAD partage le cluster et n'ajoute que ses propres pods.
 
-10 crédits coûtent 1 $ US pour une recharge unique, et moins pour un plan mensuel. Dans un projet géré par RAD, la base de données est partagée par toutes les applications du projet, donc une deuxième application n'en ajoute pas une deuxième.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
+
+10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins avec un plan mensuel. Dans un projet géré par RAD, la base de données est partagée par toutes les applications du projet, de sorte qu'une deuxième application n'en ajoute pas une deuxième.
 
 **Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
 
@@ -59,38 +61,43 @@ Votre premier déploiement réussi sur RAD est exempté des frais de module lors
 
 ### Comment cela se compare {#how-it-compares}
 
-- Le plan professionnel de Zapier commence à **29,99 $/mois** (facturation mensuelle) pour 750 tâches et augmente avec le volume — 58,50 $/mois pour 1 500 tâches, 73,50 $/mois pour 2 000, jusqu'à plusieurs milliers de dollars par mois pour un volume élevé ; son plan Équipe (auquel l'espace de travail partagé et multi-utilisateur d'Activepieces est plus proche) commence à **103,50 $/mois** pour 2 000 tâches/mois.
-- **RAD exécute le projet open source lui-même, et non une location hébergée par un fournisseur.** Vous obtenez le même logiciel, sur votre propre infrastructure (ou celle de RAD), au lieu d'un abonnement par siège ou par utilisation qui augmente indépendamment de ce que vous utilisez réellement.
-- **Par rapport à un serveur autogéré nu :** L'exécution du même logiciel open source par vous-même, un Hetzner CPX22 (2 vCPU/4 Go, environ 24 $/mois) ou un DigitalOcean 2 vCPU/4 Go Droplet (également 24 $/mois) est à peu près de la même forme ; un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) coûte environ 49 $/mois. RAD n'est pas moins cher en termes monétaires — la différence est la base de données gérée, Secret Manager et la surveillance qui sont fournis avec le module au lieu d'être votre propre travail.
+- Le plan Professionnel de Zapier commence à **29,99 $/mois** (facturation mensuelle) pour 750 tâches et augmente avec le volume — 58,50 $/mois pour 1 500 tâches, 73,50 $/mois pour 2 000, jusqu'à plusieurs milliers de dollars par mois à volume élevé ; son plan Équipe (auquel l'espace de travail partagé et multi-utilisateur d'Activepieces est plus proche) commence à **103,50 $/mois** pour 2 000 tâches/mois.
+- **RAD exécute le projet open source lui-même, pas une location hébergée par un fournisseur.** Vous obtenez le même logiciel, sur votre propre infrastructure (ou celle de RAD), au lieu d'un abonnement par siège ou par utilisation qui augmente indépendamment de ce que vous utilisez réellement.
+- **Par rapport à un serveur auto-géré nu :** L'exécution du même logiciel open source par vous-même, un Hetzner CPX22 (2 vCPU/4 Go, environ 24 $/mois) ou un DigitalOcean 2 vCPU/4 Go Droplet (également 24 $/mois) est à peu près de la même forme ; un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) coûte environ 49 $/mois. RAD n'est pas moins cher en termes monétaires — la différence est la base de données gérée, Secret Manager et la surveillance qui accompagnent le module au lieu d'être votre propre travail.
 
-### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-Si Activepieces s'exécute dans **un projet géré par RAD pour vous**, vous disposez d'une option qui va bien au-delà de la mise à l'échelle à zéro : **supprimez l'ensemble du projet et restaurez-le dans les 30 jours pour presque rien.** Cela convient bien mieux à une utilisation occasionnelle — préparation d'une certification, démo, besoin saisonnier — que l'exécution continue d'Activepieces.
+Si Activepieces s'exécute dans **un projet géré par RAD pour vous**, vous avez une option qui va bien au-delà de la mise à l'échelle à zéro : **supprimer l'ensemble du projet et le restaurer dans les 30 jours pour presque rien.** Cela convient bien mieux à une utilisation occasionnelle — étudier pour une certification, une démo, un besoin saisonnier — que l'exécution continue d'Activepieces.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, sera utilisable après sa restauration. La restauration ne peut donc pas être considérée comme un moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-- **Comment ça marche.** La suppression d'un projet géré par RAD dissocie d'abord sa facturation, puis demande à Google de supprimer le projet purement et simplement. Google ne le supprime pas immédiatement : il conserve le projet, récupérable, pendant 30 jours, et comme la facturation est déjà dissociée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un seul module, cela ne détruit pas la base de données, aucune VM ou la ressource de calcul une par une — l'ensemble du projet s'arrête simplement, et rien n'est facturé entre-temps.
-- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
-- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude et de démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
-- **Une lacune réelle : les sauvegardes ne survivent pas.** Tout ce qu'Activepieces écrit dans un bucket de sauvegarde à l'intérieur du projet est très probablement perdu dès que vous supprimez le projet, même si le projet lui-même est récupérable pendant 30 jours — ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée. Quiconque a personnalisé le déploiement et souhaite conserver ce travail doit copier une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de la supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet. Google ne le supprime pas immédiatement : il conserve le projet, récupérable, pendant 30 jours, et comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un seul module, cela ne détruit pas la base de données, aucune VM ou la ressource de calcul une par une — l'ensemble du projet s'arrête simplement, et rien n'est facturé entre-temps.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
+- **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude et de démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+- **Un véritable manque : les sauvegardes ne survivent pas.** Tout ce qu'Activepieces écrit dans un bucket de sauvegarde à l'intérieur du projet est très probablement perdu dès que vous supprimez le projet, même si le projet lui-même est récupérable pendant 30 jours — ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée. Quiconque a personnalisé le déploiement et souhaite conserver ce travail doit copier une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
-### Ne payez que pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-C'est la solution de repli pour un projet que vous possédez, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée : **supprimez le déploiement et redéployez-le lorsque vous en avez à nouveau besoin.**
+C'est la solution de repli pour un projet que vous possédez, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée : **supprimez le déploiement et redéployez-le lorsque vous en aurez à nouveau besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 $ US) dans votre propre projet, ou 99 crédits dans un projet géré par RAD, car RAD reconstruit les ressources à partir de zéro. La suppression permet d'économiser de l'argent une fois qu'Activepieces resterait inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution — environ 3 jours ou plus dans votre propre projet (4,31 $ US/jour) ou 1 jour ou plus dans un projet géré par RAD (107 crédits/jour).
-- **La majeure partie du coût d'exécution est généralement l'infrastructure partagée.** La base de données ne s'arrête que si rien d'autre dans le projet ne les utilise, donc la suppression d'Activepieces alors qu'une autre application partage le projet n'économise que la partie calcul d'Activepieces.
-- **Gardez vos données en premier.** Tout ce qu'Activepieces écrit dans un bucket de sauvegarde à l'intérieur du déploiement est supprimé avec lui — copiez la dernière sauvegarde (vers Google Drive, ou un bucket que vous conservez) avant de la supprimer si vous voulez la conserver.
-- **RAD ne recrée pas un déploiement supprimé pour vous.** Vous saisissez à nouveau les paramètres lorsque vous redéployez.
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 $ US) dans votre propre projet, ou
+  99 crédits dans un projet géré par RAD, car RAD reconstruit les ressources
+  à partir de zéro. La suppression permet d'économiser de l'argent une fois qu'Activepieces resterait inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution — environ 3 jours ou plus dans votre propre projet (4,31 $ US/jour) ou 1 jour ou plus dans un projet géré par RAD (137 crédits/jour).
+- **La majeure partie du coût d'exécution est généralement l'infrastructure partagée.** La base de données ne s'arrête que lorsque rien d'autre dans le projet ne les utilise, donc la suppression d'Activepieces alors qu'une autre application partage le projet n'économise que la partie calcul d'Activepieces.
+- **Conservez d'abord vos données.** Tout ce qu'Activepieces écrit dans un bucket de sauvegarde à l'intérieur du déploiement est
+  supprimé avec lui — copiez la dernière sauvegarde (vers Google Drive, ou un bucket que vous conservez) avant
+  de supprimer si vous voulez la conserver.
+- **RAD ne recrée pas un déploiement supprimé pour vous.** Vous saisissez à nouveau les paramètres lorsque
+  vous redéployez.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose d'Activepieces dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute Activepieces pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose d'Activepieces dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits non utilisés sont reversés au formateur.
+- **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute Activepieces pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais RAD et estimation des crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration ; [Tarification Zapier](https://zapier.com/pricing). Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
+**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais de RAD et estimation des crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration ; [Tarification Zapier](https://zapier.com/pricing). Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
 
 ## 1. Vue d'ensemble {#1-overview}
 
@@ -102,36 +109,36 @@ connecte un ensemble ciblé de services Google Cloud :
 | Calcul | GKE Autopilot | Pods Node.js, 2 vCPU / 2 Gio par défaut, mise à l'échelle horizontale automatique |
 | Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — Activepieces ne prend pas en charge MySQL ou d'autres moteurs |
 | Stockage d'objets | Cloud Storage | Un bucket de données dédié provisionné automatiquement |
-| Cache et file d'attente | Redis (facultatif) | Obligatoire pour la mise à l'échelle horizontale ; le mode file d'attente en mémoire est le défaut |
-| Secrets | Secret Manager | `AP_ENCRYPTION_KEY` et `AP_JWT_SECRET` auto-générés ; mot de passe de la base de données |
-| Ingress | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé facultatif + certificat géré |
+| Cache et file d'attente | Redis (facultatif) | Obligatoire pour la mise à l'échelle horizontale ; le mode file d'attente en mémoire est la valeur par défaut |
+| Secrets | Secret Manager | `AP_ENCRYPTION_KEY` et `AP_JWT_SECRET` générés automatiquement ; mot de passe de la base de données |
+| Ingress | Cloud Load Balancing | LoadBalancer externe, nom de domaine personnalisé facultatif + certificat géré |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par
-  la couche d'application partagée ; la sélection de tout autre moteur
-  interrompt le démarrage.
-- **Le mode file d'attente en mémoire est le défaut.** `AP_QUEUE_MODE = MEMORY` signifie que
-  tous les jobs de flux de travail s'exécutent en interne. Cela fonctionne pour
-  une seule réplique, mais la mise à l'échelle au-delà d'un pod nécessite Redis
-  (`enable_redis = true`).
-- **`AP_ENCRYPTION_KEY` et `AP_JWT_SECRET` sont générés automatiquement** et stockés dans
-  Secret Manager. Ces clés ne doivent jamais être renouvelées après le premier
-  démarrage sans fenêtre de maintenance — le renouvellement de `AP_ENCRYPTION_KEY` corrompt
-  toutes les informations d'identification de connexion stockées, et le
+- **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la
+  couche d'application partagée ; la sélection de tout autre moteur empêche le
+  démarrage.
+- **Le mode file d'attente en mémoire est la valeur par défaut.** `AP_QUEUE_MODE = MEMORY`
+  signifie que tous les jobs de flux de travail s'exécutent en interne. Cela
+  fonctionne pour un seul réplica, mais la mise à l'échelle au-delà d'un pod
+  nécessite Redis (`enable_redis = true`).
+- **`AP_ENCRYPTION_KEY` et `AP_JWT_SECRET` sont générés automatiquement** et stockés
+  dans Secret Manager. Ces clés ne doivent jamais être renouvelées après le
+  premier démarrage sans fenêtre de maintenance — le renouvellement de `AP_ENCRYPTION_KEY`
+  corrompt toutes les informations d'identification de connexion stockées, et le
   renouvellement de `AP_JWT_SECRET` invalide toutes les sessions utilisateur actives.
 - **L'affinité de session est `ClientIP` par défaut.** Activepieces utilise des
-  connexions WebSocket persistantes pour les mises à jour de flux en temps
-  réel ; les requêtes du même client doivent atteindre le même pod.
+  connexions WebSocket persistantes pour les mises à jour de flux en temps réel ;
+  les requêtes du même client doivent atteindre le même pod.
 - **NFS est désactivé par défaut.** Contrairement aux applications centrées sur
   les fichiers, Activepieces stocke tout l'état du flux de travail dans
-  PostgreSQL. N'activez NFS que si Redis est colocalisé sur la VM du serveur
-  NFS.
+  PostgreSQL. Activez NFS uniquement si Redis est colocalisé sur la VM du
+  serveur NFS.
 - **L'extension `pgvector` est installée automatiquement** lors du job de
-  configuration de la base de données du premier déploiement, permettant des
+  configuration de la base de données au premier déploiement, activant les
   éléments de flux de travail basés sur l'IA.
-- **Un minimum de 1 réplique est maintenu** (GKE ne prend pas en charge la mise
-  à l'échelle à zéro) pour que les points de terminaison des webhooks soient
+- **Un minimum de 1 réplica est maintenu** (GKE ne prend pas en charge la mise à
+  l'échelle à zéro) pour que les points de terminaison des webhooks soient
   toujours accessibles.
 
 ---
@@ -140,17 +147,17 @@ connecte un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Activepieces {#a-gke-autopilot--the-activepieces-workload}
 
-Les pods Activepieces sont planifiés sur Autopilot, qui facture le CPU/la
-mémoire que les pods demandent réellement. L'autoscaling horizontal des pods
-dimensionne le déploiement entre les nombres minimum et maximum de répliques.
+Les pods Activepieces sont planifiés sur Autopilot, qui facture le CPU/la mémoire
+que les pods demandent réellement. L'autoscaling horizontal des pods dimensionne
+le déploiement entre le nombre minimum et maximum de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge
-  de travail Activepieces pour voir les pods, les révisions et les événements.
+- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+  travail Activepieces pour voir les pods, les révisions et les événements.
   Kubernetes Engine → Services et Ingress affiche l'adresse IP externe.
 - **CLI :**
   ```bash
@@ -164,15 +171,15 @@ et du type de charge de travail (Deployment vs StatefulSet).
 
 ### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Activepieces stocke toutes les données d'application (flux, connexions,
-historique d'exécution, utilisateurs) dans une instance Cloud SQL pour
-PostgreSQL 15 gérée. Les pods y accèdent en privé via le sidecar **Cloud SQL
-Auth Proxy** via un socket Unix ; aucune IP publique n'est exposée. Lors du
-premier déploiement, un job d'initialisation crée la base de données et
-l'utilisateur de l'application et installe l'extension `pgvector`.
+Activepieces stocke toutes les données de l'application (flux, connexions,
+historique d'exécution, utilisateurs) dans une instance gérée de Cloud SQL pour
+PostgreSQL 15. Les pods y accèdent en privé via le sidecar **Cloud SQL Auth Proxy**
+sur un socket Unix ; aucune IP publique n'est exposée. Lors du premier déploiement,
+un job d'initialisation crée la base de données et l'utilisateur de l'application
+et installe l'extension `pgvector`.
 
-- **Console :** SQL → sélectionnez l'instance pour les connexions, les
-  sauvegardes, les indicateurs et les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes,
+  les indicateurs et les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -183,16 +190,15 @@ l'utilisateur de l'application et installe l'extension `pgvector`.
 
 Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret
 Secret Manager contenant le mot de passe sont tous affichés dans les
-[Sorties](#5-outputs). Pour le modèle de connexion, les sauvegardes
-automatisées et le renouvellement du mot de passe, voir
-[App_GKE](App_GKE.md).
+[Sorties](#5-outputs). Pour le modèle de connexion, les sauvegardes automatiques
+et le renouvellement du mot de passe, voir [App_GKE](App_GKE.md).
 
 ### C. Cloud Storage {#c-cloud-storage}
 
-Un bucket de données **Cloud Storage** dédié est provisionné automatiquement
-pour le stockage de fichiers Activepieces. Le compte de service de la charge de
-travail se voit accorder l'accès. Des buckets supplémentaires peuvent être
-déclarés via `storage_buckets`.
+Un bucket de données **Cloud Storage** dédié est provisionné automatiquement pour
+le stockage de fichiers Activepieces. Le compte de service de la charge de travail
+se voit accorder l'accès. Des buckets supplémentaires peuvent être déclarés via
+`storage_buckets`.
 
 - **Console :** Cloud Storage → Buckets.
 - **CLI :**
@@ -207,9 +213,9 @@ Voir [App_GKE](App_GKE.md) pour les options CMEK et les montages GCS Fuse.
 
 Redis est **désactivé par défaut** (`AP_QUEUE_MODE = MEMORY`). Lorsque `enable_redis = true`
 est défini, le backend de la file d'attente passe à `AP_QUEUE_MODE = REDIS`, ce qui est
-requis avant de passer à plus d'une réplique. Lorsque `redis_host` est laissé vide
-et `enable_nfs` est vrai, l'IP de la VM du serveur NFS est utilisée comme point de
-terminaison Redis.
+requis avant de passer à plus d'un réplica. Lorsque `redis_host` est laissé vide
+et `enable_nfs` est vrai, l'adresse IP de la VM du serveur NFS est utilisée comme
+point de terminaison Redis.
 
 - **Console :** Memorystore → Redis (si vous utilisez une instance gérée).
 - **CLI :**
@@ -222,11 +228,11 @@ terminaison Redis.
 
 ### E. Secret Manager {#e-secret-manager}
 
-Deux secrets cryptographiques sont générés automatiquement et stockés dans
-Secret Manager : `AP_ENCRYPTION_KEY` (utilisé pour chiffrer toutes les informations
-d'identification de connexion stockées) et `AP_JWT_SECRET` (utilisé pour signer les
-jetons de session utilisateur). Le mot de passe de la base de données est géré
-séparément par la fondation.
+Deux secrets cryptographiques sont générés automatiquement et stockés dans Secret
+Manager : `AP_ENCRYPTION_KEY` (utilisé pour chiffrer toutes les informations
+d'identification de connexion stockées) et `AP_JWT_SECRET` (utilisé pour signer
+les jetons de session utilisateur). Le mot de passe de la base de données est
+géré séparément par la fondation.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -241,30 +247,28 @@ renouvellement de Secret Store CSI.
 
 ### F. Réseau et ingress {#f-networking--ingress}
 
-Par défaut, la charge de travail est exposée via une IP externe Cloud Load
-Balancing. Un domaine personnalisé avec un certificat géré par Google peut être
-activé, et une IP statique peut être réservée afin que l'adresse survive aux
-redéploiements.
+Par défaut, la charge de travail est exposée via une adresse IP externe de Cloud
+Load Balancing. Un domaine personnalisé avec un certificat géré par Google peut
+être activé, et une adresse IP statique peut être réservée afin que l'adresse
+survive aux redéploiements.
 
-- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses
-  IP.
+- **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
 - **CLI :**
   ```bash
   kubectl get ingress,svc -n "$NAMESPACE"
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les
-détails de l'IP statique.
+Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et
+les détails de l'adresse IP statique.
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les sorties standard/erreur des pods sont acheminées vers Cloud Logging ; les
+Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les
 métriques GKE et Cloud SQL sont acheminées vers Cloud Monitoring. Des tests de
-disponibilité et des politiques d'alerte facultatifs sont disponibles.
+disponibilité et des stratégies d'alerte facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
-  bord / Alertes.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -276,25 +280,25 @@ disponibilité et des politiques d'alerte facultatifs sont disponibles.
 ## 3. Comportement de l'application Activepieces {#3-activepieces-application-behaviour}
 
 - **Configuration de la base de données au premier déploiement.** Un job
-  d'initialisation exécute `db-init.sh` en utilisant `postgres:15-alpine`. Il se connecte via le
-  Cloud SQL Auth Proxy et crée de manière idempotente la base de données et
-  l'utilisateur de l'application, accorde les privilèges et installe
-  l'extension `pgvector` pour les éléments de flux basés sur l'IA. Le job peut être
-  réexécuté en toute sécurité.
+  d'initialisation exécute `db-init.sh` en utilisant `postgres:15-alpine`. Il se
+  connecte via le Cloud SQL Auth Proxy et crée de manière idempotente la base de
+  données et l'utilisateur de l'application, accorde les privilèges et installe
+  l'extension `pgvector` pour les éléments de flux basés sur l'IA. Le job peut
+  être réexécuté en toute sécurité.
 - **Migrations de base de données au démarrage.** Activepieces applique ses
   propres migrations de schéma automatiquement à chaque démarrage, de sorte que
   la mise à niveau de la version de l'application applique les modifications de
   schéma sans étape de migration distincte.
-- **`AP_ENCRYPTION_KEY` et `AP_JWT_SECRET` sont immuables après le premier démarrage.** Ces clés
-  sont générées une fois et écrites dans Secret Manager. La modification de
-  `AP_ENCRYPTION_KEY` corrompt de manière permanente toutes les informations d'identification
-  de connexion stockées. La modification de `AP_JWT_SECRET` invalide toutes les sessions
-  utilisateur actives. Ne les renouvelez que pendant une fenêtre de maintenance
-  planifiée.
-- **Les points de terminaison des webhooks nécessitent une IP externe.** Le
-  `service_type = LoadBalancer` par défaut expose une IP externe pour les appels de webhook entrants.
-  Définissez `AP_FRONTEND_URL` et `AP_WEBHOOK_URL_PREFIX` sur l'URL externe après l'attribution de l'IP du
-  LoadBalancer :
+- **`AP_ENCRYPTION_KEY` et `AP_JWT_SECRET` sont immuables après le premier démarrage.** Ces
+  clés sont générées une fois et écrites dans Secret Manager. La modification de
+  `AP_ENCRYPTION_KEY` corrompt de manière permanente toutes les informations
+  d'identification de connexion stockées. La modification de `AP_JWT_SECRET`
+  invalide toutes les sessions utilisateur actives. Ne les renouvelez que
+  pendant une fenêtre de maintenance planifiée.
+- **Les points de terminaison de webhook nécessitent une adresse IP externe.** Le
+  `service_type = LoadBalancer` par défaut expose une adresse IP externe pour les appels de
+  webhook entrants. Définissez `AP_FRONTEND_URL` et `AP_WEBHOOK_URL_PREFIX` sur l'URL
+  externe après l'attribution de l'adresse IP du LoadBalancer :
   ```bash
   kubectl patch deploy <service-name> -n "$NAMESPACE" \
     -p '{"spec":{"template":{"spec":{"containers":[{"name":"activepieces","env":[
@@ -302,14 +306,16 @@ disponibilité et des politiques d'alerte facultatifs sont disponibles.
       {"name":"AP_WEBHOOK_URL_PREFIX","value":"https://activepieces.example.com"}
     ]}]}}}}'
   ```
-  Ou définissez `environment_variables` dans la configuration du module avant le déploiement.
+  Ou définissez `environment_variables` dans la configuration du module avant le
+  déploiement.
 - **L'inscription est ouverte par défaut.** `AP_SIGN_UP_ENABLED = "true"` est injecté
-  automatiquement. Après avoir créé le compte administrateur initial,
-  désactivez l'inscription en ajoutant `AP_SIGN_UP_ENABLED = "false"` à `environment_variables`.
+  automatiquement. Après avoir créé le compte administrateur initial, désactivez
+  l'inscription en ajoutant `AP_SIGN_UP_ENABLED = "false"` à `environment_variables`.
 - **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent la racine
-  `/` par défaut. Le point de terminaison `/api/v1/flags` ne répond que lorsque le
-  serveur est entièrement initialisé et connecté à PostgreSQL — envisagez de
-  définir `path = "/api/v1/flags"` pour une signalisation de santé plus précise.
+  `/` par défaut. Le point de terminaison `/api/v1/flags` ne répond
+  que lorsque le serveur est entièrement initialisé et connecté à PostgreSQL —
+  envisagez de définir `path = "/api/v1/flags"` pour une signalisation de santé plus
+  précise.
 
 ---
 
@@ -333,7 +339,7 @@ défaut.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
+| `support_users` | `[]` | Adresses e-mail autorisées à accéder au projet et aux alertes de surveillance. |
 | `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources pour le suivi des coûts/de la propriété. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -341,15 +347,15 @@ défaut.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `activepieces` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
-| `application_version` | `latest` | Étiquette de suivi du déploiement pour l'image construite. **Ne fixe pas la version amont** : le Dockerfile de `Activepieces_Common` construit toujours `FROM activepieces/activepieces:latest` sans ARG de version, donc la modification de cette valeur ne fait que réétiqueter la balise Artifact Registry poussée. |
+| `application_version` | `latest` | Balise de suivi du déploiement pour l'image construite. **Ne fixe pas la version amont** : le Dockerfile de `Activepieces_Common` construit toujours `FROM activepieces/activepieces:latest` sans ARG de version, donc la modification de cette valeur ne fait que réétiqueter la balise Artifact Registry poussée. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
-| `min_instance_count` | `1` | Nombre minimal de répliques ; maintenez à 1 pour garantir que les points de terminaison des webhooks sont toujours accessibles. |
-| `max_instance_count` | `1` | Nombre maximal de répliques. **N'augmentez que lorsque `enable_redis = true`.** |
+| `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
+| `min_instance_count` | `1` | Nombre minimal de réplicas ; maintenir à 1 pour garantir que les points de terminaison des webhooks sont toujours accessibles. |
+| `max_instance_count` | `1` | Nombre maximal de réplicas. **N'augmenter que lorsque `enable_redis = true`.** |
 | `timeout_seconds` | `300` | Durée maximale de la requête (0–3600 secondes). |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions socket. |
 | `enable_image_mirroring` | `true` | Mettre en miroir l'image Activepieces dans Artifact Registry avant le déploiement. |
@@ -358,8 +364,8 @@ défaut.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Les valeurs de base de `AP_*` sont définies automatiquement — ne définissez pas `AP_ENCRYPTION_KEY`, `AP_JWT_SECRET` ou `AP_POSTGRES_*` ici. |
-| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. |
+| `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Les valeurs de base `AP_*` sont définies automatiquement — ne pas définir `AP_ENCRYPTION_KEY`, `AP_JWT_SECRET` ou `AP_POSTGRES_*` ici. |
+| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. |
 
@@ -378,7 +384,7 @@ défaut.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `stateful_pvc_enabled` | `false` | Activer les modèles de PVC. Non recommandé — Activepieces stocke tout l'état dans PostgreSQL. |
+| `stateful_pvc_enabled` | `false` | Activer les modèles PVC. Non recommandé — Activepieces stocke tout l'état dans PostgreSQL. |
 | `stateful_pvc_size` | `10Gi` | Taille de stockage PVC par pod. |
 | `stateful_pvc_mount_path` | `/data` | Chemin de montage du conteneur pour le PVC. |
 | `stateful_pvc_storage_class` | `standard-rwo` | Kubernetes StorageClass pour les PVC. |
@@ -390,11 +396,11 @@ défaut.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Créer un ResourceQuota Kubernetes dans l'espace de noms de l'application. **Déclaré mais non transféré** dans `main.tf` — n'a aucun effet sur le déploiement de ce module. |
-| `quota_cpu_requests` | `""` | Requêtes CPU totales autorisées pour tous les pods dans l'espace de noms. Non transféré — aucun effet. |
-| `quota_cpu_limits` | `""` | Limites CPU totales autorisées pour tous les pods dans l'espace de noms. Non transféré — aucun effet. |
-| `quota_memory_requests` | `""` | Requêtes mémoire totales autorisées ; nécessite un suffixe binaire (par exemple `4Gi`, `8192Mi`) par convention. Non transféré — aucun effet. |
-| `quota_memory_limits` | `""` | Limites mémoire totales autorisées ; nécessite un suffixe binaire. Non transféré — aucun effet. |
+| `enable_resource_quota` | `false` | Créer un Kubernetes ResourceQuota dans l'espace de noms de l'application. **Déclaré mais non transféré** dans `main.tf` — n'a aucun effet sur le déploiement de ce module. |
+| `quota_cpu_requests` | `""` | Total des requêtes CPU autorisées pour tous les pods dans l'espace de noms. Non transféré — aucun effet. |
+| `quota_cpu_limits` | `""` | Total des limites CPU autorisées pour tous les pods dans l'espace de noms. Non transféré — aucun effet. |
+| `quota_memory_requests` | `""` | Total des requêtes mémoire autorisées ; nécessite un suffixe binaire (par exemple `4Gi`, `8192Mi`) selon la convention. Non transféré — aucun effet. |
+| `quota_memory_limits` | `""` | Total des limites mémoire autorisées ; nécessite un suffixe binaire. Non transféré — aucun effet. |
 | `quota_max_pods` | `""` | Nombre maximal de pods autorisés dans l'espace de noms. Non transféré — aucun effet. |
 | `quota_max_services` | `""` | Nombre maximal de services Kubernetes autorisés dans l'espace de noms. Non transféré — aucun effet. |
 | `quota_max_pvcs` | `""` | Nombre maximal de PersistentVolumeClaims autorisés. Non transféré — aucun effet. |
@@ -410,8 +416,8 @@ défaut.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/` 60s de délai | Sonde de démarrage. Envisagez de définir `path = "/api/v1/flags"` pour une signalisation précise du premier démarrage. |
-| `liveness_probe` | HTTP `/` 30s de délai | Sonde de vivacité. |
+| `startup_probe` | HTTP `/` délai de 60s | Sonde de démarrage. Envisagez de définir `path = "/api/v1/flags"` pour une signalisation précise du premier démarrage. |
+| `liveness_probe` | HTTP `/` délai de 30s | Sonde de vivacité. |
 | `startup_probe_config` | TCP 240s | Sonde d'infrastructure de niveau App_GKE. |
 | `health_check_config` | HTTP `/` | Sonde de vivacité de niveau App_GKE. |
 | `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
@@ -421,7 +427,7 @@ défaut.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `initialization_jobs` | `[]` | Laissez vide pour utiliser le job `db-init` intégré. |
+| `initialization_jobs` | `[]` | Laisser vide pour utiliser le job `db-init` intégré. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes planifiés. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés avec Activepieces. |
 
@@ -435,7 +441,7 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `false` | NFS est désactivé par défaut. Activez-le uniquement si Redis est colocalisé sur la VM du serveur NFS. |
+| `enable_nfs` | `false` | NFS est désactivé par défaut. Activer uniquement si Redis est colocalisé sur la VM du serveur NFS. |
 | `nfs_mount_path` | `/mnt/nfs` | Chemin de montage à l'intérieur du conteneur. |
 
 ### Groupe 14 — Cloud Storage et Artifact Registry {#group-14--cloud-storage--artifact-registry}
@@ -446,8 +452,8 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | `storage_buckets` | `[]` | Buckets supplémentaires à provisionner. |
 | `gcs_volumes` | `[]` | Montages de volume GCS Fuse via le pilote CSI. |
 | `manage_storage_kms_iam` / `enable_artifact_registry_cmek` | `false` | Options CMEK. |
-| `max_images_to_retain` | `7` | Nombre maximal d'images Artifact Registry récentes à conserver. |
-| `delete_untagged_images` | `true` | Supprimer automatiquement les images non étiquetées. |
+| `max_images_to_retain` | `7` | Nombre maximal d'images récentes d'Artifact Registry à conserver. |
+| `delete_untagged_images` | `true` | Supprimer automatiquement les images non taguées. |
 | `image_retention_days` | `30` | Jours après lesquels les images sont éligibles à la suppression. |
 
 ### Groupe 15 — Cache et file d'attente Redis {#group-15--redis-cache--queue}
@@ -455,7 +461,7 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_redis` | `false` | Basculer `AP_QUEUE_MODE` de `MEMORY` à `REDIS`. Requis lorsque `max_instance_count > 1`. |
-| `redis_host` | `""` | Point de terminaison Redis. Laissez vide pour utiliser l'IP du serveur NFS (nécessite `enable_nfs = true`). |
+| `redis_host` | `""` | Point de terminaison Redis. Laisser vide pour utiliser l'adresse IP du serveur NFS (nécessite `enable_nfs = true`). |
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
@@ -467,14 +473,14 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | `db_user` | `ap_user` | Utilisateur de la base de données de l'application. Immuable après le premier déploiement. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 | `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption de service. |
-| `rotation_propagation_delay_sec` | `90` | Secondes à attendre après la rotation avant de redémarrer les pods. |
+| `rotation_propagation_delay_sec` | `90` | Secondes à attendre après la rotation avant de redémarrer les pods en cascade. |
 
 ### Groupe 17 — Sauvegarde et maintenance {#group-17--backup--maintenance}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
-| `backup_retention_days` | `7` | Rétention ; augmentez à 30–90 pour la production/conformité. |
+| `backup_retention_days` | `7` | Rétention ; augmenter à 30–90 pour la production/conformité. |
 | `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
 ### Groupe 18 — Scripts SQL personnalisés {#group-18--custom-sql-scripts}
@@ -491,16 +497,15 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | `application_domains` | `[]` | Noms d'hôtes à servir. |
 | `reserve_static_ip` | `true` | IP externe stable sur les redéploiements. |
 
-### Groupe 20 — Proxy compatible avec l'identité (IAP) {#group-20--identity-aware-proxy-iap}
+### Groupe 20 — Identity-Aware Proxy (IAP) {#group-20--identity-aware-proxy-iap}
 
-> **Attention :** L'activation d'IAP nécessite une authentification d'identité
-> Google pour **toutes** les requêtes entrantes, y compris les rappels de
-> webhook provenant de services externes. N'activez IAP que lorsque les
-> webhooks publics ne sont pas nécessaires.
+> **Avertissement :** L'activation d'IAP nécessite une authentification d'identité Google pour **toutes**
+> les requêtes entrantes, y compris les rappels de webhook provenant de services externes. N'activez
+> IAP que lorsque les webhooks publics ne sont pas nécessaires.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_iap` | `false` | Exiger la connexion Google devant Activepieces. |
+| `enable_iap` | `false` | Exiger une connexion Google devant Activepieces. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder. |
 | `iap_oauth_client_id` / `iap_oauth_client_secret` | `""` | Requis lorsque IAP est activé (sensible). |
 
@@ -526,78 +531,89 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 ## 5. Sorties {#5-outputs}
 
 Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen
-le plus rapide de localiser et d'explorer les ressources en cours
-d'exécution.
+le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Kubernetes. |
 | `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
 | `service_cluster_ip` | ClusterIP intra-cluster. |
-| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à l'étape. |
+| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à chaque étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `service_url` | URL pour atteindre Activepieces. |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` | Nom de la base de données de l'application. |
 | `database_user` | Utilisateur de la base de données de l'application. |
-| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
+| `database_password_secret` | Secret Manager secret contenant le mot de passe de la base de données. |
 | `database_host` / `database_port` | Point de terminaison de la base de données (127.0.0.1 via le proxy d'authentification) / port. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
+| `monitoring_enabled` / `monitoring_notification_channels` | Statut et canaux de surveillance. |
 | `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants de projet. |
-| `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
+| `project_id` / `project_number` | Identifiants du projet. |
+| `cicd_enabled` / `cicd_configuration` | Statut et détails CI/CD (dépôt, déclencheur, registre). |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
+| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt(e). |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | Statut VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et statut CMEK. |
 
 ---
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
-> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
+> (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible**
+> (mineur).
 
-> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de base [App_GKE](App_GKE.md), qui valide les valeurs *et les combinaisons* au moment de la planification — un réplica en lecture sans son primaire, IAP sans identités autorisées, un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors limites. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à l'exécution.
+> **Validation héritée au moment du plan.** Ce module transmet sa configuration
+> au moteur de base [App_GKE](App_GKE.md), qui valide les valeurs *et les
+> combinaisons* au moment du plan — un réplica en lecture sans son primaire, IAP
+> sans identités autorisées, un runtime `gen1` avec des montages NFS/GCS, un
+> `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors de
+> portée. Une configuration invalide fait échouer le **plan** avec une erreur
+> claire et nommée avant la création de toute ressource, de sorte que la plupart
+> des erreurs ci-dessous sont détectées en amont plutôt qu'à l'apply ou à
+> l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
-| `AP_ENCRYPTION_KEY` (auto-généré) | Ne jamais faire pivoter après le premier démarrage | Critique | Le faire pivoter corrompt de façon permanente toutes les informations d'identification de connexion stockées — elles ne peuvent pas être déchiffrées. |
+| `AP_ENCRYPTION_KEY` (auto-généré) | Ne jamais faire pivoter après le premier démarrage | Critique | Le faire pivoter corrompt de manière permanente toutes les informations d'identification de connexion stockées — elles ne peuvent pas être déchiffrées. |
 | `AP_JWT_SECRET` (auto-généré) | Ne faire pivoter que pendant une fenêtre de maintenance | Critique | Le faire pivoter invalide toutes les sessions utilisateur actives, forçant une reconnexion immédiate pour tout le monde. |
 | `db_name` / `db_user` | Définir une seule fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans un `backup_uri` valide fait échouer le job d'importation. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans `backup_uri` valide fait échouer le job d'importation. |
 | `AP_FRONTEND_URL` / `AP_WEBHOOK_URL_PREFIX` | URL du LoadBalancer externe | Critique | Une URL incorrecte interrompt toutes les intégrations de webhook et les rappels OAuth. |
 | `max_instance_count` | `1` sauf si Redis est activé | Élevé | La mise à l'échelle au-delà de 1 en mode de file d'attente en mémoire divise la file d'attente des jobs entre les pods, ce qui entraîne des exécutions en double et des exécutions perdues. |
 | `enable_redis` | `true` avant la mise à l'échelle | Élevé | Sans Redis, chaque pod maintient sa propre file d'attente en mémoire — exécution incohérente avec plus d'un réplica. |
 | `redis_host` | `""` (NFS) ou explicite | Élevé | Lorsque Redis est activé mais que NFS est désactivé et qu'aucun hôte n'est défini, la chaîne de connexion Redis est vide et l'application ne démarre pas. |
-| `memory_limit` | `2Gi` | Élevé | Des valeurs inférieures à 1 GiB provoquent des arrêts OOM lors d'exécutions de flux concurrentes. |
-| `session_affinity` | `ClientIP` | Élevé | Sans persistance de session, les reconnexions WebSocket se dirigent vers différents pods, perturbant les mises à jour de flux en temps réel dans l'interface utilisateur. |
-| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la garde de validation rejette les valeurs invalides. Le maintien de 1 garantit que les webhooks sont toujours disponibles. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment de la planification. |
-| `AP_SIGN_UP_ENABLED` (`"true"` auto-injecté) | Désactiver après le premier administrateur | Élevé | Laisser l'inscription ouverte permet à quiconque ayant l'URL de créer un compte. |
+| `memory_limit` | `2Gi` | Élevé | Des valeurs inférieures à 1 GiB provoquent des arrêts OOM (Out Of Memory) lors d'exécutions de flux concurrentes. |
+| `session_affinity` | `ClientIP` | Élevé | Sans persistance de session, les reconnexions WebSocket sont acheminées vers différents pods, perturbant les mises à jour de flux en temps réel dans l'interface utilisateur. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la garde de validation rejette les valeurs invalides. Maintenir 1 garantit que les webhooks sont toujours disponibles. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le sidecar Auth Proxy est requis pour la connectivité PostgreSQL ; sa désactivation est bloquée par une garde de validation au moment du plan. |
+| `AP_SIGN_UP_ENABLED` (`"true"` auto-injecté) | Désactiver après le premier administrateur | Élevé | Laisser l'inscription ouverte permet à toute personne ayant l'URL de créer un compte. |
 | `enable_iap` | uniquement lorsque les webhooks ne sont pas nécessaires | Élevé | IAP bloque toutes les requêtes non authentifiées, y compris les rappels de webhook externes. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pod dans l'espace de noms. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont des octets et bloquent toute planification de pod dans l'espace de noms. |
 | `enable_pod_disruption_budget` | `true` | Moyen | La désactivation permet à GKE d'expulser tous les pods simultanément pendant la maintenance. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — IAM et Workload Identity,
+Pour le comportement de base référencé partout — IAM et Workload Identity,
 autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
-**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Activepieces partagée
-avec la variante Cloud Run est décrite dans
+**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à
+Activepieces partagée avec la variante Cloud Run est décrite dans
 **[Activepieces_Common](Activepieces_Common.md)**.
-
-<!-- related-guides -->
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : Activepieces sur GKE Autopilot](../labs/Activepieces_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
-- [Activepieces sur Google Cloud Run](Activepieces_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.
-- [Activepieces Common — Configuration d'application partagée](Activepieces_Common.md) — la configuration partagée par les deux cibles de déploiement.
+- [Lab pratique : Activepieces sur GKE Autopilot](../labs/Activepieces_GKE.md)
+  — déployez-le étape par étape, avec les écrans de la console et les commandes
+  à chaque étape.
+- [Activepieces sur Google Cloud Run](Activepieces_CloudRun.md) — la même
+  application sur Cloud Run, lorsque vous avez besoin de l'autre cible de
+  déploiement.
+- [Activepieces Common — Configuration d'application partagée](Activepieces_Common.md)
+  — la configuration partagée par les deux cibles de déploiement.

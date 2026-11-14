@@ -3,70 +3,72 @@ title: "LobeChat sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de LobeChat sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LobeChat_GKE.md @ 60462a86 sha256:ae52d5bf23d2 -->
+<!-- translated-from: docs/modules/LobeChat_GKE.md @ 40c83c3f sha256:92122e0301ec -->
 
 # LobeChat sur GKE Autopilot {#lobechat-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/LobeChat_GKE.png" alt="LobeChat sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-LobeChat est une interface de chat LLM moderne et open-source (construite avec Next.js) qui permet aux utilisateurs de converser avec de nombreux fournisseurs de modèles — OpenAI, Anthropic, Google et d'autres — via une interface polie unique, les utilisateurs fournissant leurs propres clés API côté client. Ce module déploie LobeChat sur **GKE Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée Google Cloud et Kubernetes.
+LobeChat est une interface utilisateur de chat LLM moderne et open source (construite avec Next.js) qui permet aux utilisateurs de converser avec de nombreux fournisseurs de modèles — OpenAI, Anthropic, Google et d'autres — via une interface soignée unique, les utilisateurs fournissant leurs propres clés API côté client. Ce module déploie LobeChat sur **GKE Autopilot** au-dessus de la fondation [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée de Google Cloud et Kubernetes.
 
-Ce guide se concentre sur les services cloud utilisés par LobeChat et sur la manière de les explorer et de les opérer depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à toutes les applications GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls et le cycle de vie du déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+Ce guide se concentre sur les services cloud utilisés par LobeChat et sur la manière de les explorer et de les exploiter depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à chaque application GKE — Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls et le cycle de vie du déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
-## Coût de LobeChat sur RAD et comparaison {#what-lobechat-costs-on-rad-and-how-that-compares}
+## Ce que coûte LobeChat sur RAD, et comment cela se compare {#what-lobechat-costs-on-rad-and-how-that-compares}
 
-**LobeChat sur le module GKE Autopilot de RAD coûte environ 26 $ US par mois dans votre propre projet.** RAD facture 40 crédits une fois par déploiement dans votre propre projet (36 crédits, 10 % de moins, dans un projet géré par RAD) ; les builds sont inclus dans le prix. Si vous n'en avez besoin qu'occasionnellement, un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ce chiffre mensuel devient quelques dollars au lieu de cela — voir **Mettez-le en pause gratuitement**, ci-dessous.
+**LobeChat sur le module GKE Autopilot de RAD coûte environ 26 US$ par mois dans votre propre projet.** RAD facture 40 crédits une fois par déploiement dans votre propre projet (36 crédits, 10 % de moins, dans un projet géré par RAD). Les builds sont inclus dans le prix. Si vous n'en avez besoin qu'occasionnellement, un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ce chiffre mensuel ne représente que quelques dollars — voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
-| Frais de module, une fois par déploiement | 40 crédits (4,00 $ US au prix de la recharge) | 36 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût de fonctionnement Google Cloud | Facturé par Google à votre propre compte de facturation, environ **26 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **55 crédits par jour**, soit environ 1 650 par mois (environ 165,00 $ US au prix de la recharge, moins sur un forfait) |
-| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
+| Frais de module, une fois par déploiement | 40 crédits (4,00 US$ au prix de la recharge) | 36 crédits (10 % de moins) |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites, puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Identique |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **26 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **63 crédits par jour**, environ 1 890 par mois (environ 189 US$ au prix de la recharge ; estimé à partir des prix catalogue de Google, et incluant les frais de cluster) |
+| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est maintenu en réserve |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+**Pourquoi les deux colonnes diffèrent.** Le chiffre géré par RAD inclut les frais de gestion du cluster GKE (environ 73 US$ par mois) et la fondation partagée du projet. Dans votre propre projet, le niveau gratuit de Google couvre les frais de gestion d'un cluster par compte de facturation, ce que le chiffre du projet propre suppose. Il est estimé à partir des prix catalogue de Google, car il n'y a pas encore suffisamment d'historique GKE géré par RAD pour le mesurer, de sorte que la confirmation de déploiement ne le cite pas. Une deuxième application GKE dans le même projet géré par RAD partage le cluster et n'ajoute que ses propres pods.
 
-10 crédits coûtent 1 $ US pour une recharge unique, et moins sur un forfait mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant des frais : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
-**Coût de fonctionnement par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
+10 crédits coûtent 1 US$ pour une recharge unique, et moins pour un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par chaque application du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
 
-| Ressource (module par défaut) | Par mois |
+**Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
+
+| Ressource (valeur par défaut du module) | Par mois |
 |---|---|
-| Pod GKE Autopilot, 0,5x vCPU / 1 GiB | 20 $ US |
-| Cloud NAT et réseau | 5 $ US |
-| Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
-| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ US si c'est votre seul cluster, sinon ~73 $ US |
-| **Total** | **environ 26 $ US** |
+| Pod GKE Autopilot, 0,5x vCPU / 1 GiB | 20 US$ |
+| Cloud NAT et réseau | 5 US$ |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 US$ |
+| Frais de gestion du cluster GKE | partagés entre chaque application GKE du projet ; 0 US$ si c'est votre seul cluster, sinon ~73 US$ |
+| **Total** | **environ 26 US$** |
 
-### Comparaison {#how-it-compares}
+### Comment cela se compare {#how-it-compares}
 
-- LobeChat est une **interface** de chat, pas un service hébergé avec son propre abonnement — il est sans état par défaut (pas de base de données, de Redis ou de stockage persistant), et les utilisateurs fournissent leurs propres clés API de fournisseur. Il n'y a pas d'équivalent SaaS à comparer avec un prix courant vérifiable : le coût qui compte ici est l'utilisation du modèle elle-même, qui est facturée par la clé du fournisseur que chaque utilisateur fournit, et non par RAD ou par LobeChat.
-- Comparaison auto-gérée : à 0,5 vCPU / 1 GiB, l'empreinte de LobeChat est plus petite que n'importe quelle des classes de VPS de référence habituelles (un Hetzner CPX22 ou un droplet DigitalOcean de 4 Go, tous deux ~24 $ US/mois, sont dimensionnés pour une charge de travail plus lourde), donc une instance moins chère et plus petite que celles-ci ferait l'affaire — les 26 $ US par mois de RAD incluent la facturation par pod de GKE Autopilot, la gestion du réseau et du stockage plutôt qu'une simple VM que vous patchez vous-même.
-- La vraie décision est généralement "héberger l'interface utilisateur soi-même ou utiliser le produit de chat hébergé d'un fournisseur (par exemple les applications web ChatGPT ou Gemini)" plutôt que "héberger soi-même ou payer pour un LobeChat hébergé" — personne ne vend LobeChat hébergé comme un produit payant aujourd'hui.
+- LobeChat est une **interface** de chat, pas un service hébergé avec son propre abonnement — il est sans état par défaut (pas de base de données, de Redis ou de stockage persistant), et les utilisateurs fournissent leurs propres clés API de fournisseur. Il n'y a pas d'équivalent SaaS à comparer avec un prix actuel vérifiable : le coût qui compte ici est l'utilisation du modèle elle-même, qui est facturée par la clé du fournisseur que chaque utilisateur fournit, et non par RAD ou par LobeChat.
+- Comparaison auto-gérée : à 0,5 vCPU / 1 GiB, l'empreinte de LobeChat est plus petite que n'importe quelle des classes de VPS de référence habituelles (un Hetzner CPX22 ou un DigitalOcean 4 Go, tous deux ~24 US$/mois, sont dimensionnés pour une charge de travail plus lourde), donc une instance moins chère et plus petite ferait l'affaire — les 26 US$ par mois de RAD incluent la facturation par pod de GKE Autopilot, la mise en réseau et le stockage gérés plutôt qu'une simple VM que vous corrigez vous-même.
+- La vraie décision est généralement "héberger soi-même l'interface utilisateur ou utiliser le produit de chat hébergé d'un fournisseur (par exemple les applications web ChatGPT ou Gemini)" plutôt que "héberger soi-même ou payer pour un LobeChat hébergé" — personne ne vend LobeChat hébergé comme un produit payant aujourd'hui.
 
 ### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 Si LobeChat s'exécute dans **un projet géré par RAD pour vous**, vous avez une deuxième option qui va bien au-delà de la mise à l'échelle à zéro : **supprimez l'ensemble du projet et restaurez-le dans les 30 jours pour presque rien.** Cela convient bien mieux à LobeChat dont vous n'avez besoin qu'occasionnellement — évaluation, environnement de démonstration, charge de travail saisonnière ou intermittente — que de le faire fonctionner en continu.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, sera utilisable après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable, pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un module, cela ne détruit pas la base de données, aucune VM ou la ressource de calcul une par une — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture plus les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
-- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 26 $ US.** Déployez LobeChat, utilisez-le pendant un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre à jour, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez que les frais de module une fois, et le temps pendant lequel il a été réellement actif.
-- **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont RAD ne gère que la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'évaluation conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
-- **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes et autres fichiers générés sont écrits dans un bucket à l'intérieur du projet, et ce bucket n'est **pas** protégé par la suppression logicielle de Cloud Storage, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé LobeChat et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+- **Comment ça marche.** La suppression d'un projet géré par RAD commence par délier sa facturation, puis demande à Google de supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable, pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un module, cela ne détruit pas la base de données, aucune VM ou la ressource de calcul une par une — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
+- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, et non les 189 US$ par mois pour le maintenir en fonctionnement.** Déployez LobeChat, utilisez-le un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Update, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez que les frais de module une fois et le temps qu'il a réellement été en ligne.
+- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet dont RAD ne gère que la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'évaluation conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
+- **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes et autres fichiers générés sont écrits dans un bucket à l'intérieur du projet, et ce bucket n'est **pas** protégé par la suppression logicielle de Cloud Storage, il est donc très probablement supprimé dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé LobeChat et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
-### Payez uniquement pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
 L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le déploiement et de le déployer à nouveau lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) — 40 crédits (4,00 $ US) au total. La suppression permet d'économiser de l'argent seulement si LobeChat resterait inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût de fonctionnement — environ **6 jours ou plus**, à la fois dans votre propre projet (environ 0,86 $ US par jour) et dans un projet géré par RAD (55 crédits par jour).
-- **La majeure partie du coût de fonctionnement est généralement partagée.** Pour LobeChat, c'est la base de données. Ils ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de cette application pendant que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
-- **Gardez vos données d'abord.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) — 40 crédits (4,00 US$) au total. La suppression ne permet d'économiser de l'argent que si LobeChat reste inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution — environ **6 jours ou plus**, à la fois dans votre propre projet (environ 0,86 US$ par jour) et dans un projet géré par RAD (63 crédits par jour).
+- **La majeure partie du coût d'exécution est généralement partagée.** Pour LobeChat, il s'agit de la base de données. Ils ne s'arrêtent que si rien d'autre dans le projet ne les utilise, donc la suppression de cette application pendant que quelque chose d'autre partage le projet n'économise que la partie calcul de cette application.
+- **Conservez d'abord vos données.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
@@ -84,10 +86,10 @@ LobeChat s'exécute comme une seule charge de travail web Next.js sans état sur
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Next.js, 500m vCPU / 1 GiB par défaut, autoscalés horizontalement |
-| Base de données | *(aucune)* | `database_type = "NONE"` — aucune instance Cloud SQL n'est provisionnée ; l'état réside dans le navigateur |
+| Base de données | *(aucune)* | `database_type = "NONE"` — aucune base de données Cloud SQL n'est provisionnée ; l'état réside dans le navigateur |
 | Stockage d'objets | *(aucun)* | Sans état — aucun bucket GCS, montage NFS ou PVC déclaré par défaut |
 | Cache | Redis (optionnel, désactivé) | Uniquement pour la limitation de débit / détection de bots sur les déploiements publics |
-| Secrets | Secret Manager (aucun par défaut) | LobeChat ne génère pas de secrets ; injectez vous-même les clés de fournisseur si vous le souhaitez |
+| Secrets | Secret Manager (aucun par défaut) | LobeChat ne génère aucun secret ; injectez vous-même les clés de fournisseur si vous le souhaitez |
 | Ingress | Cloud Load Balancing | LoadBalancer externe, domaine personnalisé optionnel + certificat géré |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
@@ -95,12 +97,12 @@ LobeChat s'exécute comme une seule charge de travail web Next.js sans état sur
 - **Pas de base de données, pas de secrets, pas de stockage.** LobeChat est sans état en mode client-stocké — les utilisateurs ajoutent leurs propres clés API de modèle dans le navigateur. Il n'y a rien à sauvegarder et rien à migrer. (Un mode serveur Postgres optionnel existe en amont mais n'est pas câblé par ce module.)
 - **Le port 3210 est fixe.** L'image personnalisée épingle `PORT=3210` et `container_port =
   3210` ; ne le changez pas sans reconstruire l'image.
-- **Par défaut `500m` CPU / `1Gi` mémoire** (`container_resources`). Le processus SSR Next.js de LobeChat (plus ses dépendances de rendu `pdfjs-dist`/`@napi-rs/canvas`) OOM et `CrashLoopBackOff` à 512Mi (`JavaScript heap out of memory`) — 1Gi est le minimum pour un démarrage stable ; augmentez `container_resources.memory_limit` davantage sous une charge plus lourde.
+- **La valeur par défaut est `500m` CPU / `1Gi` mémoire** (`container_resources`). Le processus SSR Next.js de LobeChat (plus ses dépendances de rendu `pdfjs-dist`/`@napi-rs/canvas`) OOM et `CrashLoopBackOff` à 512Mi (`JavaScript heap out of memory`) — 1Gi est le seuil pour un démarrage stable ; augmentez `container_resources.memory_limit` davantage sous une charge plus lourde.
 - **Minimum 1 réplica** (`min_instance_count = 1`, forcé par le câblage). GKE ne prend pas en charge la mise à l'échelle à zéro, donc au moins un pod est toujours en cours d'exécution pour maintenir l'interface utilisateur accessible ; `max_instance_count = 3`.
-- **Sans état — Déploiement, pas StatefulSet.** Il n'y a pas de volume persistant ; les pods peuvent être remplacés librement et mis à l'échelle horizontalement sans file d'attente ni prérequis de cache.
+- **Sans état — Déploiement, pas StatefulSet.** Il n'y a pas de volume persistant ; les pods peuvent être remplacés librement et mis à l'échelle horizontalement sans prérequis de file d'attente ou de cache.
 - **`service_type = LoadBalancer`, `session_affinity = None`.** Sans état de session côté serveur, les requêtes n'ont pas besoin de routage persistant.
 - **Redis est optionnel et désactivé.** Activez-le uniquement pour ajouter une limitation de débit / détection de bots devant un déploiement public.
-- **`latest` correspond à un véritable tag d'image.** L'ARG de build `LOBECHAT_VERSION` passe la version inchangée, donc `application_version = "latest"` se résout en le véritable `lobehub/lobe-chat:latest`.
+- **`latest` correspond à une vraie balise d'image.** L'ARG de build `LOBECHAT_VERSION` passe la version inchangée, donc `application_version = "latest"` se résout en la vraie `lobehub/lobe-chat:latest`.
 
 ---
 
@@ -114,7 +116,7 @@ et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
 
 Les pods LobeChat sont planifiés sur Autopilot, qui facture le CPU/la mémoire que les pods demandent réellement. L'autoscaling horizontal des pods dimensionne le déploiement entre le nombre minimum (1) et maximum de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de travail LobeChat pour voir les pods, les révisions et les événements. Kubernetes Engine → Services et Ingress affiche l'IP externe.
+- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de travail LobeChat pour voir les pods, les révisions et les événements. Kubernetes Engine → Services & Ingress affiche l'adresse IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -126,13 +128,13 @@ Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle
 
 ### B. Pas de base de données {#b-no-database}
 
-LobeChat ne provisionne **aucune instance Cloud SQL** — `database_type = "NONE"`. En mode client-stocké, chaque conversation, paramètre et clé de fournisseur réside dans le navigateur de l'utilisateur, il n'y a donc pas de base de données côté serveur à laquelle se connecter, à sauvegarder ou à migrer, et aucun sidecar Cloud SQL Auth Proxy n'est injecté. L'activation du mode serveur Postgres en amont de LobeChat (pour la synchronisation inter-appareils) est hors de portée de ce module.
+LobeChat ne provisionne **aucune instance Cloud SQL** — `database_type = "NONE"`. En mode client-stocké, chaque conversation, paramètre et clé de fournisseur réside dans le navigateur de l'utilisateur, il n'y a donc pas de base de données côté serveur à laquelle se connecter, à sauvegarder ou à migrer, et aucun sidecar Cloud SQL Auth Proxy n'est injecté. L'activation du mode serveur Postgres en amont de LobeChat (pour la synchronisation inter-appareils) n'entre pas dans le cadre de ce module.
 
-### C. Pas de stockage d'objets ni de volume persistant {#c-no-object-storage-or-persistent-volume}
+### C. Pas de stockage d'objets ou de volume persistant {#c-no-object-storage-or-persistent-volume}
 
 Aucun bucket GCS, montage NFS ou PVC de bloc n'est déclaré par défaut (`storage_buckets` est vide, `enable_nfs = false`, `stateful_pvc_enabled` non défini/`null`). La charge de travail est sans état ; les pods ne transportent aucune donnée persistante.
 
-- **CLI (pour confirmer qu'aucun n'est la propriété de l'application) :**
+- **CLI (pour confirmer qu'aucun n'est détenu par l'application) :**
   ```bash
   gcloud storage buckets list --project "$PROJECT"
   kubectl get pvc -n "$NAMESPACE"          # none expected
@@ -152,7 +154,7 @@ Redis est **désactivé par défaut** (`enable_redis = false`). Activez-le uniqu
 
 ### E. Secret Manager {#e-secret-manager}
 
-LobeChat ne génère **aucun secret** — il n'y a pas de clés cryptographiques à protéger. Secret Manager (via le pilote CSI Secret Store) n'est utilisé que si *vous* choisissez d'injecter une clé de fournisseur côté serveur (par exemple `OPENAI_API_KEY`) via `secret_environment_variables`, qui fait référence à un secret que vous créez.
+LobeChat ne génère **aucun secret** — il n'y a pas de clés cryptographiques à protéger. Secret Manager (via le pilote CSI du Secret Store) n'est utilisé que si *vous* choisissez d'injecter une clé de fournisseur côté serveur (par exemple `OPENAI_API_KEY`) via `secret_environment_variables`, qui fait référence à un secret que vous créez.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -161,11 +163,11 @@ LobeChat ne génère **aucun secret** — il n'y a pas de clés cryptographiques
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation de Secret Store CSI.
+Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation du Secret Store CSI.
 
 ### F. Réseau et ingress {#f-networking--ingress}
 
-Par défaut, la charge de travail est exposée via une adresse IP externe Cloud Load Balancing (`service_type = LoadBalancer`). Un domaine personnalisé avec un certificat géré par Google peut être activé, et une IP statique réservée afin que l'adresse survive aux redéploiements.
+Par défaut, la charge de travail est exposée via une adresse IP externe de Cloud Load Balancing (`service_type = LoadBalancer`). Un domaine personnalisé avec un certificat géré par Google peut être activé, et une adresse IP statique réservée afin que l'adresse survive aux redéploiements.
 
 - **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
 - **CLI :**
@@ -178,7 +180,7 @@ Voir [App_GKE](App_GKE.md) pour les détails sur les domaines personnalisés, Cl
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les flux stdout/stderr des pods vers Cloud Logging ; les métriques GKE vers Cloud Monitoring. Des vérifications de disponibilité et des politiques d'alerte optionnelles sont disponibles.
+Les sorties standard/erreur des pods sont acheminées vers Cloud Logging ; les métriques GKE sont acheminées vers Cloud Monitoring. Des tests de disponibilité et des stratégies d'alerte optionnels sont disponibles.
 
 - **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
@@ -192,10 +194,10 @@ Les flux stdout/stderr des pods vers Cloud Logging ; les métriques GKE vers Clo
 ## 3. Comportement de l'application LobeChat {#3-lobechat-application-behaviour}
 
 - **Pas de configuration de base de données au premier déploiement.** Il n'y a pas de job `db-init` et pas de schéma — la sortie `initialization_jobs` est vide. Le premier démarrage lance simplement le serveur Next.js.
-- **Pas de migrations.** Sans base de données côté serveur en mode par défaut, la mise à niveau de `application_version` déploie simplement une nouvelle image ; il n'y a pas de schéma à migrer.
-- **Pas de compte administrateur / pas d'identifiants par défaut.** Le mode client-stocké de LobeChat n'a pas de magasin d'utilisateurs côté serveur. La seule porte d'accès est la phrase secrète partagée optionnelle `ACCESS_CODE` (voir ci-dessous) ; sans elle, l'interface utilisateur est ouverte à quiconque atteint l'adresse IP du LoadBalancer.
+- **Pas de migrations.** Sans base de données côté serveur en mode par défaut, la mise à niveau `application_version` déploie simplement une nouvelle image ; il n'y a pas de schéma à migrer.
+- **Pas de compte administrateur / pas de identifiants par défaut.** Le mode client-stocké de LobeChat n'a pas de magasin d'utilisateurs côté serveur. La seule porte d'accès est la phrase secrète partagée `ACCESS_CODE` optionnelle (voir ci-dessous) ; sans elle, l'interface utilisateur est ouverte à quiconque atteint l'adresse IP du LoadBalancer.
 - **Les utilisateurs fournissent leurs propres clés de modèle.** Chaque utilisateur colle les clés API du fournisseur dans l'interface utilisateur, conservées dans le `localStorage` du navigateur. Pour préconfigurer un fournisseur côté serveur à la place, injectez par exemple `OPENAI_API_KEY` (en tant que secret) et/ou `OPENAI_PROXY_URL` via `secret_environment_variables` / `environment_variables`.
-- **Contrôlez l'accès avec `ACCESS_CODE`.** Pour tout déploiement exposé en externe, définissez une phrase secrète partagée afin que l'interface utilisateur de chat (et toutes les clés que les utilisateurs collent) ne soient pas exposées :
+- **Accès sécurisé avec `ACCESS_CODE`.** Pour tout déploiement exposé en externe, définissez une phrase secrète partagée afin que l'interface utilisateur de chat (et toutes les clés que les utilisateurs collent) ne soient pas exposées :
   ```bash
   # via the module: environment_variables = { ACCESS_CODE = "<passphrase>" }
   # verify it reached the running pod:
@@ -203,7 +205,7 @@ Les flux stdout/stderr des pods vers Cloud Logging ; les métriques GKE vers Clo
   ```
 - **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité ciblent `/` — le serveur Next.js de LobeChat renvoie HTTP 200 une fois démarré, sans authentification. Laissez la fenêtre de démarrage par défaut pour le démarrage à froid `next-server`.
 - **Port fixe 3210.** L'image personnalisée épingle `PORT=3210` ; `container_port` doit rester `3210`.
-- **`imagePullPolicy = Always` pour l'image miroir.** App_GKE force `Always` pour les images personnalisées/miroirs afin qu'un tag reconstruit soit ré-extrait lors du redéploiement plutôt que de servir une couche mise en cache obsolète.
+- **`imagePullPolicy = Always` pour l'image mise en miroir.** App_GKE force `Always` pour les images personnalisées/mises en miroir afin qu'une balise reconstruite soit ré-extraite lors du redéploiement plutôt que de servir une couche mise en cache obsolète.
 
 ---
 
@@ -216,24 +218,24 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `lobechat` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
-| `application_version` | `latest` | Tag d'image LobeChat ; `latest` correspond au véritable `lobehub/lobe-chat:latest`. Épinglez un tag spécifique en production. |
+| `application_version` | `latest` | Balise d'image LobeChat ; `latest` correspond à la vraie `lobehub/lobe-chat:latest`. Épinglez une balise spécifique en production. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
-| `container_resources` | `500m` CPU / `1Gi` mémoire | Requêtes/limites par pod. Next.js `next-server` (plus les dépendances de rendu `pdfjs-dist`/canvas) OOM-plante au démarrage en dessous de 1Gi — augmentez la mémoire si vous constatez la même défaillance sous charge. |
+| `container_resources` | `500m` CPU / `1Gi` mémoire | Requêtes/limites par pod. Next.js `next-server` (plus les dépendances de rendu `pdfjs-dist`/canvas) OOM-crash au démarrage en dessous de 1 Gi — augmentez la mémoire si vous constatez la même défaillance sous charge. |
 | `min_instance_count` | `1` | Réplicas minimum (GKE n'a pas de mise à l'échelle à zéro) ; maintient l'interface utilisateur accessible. |
-| `max_instance_count` | `3` | Sûr à augmenter — pas d'état de serveur partagé ni de prérequis de file d'attente. |
+| `max_instance_count` | `3` | Sûr à augmenter — pas d'état côté serveur partagé ni de prérequis de file d'attente. |
 | `container_port` | `3210` | Port du serveur Next.js de LobeChat. Ne pas modifier sans reconstruire l'image. |
-| `enable_image_mirroring` | `true` | Mettez en miroir `lobehub/lobe-chat` dans Artifact Registry. |
+| `enable_image_mirroring` | `true` | Mettre en miroir `lobehub/lobe-chat` dans Artifact Registry. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Remplacements optionnels — notamment `ACCESS_CODE` (protéger l'interface utilisateur) et les valeurs par défaut du fournisseur/thème. |
+| `environment_variables` | `{}` | Substitutions optionnelles — notamment `ACCESS_CODE` (protéger l'interface utilisateur) et les valeurs par défaut du fournisseur/thème. |
 | `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager. Utilisez ceci pour toute clé de fournisseur côté serveur (par exemple `OPENAI_API_KEY`). |
 
 ### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
@@ -258,7 +260,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 | `redis_host` | `""` | Point de terminaison Redis. Définir explicitement lorsque `enable_redis = true` (vide revient à `127.0.0.1`). |
 | `redis_port` | `6379` | Port Redis. |
 
-Les groupes Backend de base de données, Sauvegarde et maintenance, Système de fichiers (NFS) et Cloud Storage existent pour la mise en miroir des conventions mais sont **inertes** — `database_type = "NONE"` et aucun bucket/volume n'est déclaré, donc ces entrées ne créent aucune ressource. Toutes les autres entrées suivent le comportement standard de [App_GKE](App_GKE.md).
+Les groupes Backend de base de données, Sauvegarde et maintenance, Système de fichiers (NFS) et Cloud Storage existent pour la convention de mise en miroir mais sont **inertes** — `database_type = "NONE"` et aucun bucket/volume n'est déclaré, de sorte que ces entrées ne créent aucune ressource. Toutes les autres entrées suivent le comportement standard de [App_GKE](App_GKE.md).
 
 ---
 
@@ -271,14 +273,14 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 | `service_name` | Nom du service Kubernetes. |
 | `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
 | `service_cluster_ip` | ClusterIP intra-cluster. |
-| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à l'étape. |
+| `stage_service_cluster_ips` | Mappage des ClusterIPs pour les services spécifiques à l'étape. |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `service_url` | URL pour atteindre LobeChat. |
 | `storage_buckets` | Buckets Cloud Storage créés (vides par défaut). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | État et canaux de surveillance. |
-| `initialization_jobs` | Noms des jobs de configuration (vide — LobeChat n'en a pas). |
+| `initialization_jobs` | Noms des jobs de configuration (vides — LobeChat n'en a pas). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants de projet. |
 | `cicd_enabled` / `cicd_configuration` | État et détails CI/CD (dépôt, déclencheur, registre). |
@@ -297,17 +299,17 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 
 > **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de fondation [App_GKE](App_GKE.md), qui valide les valeurs *et les combinaisons* au moment de la planification — un `workload_type = "Deployment"` à côté de `stateful_pvc_enabled = true`, IAP sans identités autorisées, unités de quota de mémoire binaires, un `redis_port` hors de portée. Une configuration invalide échoue la **planification** avec une erreur claire et nommée avant la création de toute ressource.
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `ACCESS_CODE` | Définir sur tout déploiement exposé | Élevé | Sans cela, l'interface utilisateur de chat — et toutes les clés de fournisseur que les utilisateurs collent — est ouverte à quiconque atteint l'adresse IP du LoadBalancer. |
-| `container_resources` mémoire | `1Gi` (minimum) | Élevé | En dessous de 1 GiB, Next.js `next-server` OOM-plante au démarrage (`JavaScript heap out of memory`) et le pod ne devient jamais Prêt. |
+| `container_resources` mémoire | `1Gi` (plancher) | Élevé | En dessous de 1 GiB, Next.js `next-server` OOM-crash au démarrage (`JavaScript heap out of memory`) et le pod ne devient jamais Prêt. |
 | `container_port` | `3210` | Élevé | L'image épingle `PORT=3210` ; une non-concordance signifie que la sonde ne se connecte jamais et que le pod ne démarre pas. |
 | Clés de fournisseur côté serveur | Injecter via `secret_environment_variables` | Élevé | Placer une clé API en clair `environment_variables` l'expose dans la spécification du pod et les journaux. |
-| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; le garde de validation rejette `0`. Maintenir 1 garantit que l'interface utilisateur reste accessible. |
-| `stateful_pvc_enabled` | laisser non défini (`null`) | Moyen | L'activation d'un PVC ajoute un stockage par pod inutile — LobeChat ne persiste rien côté serveur en mode par défaut. |
-| `enable_redis` | `false` sauf si public | Moyen | L'activation sans `redis_host` accessible (vide → `127.0.0.1`) rend la limitation de débit non fonctionnelle. |
+| `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la garde de validation rejette `0`. Maintenir 1 garantit que l'interface utilisateur reste accessible. |
+| `stateful_pvc_enabled` | laisser non défini (`null`) | Moyen | L'activation d'un PVC ajoute un stockage inutile par pod — LobeChat ne persiste rien côté serveur en mode par défaut. |
+| `enable_redis` | `false` sauf si public | Moyen | L'activation sans un `redis_host` accessible (vide → `127.0.0.1`) rend la limitation de débit non fonctionnelle. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont des octets et bloquent toute planification de pod dans l'espace de noms. |
-| `application_version` | Épinglez un tag en production | Moyen | `latest` évolue avec l'amont ; une version surprise peut modifier le comportement lors du prochain déploiement. |
+| `application_version` | Épinglez une balise en production | Moyen | `latest` se déplace avec l'amont ; une publication surprise peut modifier le comportement lors du prochain déploiement. |
 
 ---
 
@@ -317,5 +319,5 @@ Pour le comportement de la fondation référencé tout au long — IAM et Worklo
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : LobeChat sur GKE Autopilot](../labs/LobeChat_GKE.md) — déployez-le étape par étape, avec les écrans de console et les commandes à chaque étape.
+- [Lab pratique : LobeChat sur GKE Autopilot](../labs/LobeChat_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [LobeChat Common — Configuration d'application partagée](LobeChat_Common.md) — la configuration partagée par les deux cibles de déploiement.

@@ -3,13 +3,13 @@ title: "Module Umami GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement d'Umami sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Umami_GKE.md @ 60462a86 sha256:ff9cb8aa4c6c -->
+<!-- translated-from: docs/modules/Umami_GKE.md @ 40c83c3f sha256:9adae9084bd6 -->
 
 # Module Umami GKE — Guide de configuration {#umami-gke-module--configuration-guide}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Umami_GKE.png" alt="Module Umami GKE — Guide de configuration" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Ce guide décrit chaque variable de configuration disponible dans le module `Umami_GKE`. `Umami_GKE` est un **module wrapper** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration d'application partagée [`Umami_Common`](./Umami_Common) pour déployer la plateforme d'analyse web axée sur la confidentialité [Umami](https://umami.is/) sur Google Kubernetes Engine (GKE) Autopilot.
+Ce guide décrit chaque variable de configuration disponible dans le module `Umami_GKE`. `Umami_GKE` est un **module enveloppe** qui combine le module d'infrastructure générique [`App_GKE`](./App_GKE.md) avec la configuration d'application partagée [`Umami_Common`](./Umami_Common) pour déployer la plateforme d'analyse web axée sur la confidentialité [Umami](https://umami.is/) sur Google Kubernetes Engine (GKE) Autopilot.
 
 La plupart des options de configuration dans `Umami GKE` correspondent directement aux mêmes options dans `App GKE`. Lorsqu'une variable a un comportement identique, ce guide fait référence au guide `App GKE` plutôt que de répéter la même documentation. Seules les variables et les valeurs par défaut **spécifiques à Umami** sont décrites en détail ici.
 
@@ -19,61 +19,62 @@ La plupart des options de configuration dans `Umami GKE` correspondent directeme
 
 ## Ce que coûte Umami sur RAD, et comment cela se compare {#what-umami-costs-on-rad-and-how-that-compares}
 
-**L'exécution d'Umami sur GKE Autopilot dans votre propre projet Google Cloud coûte environ 104,74 $ US/mois en frais Google Cloud** (environ 177,74 $ US si ce n'est pas votre seul cluster Autopilot), en plus de frais de module RAD uniques de 110 crédits (11 $ US) — plus élevés que les frais du module Cloud Run car cette variante exécute également un volume NFS partagé sur GKE. GKE Autopilot convient à Umami qui doit rester opérationnel ou évoluer sur plusieurs pods ; pour le coût le plus bas, consultez plutôt le [guide Cloud Run](Umami_CloudRun.md). Dans un projet géré par RAD, les frais de module tombent à 99 crédits (10 % de moins) — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous.
+**L'exécution d'Umami sur GKE Autopilot dans votre propre projet Google Cloud coûte environ 104,74 $ US/mois en frais Google Cloud** (environ 177,74 $ US si ce n'est pas votre seul cluster Autopilot), en plus de frais de module RAD uniques de 110 crédits (11 $ US) — plus élevés que les frais du module Cloud Run car cette variante exécute également un volume NFS partagé sur GKE. GKE Autopilot convient à Umami qui doit rester opérationnel ou évoluer sur plusieurs pods ; pour le coût le plus bas, consultez plutôt le [guide Cloud Run](Umami_CloudRun.md). Dans un projet géré par RAD, les frais de module tombent à 99 crédits (10 % de moins) — voir [Mettre en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (une seule fois) | 110 crédits | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | 104,74 $ US/mois, facturé par Google au prix catalogue | ~92 crédits/jour (environ 2760/mois, 276 $ US au prix de la recharge), mesuré au prix catalogue plus la marge de RAD |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | 104,74 $ US/mois, facturé par Google au prix catalogue | ~122 crédits/jour (environ 3 660/mois, 366 $ US au prix de la recharge), mesuré au prix catalogue plus la marge de RAD |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+**Pourquoi les deux colonnes diffèrent.** Le chiffre du projet géré par RAD inclut les frais de gestion du cluster GKE (environ 73 $ US par mois) et le socle partagé du projet. Dans votre propre projet, le niveau gratuit de Google couvre les frais de gestion d'un cluster par compte de facturation, ce que le chiffre du projet propre suppose. Il est estimé à partir des prix catalogue de Google, car il n'y a pas encore assez d'historique GKE géré par RAD pour le mesurer, de sorte que la confirmation de déploiement ne le cite pas. Une deuxième application GKE dans le même projet géré par RAD partage le cluster et n'ajoute que ses propres pods.
 
-10 crédits coûtent 1 $ US pour une recharge unique, et moins avec un abonnement mensuel.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant des frais : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
+
+10 crédits coûtent 1 $ US pour une recharge unique, et moins pour un plan mensuel.
 
 **Coût d'exécution par défaut dans votre propre projet**
 
 | Ressource (valeur par défaut du module) | Par mois |
 |---|---|
-| Pod GKE Autopilot, 1x vCPU / 0,5 Gio | 34,29 $ US |
+| Pod GKE Autopilot, 1 vCPU / 0,5 Gio | 34,29 $ US |
 | Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
 | Serveur de fichiers NFS/cache (petite VM) | 13,43 $ US |
 | Cloud NAT et réseau | 5 $ US |
 | Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
 | **Total** | **104,74 $ US** |
 
-*Les frais de gestion de cluster GKE sont exclus du total ci-dessus car ils sont partagés entre toutes les applications GKE du projet — 0 $ si c'est la seule, sinon environ 73 $/mois répartis entre le nombre d'applications que vous exécutez.*
+*Les frais de gestion du cluster GKE sont exclus du total ci-dessus car ils sont partagés entre toutes les applications GKE du projet — 0 $ si c'est la seule, sinon environ 73 $/mois répartis entre le nombre d'applications que vous exécutez.*
 
 ### Comment cela se compare {#how-it-compares}
 
-- La propre solution hébergée d'Umami, **Umami Cloud**, propose un niveau Hobby gratuit, puis Pro à 20 $/mois et Business à 200 $/mois — vérifié sur la page de tarification d'Umami, le 8 octobre 2026. Le coût d'exécution de RAD dans votre propre projet est un forfait d'environ 105 $ US/mois, quel que soit le volume d'événements.
+- La propre solution hébergée d'Umami, **Umami Cloud**, propose un niveau Hobby gratuit, puis Pro à 20 $/mois et Business à 200 $/mois — vérifié sur la page de tarification d'Umami, le 8 octobre 2026. Le coût d'exécution du projet propre de RAD est un forfait d'environ 105 $/mois, quel que soit le volume d'événements.
 - Une comparaison avec un VPS autogéré, dimensionné selon la configuration par défaut d'Umami de 1 vCPU / 0,5 Gio : un Hetzner CPX11 ou un Droplet DigitalOcean de 1 vCPU/2 Go coûte environ 6-12 $/mois — plus votre propre temps pour les sauvegardes et les correctifs, et aucun plan de contrôle Kubernetes à gérer.
-- La majeure partie du coût de ce module par rapport à la variante Cloud Run est due au pod GKE et au volume NFS ; le [module Cloud Run](Umami_CloudRun.md) n'a besoin ni de l'un ni de l'autre et est l'option par défaut la moins chère pour Umami.
+- La majeure partie du coût de ce module, au-delà de la variante Cloud Run, est due au pod GKE et au volume NFS ; le [module Cloud Run](Umami_CloudRun.md) n'a besoin ni de l'un ni de l'autre et est l'option par défaut la moins chère pour Umami.
 
-### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 C'est l'avantage principal d'un projet géré par RAD, et il ne coûte rien pendant la pause.
-La suppression d'un projet géré par RAD dissocie d'abord sa facturation, puis demande à Google de supprimer
-le projet purement et simplement — la propre suppression logicielle récupérable de Google pendant 30 jours. Contrairement à la suppression d'un module,
-cela ne détruit **pas** Cloud SQL, aucune VM, ou la ressource de calcul une par une : l'ensemble
+La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer
+le projet purement et simplement — la propre suppression logicielle récupérable de Google de 30 jours. Contrairement à la suppression d'un module,
+cela ne démantèle **pas** Cloud SQL, aucune VM, ni la ressource de calcul une par une : l'ensemble
 du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà
-dissociée.
+déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer
-le projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le
+projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour
 confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve
 les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
 
-Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD ne gère que la facturation), vous devez
-le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez
+le restaurer vous-même dans les 30 jours — après quoi Google le supprime définitivement — et la restauration est
 admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser
-le seuil du niveau (100 crédits pour le niveau sandbox qui convient à la plupart des utilisations d'étude/démo). Google indique que la plupart
-des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services sont entièrement fonctionnels à nouveau dans les 36 heures suivant une restauration.
 
 Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a
 la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous
@@ -82,17 +83,17 @@ personnalisé Umami et que vous souhaitez conserver ce travail, copiez une sauve
 en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable,
 cela n'a pas d'importance.
 
-### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
 Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un projet géré par RAD, il n'y a pas de pause gratuite —
 la suppression supprime les ressources définitivement, et ramener Umami signifie redéployer à partir de
 zéro. Cela coûte environ 113-116 crédits dans votre propre projet, ou environ
 102-105 crédits dans un projet géré par RAD.
 
-La suppression ne permet d'économiser de l'argent que si Umami resterait inutilisé assez longtemps pour compenser ce
+La suppression ne permet d'économiser de l'argent que si Umami reste inutilisé assez longtemps pour compenser ce
 coût de redéploiement par rapport à son propre coût d'exécution — environ 3 jours ou plus dans votre propre projet
 (environ 3,49 $ US par jour), ou environ 1 jour ou plus dans un projet géré par RAD
-(92 crédits par jour).
+(122 crédits par jour).
 
 Conservez d'abord les données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui,
 donc copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
@@ -100,9 +101,9 @@ donc copiez la dernière sauvegarde avant de supprimer si vous voulez la conserv
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
 Sessions de lab, pour la formation : un formateur anime une session pour une classe. Chaque participant obtient
-l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
-définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
-Tout est supprimé à la fin de la session et les crédits non utilisés sont reversés au formateur.
+l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par
+le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 
 Environnements gérés, pour les sociétés de conseil : un partenaire exécute l'application pour un client à partir d'un
 portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,
@@ -145,26 +146,26 @@ Les zones de configuration suivantes sont fournies par le module sous-jacent `Ap
 | Pipeline Cloud Deploy | §6.B Pipeline Cloud Deploy | Identique. |
 | Mise en miroir d'images | §6.C Mise en miroir d'images | Activé par défaut pour éviter les limites de débit de GitHub Container Registry. |
 | Budgets d'interruption de pod | §7.A Budgets d'interruption de pod | Identique. |
-| Contraintes de répartition topologique | §7.B Contraintes de répartition topologique | Identique. |
+| Contraintes de répartition de topologie | §7.B Contraintes de répartition de topologie | Identique. |
 | Quotas de ressources | §7.C Quotas de ressources | Identique. |
 | Rotation automatique des mots de passe | §7.D Rotation automatique des mots de passe | Voir [Groupe 16 : Configuration de la base de données](#group-16-database-configuration). |
-| Cache Redis | §8.A Redis / Memorystore | Redis non câblé — Umami ne le nécessite pas ; voir [Groupe : Cache Redis](#redis-cache). |
+| Cache Redis | §8.A Redis / Memorystore | Redis non câblé — Umami n'en a pas besoin ; voir [Groupe : Cache Redis](#redis-cache). |
 | Importation de sauvegarde | §8.B Importation de sauvegarde | Voir [Groupe 21 : Importation de sauvegarde](#group-21-backup-import). |
-| Service Mesh (ASM) | §8.C Service Mesh (ASM via Fleet) | Identique. |
+| Maillage de services (ASM) | §8.C Maillage de services (ASM via Fleet) | Identique. |
 | Services multi-clusters | §8.D Services multi-clusters (MCS) | Identique. |
 
 ---
 
 ## Comment Umami GKE se rapporte à App GKE {#how-umami-gke-relates-to-app-gke}
 
-`Umami GKE` transmet toutes les variables à `App GKE` et ajoute un sous-module `Umami Common` qui fournit des valeurs par défaut et une configuration d'application spécifiques à Umami. Les principaux effets sont :
+`Umami GKE` transmet toutes les variables à `App GKE` et ajoute un sous-module `Umami Common` qui fournit des valeurs par défaut et une configuration d'application spécifiques à Umami. Les principaux effets sont les suivants :
 
-1.  **PostgreSQL est requis.** Umami nécessite PostgreSQL pour tout le stockage de données. La valeur par défaut de `database_type` est `"POSTGRES"` (l'option PostgreSQL générique).
+1.  **PostgreSQL est requis.** Umami nécessite PostgreSQL pour tout le stockage de données. La valeur par défaut `database_type` est `"POSTGRES"` (l'option PostgreSQL générique).
 2.  **`DATABASE_URL` est assemblé à l'exécution.** Le point d'entrée Umami personnalisé construit `DATABASE_URL` à partir des variables DB_* injectées par la plateforme. Cela évite de stocker une chaîne de connexion en texte clair dans les variables d'environnement ou l'état Terraform.
 3.  **`APP_SECRET` est auto-généré.** `Umami Common` génère un secret alphanumérique de 32 caractères et le stocke dans Secret Manager. Il est injecté dans le pod en tant que `APP_SECRET`.
 4.  **Aucun bucket de stockage n'est provisionné par défaut.** Umami est un service d'analyse sans état — toutes les données résident dans PostgreSQL. `storage_buckets` est par défaut une liste vide.
-5.  **Un job `db-init` s'exécute lors du premier déploiement.** `Umami Common` fournit un job Kubernetes `db-init` par défaut qui pré-crée la base de données et l'utilisateur PostgreSQL d'Umami. Umami exécute ensuite ses propres migrations Prisma au démarrage.
-6.  **Les valeurs par défaut des ressources sont dimensionnées pour Umami.** Les valeurs par défaut de `cpu_limit` (1 vCPU) et `memory_limit` (512 Mio) reflètent l'empreinte légère d'Umami.
+5.  **Un job `db-init` s'exécute lors du premier déploiement.** `Umami Common` fournit un Job Kubernetes `db-init` par défaut qui pré-crée la base de données et l'utilisateur PostgreSQL Umami. Umami exécute ensuite ses propres migrations Prisma au démarrage.
+6.  **Les valeurs par défaut des ressources sont dimensionnées pour Umami.** Les valeurs par défaut `cpu_limit` (1 vCPU) et `memory_limit` (512 Mio) reflètent l'empreinte légère d'Umami.
 7.  **Les sondes de santé ciblent `/api/heartbeat`.** Le point de terminaison de santé dédié d'Umami, et non un chemin racine générique.
 8.  **Redis n'est pas utilisé.** Umami stocke tout dans PostgreSQL ; le module ne câble aucune connexion Redis (la déclaration `enable_redis` mise en miroir n'est pas transmise à la Fondation).
 9.  **La mise en miroir d'images est activée par défaut.** Umami est distribué via GitHub Container Registry (`ghcr.io`). Le module met en miroir l'image vers Artifact Registry pour éviter les limites de débit en production.
@@ -210,11 +211,11 @@ La plupart des variables se comportent de manière identique à `App_GKE`. Voir 
 | `container_resources` | `{ cpu_limit="1000m", memory_limit="512Mi" }` | `{ cpu_limit="1000m", memory_limit="512Mi" }` | Mêmes valeurs par défaut — Umami est léger. Augmentez `memory_limit` à `1Gi` pour les tableaux de bord d'analyse à fort trafic. |
 | `min_instance_count` | `1` | varie | La valeur par défaut de GKE est 1 pod minimum. Définissez une valeur plus élevée pour les déploiements à haute disponibilité. |
 | `max_instance_count` | `10` | `3` | Umami s'adapte horizontalement en toute sécurité — tout l'état est dans PostgreSQL, permettant de nombreuses instances concurrentes. |
-| `container_image_source` | `"custom"` | `"custom"` | Le mode `custom` construit une image wrapper qui assemble `DATABASE_URL` à partir des variables DB_*. Définissez sur `"prebuilt"` uniquement si vous fournissez `DATABASE_URL` manuellement. |
+| `container_image_source` | `"custom"` | `"custom"` | Le mode `custom` construit une image enveloppe qui assemble `DATABASE_URL` à partir des variables DB_*. Définissez sur `"prebuilt"` uniquement si vous fournissez `DATABASE_URL` manuellement. |
 | `enable_cloudsql_volume` | `true` | `true` | Sidecar Cloud SQL Auth Proxy. Requis pour qu'Umami se connecte à Cloud SQL via un socket Unix. |
 | `workload_type` | `"Deployment"` | `"Deployment"` | Umami est sans état — `Deployment` est le type de charge de travail correct. N'utilisez pas `StatefulSet` sauf si vous attachez un stockage local persistant pour un cas d'utilisation non standard. |
 
-**`enable_vertical_pod_autoscaling` :** Par défaut à `false`. Activez pour permettre à GKE Autopilot de dimensionner automatiquement les pods Umami en fonction de l'utilisation observée des ressources. Utile pour l'optimisation des coûts en production.
+**`enable_vertical_pod_autoscaling` :** Par défaut à `false`. Activez pour permettre à GKE Autopilot de dimensionner automatiquement les pods Umami en fonction de l'utilisation des ressources observée. Utile pour l'optimisation des coûts en production.
 
 Les variables d'exécution restantes (`enable_image_mirroring`, `container_build_config`, `container_protocol`, `timeout_seconds`, `cloudsql_volume_mount_path`, `service_annotations`, `service_labels`, `termination_grace_period_seconds`, `deployment_timeout`) se comportent comme décrit dans [App_GKE Groupe 4](./App_GKE.md#group-4--runtime--scaling).
 
@@ -266,7 +267,7 @@ environment_variables = {
 |---|---|---|
 | `environment_variables` | `{}` | Variables d'environnement en texte clair injectées dans le pod à l'exécution. |
 | `secret_environment_variables` | `{}` | Références Secret Manager injectées comme variables d'environnement. |
-| `secret_rotation_period` | `'2592000s'` | Période de rotation pour les secrets Secret Manager (30 jours). |
+| `secret_rotation_period` | `'2592000s'` | Période de rotation des secrets Secret Manager (30 jours). |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 
 ---
@@ -276,10 +277,10 @@ environment_variables = {
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Nom du cluster GKE Autopilot cible. Laisser vide pour la découverte automatique. |
-| `namespace_name` | `""` | Espace de noms Kubernetes. Auto-généré à partir de `application_name` et `tenant_id` lorsqu'il est vide. |
+| `namespace_name` | `""` | Espace de noms Kubernetes. Auto-généré à partir de `application_name` et `tenant_id` si vide. |
 | `service_type` | `"LoadBalancer"` | Type de service Kubernetes. `"LoadBalancer"` (la valeur par défaut) expose Umami directement sur une IP externe ; utilisez `"ClusterIP"` pour un accès interne uniquement derrière un Ingress. |
 | `session_affinity` | `"None"` | Mode d'affinité de session. `"None"` est correct pour Umami — tout l'état est dans PostgreSQL, donc n'importe quel pod peut gérer n'importe quelle requête. |
-| `enable_multi_cluster_service` | `false` | Enregistre le service auprès de GKE Multi Cluster Services. |
+| `enable_multi_cluster_service` | `false` | Enregistre le service auprès des services multi-clusters GKE. |
 | `configure_service_mesh` | `false` | Injecte les proxys sidecar Anthos Service Mesh (Istio). |
 | `termination_grace_period_seconds` | `30` | Secondes pendant lesquelles Kubernetes attend la terminaison du pod avant de le tuer de force. |
 | `deployment_timeout` | `1800` | Nombre maximal de secondes à attendre pour que le déploiement GKE atteigne un état sain. |
@@ -308,13 +309,13 @@ Lorsque `initialization_jobs` est laissé comme valeur par défaut (liste vide `
 |---|---|
 | Nom du job | `db-init` |
 | Image | Image client PostgreSQL |
-| Objectif | Pré-crée la base de données et l'utilisateur PostgreSQL d'Umami avant qu'Umami n'exécute ses propres migrations Prisma |
+| Objectif | Pré-crée la base de données et l'utilisateur PostgreSQL Umami avant qu'Umami n'exécute ses propres migrations Prisma |
 | Exécuter à chaque apply | `true` |
 | CPU / Mémoire | `1000m` / `512Mi` |
 
-Remplacez `initialization_jobs` par une liste non vide pour remplacer cette valeur par défaut par vos propres jobs. Chaque job personnalisé doit spécifier au moins l'un des `command`, `args` ou `script_path`.
+Remplacez `initialization_jobs` par une liste non vide pour remplacer cette valeur par défaut par vos propres jobs. Chaque job personnalisé doit spécifier au moins l'un des éléments `command`, `args` ou `script_path`.
 
-**CronJobs :** Les variables `cron_jobs` et `additional_services` sont disponibles et se comportent de manière identique à `App_GKE`. Utilisez `cron_jobs` pour des tâches telles que les exportations régulières de données d'analyse ou la maintenance de la base de données.
+**CronJobs :** Les variables `cron_jobs` et `additional_services` sont disponibles et se comportent de manière identique à `App_GKE`. Utilisez `cron_jobs` pour des tâches telles que des exportations régulières de données analytiques ou la maintenance de la base de données.
 
 > **Note :** Le schéma `cron_jobs` dans `Umami GKE` utilise les champs CronJob de Kubernetes — `restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend`.
 
@@ -327,8 +328,8 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#group-9--reliability).
 | Variable | Valeur par défaut | Notes |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Activé par défaut. Empêche tous les pods Umami d'être évincés simultanément pendant la maintenance du cluster. |
-| `pdb_min_available` | `"1"` | Au moins un pod Umami doit rester disponible pendant les perturbations volontaires. |
-| `enable_topology_spread` | `false` | Activer pour les déploiements à haute disponibilité afin de répartir les pods sur plusieurs zones. |
+| `pdb_min_available` | `"1"` | Au moins un pod Umami doit rester disponible pendant les interruptions volontaires. |
+| `enable_topology_spread` | `false` | Activez pour les déploiements à haute disponibilité afin de répartir les pods sur plusieurs zones. |
 | `topology_spread_strict` | `false` | Lorsque `true`, utilise la contrainte de répartition `DoNotSchedule`. |
 
 ---
@@ -346,7 +347,7 @@ Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](.
 | `uptime_check_config` | `{ enabled=false, path="/api/heartbeat" }` | Test de disponibilité Cloud Monitoring. Désactivé par défaut. |
 | `alert_policies` | `[]` | Politiques d'alerte de métriques personnalisées Cloud Monitoring. |
 
-**Note sur la sonde de démarrage :** La sonde `failure_threshold = 30` avec `period_seconds = 10` donne à Umami jusqu'à 5 minutes (plus le délai initial de 30 secondes) pour terminer le démarrage et exécuter les migrations Prisma sur une nouvelle base de données. Lors des redémarrages ultérieurs (migrations déjà appliquées), le démarrage est beaucoup plus rapide.
+**Note sur la sonde de démarrage :** Le `failure_threshold = 30` avec `period_seconds = 10` donne à Umami jusqu'à 5 minutes (plus le délai initial de 30 secondes) pour terminer le démarrage et exécuter les migrations Prisma sur une nouvelle base de données. Lors des redémarrages ultérieurs (migrations déjà appliquées), le démarrage est beaucoup plus rapide.
 
 ---
 
@@ -355,7 +356,7 @@ Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `initialization_jobs` | `[]` | Jobs Kubernetes à exécuter avant le démarrage de l'application Umami. Laisser vide pour que `Umami Common` fournisse le job `db-init` par défaut. |
-| `cron_jobs` | `[]` | Ressources CronJob Kubernetes récurrentes. |
+| `cron_jobs` | `[]` | Ressources Kubernetes CronJob récurrentes. |
 | `additional_services` | `[]` | Services sidecar ou auxiliaires déployés à côté du conteneur Umami principal. |
 
 ---
@@ -366,7 +367,7 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#group-12--cicd).
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cicd_trigger` | `false` | Provisionne un déclencheur Cloud Build GitHub. |
+| `enable_cicd_trigger` | `false` | Provisionne un déclencheur GitHub Cloud Build. |
 | `github_repository_url` | `""` | URL HTTPS complète du dépôt GitHub. |
 | `github_token` | `""` | Jeton d'accès personnel GitHub. Sensible. |
 | `github_app_installation_id` | `""` | ID d'installation de l'application GitHub. |
@@ -380,14 +381,14 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#group-12--cicd).
 
 ## Groupe 13 : NFS {#group-13-nfs}
 
-Umami ne nécessite pas de NFS. `enable_nfs` est par défaut à `false`. Toutes les données Umami sont stockées dans PostgreSQL.
+Umami ne nécessite pas NFS. `enable_nfs` est par défaut `false`. Toutes les données Umami sont stockées dans PostgreSQL.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_nfs` | `false` | Provisionne une instance Cloud Filestore (NFS). Non requis pour Umami. |
 | `nfs_mount_path` | `"/mnt/nfs"` | Chemin de montage NFS du conteneur. Utilisé uniquement lorsque `enable_nfs = true`. |
-| `nfs_instance_name` | `""` | Nom d'une VM NFS GCE existante. Auto-découvert si vide. |
-| `nfs_instance_base_name` | `"app-nfs"` | Nom de base pour une VM NFS GCE intégrée (inline). |
+| `nfs_instance_name` | `""` | Nom d'une VM NFS GCE existante. Découverte automatiquement si vide. |
+| `nfs_instance_base_name` | `"app-nfs"` | Nom de base pour une VM NFS GCE intégrée. |
 | `nfs_volume_name` | `"nfs-data-volume"` | Nom du volume Kubernetes pour le montage NFS. |
 
 ---
@@ -403,7 +404,7 @@ Umami ne nécessite pas de buckets GCS. `storage_buckets` est par défaut une li
 | `gcs_volumes` | `[]` | Buckets GCS à monter via le pilote CSI GCS Fuse. |
 | `manage_storage_kms_iam` | `false` | Crée un trousseau de clés CMEK KMS pour les buckets GCS. |
 | `enable_artifact_registry_cmek` | `false` | Crée une clé KMS Artifact Registry pour le chiffrement des images au repos. |
-| `max_images_to_retain` | `7` | Nombre maximal d'images de conteneurs à conserver dans Artifact Registry. |
+| `max_images_to_retain` | `7` | Nombre maximal d'images conteneurs à conserver dans Artifact Registry. |
 | `delete_untagged_images` | `true` | Supprime automatiquement les images non étiquetées d'Artifact Registry. |
 | `image_retention_days` | `30` | Jours après lesquels les images sont éligibles à la suppression. |
 
@@ -418,7 +419,7 @@ Ces variables se comportent de manière identique à `App_GKE`. Voir [App_GKE](.
 | Variable | Valeur par défaut Umami GKE | Valeur par défaut App GKE | Notes |
 |---|---|---|---|
 | `database_type` | `"POSTGRES"` | `"POSTGRES"` | Umami nécessite PostgreSQL. Ne pas changer pour MySQL ou NONE. |
-| `application_database_name` | `"umami"` | `"gkeappdb"` | **Ne pas modifier après le déploiement** — la modification recrée la base de données et détruit toutes les données d'analyse. |
+| `application_database_name` | `"umami"` | `"gkeappdb"` | **Ne pas modifier après le déploiement** — la modification recrée la base de données et détruit toutes les données analytiques. |
 | `application_database_user` | `"umami"` | `"gkeappuser"` | **Ne pas modifier après le déploiement.** |
 | `database_password_length` | `32` | `32` | Longueur du mot de passe auto-généré. Plage : 16–64. |
 
@@ -477,17 +478,17 @@ Identique à `App_GKE`. Voir [App_GKE](./App_GKE.md#group-8--resource-quota).
 | `quota_memory_requests` | `""` | Requêtes mémoire totales. **Doit utiliser des suffixes d'unité binaire** (par exemple, `"4Gi"`, `"8192Mi"`). |
 | `quota_memory_limits` | `""` | Limites mémoire totales. **Doit utiliser des suffixes d'unité binaire.** |
 
-> **Avertissement :** `quota_memory_requests` et `quota_memory_limits` doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'ils sont définis. Les entiers nus (par exemple, `"4"`) sont traités comme des octets par Kubernetes et bloqueront toute planification de pod avec une erreur de dépassement de quota.
+> **Attention :** `quota_memory_requests` et `quota_memory_limits` doivent utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'ils sont définis. Les entiers bruts (par exemple, `"4"`) sont traités comme des octets par Kubernetes et bloqueront toute planification de pod avec une erreur de dépassement de quota.
 
 ---
 
 ## Cache Redis {#redis-cache}
 
-Umami n'utilise pas Redis — il stocke toutes les données d'analyse directement dans PostgreSQL sans couche de mise en cache. La variable `enable_redis` est déclarée dans `Umami_GKE` uniquement pour satisfaire la mise en miroir des variables de la Fondation ; elle n'est **pas transmise** à l'appel `App_GKE`, donc la modifier n'a aucun effet.
+Umami n'utilise pas Redis — il stocke toutes les données analytiques directement dans PostgreSQL sans couche de cache. La variable `enable_redis` est déclarée dans `Umami_GKE` uniquement pour satisfaire la mise en miroir des variables de Foundation ; elle n'est **pas transmise** à l'appel `App_GKE`, donc la modifier n'a aucun effet.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_redis` | `true` | Déclaration inerte (mise en miroir de la Fondation uniquement) — non transmise à `App_GKE`, donc aucune variable d'environnement Redis n'est injectée quelle que soit la valeur. |
+| `enable_redis` | `true` | Déclaration inerte (mise en miroir de Foundation uniquement) — non transmise à `App_GKE`, donc aucune variable d'environnement Redis n'est injectée quelle que soit la valeur. |
 
 Si vous avez besoin de Redis pour une intégration personnalisée ou un service adjacent, utilisez `additional_services` pour déployer un sidecar Redis, ou configurez Memorystore indépendamment.
 
@@ -498,48 +499,48 @@ Si vous avez besoin de Redis pour une intégration personnalisée ou un service 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique les périmètres des contrôles de service VPC autour des API GCP. |
-| `vpc_cidr_ranges` | `[]` | Plages CIDR des sous-réseaux VPC pour le niveau d'accès réseau VPC-SC. |
+| `vpc_cidr_ranges` | `[]` | Plages CIDR de sous-réseau VPC pour le niveau d'accès réseau VPC-SC. |
 | `vpc_sc_dry_run` | `true` | Enregistre les violations sans les bloquer. |
-| `organization_id` | `""` | ID de l'organisation GCP pour VPC-SC. Découvert automatiquement si vide. |
+| `organization_id` | `""` | ID d'organisation GCP pour VPC-SC. Découvert automatiquement si vide. |
 | `enable_audit_logging` | `false` | Active les journaux d'audit Cloud détaillés. |
 
 ---
 
 ## Exploration avec la console GCP {#exploring-with-the-gcp-console}
 
-Après un déploiement réussi, explorez l'installation d'Umami dans la console GCP :
+Après un déploiement réussi, explorez l'installation Umami dans la console GCP :
 
 **Charge de travail GKE :**
-Accédez à **Kubernetes Engine → Workloads**. Trouvez le déploiement nommé d'après votre `application_name` et `tenant_id`. Cliquez pour afficher :
+Accédez à **Kubernetes Engine → Charges de travail**. Trouvez le déploiement nommé d'après votre `application_name` et `tenant_id`. Cliquez pour afficher :
 - L'état du pod, le nombre de redémarrages et l'âge.
-- L'onglet **Logs** — diffuse les journaux des conteneurs des pods Umami en cours d'exécution.
-- L'onglet **Details** — affiche la spécification du déploiement, les limites de ressources, la configuration de la sonde et les variables d'environnement (non sensibles).
-- L'**historique des révisions** — liste les ReplicaSets précédents.
+- L'onglet **Journaux** — diffuse les journaux des conteneurs des pods Umami en cours d'exécution.
+- L'onglet **Détails** — affiche la spécification du déploiement, les limites de ressources, la configuration de la sonde et les variables d'environnement (non sensibles).
+- L'**Historique des révisions** — liste les ReplicaSets précédents.
 
 **Services et Ingress GKE :**
-Accédez à **Kubernetes Engine → Services & Ingress**. Trouvez le service pour votre déploiement Umami. Affichez :
+Accédez à **Kubernetes Engine → Services et Ingress**. Trouvez le service pour votre déploiement Umami. Affichez :
 - L'adresse IP externe (si `service_type = "LoadBalancer"` ou `reserve_static_ip = true`).
 - Les mappages de ports.
 - L'état de la vérification de l'état de l'équilibreur de charge.
 
 **Instance Cloud SQL :**
 Accédez à **SQL**. Trouvez l'instance nommée `app-sql-<deployment_id>`. Explorez :
-- **Overview** — nom de la connexion, version de PostgreSQL, utilisation du stockage.
-- **Databases** — la base de données `umami` avec toutes les tables d'analyse.
-- **Users** — l'utilisateur de l'application `umami`.
-- **Operations** — historique des maintenances, des basculements et des sauvegardes.
+- **Vue d'ensemble** — nom de la connexion, version de PostgreSQL, utilisation du stockage.
+- **Bases de données** — la base de données `umami` avec toutes les tables analytiques.
+- **Utilisateurs** — l'utilisateur de l'application `umami`.
+- **Opérations** — historique des maintenances, basculements et sauvegardes.
 
 **Secret Manager :**
-Accédez à **Security → Secret Manager**. Trouvez le secret `secret-<tenant_resource_prefix>-<application_name>-app-secret` (injecté comme `APP_SECRET`) pour ce déploiement. Cliquez pour afficher :
+Accédez à **Sécurité → Secret Manager**. Trouvez le secret `secret-<tenant_resource_prefix>-<application_name>-app-secret` (injecté comme `APP_SECRET`) pour ce déploiement. Cliquez pour afficher :
 - Les versions du secret et les horodatages de création.
 - Le journal d'accès montrant quand les pods GKE ont lu le secret.
 - La configuration de la rotation.
 
 **Artifact Registry :**
-Accédez à **Artifact Registry**. Trouvez le dépôt pour ce déploiement. Affichez les images Umami mises en miroir depuis GitHub Container Registry, leurs tags et la politique de rétention.
+Accédez à **Artifact Registry**. Trouvez le dépôt pour ce déploiement. Affichez les images Umami mises en miroir depuis GitHub Container Registry, leurs balises et la politique de rétention.
 
 **Cloud Monitoring :**
-Si `uptime_check_config.enabled = true` a été défini, accédez à **Monitoring → Uptime checks** pour afficher les résultats de la vérification de disponibilité `/api/heartbeat` dans les régions GCP. Accédez à **Monitoring → Dashboards** pour trouver le tableau de bord GKE auto-provisionné avec les métriques CPU, mémoire et requêtes.
+Si `uptime_check_config.enabled = true` a été défini, accédez à **Surveillance → Tests de disponibilité** pour afficher les résultats du test de disponibilité `/api/heartbeat` dans les régions GCP. Accédez à **Surveillance → Tableaux de bord** pour trouver le tableau de bord GKE auto-provisionné avec les métriques CPU, mémoire et requêtes.
 
 ---
 
@@ -641,33 +642,33 @@ gcloud monitoring uptime list-configs \
 | `container_image` | Image de conteneur utilisée pour le déploiement. |
 | `cicd_enabled` | Indique si le pipeline CI/CD est activé. |
 | `github_repository_url` | URL du dépôt GitHub connecté pour le CI/CD. |
-| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est accessible et que toutes les ressources de charge de travail Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster inline — réexécutez apply pour terminer le déploiement. |
+| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est accessible et que toutes les ressources de charge de travail Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster intégré — relancez l'apply pour terminer le déploiement. |
 
 ---
 
 ## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
-> Niveaux de risque : **Critique** (perte de données, panne complète, faille de sécurité) — **Élevé** (service indisponible ou dégradation significative) — **Moyen** (fonction dégradée ou coût accru) — **Faible** (impact mineur).
+> Niveaux de risque : **Critique** (perte de données, panne totale, faille de sécurité) — **Élevé** (service indisponible ou dégradation significative) — **Moyen** (fonction dégradée ou coût accru) — **Faible** (impact mineur).
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | _(obligatoire)_ | **Critique** | Pas de valeur par défaut — le déploiement échoue immédiatement. |
 | `database_type` | `"POSTGRES"` | **Critique** | Umami nécessite PostgreSQL. Le fait de le définir sur MySQL ou NONE entraîne l'échec de l'assemblage de DATABASE_URL et Umami ne peut pas se connecter à la base de données. |
-| `application_database_name` | `"umami"` | **Critique** | Changer cela après le déploiement initial détruit toutes les données d'analyse collectées. La base de données est recréée vide tandis que les anciennes données restent orphelines dans Cloud SQL. |
-| `application_database_user` | `"umami"` | **Critique** | Changer cela après le déploiement initial recrée l'utilisateur Cloud SQL, invalidant les identifiants et rompant toute connectivité à la base de données. |
+| `application_database_name` | `"umami"` | **Critique** | La modification de cette valeur après le déploiement initial détruit toutes les données analytiques collectées. La base de données est recréée vide tandis que les anciennes données restent orphelines dans Cloud SQL. |
+| `application_database_user` | `"umami"` | **Critique** | La modification de cette valeur après le déploiement initial recrée l'utilisateur Cloud SQL, invalidant les identifiants et rompant toute connectivité à la base de données. |
 | `container_port` | `3000` | **Critique** | Umami écoute sur 3000. Une non-concordance entraîne l'échec de toutes les sondes de santé et Kubernetes redémarre continuellement le pod. |
 | `container_image_source` | `"custom"` | **Élevé** | L'image officielle d'Umami n'accepte pas les variables DB_* individuelles — elle nécessite un `DATABASE_URL` entièrement formé. L'utilisation de `"prebuilt"` sans définir manuellement `DATABASE_URL` dans `environment_variables` entraînera l'échec d'Umami au démarrage avec une erreur de connexion à la base de données manquante. |
-| `application_version` | `"postgresql-latest"` | **Élevé** | Doit utiliser un tag préfixé par `postgresql-`. Les tags simples (par exemple, `latest`) n'existent pas pour la variante PostgreSQL d'Umami. Un tag invalide entraîne l'échec du pull du conteneur. |
-| `admin_password` | _(à changer lors de la première connexion)_ | **Critique** | Les identifiants par défaut (`admin` / `umami`) sont publiquement connus. Les laisser inchangés expose le tableau de bord d'analyse et toutes les données suivies à quiconque connaît l'URL du service. |
-| `container_resources.memory_limit` | `"512Mi"` | **Moyen** | 512 Mio sont suffisants pour un trafic léger à modéré. En cas d'utilisation intensive et concurrente du tableau de bord ou de requêtes d'analyse complexes, Umami peut manquer de mémoire. Augmentez à `1Gi` si une pression mémoire est observée. |
+| `application_version` | `"postgresql-latest"` | **Élevé** | Doit utiliser une balise préfixée par `postgresql-`. Les balises simples (par exemple, `latest`) n'existent pas pour la variante PostgreSQL d'Umami. Une balise invalide entraîne l'échec du pull du conteneur. |
+| `admin_password` | _(à changer lors de la première connexion)_ | **Critique** | Les identifiants par défaut (`admin` / `umami`) sont connus publiquement. Les laisser inchangés expose le tableau de bord analytique et toutes les données suivies à quiconque connaît l'URL du service. |
+| `container_resources.memory_limit` | `"512Mi"` | **Moyen** | 512 Mio sont suffisants pour un trafic léger à modéré. En cas d'utilisation intensive et concurrente du tableau de bord ou de requêtes analytiques complexes, Umami peut manquer de mémoire. Augmentez à `1Gi` si une pression mémoire est observée. |
 | `enable_cloudsql_volume` | `true` | **Critique** | Umami se connecte à Cloud SQL via le socket Unix du proxy d'authentification. La désactivation de cette option supprime le socket, entraînant l'échec de toutes les connexions à la base de données. |
-| `startup_probe_config.failure_threshold` | `30` | **Élevé** | Avec `period_seconds = 10`, un `failure_threshold` de 30 donne à Umami jusqu'à 5 minutes pour démarrer et exécuter les migrations Prisma. Réduire cela en dessous de 10 peut entraîner le redémarrage du pod par Kubernetes avant la fin des migrations, créant une boucle de redémarrage sur les nouveaux déploiements. |
+| `startup_probe_config.failure_threshold` | `30` | **Élevé** | Avec `period_seconds = 10`, un `failure_threshold` de 30 donne à Umami jusqu'à 5 minutes pour démarrer et exécuter les migrations Prisma. Réduire cette valeur en dessous de 10 peut entraîner le redémarrage du pod par Kubernetes avant la fin des migrations, créant une boucle de redémarrage sur les nouveaux déploiements. |
 | `session_affinity` | `"None"` | **Faible** | Umami est entièrement sans état — aucune affinité de session n'est requise. Toutes les requêtes peuvent être traitées par n'importe quel pod sans problèmes de cohérence. |
-| `min_instance_count` | `1` | **Moyen** | Au moins un pod Umami doit toujours être en cours d'exécution pour que les données d'analyse soient collectées. La mise à l'échelle à zéro entraînerait des lacunes de données pendant les périodes sans trafic de tableau de bord. |
+| `min_instance_count` | `1` | **Moyen** | Au moins un pod Umami doit toujours être en cours d'exécution pour que les données analytiques soient collectées. La mise à l'échelle à zéro entraînerait des lacunes dans les données pendant les périodes sans trafic de tableau de bord. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Critique** (spécifique à GKE) | Doit utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'il est défini. Les entiers bruts sont traités comme des octets, bloquant toute planification de pod avec une erreur de dépassement de quota. |
-| `enable_pod_disruption_budget` | `true` | **Moyen** | Déjà activé par défaut. La désactivation permet de terminer tous les pods simultanément pendant les mises à niveau des nœuds GKE Autopilot, entraînant de brèves interruptions de service. |
-| `backup_retention_days` | `7` | **Moyen** | La perte de données d'analyse est difficile à récupérer. Augmentez à 30 jours et plus pour les déploiements de production où les données d'analyse historiques ont une valeur commerciale. |
-| `enable_backup_import` | `false` | **Élevé** | Définir cela sur `true` déclenche une restauration de base de données à chaque apply. N'activez cette option que pour la migration initiale à partir d'une instance Umami existante ; remettez-la immédiatement à `false`. |
+| `enable_pod_disruption_budget` | `true` | **Moyen** | Déjà activé par défaut. La désactivation permet à tous les pods d'être terminés simultanément lors des mises à niveau des nœuds GKE Autopilot, entraînant de brèves interruptions de service. |
+| `backup_retention_days` | `7` | **Moyen** | La perte de données analytiques est difficile à récupérer. Augmentez à 30 jours et plus pour les déploiements de production où les données analytiques historiques ont une valeur commerciale. |
+| `enable_backup_import` | `false` | **Élevé** | Définir cette valeur sur `true` déclenche une restauration de base de données à chaque apply. N'activez cette option que pour la migration initiale depuis une instance Umami existante ; remettez-la immédiatement à `false`. |
 | `enable_vpc_sc` | `false` | **Moyen** | Le périmètre VPC-SC n'est actif que lorsque `organization_id` est également défini. Sans les deux, `enable_vpc_sc = true` n'a aucun effet d'application. |
 
 <!-- related-guides -->

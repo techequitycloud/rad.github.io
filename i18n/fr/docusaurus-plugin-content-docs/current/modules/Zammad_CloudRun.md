@@ -3,46 +3,59 @@ title: "Zammad sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Zammad sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Zammad_CloudRun.md @ 60462a86 sha256:6d0f7aad1826 -->
+<!-- translated-from: docs/modules/Zammad_CloudRun.md @ 40c83c3f sha256:6973b7c470bc -->
 
 # Zammad sur Google Cloud Run {#zammad-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Zammad_CloudRun.png" alt="Zammad sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Zammad est une plateforme open source de service d'assistance et de support client — une
+Zammad est une plateforme open source de helpdesk et de support client — une
 alternative conforme au RGPD à Zendesk et Freshdesk. Ce module déploie Zammad sur
-**Cloud Run v2** au-dessus de la fondation [App_CloudRun](App_CloudRun.md), qui
-provisionne et gère l'infrastructure Google Cloud partagée.
+**Cloud Run v2** au-dessus du socle [App_CloudRun](App_CloudRun.md), qui provisionne
+et gère l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud utilisés par Zammad et sur la manière de les
-explorer et de les opérer depuis la console Google Cloud et la ligne de commande. Pour les
-mécanismes communs à toutes les applications Cloud Run — identité de service,
-ingestion et équilibrage de charge, mise à l'échelle et concurrence, CI/CD, Cloud Armor,
-IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle de vie du
-déploiement — veuillez vous référer au [guide de la fondation App_CloudRun](App_CloudRun.md)
+Ce guide se concentre sur les services cloud utilisés par Zammad et sur la manière
+de les explorer et de les exploiter depuis la console Google Cloud et la ligne de
+commande. Pour les mécanismes communs à chaque application Cloud Run — identité de
+service, ingress et équilibrage de charge, mise à l'échelle et concurrence, CI/CD,
+Cloud Armor, IAP, Binary Authorization, VPC Service Controls, sauvegardes et cycle
+de vie du déploiement — reportez-vous au [guide du socle App_CloudRun](App_CloudRun.md)
 plutôt que de les répéter ici.
 
 ---
 
 ## Ce que coûte Zammad sur RAD, et comment cela se compare {#what-zammad-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Zammad sur Cloud Run dans votre propre projet Google Cloud coûte environ 101,98 $/mois en frais Google Cloud**, en plus d'un frais de module RAD unique de 110 crédits facturé une fois au moment du déploiement. Zammad a besoin d'une base de données PostgreSQL et d'un serveur de fichiers partagé NFS/cache pour les pièces jointes, qui représentent la majeure partie des 101,98 $ ci-dessus. Dans un projet géré par RAD, les frais de module tombent à 99 crédits (10 % de moins) et le coût d'exécution est mesuré à l'heure en crédits au lieu d'être facturé directement par Google — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous pour le seul avantage géré par RAD qu'un VPS auto-hébergé ne peut égaler — ou voir le [guide GKE](Zammad_GKE.md) si vous préférez l'exécuter sur Kubernetes.
+**L'exécution de Zammad sur Cloud Run dans votre propre projet Google Cloud coûte
+environ 101,98 $/mois en frais Google Cloud**, en plus d'un frais de module RAD
+unique de 110 crédits facturé une fois au moment du déploiement. Zammad a besoin
+d'une base de données PostgreSQL et d'un serveur de fichiers NFS/cache partagé
+pour les pièces jointes, qui représentent ensemble la majeure partie des 101,98 $
+ci-dessus. Dans un projet géré par RAD, les frais de module tombent à 99 crédits
+(10 % de moins) et le coût d'exécution est mesuré à l'heure en crédits au lieu
+d'être facturé directement par Google — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it)
+ci-dessous pour le seul avantage géré par RAD qu'un VPS auto-hébergé ne peut pas
+égaler — ou voir le [guide GKE](Zammad_GKE.md) si vous préférez l'exécuter sur
+Kubernetes.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 110 crédits | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | 101,98 $/mois, facturé par Google au prix catalogue | ~32 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Coût d'exécution Google Cloud | 101,98 $/mois, facturé par Google au prix catalogue | ~67 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que
+soit le montant : une fois par compte, pour un module que vous déployez et payez
+vous-même (dans une solution, les frais d'une application : la première à réussir ;
+jamais une session de lab ou un projet client).
 
 **Coût d'exécution par défaut dans votre propre projet**
 
 | Ressource | US$/mois (prix catalogue Google, us-central1) |
 |---|---|
-| Cloud Run, 2x vCPU / 4 GiB (scaleToZero) | 31,53 $ |
+| Cloud Run, 2x vCPU / 4 Gio (scaleToZero) | 31,53 $ |
 | Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ |
 | Serveur de fichiers NFS/cache (petite VM) | 13,43 $ |
 | Cloud NAT et réseau | 5,00 $ |
@@ -51,120 +64,167 @@ Votre premier déploiement réussi sur RAD est exempté des frais de module lors
 
 ### Comment cela se compare {#how-it-compares}
 
-- Zammad, le fournisseur derrière ce projet open source, vend également une version cloud hébergée : sa [page de tarification](https://zammad.com/en/pricing) (vérifiée le 8 octobre 2026) liste Starter v2 à 7-9 €/agent/mois (jusqu'à 5 agents), Professional v2 à 16-18 €/agent/mois (jusqu'à 35 agents) et Plus v2 à 25-27 €/agent/mois (agents illimités), hors TVA.
-- Cette tarification par agent signifie que le propre cloud de Zammad devient plus cher à mesure que vous ajoutez du personnel de support — une équipe professionnelle de 10 agents coûterait environ 160-180 €/mois (environ 170-195 $) — tandis que le coût d'exécution fixe de RAD de 101,98 $/mois plus les frais de module uniques ne change pas avec le nombre d'employés, ce qui favorise RAD une fois qu'une équipe de support dépasse une poignée d'agents.
-- Une alternative VPS nu fonctionne également : une instance GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) à environ 49 $/mois, ou une machine Hetzner/DigitalOcean de taille similaire à environ 24 $/mois, peut auto-héberger Zammad et Postgres ensemble — moins cher que RAD ou le propre cloud de Zammad en termes de coûts, sans aucune des sauvegardes gérées, des correctifs ou de la surveillance que l'un ou l'autre fournit.
+- Zammad, le fournisseur derrière ce projet open source, vend également une version
+  cloud hébergée : sa [page de tarification](https://zammad.com/en/pricing) (vérifiée
+  le 8 octobre 2026) liste Starter v2 à 7-9 €/agent/mois (jusqu'à 5 agents),
+  Professional v2 à 16-18 €/agent/mois (jusqu'à 35 agents) et Plus v2 à 25-27 €/agent/mois
+  (agents illimités), hors TVA.
+- Cette tarification par agent signifie que le cloud de Zammad devient plus cher à
+  mesure que vous ajoutez du personnel de support — une équipe professionnelle de 10
+  agents coûterait environ 160-180 €/mois (environ 170-195 $) — tandis que le coût
+  d'exécution fixe de 101,98 $/mois de RAD plus les frais de module uniques ne
+  changent pas avec les effectifs, ce qui favorise RAD une fois qu'une équipe de
+  support dépasse une poignée d'agents.
+- Une alternative VPS nu fonctionne également : un GCP Compute Engine e2-standard-2
+  (2 vCPU/8 Go) à environ 49 $/mois, ou une machine Hetzner/DigitalOcean de taille
+  similaire à environ 24 $/mois, peut auto-héberger Zammad et Postgres ensemble —
+  moins cher que RAD ou le cloud de Zammad en termes d'argent, sans aucune des
+  sauvegardes gérées, des correctifs ou de la surveillance fournis par l'un ou
+  l'autre.
 
 ### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-C'est l'avantage principal d'un projet géré par RAD, et il ne coûte rien pendant la pause.
-La suppression d'un projet géré par RAD commence par délier sa facturation, puis demande à Google de
-supprimer le projet purement et simplement — la suppression logique récupérable de 30 jours de Google.
-Contrairement à la suppression d'un module, cela ne **détruit pas** Cloud SQL, aucune VM,
-ni la ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est
-facturé pendant qu'il attend, car la facturation est déjà déliée.
+C'est l'avantage principal d'un projet géré par RAD, et il ne coûte rien pendant
+la pause. La suppression d'un projet géré par RAD délie d'abord sa facturation,
+puis demande à Google de supprimer le projet purement et simplement — la propre
+suppression logicielle récupérable de 30 jours de Google. Contrairement à la
+suppression d'un module, cela ne détruit **pas** Cloud SQL, aucune VM, ou la
+ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et
+rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.**
+> Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou
+> les ressources qu'il contient, seront utilisables après sa restauration, de
+> sorte que la restauration ne peut pas être invoquée comme un moyen de récupérer
+> un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des
+> sauvegardes appropriées des données et de la configuration de l'application et
+> de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le
+> projet restauré ne fonctionne pas, la solution de repli consiste à redéployer
+> l'application (voir la section suivante) et à restaurer sa configuration et ses
+> données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de
-réactiver le projet et de rattacher son compte de facturation, puis vous demande d'exécuter
-Update sur chaque déploiement pour confirmer que tout est revenu. Étant donné que rien n'a été
-détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est
-une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module.
-Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet,
+demande à Google de récupérer le projet et de rattacher son compte de facturation,
+puis vous demande d'exécuter une mise à jour sur chaque déploiement pour confirmer
+que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à
+jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une
+reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau.
+Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement),
+donc une restauration ne coûte normalement aucun crédit.
 
-Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation),
-vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement —
-et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits
-achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude/démo).
-Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD
+gère uniquement la facturation), vous devez le restaurer vous-même dans les 30
+jours — après cela, Google le supprime définitivement — et la restauration est
+admise comme la création d'un nouveau projet, donc votre solde de crédits achetés
+doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox
+adapté à la plupart des utilisations d'étude/démo). Google indique que la plupart
+des services sont de nouveau entièrement fonctionnels dans les 36 heures suivant
+une restauration.
 
-Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet,
-et ce bucket a la suppression logique de Cloud Storage explicitement désactivée, il est donc très
-probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est
-récupérable pendant 30 jours. Si vous avez personnalisé Zammad et que vous souhaitez conserver ce travail,
-copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de la supprimer.
-Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à
+l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage
+explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous
+supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours.
+Si vous avez personnalisé Zammad et que vous souhaitez conserver ce travail,
+copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant
+de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela
+n'a pas d'importance.
 
-### Ne payez que pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un projet géré par RAD, il n'y a pas de pause gratuite —
-la suppression supprime les ressources définitivement, et la réactivation de Zammad signifie un redéploiement
-à partir de zéro. Cela coûte 110 crédits (les frais de module ; les builds sont inclus).
+Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un projet
+géré par RAD, il n'y a pas de pause gratuite — la suppression supprime les
+ressources définitivement, et ramener Zammad signifie le redéployer à partir de
+zéro. Cela coûte 110 crédits (les frais de module ; les builds sont inclus).
 
-La suppression ne permet d'économiser de l'argent que si Zammad reste inutilisé suffisamment longtemps pour compenser
-ce coût de redéploiement par rapport à son propre coût d'exécution — pour Zammad, cela représente environ 4 jours ou plus.
-La majeure partie de ce coût d'exécution est généralement la base de données et toute VM de fichier/cache partagée —
-celles-ci ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de cette application
-alors que quelque chose d'autre partage le projet n'économise que sa propre part de calcul.
+La suppression ne permet d'économiser de l'argent que si Zammad reste inutilisé
+assez longtemps pour que le coût de redéploiement soit compensé par son propre
+coût d'exécution — pour Zammad, c'est environ 4 jours ou plus. La majeure partie
+de ce coût d'exécution est généralement la base de données et toute VM de fichier/cache
+partagée — celles-ci ne s'arrêtent que lorsque rien d'autre dans le projet ne les
+utilise, donc la suppression de cette application alors que quelque chose d'autre
+partage le projet n'économise que sa propre part de calcul.
 
-Priorité aux données : les sauvegardes nocturnes sont stockées dans un bucket à l'intérieur du déploiement et sont
-supprimées avec celui-ci, donc copiez la dernière sauvegarde avant de la supprimer si vous souhaitez la conserver.
+Conservez d'abord les données : les sauvegardes nocturnes vont dans un bucket à
+l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière
+sauvegarde avant de supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-Sessions de lab, pour la formation : un formateur anime une session pour une classe. Chaque participant
-obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite
-fixée par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
-Tout est supprimé à la fin de la session et les crédits non utilisés sont restitués au formateur.
+Sessions de lab, pour la formation : un formateur anime une session pour une classe.
+Chaque participant obtient l'application dans son propre projet Google Cloud pendant
+15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur.
+Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au
+formateur.
 
-Environnements gérés, pour les cabinets de conseil : un partenaire exécute l'application pour un client
-à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille
-est faible, la facturation est suspendue et les données sont conservées, afin que personne ne reçoive de
-facture inattendue. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+Environnements gérés, pour les sociétés de conseil : un partenaire exécute l'application
+pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement
+avec le client. Si le portefeuille est faible, la facturation est suspendue et les
+données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin,
+le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 
-Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR,
-par carte, virement bancaire ou argent mobile.
+Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS,
+KES et ZAR, par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les frais propres à RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les affirmations de pause/restauration. Prix du cloud hébergé Zammad sur [zammad.com/en/pricing](https://zammad.com/en/pricing), vérifiés le 8 octobre 2026.
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ;
+[radmodules.dev/pricing](https://radmodules.dev/pricing) pour les propres frais de RAD
+et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects)
+pour les affirmations de pause/restauration. Prix du cloud hébergé Zammad depuis
+[zammad.com/en/pricing](https://zammad.com/en/pricing), vérifié le 8 octobre 2026.
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Zammad s'exécute en tant que conteneur Ruby on Rails (railsserver) sur Cloud Run v2. Le
-déploiement relie un ensemble ciblé de services Google Cloud :
+Zammad s'exécute en tant que conteneur Ruby on Rails (railsserver) sur Cloud Run v2.
+Le déploiement relie un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | Cloud Run v2 | Service Rails, 2 vCPU / 4 GiB par défaut, autoscaling basé sur les requêtes |
+| Calcul | Cloud Run v2 | Service Rails, 2 vCPU / 4 Gio par défaut, autoscaling basé sur les requêtes |
 | Base de données | Cloud SQL pour PostgreSQL 15 | Requis — Zammad ne prend pas en charge MySQL |
 | Stockage des pièces jointes | Filestore (NFS) | Pièces jointes des tickets à `/opt/zammad/storage`, partagées entre toutes les instances |
 | Stockage d'objets | Cloud Storage | Un bucket `zammad-attachments` dédié, toujours provisionné |
-| Cache et file d'attente de jobs | Redis | Activé par défaut ; requis pour la publication/abonnement WebSocket d'ActionCable et Sidekiq |
+| Cache et file d'attente de jobs | Redis | Activé par défaut ; requis pour ActionCable WebSocket pub/sub et Sidekiq |
 | Secrets | Secret Manager | Mot de passe de la base de données géré automatiquement |
-| Ingestion | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut, équilibreur de charge HTTPS externe optionnel + domaine personnalisé |
+| Ingress | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut, équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **PostgreSQL 15 est requis.** MySQL n'est pas pris en charge et est rejeté au moment de la planification.
-- **Redis est requis.** Zammad utilise Redis pour les mises à jour de tickets en temps réel (ActionCable)
-  et le traitement des jobs en arrière-plan (Sidekiq). Sans cela, Zammad ne démarre pas.
-- **Une image personnalisée est construite via Cloud Build.** `container_image_source = "custom"` est
-  la valeur par défaut — Cloud Build enveloppe l'image Docker Hub officielle `zammad/zammad` avec
-  un `entrypoint.sh` spécifique à GCP qui mappe les variables `DB_*` de la fondation à la
-  convention `POSTGRESQL_*` de Zammad.
-- **La sonde de démarrage cible `/`.** Zammad renvoie HTTP 200 uniquement une fois entièrement
-  initialisé. La sonde est délibérément indulgente (seuil de 30 échecs) pour
-  s'adapter à la migration de schéma au premier démarrage.
-- **Les migrations de base de données s'exécutent à chaque démarrage d'instance** (idempotent via `zammad-init`),
-  de sorte que les mises à jour de version appliquent automatiquement les modifications de schéma.
-- `min_instance_count = 0` est la valeur par défaut (mise à l'échelle à zéro) ; remplacez par `1` pour
-  éliminer les démarrages à froid de 60 à 90 secondes sur un service d'assistance en production.
+- **PostgreSQL 15 est requis.** MySQL n'est pas pris en charge et est rejeté au
+  moment de la planification.
+- **Redis est requis.** Zammad utilise Redis pour les mises à jour de tickets en
+  temps réel (ActionCable) et le traitement des jobs en arrière-plan (Sidekiq).
+  Sans cela, Zammad ne démarre pas.
+- **Une image personnalisée est construite via Cloud Build.** `container_image_source = "custom"` est la
+  valeur par défaut — Cloud Build encapsule l'image Docker Hub officielle `zammad/zammad`
+  avec un `entrypoint.sh` spécifique à GCP qui mappe les variables `DB_*` de Foundation
+  à la convention `POSTGRESQL_*` de Zammad.
+- **La sonde de démarrage cible `/`.** Zammad renvoie HTTP 200 uniquement
+  une fois entièrement initialisé. La sonde est délibérément indulgente (seuil
+  de 30 échecs) pour s'adapter à la migration de schéma au premier démarrage.
+- **Les migrations de base de données s'exécutent à chaque démarrage d'instance**
+  (idempotent via `zammad-init`), de sorte que les mises à niveau de version appliquent
+  automatiquement les modifications de schéma.
+- `min_instance_count = 0` est la valeur par défaut (mise à l'échelle à zéro) ; remplacez par
+  `1` pour éliminer les démarrages à froid de 60 à 90 secondes sur un
+  helpdesk de production.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de service et de ressource sont
-rapportés dans les [Sorties](#5-outputs) du déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de
+services et de ressources sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Zammad {#a-cloud-run--the-zammad-service}
 
-Zammad s'exécute en tant que service Cloud Run v2 qui s'adapte automatiquement en fonction de la charge de requêtes entre le
-nombre minimal et maximal d'instances. Chaque déploiement crée une révision immuable ;
-le trafic peut être réparti entre les révisions pour des déploiements sûrs.
+Zammad s'exécute en tant que service Cloud Run v2 qui s'adapte automatiquement
+en fonction de la charge des requêtes entre le nombre minimum et maximum d'instances.
+Chaque déploiement crée une révision immuable ; le trafic peut être réparti entre
+les révisions pour des déploiements sûrs.
 
-- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les logs et
-  les métriques.
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic,
+  les logs et les métriques.
 - **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION"
@@ -172,22 +232,27 @@ le trafic peut être réparti entre les révisions pour des déploiements sûrs.
   gcloud run revisions list --service <service-name> --project "$PROJECT" --region "$REGION"
   ```
 
-Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence, l'environnement d'exécution et la répartition du trafic.
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
+l'environnement d'exécution et la répartition du trafic.
 
 ### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Zammad stocke toutes les données du service d'assistance (tickets, utilisateurs, canaux, enregistrements SLA) dans une instance
-Cloud SQL pour PostgreSQL 15 gérée. Le service se connecte en privé via le
-**proxy d'authentification Cloud SQL** sur un socket Unix — aucune IP publique n'est exposée. Lors du premier
-déploiement, un job d'initialisation crée la base de données et l'utilisateur de l'application. À chaque
-démarrage d'instance ultérieur, `zammad-init` applique toutes les migrations de schéma en attente.
+Zammad stocke toutes les données du helpdesk (tickets, utilisateurs, canaux,
+enregistrements SLA) dans une instance Cloud SQL pour PostgreSQL 15 gérée. Le
+service se connecte en privé via le **Cloud SQL Auth Proxy** sur un socket Unix
+— aucune IP publique n'est exposée. Lors du premier déploiement, un job
+d'initialisation crée la base de données et l'utilisateur de l'application. À
+chaque démarrage d'instance ultérieur, `zammad-init` applique toutes les migrations
+de schéma en attente.
 
 **Solution de contournement TCP de Cloud Run :** `docker-entrypoint.sh` de Zammad vérifie la
-disponibilité de PostgreSQL à l'aide d'un socket bash TCP. Étant donné que `DB_HOST` de Cloud Run est un chemin de socket Unix
-(non adressable par TCP), le `entrypoint.sh` personnalisé utilise l'IP privée de Cloud SQL
-(`DB_IP`) à la place pour cette vérification.
+disponibilité de PostgreSQL à l'aide d'un socket bash TCP. Étant donné que
+`DB_HOST` de Cloud Run est un chemin de socket Unix (non adressable par TCP),
+le `entrypoint.sh` personnalisé utilise l'IP privée de Cloud SQL (`DB_IP`) à la
+place pour cette vérification.
 
-- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs, les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes,
+  les indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -195,16 +260,17 @@ disponibilité de PostgreSQL à l'aide d'un socket bash TCP. Étant donné que `
   gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe se trouvent dans les
-[Sorties](#5-outputs). Voir [App_CloudRun](App_CloudRun.md) pour le
-modèle de connexion, les sauvegardes et la rotation des mots de passe.
+Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de
+passe se trouvent dans les [Sorties](#5-outputs). Voir [App_CloudRun](App_CloudRun.md)
+pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Filestore (NFS) et Cloud Storage {#c-filestore-nfs-and-cloud-storage}
 
-Les pièces jointes des tickets et les fichiers téléchargés sont écrits sur un partage **Filestore (NFS)**
-monté à `/opt/zammad/storage` à l'intérieur du service afin que toutes les instances partagent les mêmes
-fichiers. Un bucket **Cloud Storage** (`zammad-attachments`) dédié est également
-provisionné automatiquement. L'environnement d'exécution Gen2 est requis pour les montages NFS.
+Les pièces jointes des tickets et les fichiers téléchargés sont écrits sur un
+partage **Filestore (NFS)** monté à `/opt/zammad/storage` à l'intérieur du service afin que
+toutes les instances partagent les mêmes fichiers. Un bucket **Cloud Storage**
+(`zammad-attachments`) dédié est également provisionné automatiquement. L'environnement
+d'exécution Gen2 est requis pour les montages NFS.
 
 - **Console :** Filestore → Instances ; Cloud Storage → Buckets.
 - **CLI :**
@@ -218,17 +284,17 @@ Voir [App_CloudRun](App_CloudRun.md) pour le montage NFS, GCS Fuse et CMEK.
 
 ### D. Cache Redis et file d'attente de jobs {#d-redis-cache-and-job-queue}
 
-Redis est obligatoire pour Zammad et remplit deux rôles essentiels :
+Redis est obligatoire pour Zammad et remplit deux rôles critiques :
 
-1. **Publication/abonnement ActionCable** — fournit des mises à jour de tickets en temps réel aux agents sur
-   plusieurs instances Cloud Run.
-2. **Sidekiq** — traite les jobs en arrière-plan (envoi d'e-mails, notifications SLA,
-   synchronisation LDAP, tâches de planification).
+1. **ActionCable pub/sub** — fournit des mises à jour de tickets en temps réel
+   aux agents sur plusieurs instances Cloud Run.
+2. **Sidekiq** — traite les jobs en arrière-plan (envoi d'e-mails, notifications
+   SLA, synchronisation LDAP, tâches du planificateur).
 
-Lorsqu'aucun `redis_host` externe n'est configuré et que NFS est activé, l'adresse IP de l'hôte NFS est
-utilisée comme point de terminaison Redis. Pour la production, utilisez une instance Google Cloud Memorystore
-pour Redis dédiée et définissez `vpc_egress_setting = "ALL_TRAFFIC"` afin que Cloud Run puisse
-atteindre son IP privée.
+Lorsqu'aucun `redis_host` externe n'est configuré et que NFS est activé, l'IP de
+l'hôte NFS est utilisée comme point de terminaison Redis. Pour la production,
+utilisez une instance Google Cloud Memorystore pour Redis dédiée et définissez
+`vpc_egress_setting = "ALL_TRAFFIC"` afin que Cloud Run puisse atteindre son IP privée.
 
 - **Console :** Memorystore → Redis (si vous utilisez une instance gérée).
 - **CLI :**
@@ -239,9 +305,10 @@ atteindre son IP privée.
 
 ### E. Secret Manager {#e-secret-manager}
 
-Le mot de passe de la base de données est stocké dans Secret Manager et injecté dans le service au
-moment de l'exécution. Zammad gère ses propres clés de signature internes — aucun secret au niveau de l'application
-n'est généré automatiquement par ce module.
+Le mot de passe de la base de données est stocké dans Secret Manager et injecté
+dans le service au moment de l'exécution. Zammad gère ses propres clés de
+signature internes — aucun secret au niveau de l'application n'est généré
+automatiquement par ce module.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -252,9 +319,12 @@ n'est généré automatiquement par ce module.
 
 Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
 
-### F. Réseau et ingestion {#f-networking--ingress}
+### F. Réseau et ingress {#f-networking--ingress}
 
-Le service est accessible par son URL `run.app` par défaut. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peuvent être superposés. Lors de l'utilisation de Memorystore pour Redis, `vpc_egress_setting` doit être `"ALL_TRAFFIC"` afin que les connexions Redis soient acheminées via le VPC.
+Le service est accessible par son URL `run.app` par défaut. Un équilibreur de
+charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor
+peut être superposé. Lors de l'utilisation de Memorystore pour Redis, `vpc_egress_setting`
+doit être `"ALL_TRAFFIC"` afin que les connexions Redis soient acheminées via le VPC.
 
 - **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
 - **CLI :**
@@ -267,8 +337,9 @@ Voir [App_CloudRun](App_CloudRun.md).
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les logs des conteneurs sont acheminés vers Cloud Logging ; les métriques Cloud Run et Cloud SQL sont acheminées vers Cloud
-Monitoring, avec des vérifications de disponibilité et des politiques d'alerte optionnelles.
+Les logs des conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run
+et Cloud SQL sont envoyées à Cloud Monitoring, avec des tests de disponibilité
+et des stratégies d'alerte facultatifs.
 
 - **Console :** Logging → Explorateur de logs ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
@@ -280,30 +351,37 @@ Monitoring, avec des vérifications de disponibilité et des politiques d'alerte
 
 ## 3. Comportement de l'application Zammad {#3-zammad-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un job d'initialisation (`db-init`) s'exécute avant le
-  démarrage du service. Il se connecte à Cloud SQL via le proxy d'authentification et crée de manière idempotente
-  la base de données Zammad, l'utilisateur et accorde les privilèges. Il peut être réexécuté en toute sécurité.
+- **Configuration de la base de données au premier déploiement.** Un job
+  d'initialisation (`db-init`) s'exécute avant le démarrage du service. Il se
+  connecte à Cloud SQL via le proxy d'authentification et crée de manière
+  idempotente la base de données Zammad, l'utilisateur et accorde les privilèges.
+  Il peut être réexécuté en toute sécurité.
 - **Migrations à chaque démarrage.** Le `entrypoint.sh` personnalisé appelle `zammad-init`
-  (migration de la base de données Rails + amorçage) avant de démarrer le railsserver à chaque démarrage d'instance.
-  Les migrations en attente sont appliquées ; celles déjà exécutées sont ignorées.
-- **Pontage des variables.** Le module Foundation injecte les identifiants de base de données en tant que
-  `DB_HOST`, `DB_USER`, `DB_PASSWORD`, etc. Le `entrypoint.sh` personnalisé mappe ces
-  valeurs à la convention `POSTGRESQL_*` de Zammad, et utilise `DB_IP` (IP privée de Cloud SQL) pour
-  la vérification de la disponibilité TCP car `DB_HOST` de Cloud Run est un chemin de socket Unix.
-- **Connectivité WebSocket — la poussée en temps réel ne fonctionne pas réellement sur Cloud Run.**
-  Le processus `zammad-websocket` (ActionCable) démarre sur le port 6042 en même temps que le
-  railsserver, mais Cloud Run n'expose que le `container_port` déclaré —
-  les clients ne peuvent pas atteindre directement le port 6042, de sorte que la poignée de main ActionCable du navigateur
-  ne se connecte jamais. L'interface utilisateur revient gracieusement au sondage (documenté dans
-  `Zammad_Common/scripts/entrypoint.sh`). `enable_redis = true` est toujours obligatoire
-  car Sidekiq (jobs en arrière-plan — récupération d'e-mails, escalades, calculs SLA)
-  en dépend quelle que soit l'accessibilité d'ActionCable.
-- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/`, qui renvoie
-  HTTP 200 uniquement lorsque Zammad est entièrement initialisé. La sonde de démarrage autorise jusqu'à
-  510 secondes au total (délai initial de 60 secondes, 30 tentatives à intervalles de 15 secondes) pour
-  s'adapter à la migration de schéma au premier démarrage.
-- **Intégration des e-mails.** Configurez le SMTP après la première connexion dans **Admin → Canaux →
-  E-mail**. Les identifiants SMTP peuvent être injectés via `secret_environment_variables`.
+  (migration de base de données Rails + seed) avant de démarrer le railsserver à
+  chaque démarrage d'instance. Les migrations en attente sont appliquées ; celles
+  déjà exécutées sont ignorées.
+- **Pontage des variables.** Le module Foundation injecte les identifiants de la
+  base de données sous forme de `DB_HOST`, `DB_USER`, `DB_PASSWORD`, etc. Le `entrypoint.sh`
+  personnalisé mappe ceux-ci à la convention `POSTGRESQL_*` de Zammad, et utilise
+  `DB_IP` (IP privée de Cloud SQL) pour la vérification de disponibilité TCP
+  car `DB_HOST` de Cloud Run est un chemin de socket Unix.
+- **Connectivité WebSocket — le push en temps réel ne fonctionne pas réellement sur
+  Cloud Run.** Le processus `zammad-websocket` (ActionCable) démarre sur le port 6042
+  parallèlement au railsserver, mais Cloud Run n'expose que le `container_port` unique
+  déclaré — les clients ne peuvent pas atteindre directement le port 6042, de sorte
+  que la poignée de main ActionCable du navigateur ne se connecte jamais. L'interface
+  utilisateur revient gracieusement au polling à la place (documenté dans `Zammad_Common/scripts/entrypoint.sh`).
+  `enable_redis = true` est toujours obligatoire car Sidekiq (jobs en arrière-plan — récupération
+  d'e-mails, escalades, calculs SLA) en dépend quelle que soit l'accessibilité
+  d'ActionCable.
+- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/`,
+  qui renvoie HTTP 200 uniquement lorsque Zammad est entièrement initialisé. La
+  sonde de démarrage autorise jusqu'à 510 secondes au total (délai initial de 60
+  secondes, 30 tentatives à intervalles de 15 secondes) pour s'adapter à la
+  migration de schéma au premier démarrage.
+- **Intégration de la messagerie.** Configurez SMTP après la première connexion
+  dans **Admin → Channels → Email**. Les identifiants SMTP peuvent être injectés
+  via `secret_environment_variables`.
 - **Inspecter les jobs planifiés :**
   ```bash
   gcloud run jobs list --project "$PROJECT" --region "$REGION"
@@ -314,9 +392,10 @@ Monitoring, avec des vérifications de disponibilité et des politiques d'alerte
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement telles qu'elles apparaissent sur la plateforme de déploiement. Seuls les
-paramètres spécifiques ou notables pour Zammad sont listés ; toutes les autres entrées sont
-héritées de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
+Les variables sont regroupées exactement telles qu'elles apparaissent sur la
+plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
+Zammad sont listés ; toute autre entrée est héritée de [App_CloudRun](App_CloudRun.md)
+avec son comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
@@ -332,8 +411,8 @@ héritées de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails ayant accès au projet et aux alertes de surveillance. |
-| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources. |
+| `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
+| `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
@@ -350,20 +429,20 @@ héritées de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
 |---|---|---|
 | `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
 | `container_image_source` | `custom` | `custom` construit via Cloud Build (requis pour le point d'entrée GCP) ; `prebuilt` ignore le build. |
-| `container_image` | `""` | Remplace l'URI de l'image du conteneur. Laisser vide pour que Cloud Build le gère. |
+| `container_image` | `""` | Remplacer l'URI de l'image du conteneur. Laisser vide pour que Cloud Build le gère. |
 | `cpu_limit` | `2000m` | CPU par instance. Minimum 2 vCPU pour Zammad. |
-| `memory_limit` | `4Gi` | Mémoire par instance. Minimum 2 GiB ; 4 GiB recommandés. |
+| `memory_limit` | `4Gi` | Mémoire par instance. Minimum 2 Gio ; 4 Gio recommandés. |
 | `container_port` | `3000` | Port du railsserver Zammad. Doit correspondre à `ZAMMAD_RAILSSERVER_PORT`. |
 | `execution_environment` | `gen2` | Gen2 requis pour les montages NFS et GCS Fuse. |
-| `cpu_always_allocated` | `false` | Valeur par défaut de démarrage à froid axée sur les coûts. `false` limite le CPU à ~0 entre les requêtes, ce qui arrête le planificateur Sidekiq (déclencheurs, escalades) et ActionCable en cours de processus. Définir `true` (avec `min_instance_count >= 1`) pour restaurer le fonctionnement continu. |
-| `min_instance_count` | `0` | Instances minimales (mise à l'échelle à zéro). Définir ≥ 1 pour éviter les démarrages à froid sur un service d'assistance en production. |
+| `cpu_always_allocated` | `false` | Valeur par défaut de démarrage à froid axée sur les coûts. `false` limite le CPU à ~0 entre les requêtes, ce qui arrête le planificateur Sidekiq intégré (déclencheurs, escalades) et ActionCable. Définir `true` (avec `min_instance_count >= 1`) pour restaurer le fonctionnement continu. |
+| `min_instance_count` | `0` | Instances minimales (mise à l'échelle à zéro). Définir ≥ 1 pour éviter les démarrages à froid sur un helpdesk de production. |
 | `max_instance_count` | `5` | Instances maximales (plafond de coût). |
-| `enable_cloudsql_volume` | `true` | Proxy d'authentification Cloud SQL pour les connexions socket. Ne pas désactiver. |
+| `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions socket. Ne pas désactiver. |
 | `enable_image_mirroring` | `true` | Met en miroir l'image Zammad Docker Hub dans Artifact Registry avant le déploiement. |
-| `traffic_split` | `[]` | Répartit le trafic entre les révisions pour des déploiements échelonnés. |
-| `max_revisions_to_retain` | `7` | Nombre d'anciennes révisions à conserver. |
+| `traffic_split` | `[]` | Répartir le trafic entre les révisions pour les déploiements échelonnés. |
+| `max_revisions_to_retain` | `7` | Combien d'anciennes révisions conserver. |
 
-### Groupe 5 — Contrôle d'accès et d'ingestion {#group-5--access--ingress-control}
+### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -376,8 +455,8 @@ héritées de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Les valeurs de base `POSTGRESQL_*` et `RAILS_*` sont définies automatiquement. |
-| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager (par exemple, pour les mots de passe SMTP). |
+| `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Les valeurs principales `POSTGRESQL_*` et `RAILS_*` sont définies automatiquement. |
+| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom de secret Secret Manager (par exemple pour les mots de passe SMTP). |
 | `explicit_secret_values` | `{}` | Valeurs sensibles à stocker et à injecter en tant que secrets. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. |
@@ -390,7 +469,7 @@ héritées de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
 | `backup_retention_days` | `7` | Rétention ; augmenter pour la production/conformité. |
 | `enable_backup_import` / `backup_source` / `backup_file` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
-### Groupe 8 — CI/CD et autorisation binaire {#group-8--cicd--binary-authorization}
+### Groupe 8 — CI/CD et Binary Authorization {#group-8--cicd--binary-authorization}
 
 Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 [App_CloudRun](App_CloudRun.md). Entrées clés : `enable_cicd_trigger`,
@@ -442,9 +521,9 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` / `startup_probe_config` | `/`, délai de 60s, 30 tentatives | Tolérance généreuse pour la migration de schéma au premier démarrage. |
-| `liveness_probe` / `health_check_config` | `/`, délai de 60s | Redémarre le conteneur après 3 échecs consécutifs. |
-| `uptime_check_config` | désactivé | Vérification de disponibilité de Cloud Monitoring ciblant `/` ; définir `enabled = true` pour le provisionner. |
+| `startup_probe` / `startup_probe_config` | `/`, délai de 60 s, 30 tentatives | Tolérance généreuse pour la migration de schéma au premier démarrage. |
+| `liveness_probe` / `health_check_config` | `/`, délai de 60 s | Redémarre le conteneur après 3 échecs consécutifs. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring ciblant `/` ; définir `enabled = true` pour le provisionner. |
 | `alert_policies` | `[]` | Politiques d'alerte métrique. |
 
 ### Groupe 21 — Cache Redis et file d'attente de jobs {#group-21--redis-cache--job-queue}
@@ -454,22 +533,22 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 | `enable_redis` | `true` | **Requis.** Utiliser Redis pour ActionCable et Sidekiq. |
 | `redis_host` | `""` | Laisser vide pour utiliser l'IP de l'hôte NFS ; définir explicitement pour Memorystore. |
 | `redis_port` | `6379` | Port Redis. |
-| `redis_auth` | `""` | Mot de passe d'authentification Redis optionnel (sensible). |
+| `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation (dry-run). |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
 | `enable_audit_logging` | `false` | Logs d'audit Cloud détaillés. |
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les
-ressources en cours d'exécution.
+Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et
+d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
@@ -480,19 +559,19 @@ ressources en cours d'exécution.
 | `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
-| `database_password_secret` | Secret Manager secret contenant le mot de passe de la base de données. |
+| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
 | `database_host` / `database_port` | Point de terminaison / port de la base de données. |
 | `storage_buckets` | Buckets Cloud Storage créés (y compris `zammad-attachments`). |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
-| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | État de la surveillance, canaux, vérifications de disponibilité. |
+| `monitoring_enabled` / `monitoring_notification_channels` / `uptime_check_names` | Statut de surveillance, canaux, tests de disponibilité. |
 | `initialization_jobs` | Noms des jobs de configuration. |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants de projet. |
-| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | État et détails CI/CD. |
+| `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | Statut et détails CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | État VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et état CMEK. |
+| `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | Statut VPC-SC. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et statut CMEK. |
 
 ---
 
@@ -501,35 +580,35 @@ ressources en cours d'exécution.
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critique | Zammad nécessite PostgreSQL ; MySQL est rejeté au moment de la planification. |
 | `container_image_source` | `custom` (par défaut) | Critique | L'utilisation de `prebuilt` sans le point d'entrée personnalisé signifie que le mappage `DB_*` → `POSTGRESQL_*` ne se produit pas et que toutes les connexions à la base de données échouent au démarrage. |
 | `enable_cloudsql_volume` | `true` | Critique | La désactivation supprime le socket du proxy d'authentification ; toutes les connexions à la base de données échouent. |
-| `db_name` / `db_user` | défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données du service d'assistance. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans sauvegarde valide échoue le job d'importation ; l'activation à chaque apply écrase les données en direct. |
+| `db_name` / `db_user` | défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données du helpdesk. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans sauvegarde valide échoue le job d'importation ; l'activation à chaque apply écrase les données en direct. |
 | `enable_redis` | `true` | Critique | Sans Redis, ActionCable et Sidekiq ne parviennent pas à s'initialiser ; Zammad ne démarrera pas. |
-| `redis_host` | explicite ou IP NFS | Critique | Vide avec NFS désactivé signifie aucun point de terminaison Redis valide — Zammad ne démarre pas. |
-| `memory_limit` | `4Gi` | Élevé | Zammad manque de mémoire pendant la migration de schéma ou sous charge en dessous de 2 GiB. |
+| `redis_host` | IP explicite ou NFS | Critique | Vide avec NFS désactivé signifie aucun point de terminaison Redis valide — Zammad ne démarre pas. |
+| `memory_limit` | `4Gi` | Élevé | Zammad OOM (Out Of Memory) pendant la migration de schéma ou sous charge en dessous de 2 Gio. |
 | `nfs_mount_path` | `/opt/zammad/storage` | Élevé | La modification de ceci entraîne l'écriture des pièces jointes dans le stockage d'instance éphémère ; les pièces jointes NFS existantes deviennent inaccessibles. |
 | `enable_nfs` | `true` | Élevé | Sans NFS, toutes les pièces jointes téléchargées sont perdues au redémarrage de l'instance. |
-| `cpu_always_allocated` | `true` pour la production | Élevé | La valeur par défaut `false` (démarrage à froid axé sur les coûts) limite le CPU à ~0 entre les requêtes, arrêtant le planificateur Sidekiq (déclencheurs, escalades) et ActionCable en cours de processus. Définir `true` avec `min_instance_count >= 1` pour un service d'assistance en production qui doit traiter les événements chronométrés en continu. |
-| `min_instance_count` | `1` | Élevé | `0` (la valeur par défaut) provoque des démarrages à froid de 60 à 90 secondes pour le premier agent à ouvrir un ticket. |
-| ActionCable / port 6042 | non configurable par l'opérateur | Moyen | Les mises à jour de tickets WebSocket en temps réel ne fonctionnent jamais sur Cloud Run, quelles que soient les configurations `enable_redis`/`session` — seul le `container_port` déclaré est accessible, de sorte que la poignée de main ActionCable du navigateur ne peut pas atteindre le port 6042. L'interface utilisateur revient gracieusement au sondage ; ne vous fiez pas aux notifications push en direct. |
+| `cpu_always_allocated` | `true` pour la production | Élevé | La valeur par défaut `false` (démarrage à froid axé sur les coûts) limite le CPU à ~0 entre les requêtes, arrêtant le planificateur Sidekiq intégré (déclencheurs, escalades) et ActionCable. Définir `true` avec `min_instance_count >= 1` pour un helpdesk de production qui doit traiter les événements chronométrés en continu. |
+| `min_instance_count` | `1` | Élevé | `0` (la valeur par défaut) provoque des démarrages à froid de 60 à 90 secondes pour le premier agent qui ouvre un ticket. |
+| ActionCable / port 6042 | non configurable par l'opérateur | Moyen | Les mises à jour de tickets WebSocket en temps réel ne fonctionnent jamais sur Cloud Run, quelles que soient les paramètres `enable_redis`/`session` — seul le `container_port` déclaré est accessible, de sorte que la poignée de main ActionCable du navigateur ne peut pas atteindre le port 6042. L'interface utilisateur revient gracieusement au polling ; ne vous fiez pas aux notifications push en direct. |
 | `vpc_egress_setting` | `ALL_TRAFFIC` lors de l'utilisation de Memorystore | Élevé | L'IP privée de Memorystore Redis peut ne pas être accessible avec `PRIVATE_RANGES_ONLY` ; les connexions Redis sont refusées. |
 | `startup_probe.initial_delay_seconds` | `60` (ou plus) | Élevé | Trop court provoque des boucles de redémarrage pendant l'exécution de la migration de schéma au premier démarrage. |
 | `max_instance_count` > 1 sans Redis | configurer Redis d'abord | Moyen | Plusieurs instances sans Redis provoquent des conditions de concurrence sur l'affectation des tickets et une divergence d'état en temps réel. |
-| `enable_iap` / `enable_cloud_armor` | activer pour l'administration | Moyen | L'interface utilisateur d'administration de Zammad est autrement accessible publiquement. |
+| `enable_iap` / `enable_cloud_armor` | activer pour l'interface d'administration | Moyen | L'interface utilisateur d'administration de Zammad est autrement accessible publiquement. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
-| `enable_cdn` | désactivé (par défaut) | Moyen | Les réponses API de Zammad sont dynamiques ; la mise en cache CDN interrompt les listes de tickets et les vues en temps réel, sauf si les en-têtes `Cache-Control: no-cache` sont définis. |
+| `enable_cdn` | désactivé (par défaut) | Moyen | Les réponses de l'API de Zammad sont dynamiques ; la mise en cache CDN interrompt les listes de tickets et les vues en temps réel à moins que les en-têtes `Cache-Control: no-cache` ne soient définis. |
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — identité de service, mise à l'échelle et
-concurrence, ingestion et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
-**[App_CloudRun](App_CloudRun.md)**. La configuration d'application spécifique à Zammad partagée
-avec la variante GKE est décrite dans **[Zammad_Common](Zammad_Common.md)**.
+Pour le comportement du socle référencé tout au long — identité de service, mise
+à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor,
+IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
+**[App_CloudRun](App_CloudRun.md)**. La configuration d'application spécifique à
+Zammad partagée avec la variante GKE est décrite dans **[Zammad_Common](Zammad_Common.md)**.
 
 <!-- related-guides -->
 
@@ -538,4 +617,4 @@ avec la variante GKE est décrite dans **[Zammad_Common](Zammad_Common.md)**.
 - [Lab pratique : Zammad sur Cloud Run](../labs/Zammad_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Zammad sur GKE Autopilot](Zammad_GKE.md) — la même application sur Kubernetes, lorsque vous avez besoin de l'autre cible de déploiement.
 - [Zammad Common — Configuration d'application partagée](Zammad_Common.md) — la configuration partagée par les deux cibles de déploiement.
-- Déployé avec [Elasticsearch sur GKE Autopilot](Elasticsearch_GKE.md), [Snipe-IT sur Google Cloud Run](SnipeIT_CloudRun.md), [BookStack sur Google Cloud Run](BookStack_CloudRun.md), [GoAlert sur Google Cloud Run](GoAlert_CloudRun.md) dans la solution **IT Service Desk**.
+- Déployé aux côtés de [Elasticsearch sur GKE Autopilot](Elasticsearch_GKE.md), [Snipe-IT sur Google Cloud Run](SnipeIT_CloudRun.md), [BookStack sur Google Cloud Run](BookStack_CloudRun.md), [GoAlert sur Google Cloud Run](GoAlert_CloudRun.md) dans la solution **IT Service Desk**.

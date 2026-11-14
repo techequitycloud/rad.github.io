@@ -3,229 +3,168 @@ title: "Qdrant sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Qdrant sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Qdrant_GKE.md @ 60462a86 sha256:c0cd6a227435 -->
+<!-- translated-from: docs/modules/Qdrant_GKE.md @ 40c83c3f sha256:c7b0300d9225 -->
 
 # Qdrant sur GKE Autopilot {#qdrant-on-gke-autopilot}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Qdrant_GKE.png" alt="Qdrant sur GKE Autopilot" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Qdrant est une base de données vectorielle et un moteur de recherche de
-similarité haute performance conçus pour les charges de travail d'IA — pipelines
-RAG, systèmes de recommandation, recherche sémantique et stockage d'embeddings.
-Ce module déploie Qdrant sur **GKE Autopilot** en s'appuyant sur la fondation
-[App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée Google
-Cloud et Kubernetes.
+Qdrant est une base de données vectorielle et un moteur de recherche de similarité
+hautes performances conçus pour les charges de travail d'IA — pipelines RAG,
+systèmes de recommandation, recherche sémantique et stockage d'embeddings. Ce
+module déploie Qdrant sur **GKE Autopilot** sur la base du module
+[App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée de
+Google Cloud et Kubernetes.
 
 Ce guide se concentre sur les services cloud utilisés par Qdrant et sur la
 manière de les explorer et de les opérer depuis la console Google Cloud et la
 ligne de commande. Pour les mécanismes communs à toutes les applications GKE —
 Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement
-— veuillez vous référer au [guide de la fondation App_GKE](App_GKE.md) plutôt
-que de les répéter ici.
+— reportez-vous au [guide du module App_GKE](App_GKE.md) plutôt que de les
+répéter ici.
 
 ---
 
 ## Coût de Qdrant sur RAD et comparaison {#what-qdrant-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Qdrant dans votre propre projet Google Cloud coûte environ
-42,08 $ US/mois en infrastructure, plus des frais de module uniques de 75
-crédits RAD** (dimensionnés à 1 vCPU / 1 GiB sur les pods GKE Autopilot). RAD
-facture les frais de module une seule fois, au moment du déploiement — jamais
-plus lors d'une mise à jour — et les builds sont inclus dans le prix ;
-l'utilisation de Google Cloud elle-même est facturée à votre propre compte de
-facturation au prix catalogue de Google. Sur un projet **géré par RAD**, les
-mêmes ressources sont mesurées toutes les heures en crédits au prix catalogue
-plus la marge de RAD — environ 56 crédits/jour — et les frais de module sont
-inférieurs de 10 %, soit 67,50 crédits. Voir "Mettre en pause gratuitement"
-ci-dessous pour savoir comment un déploiement Qdrant géré par RAD peut être
-arrêté, sans frais d'exécution, jusqu'à ce que vous en ayez à nouveau besoin.
-(ou voir le [guide Cloud Run](Qdrant_CloudRun.md) pour l'option à moindre coût)
+**L'exécution de Qdrant dans votre propre projet Google Cloud coûte environ 42,08 $ US/mois en infrastructure, plus des frais de module uniques de 75 crédits RAD** (dimensionnés à 1 vCPU / 1 GiB sur les pods GKE Autopilot). RAD facture les frais de module une seule fois, au moment du déploiement — jamais plus lors d'une mise à jour — et les builds sont inclus dans le prix ; l'utilisation de Google Cloud elle-même est facturée à votre propre compte de facturation au prix catalogue de Google. Sur un projet **géré par RAD**, les mêmes ressources sont mesurées à l'heure en crédits au prix catalogue plus la marge de RAD — environ 64 crédits/jour — et les frais de module sont inférieurs de 10 %, soit 67,50 crédits. Voir "Mettre en pause gratuitement" ci-dessous pour savoir comment un déploiement Qdrant géré par RAD peut être arrêté, sans frais d'exécution, jusqu'à ce que vous en ayez à nouveau besoin. (ou consultez le [guide Cloud Run](Qdrant_CloudRun.md) pour l'option à moindre coût)
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
-| Élément | Projet propre | Projet géré par RAD |
+| Élément | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 75 crédits (une fois) | 67,50 crédits (une fois) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | ~42,08 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~56 crédits/jour, mesurés toutes les heures au prix catalogue + marge de RAD |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : le temps de build est toujours facturé à la minute | Identique |
+| Coût d'exécution Google Cloud | ~42,08 $ US/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~64 crédits/jour, mesuré à l'heure au prix catalogue + marge de RAD |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant des frais : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
 **Coût d'exécution par défaut dans votre propre projet**
 
-| Ressource | $/mois (prix catalogue Google, us-central1) |
+| Ressource | $ US/mois (prix catalogue Google, us-central1) |
 |---|---|
 | Pod GKE Autopilot, 1x vCPU / 1 GiB | 36,08 |
 | Cloud NAT et réseau | 5 |
-| Cloud Storage (add-ons, sauvegardes) | 1 |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 |
 | Frais de gestion de cluster GKE\* | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 |
 | **Total** | **42,08 $** |
 
-\* Non inclus dans le total ci-dessus — il est partagé entre toutes les
-applications GKE exécutées dans le même projet, il est donc de 0 $ si c'est
-votre seul cluster GKE.
+\* Non inclus dans le total ci-dessus — il est partagé entre toutes les applications GKE exécutées dans le même projet, il est donc de 0 $ si c'est votre seul cluster GKE.
 
 ### Comparaison {#how-it-compares}
 
-- Nous n'avons pas pu vérifier un prix SaaS commercial actuel, directement
-  comparable, pour ce projet open-source exact, donc la comparaison honnête est
-  un serveur autogéré nu : Hetzner CPX22 (2 vCPU/4 Go, ~24 $/mois), un Droplet
-  DigitalOcean 2 vCPU/4 Go (~24 $/mois), ou un GCP Compute Engine e2-standard-2
-  (2 vCPU/8 Go, ~49 $/mois). L'empreinte de cette application (1 vCPU ou moins,
-  1 GiB ou moins) est plus petite que n'importe laquelle de ces classes, donc
-  une machine autogérée nue dimensionnée pour correspondre coûterait moins cher
-  que les chiffres ci-dessus — mais vous seriez toujours responsable de chaque
-  correctif, sauvegarde et mise à jour de sécurité.
-- RAD ne prétend **pas** battre un VPS nu sur le prix affiché — ce n'est
-  généralement pas le cas. Ce que RAD ajoute pour un montant en dollars égal ou
-  similaire, c'est une base de données gérée, des identifiants gérés par Secret
-  Manager, une surveillance et une mise à jour en un clic, qu'un VPS nu ne vous
-  offre pas gratuitement.
-- Sur un VPS nu, c'est vous qui appliquez les correctifs de sécurité du
-  système d'exploitation/de la base de données, effectuez et testez les
-  sauvegardes, et renouvelez les certificats ; Cloud SQL géré par RAD, Secret
-  Manager et la surveillance gèrent les trois pour vous.
+- Nous n'avons pas pu vérifier un prix SaaS commercial actuel, directement comparable, pour ce projet open source exact, donc la comparaison honnête est un serveur autogéré nu : Hetzner CPX22 (2 vCPU/4 Go, ~24 $/mois), un DigitalOcean 2 vCPU/4 Go Droplet (~24 $/mois), ou un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go, ~49 $/mois). L'empreinte de cette application (1 vCPU ou moins, 1 GiB ou moins) est plus petite que n'importe laquelle de ces classes, donc une machine autogérée nue dimensionnée pour correspondre coûterait moins cher que les chiffres ci-dessus — mais vous seriez toujours responsable de chaque correctif, sauvegarde et mise à jour de sécurité.
+- RAD **ne prétend pas** battre un VPS nu sur le prix affiché — ce n'est généralement pas le cas. Ce que RAD ajoute pour un montant en dollars identique ou similaire, c'est une base de données gérée, des identifiants conservés dans Secret Manager, la surveillance et une mise à jour en un clic, dont aucun n'est offert gratuitement par un VPS nu.
+- Sur un VPS nu, c'est vous qui appliquez les correctifs de sécurité du système d'exploitation/de la base de données, effectuez et testez les sauvegardes, et renouvelez les certificats ; les services Cloud SQL, Secret Manager et de surveillance gérés par RAD s'occupent des trois pour vous.
 
-### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-C'est l'option phare sur un projet **géré par RAD**, et elle est gratuite
-pendant la pause. La suppression d'un projet géré par RAD délie d'abord sa
-facturation, puis demande à Google de supprimer le projet lui-même — la
-suppression logique récupérable de 30 jours de Google. Contrairement à la
-suppression d'un seul module, cela ne détruit pas la base de données, aucune VM
-ou la ressource de calcul une par une : l'ensemble du projet s'arrête
-simplement, et comme la facturation est déjà déliée, rien n'est facturé pendant
-qu'il attend.
+C'est l'option phare sur un projet **géré par RAD**, et elle est gratuite pendant la pause. La suppression
+d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet lui-même —
+la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression d'un seul module, cela ne démolit
+pas la base de données, aucune VM, ou la ressource de calcul une par une : l'ensemble du projet s'arrête
+simplement, et comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration — dans les 30 jours, et uniquement par le propriétaire du
-projet — demande à Google de restaurer le projet et de rattacher son compte de
-facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement
-pour confirmer que tout est revenu. Comme rien n'a été détruit
-individuellement, cette mise à jour trouve les mêmes ressources déjà présentes
-: c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Ce qu'il faut : vous devez être propriétaire du projet
-(pas seulement faire gérer sa facturation par RAD), vous devez le restaurer
-vous-même dans les 30 jours — après cela, Google le supprime définitivement —
-et la restauration est admise comme la création d'un nouveau projet, donc votre
-solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits
-pour le palier sandbox qui convient à la plupart des utilisations d'étude et de
-démonstration). Google affirme que la plupart des services fonctionnent à
-nouveau pleinement dans les 36 heures suivant une restauration.
+La restauration — dans les 30 jours, et uniquement par le propriétaire du projet — demande à Google de restaurer le
+projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour
+confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les
+mêmes ressources déjà présentes : c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les
+frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit. Ce qu'il faut : vous devez être propriétaire du projet (pas seulement avoir
+RAD qui gère sa facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google
+le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, donc votre solde de crédits
+achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox que la plupart des utilisations d'étude et de démonstration
+correspondent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
-**Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket
-à l'intérieur du projet, et ce bucket a la suppression logique de Cloud Storage
-explicitement désactivée, de sorte que le bucket de sauvegarde est très
-probablement supprimé dès que vous supprimez le projet — même si le projet
-lui-même est récupérable pendant 30 jours. Si vous avez personnalisé ce
-déploiement et que vous souhaitez conserver ce travail, copiez une sauvegarde
-(vers Google Drive ou un bucket en dehors du projet) avant de supprimer. Pour
-une installation par défaut sans rien d'irremplaçable, cela n'a pas
-d'importance.
+**Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a
+la suppression logicielle de Cloud Storage explicitement désactivée, de sorte que le bucket de sauvegarde est très probablement supprimé
+dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si
+vous avez personnalisé ce déploiement et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google
+Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien
+d'irremplaçable, cela n'a pas d'importance.
 
 ### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-L'autre levier, pour un **projet propre** (ou un projet géré par RAD au-delà de
-sa fenêtre de restauration de 30 jours), consiste à supprimer Qdrant
-définitivement et à le redéployer plus tard. Un redéploiement coûte à nouveau
-les frais de module (les builds sont inclus) — 75 crédits au total pour
-ce module.
+L'autre levier, pour un **projet propre** (ou un projet géré par RAD au-delà de sa fenêtre de restauration de 30 jours),
+est de supprimer Qdrant purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — **75 crédits** au total pour ce module.
 
-La suppression ne permet d'économiser de l'argent que si Qdrant resterait
-inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par
-rapport à son propre coût d'exécution — pour ce module, cela représente environ
-6 jours ou plus d'inactivité, basé sur son coût d'exécution de 42,08 $ US/mois
-ci-dessus. La majeure partie de ce coût d'exécution est généralement la base de
-données et toute VM de fichier/cache partagée, et elles ne s'arrêtent que si
-rien d'autre dans le projet ne les utilise, donc la suppression de cette
-application seule n'économise que sa propre part de calcul si quelque chose
-d'autre partage le projet.
+La suppression ne permet d'économiser de l'argent que si Qdrant reste inutilisé suffisamment longtemps pour compenser ce
+coût de redéploiement par rapport à son propre coût d'exécution — pour ce module, cela représente environ 6 jours ou plus d'inactivité,
+sur la base de son coût d'exécution de 42,08 $ US/mois ci-dessus. La majeure partie de ce coût d'exécution est
+généralement la base de données et toute VM de fichier/cache partagée, et elles ne s'arrêtent que si rien d'autre dans le
+projet ne les utilise, de sorte que la suppression de cette application seule n'économise que sa propre part de calcul si quelque chose d'autre
+partage le projet.
 
-**Conserver les données d'abord :** les sauvegardes nocturnes vont dans un
-bucket à l'intérieur du déploiement et sont supprimées avec lui, donc copiez la
-dernière sauvegarde avant de supprimer si vous voulez la conserver.
+**Conservez d'abord les données :** les sauvegardes nocturnes sont stockées dans un bucket à l'intérieur du déploiement et sont supprimées avec
+celui-ci. Copiez donc la dernière sauvegarde avant de la supprimer si vous souhaitez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation :** un formateur anime une session pour
-  une classe. Chaque participant dispose de l'application dans son propre projet
-  Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
-  définie par le formateur. Soit le formateur finance toutes les places, soit
-  chaque participant paie la sienne. Tout est supprimé à la fin de la session
-  et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les cabinets de conseil :** un partenaire
-  exécute l'application pour un client à partir d'un portefeuille cloisonné
-  qu'il finance, et règle directement avec le client. Si le portefeuille est
-  faible, la facturation est suspendue et les données sont conservées, de sorte
-  que personne ne reçoit de frais inattendus. À la fin, le partenaire remet le
-  projet et les déploiements deviennent la propriété du client.
-- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF,
-  NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant dispose de l'
+  application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le
+  formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+  Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un
+  portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,
+  la facturation est suspendue et les données sont conservées, afin que personne ne reçoive de frais inattendus. À la fin, le
+  partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par
+  carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing
-Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les
-propres frais de RAD et les estimations de crédits quotidiens ; [Resource
-Manager : supprimer et restaurer des
-projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects)
-pour les mécanismes de pause/restauration.
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les frais propres à RAD et les estimations de crédits quotidiens ; [Resource Manager : supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration.
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Qdrant s'exécute en tant que charge de travail de base de données vectorielle
-avec état sur Autopilot. Le déploiement connecte un ensemble ciblé de services
-Google Cloud :
+Qdrant s'exécute comme une charge de travail de base de données vectorielle avec état sur Autopilot. Le déploiement
+relie un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
 | Calcul | GKE Autopilot | Pods Qdrant, 1 vCPU / 1 GiB par défaut, autoscalés horizontalement |
-| Stockage persistant (par défaut) | Persistent Disk via StatefulSet PVC | Disque RWO à faible latence à `/qdrant/storage` ; `standard-rwo` (Balanced PD) ou `premium-rwo` |
+| Stockage persistant (par défaut) | Persistent Disk via StatefulSet PVC | Disque RWO à faible latence à `/qdrant/storage` ; `standard-rwo` (PD équilibré) ou `premium-rwo` |
 | Stockage persistant (non recommandé) | Cloud Storage via GCS FUSE | Utilisé uniquement si `stateful_pvc_enabled = false` ; la vérification de démarrage de Qdrant rejette le stockage basé sur FUSE ; `/qdrant/storage` monté à partir du bucket `<prefix>-storage` |
-| Secrets | Secret Manager | Clé API optionnelle (`QDRANT__SERVICE__API_KEY`) |
+| Secrets | Secret Manager | Clé API facultative (`QDRANT__SERVICE__API_KEY`) |
 | Ingress | Cloud Load Balancing | `ClusterIP` par défaut ; `LoadBalancer` ou domaine personnalisé lorsque l'accès externe est nécessaire |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **Pas de base de données SQL, pas de Redis.** Qdrant gère son propre moteur
-  de stockage intégré. Aucune instance Cloud SQL n'est créée.
-- **Instance unique par défaut.** `max_instance_count = 1` est fortement recommandé. Qdrant est
-  un magasin à écrivain unique — plusieurs pods sur le même chemin de stockage
-  corrompent les collections.
-- **StatefulSet avec un PVC de bloc par défaut.** `stateful_pvc_enabled = true` est la valeur par
-  défaut et doit rester activée : la propre vérification de démarrage de Qdrant
-  rejette le stockage basé sur FUSE (il avertit d'une corruption de données), et
-  les E/S WAL et HNSW nécessitent une sémantique POSIX réelle et une faible
-  latence.
-- **`ClusterIP` par défaut.** Qdrant ne doit pas être exposé publiquement sans
-  protection par clé API. Ne changez `service_type` en `LoadBalancer` que si nécessaire.
-- **Deux points de terminaison de santé distincts.** Le démarrage utilise
-  `/readyz` ; la vivacité utilise `/livez`. Ne pointez jamais la sonde de vivacité
-  vers `/readyz` — Qdrant se marque temporairement comme non prêt lors du
-  chargement de grandes collections, ce qui provoquerait des redémarrages de
-  pods intempestifs.
-- **gRPC est désactivé par défaut.** Activez via `QDRANT__SERVICE__GRPC_PORT=6334` dans `environment_variables` et
-  configurez manuellement un deuxième port de service.
+- **Pas de base de données SQL, pas de Redis.** Qdrant gère son propre moteur de stockage embarqué. Aucune
+  instance Cloud SQL n'est créée.
+- **Instance unique par défaut.** `max_instance_count = 1` est fortement
+  recommandé. Qdrant est un magasin à écrivain unique — plusieurs pods sur le même
+  chemin de stockage corrompent les collections.
+- **StatefulSet avec un PVC de bloc par défaut.** `stateful_pvc_enabled = true` est
+  la valeur par défaut et doit rester activée : la propre vérification de démarrage de Qdrant rejette le
+  stockage basé sur FUSE (il avertit d'une corruption de données), et les E/S WAL et HNSW nécessitent une
+  sémantique POSIX réelle et une faible latence.
+- **`ClusterIP` par défaut.** Qdrant ne doit pas être exposé publiquement sans protection par clé API. Ne changez `service_type` en `LoadBalancer` que lorsque cela est nécessaire.
+- **Deux points de terminaison de santé distincts.** Le démarrage utilise `/readyz` ; la vivacité utilise
+  `/livez`. Ne dirigez jamais la sonde de vivacité vers `/readyz` — Qdrant se
+  marque temporairement comme non prêt lors du chargement de grandes collections, ce qui provoquerait
+  des redémarrages de pods intempestifs.
+- **gRPC est désactivé par défaut.** Activez via `QDRANT__SERVICE__GRPC_PORT=6334`
+  dans `environment_variables` et configurez manuellement un deuxième port de service.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que vous avez exécuté `gcloud container clusters get-credentials <cluster> --region <region> --project <project>` et que `PROJECT`,
-`REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
+Toutes les commandes supposent que vous avez exécuté
+`gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les autres
 identifiants sont signalés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Qdrant {#a-gke-autopilot--the-qdrant-workload}
 
 Le pod Qdrant s'exécute sur Autopilot, qui facture le CPU/la mémoire que le pod
-demande réellement. L'autoscaling horizontal des pods est configuré, bien que
-la valeur par défaut `max_instance_count = 1` maintienne un seul pod en cours d'exécution pour
-éviter les conflits d'écriture.
+demande réellement. L'autoscaling horizontal des pods est configuré, bien que la valeur par défaut
+`max_instance_count = 1` maintienne un seul pod en cours d'exécution pour éviter les conflits d'écriture.
 
-- **Console :** Kubernetes Engine → Workloads → sélectionnez la charge de
-  travail Qdrant pour les pods, les événements et l'utilisation des ressources.
-  Kubernetes Engine → Services & Ingress affiche le ClusterIP (ou l'adresse IP
-  externe si `LoadBalancer` est utilisé).
+- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de travail Qdrant pour
+  les pods, les événements et l'utilisation des ressources. Kubernetes Engine → Services et Ingress affiche
+  l'IP de cluster (ou l'IP externe si `LoadBalancer` est utilisé).
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -235,27 +174,26 @@ la valeur par défaut `max_instance_count = 1` maintienne un seul pod en cours d
   kubectl describe pod -n "$NAMESPACE" -l app=<service-name>
   ```
 
-Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de l'autoscaling et du
-type de charge de travail (Déploiement vs StatefulSet).
+Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de l'autoscaling et du type de charge de travail
+(Déploiement vs StatefulSet).
 
-### B. Stockage persistant — StatefulSet PVC ou GCS FUSE {#b-persistent-storage--statefulset-pvc-or-gcs-fuse}
+### B. Stockage persistant — PVC StatefulSet ou GCS FUSE {#b-persistent-storage--statefulset-pvc-or-gcs-fuse}
 
-Qdrant persiste son WAL, ses données de collection, ses fichiers d'index HNSW et
-ses métadonnées à `/qdrant/storage`. Deux backends de stockage sont pris en charge :
+Qdrant persiste son WAL, ses données de collection, ses fichiers d'index HNSW et ses métadonnées à
+`/qdrant/storage`. Deux backends de stockage sont pris en charge :
 
-**StatefulSet PVC (par défaut) :** Un volume Persistent Disk est lié au pod via
-un PersistentVolumeClaim. La classe de stockage est `standard-rwo` (Balanced PD) par
-défaut, ou `premium-rwo` pour des IOPS plus élevées.
+**PVC StatefulSet (par défaut) :** Un volume Persistent Disk est
+lié au pod via un PersistentVolumeClaim. La classe de stockage est
+`standard-rwo` (PD équilibré) par défaut, ou `premium-rwo` pour des IOPS plus élevées.
 
-**GCS FUSE (uniquement si `stateful_pvc_enabled = false` ; non recommandé) :** Un bucket Cloud Storage
-nommé `<prefix>-storage` est monté à `/qdrant/storage` via le pilote CSI GCS FUSE. La propre
-vérification du système de fichiers au démarrage de Qdrant rejette le stockage
-basé sur FUSE comme risque de corruption de données.
+**GCS FUSE (uniquement si `stateful_pvc_enabled = false` ; non recommandé) :** Un bucket Cloud
+Storage nommé `<prefix>-storage` est monté à `/qdrant/storage` via le
+pilote CSI GCS FUSE. La propre vérification du système de fichiers au démarrage de Qdrant rejette le
+stockage basé sur FUSE comme un risque de corruption de données.
 
-- **Console (PVC) :** Kubernetes Engine → Storage → PersistentVolumeClaims.
-  Compute Engine → Disks pour voir le Persistent Disk sous-jacent.
-- **Console (GCS FUSE) :** Cloud Storage → Buckets — trouvez le bucket
-  `*-storage`.
+- **Console (PVC) :** Kubernetes Engine → Stockage → PersistentVolumeClaims.
+  Compute Engine → Disques pour voir le Persistent Disk sous-jacent.
+- **Console (GCS FUSE) :** Cloud Storage → Buckets — trouvez le bucket `*-storage`.
 - **CLI :**
   ```bash
   # PVC status
@@ -270,17 +208,15 @@ basé sur FUSE comme risque de corruption de données.
   kubectl exec -n "$NAMESPACE" <pod-name> -- ls /qdrant/storage
   ```
 
-Voir [App_GKE](App_GKE.md) pour le provisionnement NFS, GCS Fuse et les options
-CMEK.
+Voir [App_GKE](App_GKE.md) pour les options de provisionnement NFS, GCS Fuse et CMEK.
 
-### C. Secret Manager — Clé API Qdrant {#c-secret-manager--qdrant-api-key}
+### C. Secret Manager — clé API Qdrant {#c-secret-manager--qdrant-api-key}
 
-Lorsque `enable_api_key = true`, une clé API alphanumérique de 32 caractères est générée et
-stockée dans Secret Manager. Elle est injectée en tant que `QDRANT__SERVICE__API_KEY` au moment de
-l'exécution, exigeant que tous les appelants REST et gRPC passent `api-key: <key>` dans
-les en-têtes de requête.
+Lorsque `enable_api_key = true`, une clé API alphanumérique de 32 caractères est générée
+et stockée dans Secret Manager. Elle est injectée en tant que `QDRANT__SERVICE__API_KEY` à
+l'exécution, exigeant que tous les appelants REST et gRPC passent `api-key: <key>` dans les en-têtes de requête.
 
-- **Console :** Security → Secret Manager — recherchez un secret nommé
+- **Console :** Sécurité → Secret Manager — recherchez un secret nommé
   `<resource-prefix>-api-key`.
 - **CLI :**
   ```bash
@@ -294,13 +230,11 @@ Store CSI.
 
 ### D. Réseau et ingress {#d-networking--ingress}
 
-Par défaut, la charge de travail n'est exposée qu'à l'intérieur du cluster via
-un service `ClusterIP`. Changez `service_type` en `LoadBalancer` pour un accès externe, ou
-activez un domaine personnalisé avec `enable_custom_domain = true` pour l'ingress HTTPS via l'API
-Kubernetes Gateway.
+Par défaut, la charge de travail est exposée uniquement à l'intérieur du cluster via un service `ClusterIP`. Changez `service_type` en `LoadBalancer` pour un accès externe, ou activez
+un domaine personnalisé avec `enable_custom_domain = true` pour l'ingress HTTPS via l'API Kubernetes Gateway.
 
-- **Console :** Kubernetes Engine → Services & Ingress ; VPC network → IP
-  addresses (lorsqu'une IP statique est réservée).
+- **Console :** Kubernetes Engine → Services et Ingress ; Réseau VPC → Adresses IP
+  (lorsqu'une IP statique est réservée).
 - **CLI :**
   ```bash
   kubectl get svc -n "$NAMESPACE"
@@ -308,16 +242,15 @@ Kubernetes Gateway.
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les
-détails des IP statiques.
+Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et
+les détails de l'IP statique.
 
 ### E. Cloud Logging et Monitoring {#e-cloud-logging--monitoring}
 
-Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les
-métriques GKE sont acheminées vers Cloud Monitoring. Des tests de disponibilité
-optionnels (contre `/readyz`) et des politiques d'alerte sont disponibles.
+Les flux stdout/stderr des pods vers Cloud Logging ; les métriques GKE vers Cloud Monitoring.
+Des tests de disponibilité facultatifs (contre `/readyz`) et des politiques d'alerte sont disponibles.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Dashboards / Alerting.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -328,39 +261,36 @@ optionnels (contre `/readyz`) et des politiques d'alerte sont disponibles.
 
 ## 3. Comportement de l'application Qdrant {#3-qdrant-application-behaviour}
 
-- **Pas de bootstrap de base de données.** Qdrant gère son propre moteur de
-  stockage intégré. Aucun job d'initialisation n'est injecté par défaut. La
-  charge de travail démarre immédiatement après que le pod soit prêt.
-- **Chargement de la collection au démarrage.** Qdrant charge toutes les
-  collections du disque en mémoire au démarrage. Pour les instances avec de
-  grandes collections, le démarrage peut prendre de dizaines de secondes à
-  plusieurs minutes. La sonde de démarrage (`/readyz`) attend que cela se
-  termine avant que le trafic ne soit envoyé au pod.
-- **Points de terminaison de vivacité et de disponibilité séparés.** `/readyz`
-  renvoie 503 pendant le chargement des collections ; `/livez` renvoie toujours
-  200 tant que le processus est actif. La sonde de vivacité utilise `/livez`
-  pour éviter les redémarrages intempestifs des pods pendant le chargement des
-  collections. Ne changez pas la sonde de vivacité en `/readyz`.
-- **Prise en charge gRPC (facultatif).** Qdrant prend en charge gRPC sur le
-  port 6334. Il n'est pas activé par défaut car le service ClusterIP/LoadBalancer
-  par défaut n'expose que le port 6333. Pour activer gRPC, ajoutez `environment_variables = { QDRANT__SERVICE__GRPC_PORT = "6334" }` et
+- **Pas de bootstrap de base de données.** Qdrant gère son propre moteur de stockage embarqué.
+  Aucun job d'initialisation n'est injecté par défaut. La charge de travail démarre immédiatement
+  après que le pod soit prêt.
+- **Chargement de la collection au démarrage.** Qdrant charge toutes les collections du disque en
+  mémoire pendant le démarrage. Pour les instances avec de grandes collections, le démarrage peut prendre
+  des dizaines de secondes à plusieurs minutes. La sonde de démarrage (`/readyz`) attend que
+  cela se termine avant que le trafic ne soit envoyé au pod.
+- **Points de terminaison de vivacité et de disponibilité séparés.** `/readyz` renvoie 503 pendant
+  le chargement des collections ; `/livez` renvoie toujours 200 tant que le processus est
+  actif. La sonde de vivacité utilise `/livez` pour éviter les redémarrages intempestifs des pods
+  pendant le chargement de la collection. Ne changez pas la sonde de vivacité en `/readyz`.
+- **Prise en charge de gRPC (facultatif).** Qdrant prend en charge gRPC sur le port 6334. Il n'est pas
+  activé par défaut car le service ClusterIP/LoadBalancer par défaut expose
+  uniquement le port 6333. Pour activer gRPC, ajoutez
+  `environment_variables = { QDRANT__SERVICE__GRPC_PORT = "6334" }` et
   configurez manuellement un deuxième port de service.
-- **Tâches de snapshot et de maintenance.** Utilisez `cron_jobs` pour planifier
-  des snapshots périodiques de collections Qdrant via l'API REST ou pour des
-  routines de maintenance personnalisées.
-- **Délai de grâce de terminaison.** `termination_grace_period_seconds = 60` par défaut donne à Qdrant le
-  temps de vider les écritures WAL en cours avant que le pod ne soit terminé de
-  force.
+- **Tâches de snapshot et de maintenance.** Utilisez `cron_jobs` pour planifier des
+  snapshots périodiques de collections Qdrant via l'API REST ou pour des routines de maintenance
+  personnalisées.
+- **Délai de grâce de terminaison.** `termination_grace_period_seconds = 60` par
+  défaut donne à Qdrant le temps de vider les écritures WAL en cours avant que le pod ne soit
+  terminé de force.
 
 ---
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la
-plateforme de déploiement. Seuls les paramètres spécifiques à Qdrant ou
-remarquables pour Qdrant sont listés ; toutes les autres entrées sont héritées
-de [App_GKE](App_GKE.md) avec leur comportement standard et leurs valeurs par
-défaut.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls
+les paramètres spécifiques ou notables pour Qdrant sont listés ; toutes les autres entrées sont
+héritées de [App_GKE](App_GKE.md) avec son comportement et ses valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
@@ -374,7 +304,7 @@ défaut.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Adresses e-mail autorisées à accéder au projet et aux alertes de surveillance. |
+| `support_users` | `[]` | E-mails autorisés à accéder au projet et aux alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts/propriétés. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -405,7 +335,7 @@ défaut.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | `{}` | Paramètres supplémentaires non secrets. Utilisez les clés `QDRANT__…` pour remplacer la configuration de Qdrant. |
-| `secret_environment_variables` | `{}` | Mappage de variable d'environnement → nom du secret Secret Manager. |
+| `secret_environment_variables` | `{}` | Mappage de var d'env → nom de secret Secret Manager. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Période de rappel de rotation de Secret Manager (30 jours par défaut). |
 
@@ -413,9 +343,9 @@ défaut.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `gke_cluster_name` | `""` | Nom du cluster cible. Découvert automatiquement s'il est vide. |
+| `gke_cluster_name` | `""` | Nom du cluster cible. Découvert automatiquement si vide. |
 | `gke_cluster_selection_mode` | `primary` | Stratégie de sélection de cluster : `explicit`, `round-robin`, ou `primary`. |
-| `namespace_name` | `""` | Espace de noms Kubernetes. Généré automatiquement s'il est vide. |
+| `namespace_name` | `""` | Espace de noms Kubernetes. Généré automatiquement si vide. |
 | `workload_type` | `null` | `Deployment` ou `StatefulSet`. Se résout automatiquement en `StatefulSet` lorsque `stateful_pvc_enabled = true`. |
 | `service_type` | `ClusterIP` | Comment le service est exposé. `ClusterIP` (recommandé), `LoadBalancer`, ou `NodePort`. |
 | `session_affinity` | `None` | `None` ou `ClientIP`. Qdrant ne nécessite pas d'affinité de session. |
@@ -429,25 +359,25 @@ défaut.
 | `stateful_pvc_enabled` | `true` | Activer le PVC pour StatefulSet (par défaut ; le laisser activé — Qdrant rejette le stockage basé sur FUSE). Sélectionne automatiquement StatefulSet. |
 | `stateful_pvc_size` | `20Gi` | Taille du PVC par pod. Taille pour contenir toutes les collections, les index HNSW et le WAL avec une marge. |
 | `stateful_pvc_mount_path` | `/qdrant/storage` | Chemin du conteneur pour le PVC. Doit correspondre à `QDRANT__STORAGE__STORAGE_PATH`. |
-| `stateful_pvc_storage_class` | `standard-rwo` | `standard-rwo` (Balanced PD) ou `premium-rwo` pour des IOPS plus élevées. Ne peut pas être modifié après la création du PVC. |
+| `stateful_pvc_storage_class` | `standard-rwo` | `standard-rwo` (PD équilibré) ou `premium-rwo` pour des IOPS plus élevées. Ne peut pas être modifié après la création du PVC. |
 | `stateful_headless_service` | `null` | Créer un service sans tête pour des identités réseau stables. |
 | `stateful_pod_management_policy` | `null` | `OrderedReady` assure des redémarrages séquentiels sûrs. |
 | `stateful_update_strategy` | `null` | `RollingUpdate` pour des mises à jour sans interruption. |
-| `stateful_fs_group` | `3000` | GID du fsGroup défini dans le contexte de sécurité du pod pour l'accès en écriture du PVC. |
+| `stateful_fs_group` | `3000` | GID fsGroup défini dans le contexte de sécurité du pod pour l'accès en écriture au PVC. |
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Limiter les comptes CPU/mémoire/objets de l'espace de noms. |
-| `quota_memory_requests` / `quota_memory_limits` | `""` | **Doit utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers bruts sont lus comme des octets et bloquent la planification. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Doit utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers nus sont lus comme des octets et bloquent la planification. |
 
 ### Groupe 9 — Politiques de fiabilité {#group-9--reliability-policies}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `true` | Protéger la disponibilité pendant les mises à niveau de nœuds. |
-| `pdb_min_available` | `1` | Nombre minimum de pods disponibles pendant les interruptions volontaires. |
+| `pdb_min_available` | `1` | Nombre minimal de pods disponibles pendant les perturbations volontaires. |
 | `enable_topology_spread` | `false` | Répartir les pods sur plusieurs zones. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
@@ -456,8 +386,8 @@ défaut.
 |---|---|---|
 | `startup_probe` | `/readyz`, délai de 15s | Sonde HTTP — Qdrant signale qu'il est prêt une fois toutes les collections chargées. |
 | `liveness_probe` | `/livez`, délai de 30s | Sonde HTTP — point de terminaison de vivacité dédié non affecté par l'état de chargement de la collection. |
-| `uptime_check_config` | `disabled` | Test de disponibilité Cloud Monitoring optionnel contre `/readyz`. |
-| `alert_policies` | `[]` | Politiques d'alerte métrique optionnelles. |
+| `uptime_check_config` | `disabled` | Test de disponibilité Cloud Monitoring facultatif contre `/readyz`. |
+| `alert_policies` | `[]` | Politiques d'alerte métriques facultatives. |
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
@@ -470,8 +400,9 @@ défaut.
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
 
 Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
-[App_GKE](App_GKE.md). Entrées clés : `enable_cicd_trigger`, `github_repository_url`, `github_token`,
-`enable_cloud_deploy`, `enable_binary_authorization`.
+[App_GKE](App_GKE.md). Entrées clés : `enable_cicd_trigger`,
+`github_repository_url`, `github_token`, `enable_cloud_deploy`,
+`enable_binary_authorization`.
 
 ### Groupe 13 — NFS {#group-13--nfs}
 
@@ -506,7 +437,7 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | `application_domains` | `[]` | Noms d'hôtes à servir. |
 | `reserve_static_ip` | `true` | Réserver une IP externe stable. |
 
-### Groupe 20 — Proxy sensible à l'identité (IAP) {#group-20--identity-aware-proxy-iap}
+### Groupe 20 — Proxy conscient de l'identité (IAP) {#group-20--identity-aware-proxy-iap}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -518,7 +449,7 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Attacher une politique Cloud Armor (WAF) au backend GKE Ingress. |
+| `enable_cloud_armor` | `false` | Attacher une politique Cloud Armor (WAF) au backend Ingress GKE. |
 | `admin_ip_ranges` | `[]` | CIDR autorisés à un accès privilégié. |
 | `cloud_armor_policy_name` | `default-waf-policy` | Nom de la politique. |
 | `enable_cdn` | `false` | Activer Cloud CDN via GCPBackendPolicy. |
@@ -535,15 +466,15 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 
 ## 5. Sorties {#5-outputs}
 
-Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen
-le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
+Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le plus rapide de
+localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Kubernetes. |
 | `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
 | `service_cluster_ip` | ClusterIP intra-cluster. |
-| `stage_service_cluster_ips` | Mappage des ClusterIPs pour les services spécifiques à l'étape (Cloud Deploy). |
+| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à l'étape (Cloud Deploy). |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `service_url` | URL pour atteindre l'API REST Qdrant. |
 | `qdrant_api_key_secret_id` | ID du secret Secret Manager pour la clé API Qdrant. Vide lorsque `enable_api_key = false`. |
@@ -566,40 +497,38 @@ le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
-> (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible**
-> (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `enable_api_key` | `true` (tout déploiement externe) | Critique | Sans clé API, tout appelant pouvant atteindre le service peut lire, modifier ou supprimer toutes les collections. |
 | `stateful_pvc_enabled` | `true` (par défaut) | Critique | Sans PVC, les données résident dans le système de fichiers éphémère du pod ; tout redémarrage efface toutes les collections de manière permanente. |
 | `stateful_pvc_mount_path` | `/qdrant/storage` (par défaut) | Critique | Doit correspondre à `QDRANT__STORAGE__STORAGE_PATH`. Une non-concordance stocke les données dans la couche éphémère et les perd au redémarrage. |
-| `application_name` | défini une fois | Critique | Immuable après le premier déploiement ; la modification recrée l'espace de noms et le stockage, perdant toutes les collections. |
+| `application_name` | défini une fois | Critique | Immuable après le premier déploiement ; la modification recrée l'espace de noms et le stockage, entraînant la perte de toutes les collections. |
 | `max_instance_count` | `1` | Élevé | Plusieurs pods Qdrant partageant un seul PVC (RWO) ou un bucket GCS corrompent les collections. Mettre à l'échelle verticalement, pas horizontalement. |
 | `liveness_probe` chemin | `/livez` (par défaut) | Élevé | Pointer la vivacité vers `/readyz` provoque des redémarrages intempestifs des pods chaque fois qu'une grande collection est chargée depuis le disque. |
-| `memory_limit` | ≥ `4Gi` pour la production | Élevé | La valeur par défaut `1Gi` ne prend en charge que les petites collections de test ; les kills OOM terminent toutes les requêtes en cours et déclenchent un rechargement complet de l'index. |
+| `memory_limit` | ≥ `4Gi` pour la production | Élevé | La valeur par défaut `1Gi` ne prend en charge que les petites collections de test ; les arrêts OOM terminent toutes les requêtes en cours et déclenchent un rechargement complet de l'index. |
 | `stateful_pvc_size` | généreux (20 Gi+) | Élevé | Un PVC sous-dimensionné se remplit à mesure que les collections augmentent ; un disque plein fait planter Qdrant. La capacité du PVC ne peut pas être diminuée après la création. |
-| `stateful_pvc_storage_class` | `standard-rwo` ou `premium-rwo` | Moyen | Ne peut pas être modifié après la création du PVC sans migration de données ; choisir en fonction des exigences IOPS dès le départ. |
+| `stateful_pvc_storage_class` | `standard-rwo` ou `premium-rwo` | Moyen | Ne peut pas être modifié après la création du PVC sans migration de données ; choisir en fonction des exigences d'IOPS dès le départ. |
 | `application_version` | épingler à semver pour la production | Moyen | L'utilisation de `latest` peut entraîner une mise à niveau involontaire du format de stockage qui rend les collections existantes illisibles. |
 | `min_instance_count` | `1` | Moyen | La mise à l'échelle à zéro provoque un rechargement à froid de toutes les collections depuis le disque lors de la prochaine requête ; à éviter pour les charges de travail sensibles à la latence. |
-| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets et bloquent toute planification. |
+| `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers nus sont des octets et bloquent toute planification. |
 | `enable_iap` / `enable_cloud_armor` | activer pour les déploiements exposés | Élevé | Sans contrôles d'accès, l'API REST Qdrant est accessible par tout appelant à l'intérieur du réseau. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
 | `pdb_min_available` vs `min_instance_count` | laisser une marge | Moyen | `1`/`1` peut bloquer les mises à niveau de nœuds (un seul pod ne peut pas être expulsé). |
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — IAM et Workload
-Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
+Pour le comportement de base référencé tout au long — IAM et Workload Identity,
+autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
-**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Qdrant
-partagée avec la variante Cloud Run est décrite dans
-**[Qdrant_Common](Qdrant_Common.md)**.
+**[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Qdrant partagée avec
+la variante Cloud Run est décrite dans **[Qdrant_Common](Qdrant_Common.md)**.
 
 <!-- related-guides -->
 
-## Guides associées {#related-guides}
+## Guides connexes {#related-guides}
 
 - [Lab pratique : Qdrant sur GKE Autopilot](../labs/Qdrant_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Qdrant sur Google Cloud Run](Qdrant_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.

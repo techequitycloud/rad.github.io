@@ -3,7 +3,7 @@ title: "Planka sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Planka sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Planka_GKE.md @ 60462a86 sha256:700bff40662b -->
+<!-- translated-from: docs/modules/Planka_GKE.md @ 40c83c3f sha256:8eee42e10f98 -->
 
 # Planka sur GKE Autopilot {#planka-on-gke-autopilot}
 
@@ -15,47 +15,35 @@ utilisée pour la gestion de projets d'équipe et personnels — tableaux, liste
 cartes, dates d'échéance, étiquettes et pièces jointes. Ce module déploie
 Planka sur **GKE Autopilot** au-dessus de la fondation
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée
-de Google Cloud et Kubernetes.
+Google Cloud et Kubernetes.
 
-Ce guide se concentre sur les services cloud utilisés par Planka et sur la
+Ce guide se concentre sur les services cloud que Planka utilise et sur la
 manière de les explorer et de les opérer depuis la console Google Cloud et la
 ligne de commande. Pour les mécanismes communs à chaque application GKE —
 Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
 Authorization, VPC Service Controls, sauvegardes et cycle de vie du
-déploiement — reportez-vous au [guide de la fondation App_GKE](App_GKE.md)
-plutôt que de les répéter ici.
+déploiement — veuillez vous référer au [guide de la fondation
+App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
 ## Ce que coûte Planka sur RAD, et comment cela se compare {#what-planka-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Planka dans votre propre projet Google Cloud coûte environ
-136,37 $ US/mois en infrastructure, plus des frais de module uniques de 110
-crédits RAD** (dimensionnés à 2 vCPU / 4 GiB sur les pods GKE Autopilot). RAD
-facture les frais de module une seule fois, au moment du déploiement — jamais
-plus lors d'une mise à jour — et les builds sont inclus dans le prix ;
-l'utilisation de Google Cloud elle-même est facturée à votre propre compte de
-facturation au prix catalogue de Google. Sur un projet **géré par RAD**, les
-mêmes ressources sont mesurées à l'heure en crédits au prix catalogue plus la
-marge de RAD — environ 105 crédits/jour — et les frais de module sont 10 %
-inférieurs, à 99 crédits. Voir "Mettez-le en pause gratuitement" ci-dessous
-pour savoir comment un déploiement Planka géré par RAD peut être arrêté, sans
-frais de fonctionnement, jusqu'à ce que vous en ayez à nouveau besoin. (ou
-voir le [guide Cloud Run](Planka_CloudRun.md) pour l'option moins chère)
+**L'exécution de Planka dans votre propre projet Google Cloud coûte environ 136,37 $ US/mois en infrastructure, plus des frais de module uniques de 110 crédits RAD** (dimensionnés à 2 vCPU / 4 GiB sur les pods GKE Autopilot). RAD facture les frais de module une seule fois, au moment du déploiement — jamais plus lors d'une mise à jour — et les builds sont inclus dans le prix ; l'utilisation de Google Cloud elle-même est facturée à votre propre compte de facturation au prix catalogue de Google. Sur un projet **géré par RAD**, les mêmes ressources sont mesurées à l'heure en crédits au prix catalogue plus la marge de RAD — environ 135 crédits/jour — et les frais de module sont 10 % inférieurs, à 99 crédits. Voir "Mettez-le en pause gratuitement" ci-dessous pour savoir comment un déploiement Planka géré par RAD peut être arrêté, sans frais de fonctionnement, jusqu'à ce que vous en ayez à nouveau besoin. (ou consultez le [guide Cloud Run](Planka_CloudRun.md) pour l'option à moindre coût)
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | Élément | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 110 crédits (une fois) | 99 crédits (une fois) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût de fonctionnement Google Cloud | ~136,37 $ US/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~105 crédits/jour, mesuré à l'heure au prix catalogue + marge de RAD |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Coût de fonctionnement Google Cloud | ~136,37 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~135 crédits/jour, mesurés à l'heure au prix catalogue + marge de RAD |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant des frais : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
 **Coût de fonctionnement par défaut dans votre propre projet**
 
-| Ressource | $ US/mois (prix catalogue Google, us-central1) |
+| Ressource | $/mois (prix catalogue Google, us-central1) |
 |---|---|
 | Pod GKE Autopilot, 2x vCPU / 4 GiB | 79,35 |
 | Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 |
@@ -64,172 +52,95 @@ Votre premier déploiement réussi sur RAD est exempté des frais de module lors
 | Frais de gestion de cluster GKE\* | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 |
 | **Total** | **136,37 $** |
 
-\* Non inclus dans le total ci-dessus — il est partagé entre toutes les
-applications GKE exécutées dans le même projet, il est donc de 0 $ si c'est
-votre seul cluster GKE.
+\* Non inclus dans le total ci-dessus — il est partagé entre toutes les applications GKE exécutées dans le même projet, donc il est de 0 $ si c'est votre seul cluster GKE.
 
 ### Comment cela se compare {#how-it-compares}
 
-- Nous n'avons pas pu vérifier un prix SaaS commercial actuel, directement
-  comparable, pour ce projet open source exact, donc la comparaison honnête
-  est un serveur auto-géré nu : Hetzner CPX22 (2 vCPU/4 Go, ~24 $/mois), un
-  DigitalOcean 2 vCPU/4 Go Droplet (~24 $/mois), ou un GCP Compute Engine
-  e2-standard-2 (2 vCPU/8 Go, ~49 $/mois).
-- RAD ne prétend **pas** battre un VPS nu sur le prix affiché — ce n'est
-  généralement pas le cas. Ce que RAD ajoute pour le même montant ou un
-  montant similaire est une base de données gérée, des identifiants détenus
-  par Secret Manager, la surveillance et la mise à jour en un clic, dont
-  aucun n'est fourni gratuitement par un VPS nu.
-- Sur un VPS nu, c'est vous qui appliquez les correctifs de sécurité du
-  système d'exploitation/de la base de données, effectuez et testez les
-  sauvegardes et renouvelez les certificats ; Cloud SQL géré par RAD, Secret
-  Manager et la surveillance gèrent les trois pour vous.
+- Nous n'avons pas pu vérifier un prix SaaS commercial actuel, directement comparable, pour ce projet open source exact, donc la comparaison honnête est un serveur auto-géré nu : Hetzner CPX22 (2 vCPU/4 Go, ~24 $/mois), un Droplet DigitalOcean 2 vCPU/4 Go (~24 $/mois), ou un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go, ~49 $/mois).
+- RAD ne prétend **pas** battre un VPS nu sur le prix affiché — ce n'est généralement pas le cas. Ce que RAD ajoute pour un montant en dollars identique ou similaire, c'est une base de données gérée, des identifiants conservés dans Secret Manager, la surveillance et la mise à jour en un clic, dont aucun n'est gratuit avec un VPS nu.
+- Sur un VPS nu, c'est vous qui appliquez les correctifs de sécurité du système d'exploitation/de la base de données, effectuez et testez les sauvegardes, et renouvelez les certificats ; Cloud SQL géré, Secret Manager et la surveillance de RAD gèrent les trois pour vous.
 
-### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-C'est l'option principale sur un projet **géré par RAD**, et elle est
-gratuite pendant la pause. La suppression d'un projet géré par RAD
-déliaisonne d'abord sa facturation, puis demande à Google de supprimer le
-projet lui-même — la suppression logicielle récupérable de 30 jours de
-Google. Contrairement à la suppression d'un seul module, cela ne détruit pas
-la base de données, une VM ou la ressource de calcul une par une : l'ensemble
-du projet s'arrête simplement, et comme la facturation est déjà déliée, rien
-n'est facturé pendant qu'il attend.
+C'est l'option phare sur un projet **géré par RAD**, et elle est gratuite pendant la pause. La suppression
+d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet lui-même —
+la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression d'un seul module, cela ne détruit
+pas la base de données, une VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête simplement,
+et comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être invoquée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration — dans les 30 jours, et uniquement par le propriétaire du
-projet — demande à Google de restaurer le projet et de rattacher son compte
-de facturation, puis vous demande d'exécuter la mise à jour sur chaque
-déploiement pour confirmer que tout est revenu. Parce que rien n'a été
-détruit individuellement, cette mise à jour trouve les mêmes ressources déjà
-présentes : c'est une vérification, pas une reconstruction, et une mise à
-jour ne facture jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Ce qu'il faut : vous devez
-être propriétaire du projet (pas seulement faire gérer sa facturation par
-RAD), vous devez le restaurer vous-même dans les 30 jours — après cela,
-Google le supprime définitivement — et la restauration est admise comme la
-création d'un nouveau projet, de sorte que votre solde de crédits achetés
-doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox
-qui convient à la plupart des utilisations d'étude et de démonstration).
-Google indique que la plupart des services fonctionnent à nouveau
-complètement dans les 36 heures suivant une restauration.
+La restauration — dans les 30 jours, et uniquement par le propriétaire du projet — demande à Google de récupérer le
+projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour
+confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les
+mêmes ressources déjà présentes : c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les
+frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit. Ce qu'il faut : vous devez être propriétaire du projet (pas seulement avoir
+RAD qui gère sa facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google
+le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, donc votre solde de crédits achetés
+doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude et de démonstration). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
-**Un véritable manque :** les sauvegardes nocturnes sont écrites dans un
-bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de
-Cloud Storage explicitement désactivée, de sorte que le bucket de sauvegarde
-est très probablement supprimé dès que vous supprimez le projet — même si le
-projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé
-ce déploiement et que vous souhaitez conserver ce travail, copiez une
-sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de
-supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela
-n'a pas d'importance.
+**Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a
+la suppression logicielle de Cloud Storage explicitement désactivée, de sorte que le bucket de sauvegarde est très probablement parti
+dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si
+vous avez personnalisé ce déploiement et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google
+Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien
+d'irremplaçable, cela n'a pas d'importance.
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-L'autre levier, pour un **propre projet** (ou un projet géré par RAD au-delà
-de sa fenêtre de restauration de 30 jours), consiste à supprimer Planka
-purement et simplement et à le redéployer plus tard. Un redéploiement coûte
-à nouveau les frais de module (les builds sont inclus) — 110 crédits
-au total pour ce module.
+L'autre levier, pour un **projet propre** (ou un projet géré par RAD au-delà de sa fenêtre de restauration de 30 jours),
+est de supprimer Planka purement et simplement et de le redéployer plus tard. Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) — **110 crédits** au total pour ce module.
 
-La suppression ne permet d'économiser de l'argent que si Planka devait rester
-inutilisé assez longtemps pour compenser ce coût de redéploiement par
-rapport à son propre coût de fonctionnement — pour ce module, cela représente
-environ 3 jours ou plus d'inactivité, sur la base de son propre coût de
-fonctionnement de 136,37 $ US/mois ci-dessus. La majeure partie de ce coût de
-fonctionnement est généralement la base de données et toute VM de fichier/cache
-partagée, et elles ne s'arrêtent que si rien d'autre dans le projet ne les
-utilise, de sorte que la suppression de cette application seule n'économise
-que sa propre part de calcul si quelque chose d'autre partage le projet.
+La suppression ne permet d'économiser de l'argent que si Planka reste inutilisé assez longtemps pour que le coût de redéploiement soit inférieur à son propre coût de fonctionnement — pour ce module, cela représente environ 3 jours ou plus d'inactivité,
+basé sur son coût de fonctionnement de 136,37 $ US/mois mentionné ci-dessus. La majeure partie de ce coût de fonctionnement est
+généralement la base de données et toute VM de fichier/cache partagée, et elles ne s'arrêtent que lorsque rien d'autre dans le
+projet ne les utilise, donc la suppression de cette application seule n'économise que sa propre part de calcul si autre chose
+partage le projet.
 
-**Conservez d'abord les données :** les sauvegardes nocturnes vont dans un
-bucket à l'intérieur du déploiement et sont supprimées avec lui, alors
-copiez la dernière sauvegarde avant de la supprimer si vous souhaitez la
-conserver.
+**Conservez d'abord les données :** les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec
+celui-ci, donc copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation :** un formateur anime une session
-  pour une classe. Chaque participant dispose de l'application dans son
-  propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite
-  fixée par le formateur. Soit le formateur finance toutes les places, soit
-  chaque participant paie la sienne. Tout est supprimé à la fin de la
-  session et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les cabinets de conseil :** un partenaire
-  exécute l'application pour un client à partir d'un portefeuille cloisonné
-  qu'il finance, et règle directement avec le client. Si le portefeuille
-  devient faible, la facturation est suspendue et les données sont
-  conservées, de sorte que personne ne reçoit de frais inattendus. À la fin,
-  le partenaire transfère le projet et les déploiements deviennent la
-  propriété du client.
-- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF,
-  XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant obtient l'
+  application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le
+  formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+  Tout est supprimé à la fin de la session et les crédits non utilisés sont reversés au formateur.
+- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un
+  portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,
+  la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le
+  partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par
+  carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing
-Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les
-propres frais de RAD et les estimations de crédits quotidiens ; [Resource
-Manager : supprimer et restaurer des
-projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects)
-pour les mécanismes de pause/restauration.
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les propres frais de RAD et les estimations de crédits quotidiens ; [Resource Manager : supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration.
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Planka s'exécute comme une seule charge de travail web Node.js, servant à la
-fois son API et son frontend React à partir d'un seul port. Le déploiement
-relie un petit ensemble ciblé de services Google Cloud :
+Planka fonctionne comme une seule charge de travail web Node.js, servant à la fois son API et son
+frontend React à partir d'un seul port. Le déploiement relie un petit ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
 | Calcul | GKE Autopilot | Pod Node.js, 2 vCPU / 4 GiB par défaut |
 | Base de données | Cloud SQL pour PostgreSQL 15 | Le constructeur de requêtes Knex de Planka ne prend en charge aucun autre moteur |
 | Stockage d'objets | Cloud Storage | Un bucket `storage` est créé et monté à `/app/data` pour les pièces jointes, les avatars et les arrière-plans |
-| Cache & file d'attente | aucun | Planka n'a pas de dépendance Redis ou de file d'attente — les mises à jour en temps réel passent par Socket.io en cours de processus |
+| Cache et file d'attente | aucun | Planka n'a pas de dépendance Redis ou de file d'attente — les mises à jour en temps réel passent par Socket.io en cours de processus |
 | Secrets | Secret Manager | `SECRET_KEY` et `DEFAULT_ADMIN_PASSWORD` — deux secrets réels et fonctionnels — plus le mot de passe de la base de données |
-| Ingress | Cloud Load Balancing | Équilibreur de charge externe, IP statique réservée, domaine personnalisé facultatif |
+| Ingress | Cloud Load Balancing | LoadBalancer externe, IP statique réservée, nom de domaine personnalisé facultatif |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL est le seul moteur pris en charge.** `Planka_Common` corrige
   `database_type = "POSTGRES_15"`.
-- **Une build personnalisée légère, pas l'image pré-construite.** Planka a
-  besoin d'un point d'entrée cloud pour composer `DATABASE_URL` et dériver
-  `BASE_URL`, donc `container_image_source = "custom"` construit `FROM
-  ghcr.io/plankanban/planka:<version>` via
-  Cloud Build.
-- **`DATABASE_URL` est une chaîne de connexion d'autorité URL, mais SSL est
-  défini via des variables d'environnement séparées — jamais un paramètre de
-  requête `?sslmode=`.** Planka a deux chemins de connexion DB
-  indépendants (le CLI de migration et le Sails ORM du serveur en cours
-  d'exécution), chacun nécessitant une configuration SSL différente, et
-  chacun ignorant un `?sslmode=` intégré à l'URL pour sa propre
-  raison non liée. Sur GKE, le sidecar Cloud SQL Auth Proxy écoute sur
-  `127.0.0.1` et termine TLS lui-même, de sorte que le point d'entrée ne
-  définit **ni** `PGSSLMODE` ni `KNEX_REJECT_UNAUTHORIZED_SSL_CERTIFICATE` pour cette
-  connexion en boucle — aucune configuration SSL n'est nécessaire du tout.
-  Voir le [guide commun](Planka_Common.md) pour l'explication complète des
-  deux chemins et la branche TCP IP privée.
-- **Deux secrets d'application réels et fonctionnels.** `SECRET_KEY`
-  (signature de session/jeton, requise au démarrage) et `DEFAULT_ADMIN_PASSWORD` (initialise
-  le compte administrateur initial au premier démarrage de la base de données
-  vide) sont tous deux réellement consommés par Planka. Il n'y a **pas
-  d'invite de réinitialisation de mot de passe forcée**, alors changez le mot
-  de passe initial immédiatement après le premier déploiement.
-- **`workload_type` par défaut à `Deployment`, pas `StatefulSet`.** Planka
-  ne conserve aucun état local au-delà de ce qui est déjà dans Cloud SQL.
-- **`reserve_static_ip = true`** (remplaçant la valeur par défaut App_GKE de
-  `false`). Le point d'entrée cloud dérive `BASE_URL` des
-  valeurs `GKE_SERVICE_URL` injectées ; sans IP statique réservée,
-  `BASE_URL` peut revenir à un DNS `*.svc.cluster.local` interne
-  inaccessible, rompant les liens de pièces jointes et les notifications par
-  e-mail.
-- **Les pièces jointes persistent par défaut.** Le module monte le bucket
-  GCS `storage` au chemin `/app/data` de Planka, qui contient
-  tous les types de téléchargement. Si vous activez un PVC de bloc à la place
-  (`stateful_pvc_enabled = true`), le montage du bucket est supprimé afin que les deux
-  n'entrent jamais en collision.
-- **Pas de Redis, pas de NFS.** `enable_redis` et `enable_nfs` sont tous
-  deux par défaut à `false` — Planka n'a besoin ni d'un backend
-  cache/file d'attente ni d'un partage de système de fichiers POSIX.
+- **Un build personnalisé léger, pas l'image pré-construite.** Planka a besoin d'un point d'entrée cloud pour composer `DATABASE_URL` et dériver `BASE_URL`, donc `container_image_source = "custom"` construit `FROM
+  ghcr.io/plankanban/planka:<version>` via Cloud Build.
+- **`DATABASE_URL` est une chaîne de connexion d'autorité URL, mais SSL est défini via des variables d'environnement séparées — jamais un paramètre de requête `?sslmode=`.** Planka a deux chemins de connexion DB indépendants (le CLI de migration et l'ORM Sails du serveur en cours d'exécution), chacun nécessitant une configuration SSL différente, et chacun ignorant un `?sslmode=` intégré à l'URL pour sa propre raison non liée. Sur GKE, le sidecar Cloud SQL Auth Proxy écoute sur `127.0.0.1` et termine TLS lui-même, donc le point d'entrée ne définit **ni** `PGSSLMODE` **ni** `KNEX_REJECT_UNAUTHORIZED_SSL_CERTIFICATE` pour cette connexion en boucle — aucune configuration SSL n'est nécessaire. Voir le [guide commun](Planka_Common.md) pour l'explication complète des deux chemins et la branche TCP IP privée.
+- **Deux secrets d'application réels et fonctionnels.** `SECRET_KEY` (signature de session/jeton, requise au démarrage) et `DEFAULT_ADMIN_PASSWORD` (initialise le compte administrateur initial au premier démarrage, base de données vide) sont tous deux réellement consommés par Planka. Il n'y a **pas de demande de réinitialisation de mot de passe forcée**, alors changez le mot de passe initial immédiatement après le premier déploiement.
+- **`workload_type` par défaut à `Deployment`, pas `StatefulSet`.** Planka ne conserve aucun état local au-delà de ce qui est déjà dans Cloud SQL.
+- **`reserve_static_ip = true`** (remplaçant la valeur par défaut App_GKE de `false`). Le point d'entrée cloud dérive `BASE_URL` des valeurs `GKE_SERVICE_URL` injectées ; sans IP statique réservée, `BASE_URL` peut revenir à un DNS interne `*.svc.cluster.local` inaccessible, ce qui rompt les liens de pièces jointes et les notifications par e-mail.
+- **Les pièces jointes persistent par défaut.** Le module monte le bucket GCS `storage` au chemin `/app/data` de Planka, qui contient tous les types de téléchargement. Si vous activez un PVC de bloc à la place (`stateful_pvc_enabled = true`), le montage du bucket est supprimé afin que les deux ne se heurtent jamais.
+- **Pas de Redis, pas de NFS.** `enable_redis` et `enable_nfs` sont tous deux par défaut à `false` — Planka n'a besoin ni d'un backend de cache/file d'attente ni d'un partage de système de fichiers POSIX.
 
 ---
 
@@ -250,11 +161,8 @@ et que `PROJECT`, `REGION` et `NAMESPACE` sont définis.
 
 ### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Les pods atteignent la base de données en privé via le sidecar
-**cloud-sql-proxy** sur `127.0.0.1`. Lors du premier déploiement, un Job
-d'initialisation crée la base de données et le rôle de l'application ; Planka
-exécute ensuite ses propres migrations et son amorçage à chaque démarrage de
-pod.
+Les pods atteignent la base de données en privé via le sidecar **cloud-sql-proxy** sur
+`127.0.0.1`. Lors du premier déploiement, un Job d'initialisation crée la base de données et le rôle de l'application ; Planka exécute ensuite ses propres migrations et son amorçage à chaque démarrage de pod.
 
 - **CLI :**
   ```bash
@@ -279,11 +187,9 @@ pod.
 
 ### E. Réseau et ingress {#e-networking--ingress}
 
-Par défaut, la charge de travail est exposée via une IP externe Cloud Load
-Balancing avec une adresse statique réservée. Le `BASE_URL` de Planka (utilisé
-pour les liens de pièces jointes et les notifications par e-mail) est dérivé
-de cette adresse — mettez à jour `BASE_URL` explicitement si un domaine
-personnalisé est ajouté par la suite.
+Par défaut, la charge de travail est exposée via une IP externe de Cloud Load Balancing
+avec une adresse statique réservée. Le `BASE_URL` de Planka (utilisé pour les liens de pièces jointes et les notifications par e-mail) est dérivé de cette adresse — mettez à jour
+`BASE_URL` explicitement si un domaine personnalisé est ajouté par la suite.
 
 - **CLI :**
   ```bash
@@ -301,30 +207,11 @@ personnalisé est ajouté par la suite.
 
 ## 3. Comportement de l'application Planka {#3-planka-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un Job
-  d'initialisation exécute `db-init.sh`, créant de manière idempotente le rôle
-  et la base de données de l'application (pas besoin de
-  `CREATEROLE`/`CREATEDB`).
-- **Migrations de schéma et amorçage à chaque démarrage.** Le
-  `start.sh` de l'image officielle exécute `node db/init.js` (migrations +
-  amorçage) avant de démarrer le serveur.
-- **Identifiant d'amorçage administrateur réel — pas de réinitialisation
-  forcée.** Planka amorce `admin@example.com` avec le `DEFAULT_ADMIN_PASSWORD` généré
-  lors du premier démarrage (base de données vide), sans invite de
-  réinitialisation de mot de passe forcée — connectez-vous et changez le mot
-  de passe via l'interface utilisateur de Planka rapidement après le
-  déploiement.
-- **`DATABASE_URL` composé par le point d'entrée cloud.** Construit au
-  démarrage du conteneur à partir des valeurs `DB_*` injectées par la
-  fondation (le mot de passe est une valeur Secret Manager d'exécution,
-  indisponible au moment de la planification). Voir [Planka_Common](Planka_Common.md)
-  pour tous les détails.
-- **Chemin de santé.** Les sondes de démarrage et de vivacité sont
-  configurées via les variables `startup_probe`/`liveness_probe`. Le
-  `server/healthcheck.js` de Planka cible le **chemin racine `/`** sans
-  authentification, et les variables `startup_probe`/`liveness_probe` de ce
-  module sont maintenant correctement par défaut à `path = "/"` pour
-  correspondre.
+- **Configuration de la base de données au premier déploiement.** Un Job d'initialisation exécute `db-init.sh`, créant de manière idempotente le rôle et la base de données de l'application (pas besoin de `CREATEROLE`/`CREATEDB`).
+- **Migrations de schéma et amorçage à chaque démarrage.** Le `start.sh` de l'image officielle exécute `node db/init.js` (migrations + amorçage) avant de démarrer le serveur.
+- **Identifiant d'amorçage administrateur réel — pas de réinitialisation forcée.** Planka amorce `admin@example.com` avec le `DEFAULT_ADMIN_PASSWORD` généré au premier démarrage (base de données vide), sans invite de réinitialisation de mot de passe forcée — connectez-vous et changez le mot de passe via l'interface utilisateur de Planka rapidement après le déploiement.
+- **`DATABASE_URL` composé par le point d'entrée cloud.** Construit au démarrage du conteneur à partir des valeurs `DB_*` injectées par la Fondation (le mot de passe est une valeur Secret Manager d'exécution, indisponible au moment de la planification). Voir [Planka_Common](Planka_Common.md) pour tous les détails.
+- **Chemin de santé.** Les sondes de démarrage et de vivacité sont configurées via les variables `startup_probe`/`liveness_probe`. Le `server/healthcheck.js` de Planka cible le **chemin racine `/`** sans authentification, et les variables `startup_probe`/`liveness_probe` de ce module sont maintenant correctement par défaut à `path = "/"` pour correspondre.
 - **Inspecter l'exécution du job :**
   ```bash
   kubectl get jobs -n "$NAMESPACE"
@@ -335,10 +222,7 @@ personnalisé est ajouté par la suite.
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la
-plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
-Planka sont listés ; toutes les autres entrées sont héritées de
-[App_GKE](App_GKE.md) avec son comportement standard.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour Planka sont listés ; toutes les autres entrées sont héritées de [App_GKE](App_GKE.md) avec son comportement standard.
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
@@ -356,7 +240,7 @@ Planka sont listés ; toutes les autres entrées sont héritées de
 | `min_instance_count` / `max_instance_count` | `0` / `5` | Limites de mise à l'échelle HPA. |
 | `container_resources.memory_limit` | `4Gi` | Planka nécessite au moins 2 Gi pour un fonctionnement fiable. |
 
-### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -383,7 +267,7 @@ Planka sont listés ; toutes les autres entrées sont héritées de
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` / `liveness_probe` | HTTP `/`, délai de 60s | Les sondes réellement appliquées au pod déployé, correspondant maintenant à la cible de santé réelle et non authentifiée de Planka (`server/healthcheck.js`). |
-| `startup_probe_config` / `health_check_config` | HTTP `/`, délai de 60s | Valeurs par défaut au niveau de la fondation ; remplacées par `startup_probe`/`liveness_probe` ci-dessus — effectivement inertes. |
+| `startup_probe_config` / `health_check_config` | HTTP `/`, délai de 60s | Valeurs par défaut au niveau de la Fondation ; remplacées par `startup_probe`/`liveness_probe` ci-dessus — effectivement inertes. |
 
 ### Groupe 13 — NFS {#group-13--nfs}
 
@@ -413,26 +297,25 @@ Planka sont listés ; toutes les autres entrées sont héritées de
 | `service_name` / `service_url` / `service_external_ip` | Identité et adresse du service Kubernetes. |
 | `database_instance_name` / `database_name` / `database_user` / `database_host` / `database_port` | Détails de connexion Cloud SQL. |
 | `storage_buckets` | Le bucket `storage` pour les pièces jointes. |
-| `kubernetes_ready` | Si la charge de travail a atteint l'état Prêt. |
+| `kubernetes_ready` | Indique si la charge de travail a atteint l'état Prêt. |
 
 ---
 
 ## 6. Pièges de configuration et valeurs par défaut judicieuses {#6-configuration-pitfalls--sensible-defaults}
 
-> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé**
-> (service dégradé) — **Moyen** (coût ou dégradation partielle) — **Faible**
-> (mineur).
+> Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
+> **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence si erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
-| `application_database_name` / `application_database_user` | Défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/le rôle et détruit toutes les données. |
-| `container_image_source` | `custom` (par défaut) | Élevé | `"prebuilt"` déploie directement l'image officielle, en ignorant le point d'entrée cloud — Planka démarre sans `DATABASE_URL`. |
-| Chemin `startup_probe` / `liveness_probe` | `/` (la valeur par défaut du module) | **Élevé** | Correspond à la cible de santé réelle et non authentifiée de Planka (selon `server/healthcheck.js`, un simple GET HTTP vers `/` vérifiant un 200). Si remplacé par un autre chemin, le pod peut ne pas devenir Prêt. |
-| `reserve_static_ip` | `true` (déjà la valeur par défaut du module) | Élevé | `false` peut laisser `BASE_URL` pointer vers un DNS `*.svc.cluster.local` interne inaccessible, rompant les liens de pièces jointes et les notifications par e-mail. |
+| `application_database_name` / `application_database_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la DB/le rôle et détruit toutes les données. |
+| `container_image_source` | `custom` (par défaut) | Élevé | `"prebuilt"` déploie directement l'image officielle, ignorant le point d'entrée cloud — Planka démarre sans `DATABASE_URL`. |
+| Chemin `startup_probe` / `liveness_probe` | `/` (la valeur par défaut du module) | **Élevé** | Correspond à la cible de santé réelle et non authentifiée de Planka (selon `server/healthcheck.js`, un simple HTTP GET vers `/` vérifiant le code 200). Si remplacé par un autre chemin, le pod peut ne pas devenir Prêt. |
+| `reserve_static_ip` | `true` (déjà la valeur par défaut du module) | Élevé | `false` peut laisser `BASE_URL` pointer vers un DNS interne `*.svc.cluster.local` inaccessible, ce qui rompt les liens de pièces jointes et les notifications par e-mail. |
 | `DEFAULT_ADMIN_PASSWORD` (secret généré) | Connectez-vous et changez-le immédiatement après le premier déploiement | **Critique** | Planka ne force pas la réinitialisation du mot de passe — toute personne qui obtient le mot de passe initial peut se connecter en tant qu'administrateur indéfiniment jusqu'à ce qu'il soit modifié. |
-| `DATABASE_URL` / Configuration SSL | Ne jamais modifier manuellement — contrôlé par le point d'entrée cloud via les variables d'environnement `PGSSLMODE`/`KNEX_REJECT_UNAUTHORIZED_SSL_CERTIFICATE`, PAS un paramètre de requête `?sslmode=` | **Critique** | Planka a deux chemins de connexion DB indépendants avec des mécanismes SSL différents, confirmés par le traçage de la chaîne de dépendance réelle : (1) le CLI de migration (`server/db/knexfile.js`) lit `KNEX_REJECT_UNAUTHORIZED_SSL_CERTIFICATE` ; (2) le Sails ORM du serveur en cours d'exécution (`sails-postgresql` → `machinepack-postgresql`) analyse `DATABASE_URL` avec le `url.parse()` hérité de Node, qui **supprime silencieusement chaque paramètre de requête**, y compris `?sslmode=` — donc un sslmode intégré à l'URL ne fait rien pour le chemin d'exécution. Sans configuration `ssl` explicite, `pg` brut revient à la *variable d'environnement* `PGSSLMODE`, où `require` signifie "chiffrer ET vérifier" (pas "chiffrer uniquement" comme le libpq classique) — seul `PGSSLMODE=no-verify` ignore la vérification du certificat. Le certificat auto-signé de Cloud SQL n'est pas dans le bundle CA de Node, donc tout sauf `no-verify` échoue au démarrage avec `UNABLE_TO_VERIFY_LEAF_SIGNATURE` et le hook Sails `orm` ne se charge jamais. La connexion en boucle GKE (sidecar Cloud SQL Auth Proxy) n'a besoin d'aucune variable définie — le proxy termine déjà TLS. |
+| `DATABASE_URL` / Configuration SSL | Ne jamais modifier manuellement — contrôlé par le point d'entrée cloud via les variables d'environnement `PGSSLMODE`/`KNEX_REJECT_UNAUTHORIZED_SSL_CERTIFICATE`, PAS un paramètre de requête `?sslmode=` | **Critique** | Planka a deux chemins de connexion DB indépendants avec des mécanismes SSL différents, confirmés en traçant la chaîne de dépendance réelle : (1) le CLI de migration (`server/db/knexfile.js`) lit `KNEX_REJECT_UNAUTHORIZED_SSL_CERTIFICATE` ; (2) l'ORM Sails du serveur en cours d'exécution (`sails-postgresql` → `machinepack-postgresql`) analyse `DATABASE_URL` avec le `url.parse()` hérité de Node, qui **supprime silencieusement chaque paramètre de requête**, y compris `?sslmode=` — donc un sslmode intégré à l'URL ne fait rien pour le chemin d'exécution. Sans configuration `ssl` explicite, `pg` brut revient à la *variable d'environnement* `PGSSLMODE`, où `require` signifie "chiffrer ET vérifier" (pas "chiffrer uniquement" comme libpq classique) — seul `PGSSLMODE=no-verify` ignore la vérification du certificat. Le certificat auto-signé de Cloud SQL n'est pas dans le bundle CA de Node, donc tout sauf `no-verify` échoue au démarrage avec `UNABLE_TO_VERIFY_LEAF_SIGNATURE` et le hook Sails `orm` ne se charge jamais. La connexion en boucle GKE (sidecar Cloud SQL Auth Proxy) n'a besoin d'aucune variable définie — le proxy termine déjà TLS. |
 | `gcs_volumes` à `/app/data` | Laisser vide | Moyen | Le module monte déjà son bucket `storage` à `/app/data` ; un second montage au même chemin entre en conflit. |
-| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers bruts sont des octets et bloquent toute planification de pod dans l'espace de noms. |
+| `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont des octets et bloquent toute planification de pod dans l'espace de noms. |
 
 ---
 
@@ -447,6 +330,6 @@ partagée avec la variante Cloud Run est décrite dans
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : Planka sur GKE Autopilot](../labs/Planka_GKE.md) — déployez-le étape par étape, avec les écrans de console et les commandes à chaque étape.
-- [Planka sur Google Cloud Run](Planka_CloudRun.md) — la même application sur Cloud Run, pour quand vous avez besoin de l'autre cible de déploiement.
+- [Lab pratique : Planka sur GKE Autopilot](../labs/Planka_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
+- [Planka sur Google Cloud Run](Planka_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.
 - [Planka Common — Configuration d'application partagée](Planka_Common.md) — la configuration partagée par les deux cibles de déploiement.

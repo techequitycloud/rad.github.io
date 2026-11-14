@@ -3,7 +3,7 @@ title: "Azimutt sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Azimutt sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Azimutt_GKE.md @ 60462a86 sha256:3dfb83daecf0 -->
+<!-- translated-from: docs/modules/Azimutt_GKE.md @ 40c83c3f sha256:bf354c0d11e9 -->
 
 # Azimutt sur GKE Autopilot {#azimutt-on-gke-autopilot}
 
@@ -18,20 +18,20 @@ déploie Azimutt sur **GKE Autopilot** sur la base de la fondation
 [App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée de Google
 Cloud et Kubernetes.
 
-Ce guide se concentre sur les services cloud qu'Azimutt utilise et sur la façon de
-les explorer et de les opérer depuis la console Google Cloud et la ligne de
+Ce guide se concentre sur les services cloud qu'Azimutt utilise et sur la manière
+de les explorer et de les exploiter depuis la console Google Cloud et la ligne de
 commande. Pour les mécanismes communs à toutes les applications GKE — Workload
 Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC
-Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
+Service Controls, sauvegardes et cycle de vie du déploiement — veuillez vous
+référer au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les répéter ici.
 
 ---
 
 ## Ce que coûte Azimutt sur RAD, et comment cela se compare {#what-azimutt-costs-on-rad-and-how-that-compares}
 
-**Le module GKE Autopilot d'Azimutt sur RAD coûte environ 136 $ US par mois dans un projet que vous possédez, sans frais de licence pour le logiciel lui-même.** RAD facture des frais de module uniques de 175 crédits (17,50 $ US au prix de la recharge) dans un projet que vous possédez, et 157,5 crédits (10 % de moins) dans un projet géré par RAD. GKE convient à Azimutt qui doit rester opérationnel en continu ou s'adapter à plusieurs pods ; pour le coût le plus bas, le [module Cloud Run](Azimutt_CloudRun.md) exécute le même Azimutt pour environ 89 $ US par mois. Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Le module GKE Autopilot d'Azimutt sur RAD coûte environ 136 US$ par mois dans un projet que vous possédez, sans frais de licence pour le logiciel lui-même.** RAD facture des frais de module uniques de 175 crédits (17,50 US$ au prix de la recharge) dans un projet que vous possédez, et de 157,5 crédits (10 % de moins) dans un projet géré par RAD. GKE convient à Azimutt qui doit rester opérationnel en continu ou s'adapter à travers les pods ; pour le coût le plus bas, le [module Cloud Run](Azimutt_CloudRun.md) exécute le même Azimutt pour environ 89 US$ par mois. Les chiffres sont ceux du 8 octobre 2026 ; les sources sont listées à la fin de cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les quelque 136 $ US par mois deviennent presque rien. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour préparer une certification, une démo, un besoin saisonnier — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les quelque 136 US$ par mois deviennent presque nuls. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
@@ -39,23 +39,23 @@ Vous payez pour trois choses :
 
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
-| Frais de module, une fois par déploiement | 175 crédits (17,50 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ 136 $ US par mois pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **105 crédits par jour**, soit environ 3 150 par mois (environ 315 $ US au prix de la recharge, 252 $ US au tarif du plan Scale) |
+| Frais de module, une fois par déploiement | 175 crédits (17,50 US$ au prix de la recharge) | 157,5 crédits (10 % de moins) |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ 136 US$ par mois pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **135 crédits par jour**, soit environ 4 050 par mois (environ 405 US$ au prix de la recharge ; estimé à partir des prix catalogue de Google, et incluant les frais de cluster) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
-10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins avec un plan mensuel. Dans un projet géré par RAD, la base de données est partagée par toutes les applications du projet, donc une deuxième application n'en ajoute pas une deuxième.
+10 crédits coûtent 1 US$ pour une recharge ponctuelle, et moins pour un plan mensuel. Dans un projet géré par RAD, la base de données est partagée par toutes les applications du projet, donc une deuxième application n'en ajoute pas une deuxième.
 
 **Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
 
 | Ressource (par défaut du module) | Par mois |
 |---|---|
-| Pod GKE Autopilot, 2x vCPU / 4 Gio | 79,35 $ US |
-| Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
-| Cloud NAT et réseau | 5 $ US |
-| Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
-| Frais de gestion de cluster GKE | 0 $ US si c'est votre seul cluster Autopilot/zonal sur le compte de facturation, sinon environ 73 $ US (partagés entre toutes les applications GKE du projet) |
-| **Total** | **environ 136 $ US** |
+| Pod GKE Autopilot, 2x vCPU / 4 Gio | 79,35 US$ |
+| Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 US$ |
+| Cloud NAT et réseau | 5 US$ |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 US$ |
+| Frais de gestion de cluster GKE | 0 US$ si c'est votre seul cluster Autopilot/zonal sur le compte de facturation, sinon environ 73 US$ (partagés entre toutes les applications GKE du projet) |
+| **Total** | **environ 136 US$** |
 
 ### Comment cela se compare {#how-it-compares}
 
@@ -63,34 +63,34 @@ Vous payez pour trois choses :
 - **RAD n'est pas moins cher qu'un VPS nu en termes d'argent, et n'essaie pas de l'être.** Ce que RAD ajoute pour un prix similaire est une base de données gérée, Secret Manager pour les identifiants, et une surveillance qui serait autrement votre propre travail à configurer, patcher et sauvegarder.
 - **Le temps de l'administrateur est le coût réel qu'un VPS ne montre pas.** Les correctifs de sécurité, les sauvegardes et les mises à niveau de version sur un serveur nu sont un travail que quelqu'un doit continuer à faire ; les services gérés de RAD absorbent cela.
 
-### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-Si Azimutt s'exécute dans **un projet géré par RAD pour vous**, vous avez une option qui va bien au-delà de la mise à l'échelle à zéro : **supprimez l'ensemble du projet et restaurez-le dans les 30 jours pour presque rien.** Cela convient bien mieux à une utilisation occasionnelle — préparation d'une certification, démonstration, besoin saisonnier — qu'à une exécution continue d'Azimutt.
+Si Azimutt s'exécute dans **un projet géré par RAD pour vous**, vous avez une option qui va bien au-delà de la mise à l'échelle à zéro : **supprimez l'ensemble du projet et restaurez-le dans les 30 jours pour presque rien.** Cela convient bien mieux à une utilisation occasionnelle — préparation à une certification, démonstration, besoin saisonnier — qu'à une exécution continue d'Azimutt.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
 - **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet purement et simplement. Google ne le supprime pas immédiatement : il conserve le projet, récupérable, pendant 30 jours, et comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un module, cela ne détruit pas la base de données, aucune VM ou la ressource de calcul une par une — l'ensemble du projet s'arrête simplement, et rien n'est facturé entre-temps.
-- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
-- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude et de démonstration). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
-- **Un véritable manque : les sauvegardes ne survivent pas.** Tout ce qu'Azimutt écrit dans un bucket de sauvegarde à l'intérieur du projet est très probablement perdu dès que vous supprimez le projet, même si le projet lui-même est récupérable pendant 30 jours — la suppression logicielle de Cloud Storage est explicitement désactivée pour ce bucket. Quiconque a personnalisé le déploiement et souhaite conserver ce travail doit copier une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de la supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, seul le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
+- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude et de démonstration). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+- **Un véritable manque : les sauvegardes ne survivent pas.** Tout ce qu'Azimutt écrit dans un bucket de sauvegarde à l'intérieur du projet est très probablement perdu dès que vous supprimez le projet, même si le projet lui-même est récupérable pendant 30 jours — la suppression logicielle de Cloud Storage est explicitement désactivée pour ce bucket. Quiconque a personnalisé le déploiement et souhaite conserver ce travail doit copier une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-C'est la solution de repli pour un projet que vous possédez, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée : **supprimez le déploiement, et redéployez-le lorsque vous en aurez à nouveau besoin.**
+C'est la solution de repli pour un projet que vous possédez, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée : **supprimez le déploiement et redéployez-le lorsque vous en aurez à nouveau besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 175 crédits (17,50 $ US) dans votre propre projet, ou 157,5 crédits dans un projet géré par RAD, car RAD reconstruit les ressources à partir de zéro. La suppression permet d'économiser de l'argent une fois qu'Azimutt resterait inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution — environ 4 jours ou plus dans votre propre projet (4,55 $ US/jour) ou 2 jours ou plus dans un projet géré par RAD (105 crédits/jour).
-- **La majeure partie du coût d'exécution est généralement l'infrastructure partagée.** La base de données ne s'arrête que si rien d'autre dans le projet ne l'utilise, donc la suppression d'Azimutt alors qu'une autre application partage le projet n'économise que la partie calcul d'Azimutt.
-- **Conservez d'abord vos données.** Tout ce qu'Azimutt écrit dans un bucket de sauvegarde à l'intérieur du déploiement est supprimé avec lui — copiez la dernière sauvegarde (vers Google Drive, ou un bucket que vous conservez) avant de la supprimer si vous voulez la conserver.
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 175 crédits (17,50 US$) dans votre propre projet, ou 157,5 crédits dans un projet géré par RAD, car RAD reconstruit les ressources à partir de zéro. La suppression permet d'économiser de l'argent une fois qu'Azimutt resterait inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution — environ 4 jours ou plus dans votre propre projet (4,55 US$/jour) ou 2 jours ou plus dans un projet géré par RAD (135 crédits/jour).
+- **La majeure partie du coût d'exécution est généralement l'infrastructure partagée.** La base de données ne s'arrête que lorsque rien d'autre dans le projet ne l'utilise, donc la suppression d'Azimutt alors qu'une autre application partage le projet n'économise que la partie calcul d'Azimutt.
+- **Conservez vos données en premier.** Tout ce qu'Azimutt écrit dans un bucket de sauvegarde à l'intérieur du déploiement est supprimé avec lui — copiez la dernière sauvegarde (vers Google Drive, ou un bucket que vous conservez) avant de supprimer si vous voulez la conserver.
 - **RAD ne recrée pas un déploiement supprimé pour vous.** Vous saisissez à nouveau les paramètres lorsque vous redéployez.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose d'Azimutt dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose d'Azimutt dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits non utilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute Azimutt pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais RAD et estimation des crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration. Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
+**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais de RAD et estimation des crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration. Les prix changent ; vérifiez chaque source avant de vous fier à un chiffre.
 
 ## 1. Vue d'ensemble {#1-overview}
 
@@ -98,8 +98,8 @@ Azimutt s'exécute comme une seule charge de travail web Elixir/Phoenix écoutan
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | GKE Autopilot | Pods Phoenix, auto-scalés horizontalement ; facturés pour le CPU/la mémoire demandés |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Requis — Azimutt ne prend pas en charge MySQL ou d'autres moteurs |
+| Calcul | GKE Autopilot | Pods Phoenix, autoscalés horizontalement ; facturés pour le CPU/mémoire demandé |
+| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — Azimutt ne prend pas en charge MySQL ou d'autres moteurs |
 | Stockage de fichiers | Cloud Filestore (NFS) | Optionnel, désactivé par défaut (`enable_nfs = false`) : Azimutt écrit les téléchargements dans son propre répertoire de travail éphémère, jamais sur ce montage (voir ci-dessous) |
 | Stockage d'objets | Cloud Storage | Un bucket est provisionné (disponible pour un adaptateur de fichiers compatible S3) |
 | Secrets | Secret Manager | `SECRET_KEY_BASE` Phoenix auto-généré ; mot de passe de la base de données |
@@ -110,12 +110,12 @@ Azimutt s'exécute comme une seule charge de travail web Elixir/Phoenix écoutan
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la couche d'application partagée ; la sélection de tout autre moteur interrompt le démarrage. Toutes les données du projet Azimutt résident dans Postgres.
 - **Azimutt se connecte à Postgres via la boucle de rappel du proxy d'authentification (pas de SSL).** Ecto ne peut pas analyser le DSN du socket Cloud SQL, donc sur GKE, le point d'entrée construit `DATABASE_URL` contre `127.0.0.1` (le sidecar Cloud SQL Auth Proxy, qui termine TLS) avec `DATABASE_ENABLE_SSL=false`. `enable_cloudsql_volume = true` est requis.
-- **`container_port` et les sondes doivent être 4000.** Sur GKE, la plateforme n'injecte **pas** automatiquement `PORT`, donc le point d'entrée par défaut `PORT=4000` ; le port du service et les sondes doivent correspondre ou le pod ne deviendra jamais Prêt même si l'application est saine.
+- **`container_port` et les sondes doivent être 4000.** Sur GKE, la plateforme n'injecte **pas** automatiquement `PORT`, donc le point d'entrée par défaut `PORT=4000` ; le port du service et les sondes doivent correspondre ou le pod ne deviendra jamais Ready même si l'application est saine.
 - **NFS est désactivé par défaut** (`enable_nfs = false`) car rien dans ce module n'y écrit — `FILE_STORAGE_ADAPTER` reste `local`, donc les téléchargements atterrissent sur le disque éphémère du pod, que NFS soit monté ou non. Les données du projet elles-mêmes (schémas, diagrammes, mises en page, utilisateurs) résident dans Postgres et ne sont pas affectées.
-- **`SECRET_KEY_BASE` est généré automatiquement** et stocké dans Secret Manager. Le faire pivoter après le premier démarrage déconnecte chaque session active ; ne le faites pivoter que pendant une fenêtre de maintenance.
+- **`SECRET_KEY_BASE` est généré automatiquement** et stocké dans Secret Manager. Le faire pivoter après le premier démarrage déconnecte toutes les sessions actives ; ne le faites pivoter que pendant une fenêtre de maintenance.
 - **Un minimum de 1 réplica est maintenu** (`min_instance_count = 1`) — GKE ne prend pas en charge la mise à l'échelle à zéro, gardant Azimutt toujours accessible.
-- **Les migrations s'exécutent automatiquement à chaque démarrage** (`/app/bin/migrate && /app/bin/server`) ; prévoyez un temps supplémentaire au premier démarrage.
-- **`application_version = "latest"` correspond au tag `main` d'Azimutt.** Épinglez à une version spécifique en production.
+- **Les migrations s'exécutent automatiquement à chaque démarrage** (`/app/bin/migrate && /app/bin/server`) ; prévoyez un temps supplémentaire lors du premier démarrage.
+- **`application_version = "latest"` correspond à la balise `main` d'Azimutt.** Épinglez à une version spécifique en production.
 - **L'inscription est ouverte par défaut.** Restreignez l'accès après avoir créé votre premier compte.
 
 ---
@@ -128,7 +128,7 @@ et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
 
 ### A. GKE Autopilot — la charge de travail Azimutt {#a-gke-autopilot--the-azimutt-workload}
 
-Les pods Azimutt sont planifiés sur Autopilot, qui facture le CPU/la mémoire que les pods demandent réellement. L'autoscaling horizontal des pods dimensionne le déploiement entre le nombre minimal et maximal de réplicas.
+Les pods Azimutt sont planifiés sur Autopilot, qui facture le CPU/mémoire que les pods demandent réellement. L'autoscaling horizontal des pods dimensionne le déploiement entre le nombre minimal et maximal de réplicas.
 
 - **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de travail Azimutt pour voir les pods, les révisions et les événements. Kubernetes Engine → Services et Ingress affiche l'adresse IP externe.
 - **CLI :**
@@ -144,7 +144,7 @@ Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle
 
 Azimutt stocke toutes les données de l'application (schémas, diagrammes, mises en page, utilisateurs, sources) dans une instance gérée de Cloud SQL pour PostgreSQL 15. Les pods y accèdent via le **sidecar Cloud SQL Auth Proxy** sur `127.0.0.1` (TLS terminé par le proxy, donc `DATABASE_ENABLE_SSL=false`). Lors du premier déploiement, un job d'initialisation crée la base de données et le rôle de l'application ; Azimutt exécute ensuite ses propres migrations Ecto au démarrage.
 
-- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les flags, les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -156,7 +156,7 @@ Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de 
 
 ### C. Cloud Filestore (NFS) et Cloud Storage {#c-cloud-filestore-nfs--cloud-storage}
 
-NFS est **désactivé par défaut** (`enable_nfs = false`) ; s'il est activé, il est monté sur `nfs_mount_path`, mais il n'est pas connecté au chemin de stockage d'Azimutt — avec le `FILE_STORAGE_ADAPTER = local` par défaut, Azimutt écrit toujours les téléchargements dans son propre répertoire de travail éphémère plutôt que sur ce montage. Un bucket **Cloud Storage** est également provisionné (disponible si vous passez Azimutt à un adaptateur de fichiers compatible S3). Les données du projet elles-mêmes (schémas, diagrammes, mises en page, utilisateurs) résident dans Postgres et ne sont pas affectées dans les deux cas.
+NFS est **désactivé par défaut** (`enable_nfs = false`) ; s'il est activé, il est monté à `nfs_mount_path`, mais il n'est pas connecté au chemin de stockage d'Azimutt — avec le `FILE_STORAGE_ADAPTER = local` par défaut, Azimutt écrit toujours les téléchargements dans son propre répertoire de travail éphémère plutôt que sur ce montage. Un bucket **Cloud Storage** est également provisionné (disponible si vous passez Azimutt à un adaptateur de fichiers compatible S3). Les données du projet elles-mêmes (schémas, diagrammes, mises en page, utilisateurs) résident dans Postgres et ne sont pas affectées dans les deux cas.
 
 - **Console :** Filestore → Instances ; Cloud Storage → Buckets.
 - **CLI :**
@@ -179,11 +179,11 @@ Le **`SECRET_KEY_BASE`** de Phoenix est généré automatiquement et stocké dan
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation du Secret Store CSI.
+Voir [App_GKE](App_GKE.md) pour l'intégration et la rotation de Secret Store CSI.
 
 ### E. Cloud Build et Artifact Registry {#e-cloud-build--artifact-registry}
 
-L'image d'Azimutt est un wrapper léger construit À PARTIR de `ghcr.io/azimuttapp/azimutt` ; Cloud Build produit l'image wrappée et elle est mise en miroir dans Artifact Registry (`enable_image_mirroring = true`). Comme il s'agit d'une image reconstruite/mise en miroir, App_GKE définit `imagePullPolicy = Always` afin que les nœuds ne servent jamais une couche mise en cache obsolète.
+L'image d'Azimutt est un wrapper léger construit FROM `ghcr.io/azimuttapp/azimutt` ; Cloud Build produit l'image wrappée et elle est mise en miroir dans Artifact Registry (`enable_image_mirroring = true`). Comme il s'agit d'une image reconstruite/mise en miroir, App_GKE définit `imagePullPolicy = Always` afin que les nœuds ne servent jamais une couche mise en cache obsolète.
 
 - **Console :** Cloud Build → Historique ; Artifact Registry → Dépôts.
 - **CLI :**
@@ -221,10 +221,10 @@ Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les mé
 ## 3. Comportement de l'application Azimutt {#3-azimutt-application-behaviour}
 
 - **Configuration de la base de données au premier déploiement.** Un job d'initialisation exécute `db-init.sh` en utilisant `postgres:15-alpine`. Il crée de manière idempotente le rôle d'application (`LOGIN CREATEDB`) et la base de données, accorde `ALL` sur la base de données et le schéma `public`, et `ALTER` le propriétaire du schéma — Azimutt a besoin de tous les droits DDL car il exécute ses propres migrations. Le job signale ensuite au sidecar Auth Proxy de s'arrêter (`/quitquitquit`) afin que le pod du job se termine. Peut être réexécuté en toute sécurité.
-- **Les migrations s'exécutent au démarrage.** La commande du conteneur est `/app/bin/migrate && /app/bin/server`, donc Ecto applique les migrations en attente à chaque démarrage avant que le point de terminaison Phoenix ne se lie. La mise à niveau de `application_version` applique automatiquement les modifications de schéma.
-- **Le câblage de la base de données d'exécution est composé par le point d'entrée.** Sur GKE, `DATABASE_URL` est construit contre la boucle de rappel du proxy d'authentification (`127.0.0.1`) avec `DATABASE_ENABLE_SSL=false`, et `PORT` est défini par défaut sur 4000 (GKE ne l'injecte pas automatiquement). `PHX_HOST` est dérivé de l'URL du service injecté.
+- **Les migrations s'exécutent au démarrage.** La commande du conteneur est `/app/bin/migrate && /app/bin/server`, donc Ecto applique les migrations en attente à chaque démarrage avant que le point d'accès Phoenix ne se lie. La mise à niveau de `application_version` applique automatiquement les modifications de schéma.
+- **Le câblage de la base de données d'exécution est composé par le point d'entrée.** Sur GKE, `DATABASE_URL` est construit contre la boucle de rappel du proxy d'authentification (`127.0.0.1`) avec `DATABASE_ENABLE_SSL=false`, et `PORT` est défini par défaut à 4000 (GKE ne l'injecte pas automatiquement). `PHX_HOST` est dérivé de l'URL de service injectée.
 - **`SECRET_KEY_BASE` est stable et effectivement immuable.** Le faire pivoter invalide chaque cookie de session actif — tous les utilisateurs sont déconnectés. Ne le faites pivoter que pendant une fenêtre de maintenance.
-- **Chemin de santé.** La sonde de démarrage cible la racine Phoenix `/` et la sonde de vivacité `/health`, toutes deux avec un délai initial de 60 secondes. La sonde de vivacité est mise en miroir dans le contrôle de santé de la passerelle, qui nécessite un 200 littéral, elle ne doit donc pas pointer vers `/`. Les sondes et `container_port` doivent toutes deux être **4000** ou le pod ne deviendra jamais Prêt.
+- **Chemin de santé.** La sonde de démarrage cible la racine Phoenix `/` et la sonde de vivacité `/health`, toutes deux avec un délai initial de 60 secondes. La sonde de vivacité est mise en miroir dans la vérification de santé de la passerelle, qui nécessite un 200 littéral, elle ne doit donc pas pointer vers `/`. Les sondes et `container_port` doivent toutes deux être **4000** ou le pod ne deviendra jamais Ready.
 - **Configuration initiale.** Accédez au service via son adresse IP externe de LoadBalancer (ou son domaine personnalisé) et créez le premier compte Azimutt via la page d'inscription. L'inscription est ouverte par défaut — restreignez l'accès par la suite.
 - **Inspecter l'exécution du job d'initialisation :**
   ```bash
@@ -242,7 +242,7 @@ Les variables sont regroupées exactement comme elles apparaissent sur la platef
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(requis)_ | Projet Google Cloud cible. |
+| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région pour la charge de travail et les ressources régionales. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
@@ -252,8 +252,8 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | Emails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
-| `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
+| `support_users` | `[]` | E-mails autorisés à accéder au projet et aux alertes de surveillance. |
+| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
@@ -275,7 +275,7 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 | `min_instance_count` | `1` | Réplicas minimum ; GKE ne prend pas en charge la mise à l'échelle à zéro. |
 | `max_instance_count` | `5` | Réplicas maximum. |
 | `container_port` | `4000` | Phoenix écoute sur le port 4000 ; les sondes et le port du service doivent correspondre. |
-| `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy pour la connexion à la base de données `127.0.0.1` ; requis. |
+| `enable_cloudsql_volume` | `true` | Sidecar Auth Proxy pour la connexion DB `127.0.0.1` ; requis. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
@@ -310,9 +310,9 @@ Toutes les autres entrées suivent le comportement standard d'App_GKE.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `startup_probe` | HTTP `/`, délai de 60s, fenêtre d'échec de 30 × 15s | Sonde de démarrage ; laisser le temps pour les migrations au premier démarrage. Doit cibler le port 4000. |
-| `liveness_probe` | HTTP `/health`, délai de 60s | Sonde de vivacité ; également le contrôle de santé de la passerelle, qui nécessite un 200 littéral. |
+| `liveness_probe` | HTTP `/health`, délai de 60s | Sonde de vivacité ; également la vérification de santé de la passerelle, qui nécessite un 200 littéral. |
 | `startup_probe_config` / `health_check_config` | HTTP `/`, sondes d'infrastructure au niveau App_GKE | Sondes structurées. |
-| `uptime_check_config` | désactivé, chemin `/` | Vérification de disponibilité Cloud Monitoring facultative. |
+| `uptime_check_config` | désactivé, chemin `/` | Test de disponibilité optionnel de Cloud Monitoring. |
 
 Toutes les autres entrées suivent le comportement standard d'App_GKE.
 
@@ -374,14 +374,14 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
 | `database_password_secret` | Secret Manager contenant le mot de passe de la base de données. |
-| `database_host` / `database_port` | Point de terminaison de la base de données (127.0.0.1 via le proxy d'authentification) / port. |
+| `database_host` / `database_port` | Point de terminaison DB (127.0.0.1 via le proxy d'authentification) / port. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | Statut et canaux de surveillance. |
-| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (facultatif). |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (optionnel). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
-| `project_id` / `project_number` | Identifiants du projet. |
+| `project_id` / `project_number` | Identifiants de projet. |
 | `cicd_enabled` / `cicd_configuration` | Statut et détails CI/CD (dépôt, déclencheur, registre). |
 | `github_repository_url` / `github_repository_owner` / `github_repository_name` | Détails GitHub CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
@@ -396,29 +396,25 @@ Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moy
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de fondation [App_GKE](App_GKE.md), qui valide les valeurs *et les combinaisons* au moment de la planification — un réplica en lecture sans son primaire, IAP sans identités autorisées, un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage, un `quota_memory_*` entier nu. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de la fondation [App_GKE](App_GKE.md), qui valide les valeurs *et les combinaisons* au moment de la planification — un réplica en lecture sans son primaire, IAP sans identités autorisées, un runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne correspond pas à une extension activée, un `redis_port`/`backup_retention_days` hors plage, un `quota_memory_*` entier nu. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à l'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `SECRET_KEY_BASE` (auto-généré) | Ne jamais faire pivoter en dehors d'une fenêtre de maintenance | Critique | Le faire pivoter invalide chaque cookie de session actif — tous les utilisateurs sont déconnectés. |
 | `application_database_name` / `application_database_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/le rôle et orpheline toutes les données Azimutt. |
-| `container_port` | `4000` | Critique | Le point d'entrée par défaut `PORT=4000` sur GKE ; un port de service ou un port de sonde non concordant atteint un port mort et le pod ne devient jamais Prêt. |
-| `enable_cloudsql_volume` | `true` | Critique | Le sidecar Auth Proxy fournit la connexion à la base de données `127.0.0.1` ; le désactiver laisse Azimutt sans base de données et bloque le démarrage `db-init`. |
+| `container_port` | `4000` | Critique | Le point d'entrée par défaut `PORT=4000` sur GKE ; un port de service ou un port de sonde non concordant atteint un port mort et le pod ne devient jamais Ready. |
+| `enable_cloudsql_volume` | `true` | Critique | Le sidecar Auth Proxy fournit la connexion DB `127.0.0.1` ; le désactiver laisse Azimutt sans base de données et bloque le démarrage `db-init`. |
 | `enable_nfs` | `false` | Faible | L'activer provisionne Filestore, mais n'a aucun effet sur Azimutt lui-même — `FILE_STORAGE_ADAPTER` n'est jamais pointé vers le montage NFS, donc les téléchargements atterrissent toujours sur le disque éphémère du pod, quel que soit ce paramètre (les données du projet elles-mêmes sont en sécurité dans Postgres). |
 | `min_instance_count` | `1` | Élevé | GKE exige min ≥ 1 ; la garde de validation rejette les valeurs invalides. |
-| `application_version` | Épinglez une version | Élevé | `latest` correspond au tag roulant `main` ; un changement inattendu en amont peut casser un redéploiement. |
-| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions UI rebondissent entre les pods. |
+| `application_version` | Épinglez une version | Élevé | `latest` correspond à la balise roulante `main` ; un changement inattendu en amont peut casser un redéploiement. |
+| `session_affinity` | `ClientIP` | Moyen | Sans persistance, les sessions d'interface utilisateur rebondissent entre les pods. |
 | `enable_iap` / domaine personnalisé | Restreindre après le premier compte | Élevé | L'inscription est ouverte par défaut ; laisser le LoadBalancer accessible publiquement permet à quiconque de créer un compte. |
 | `quota_memory_requests` / `_limits` | unités binaires (`4Gi`, `8192Mi`) | Critique | Les entiers nus sont traités comme des octets et bloquent toute planification de pod dans l'espace de noms. |
 | `enable_redis` | `false` | Faible | Azimutt utilise Postgres/Oban, pas Redis — l'activer n'a aucun effet sur Azimutt lui-même. |
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — IAM et Workload Identity,
-autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization,
-VPC-SC, sauvegardes et mise en miroir d'images — voir **[App_GKE](App_GKE.md)**. La
-configuration d'application spécifique à Azimutt partagée avec la variante Cloud Run est
-décrite dans **[Azimutt_Common](Azimutt_Common.md)**.
+Pour le comportement de la fondation référencé tout au long — IAM et Workload Identity, autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir **[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Azimutt partagée avec la variante Cloud Run est décrite dans **[Azimutt_Common](Azimutt_Common.md)**.
 
 <!-- related-guides -->
 

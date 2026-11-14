@@ -3,7 +3,7 @@ title: "Formbricks sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Formbricks sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Formbricks_CloudRun.md @ 60462a86 sha256:e6c3bf96232b -->
+<!-- translated-from: docs/modules/Formbricks_CloudRun.md @ 40c83c3f sha256:874835bf9a38 -->
 
 # Formbricks sur Google Cloud Run {#formbricks-on-google-cloud-run}
 
@@ -15,7 +15,7 @@ Ce document fournit une référence complète pour le module `modules/Formbricks
 
 ## Ce que coûte Formbricks sur RAD, et comment cela se compare {#what-formbricks-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Formbricks dans votre propre projet Google Cloud coûte environ 83,61 $ US/mois en frais Google Cloud, en plus d'un frais de module RAD unique de 110 crédits** (99 crédits — 10 % de moins — dans un projet géré par RAD). Formbricks est une plateforme open source de gestion d'enquêtes et d'expériences. Si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement et le reprendre plus tard — voir "Mettre en pause gratuitement" ci-dessous.
+**L'exécution de Formbricks dans votre propre projet Google Cloud coûte environ 83,61 US$/mois en frais Google Cloud, en plus d'un frais de module RAD unique de 110 crédits** (99 crédits — 10 % de moins — dans un projet géré par RAD). Formbricks est une plateforme open source de gestion d'enquêtes et d'expériences. Si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement et reprendre plus tard — voir "Mettre en pause gratuitement" ci-dessous.
 
 *Formbricks est également disponible sur GKE — consultez le [guide GKE](Formbricks_GKE.md) si vous avez besoin d'une orchestration basée sur Kubernetes ; ce guide couvre l'option Cloud Run, moins coûteuse.*
 
@@ -24,71 +24,71 @@ Ce document fournit une référence complète pour le module `modules/Formbricks
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | **110 crédits** (une fois) | **99 crédits** (une fois, 10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | ~83,61 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~32 crédits/jour (~3,20 $ US/jour), facturé à l'heure au prix catalogue plus la marge de RAD |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | ~83,61 US$/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~67 crédits/jour (~6,70 US$/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
 **Coût d'exécution par défaut dans votre propre projet**
 
-| Ressource | $ US/mois (prix catalogue Google, us-central1) |
+| Ressource | US$/mois (prix catalogue Google, us-central1) |
 |---|---|
-| Cloud Run, 1x vCPU / 2 Gio (scaleToZero) | 13,16 $ US |
-| Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
-| Serveur de fichiers NFS/cache (petite VM) | 13,43 $ US |
-| Cloud NAT et réseau | 5 $ US |
-| Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
-| **Total** | **83,61 $ US** |
+| Cloud Run, 1x vCPU / 2 GiB (scaleToZero) | 13,16 US$ |
+| Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 US$ |
+| Serveur de fichiers NFS/cache (petite VM) | 13,43 US$ |
+| Cloud NAT et réseau | 5 US$ |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 US$ |
+| **Total** | **83,61 US$** |
 
 ### Comment cela se compare {#how-it-compares}
 
-- Le plan payant le moins cher de **Formbricks Cloud**, Pro, est de 74 $ US/mois (3 espaces de travail, 2 000 réponses mensuelles, sièges illimités) — vérifié sur [https://formbricks.com/pricing](https://formbricks.com/pricing). Cela est inférieur à la facture Google Cloud de RAD d'environ 83,61 $ US/mois pour la variante Cloud Run sur le seul prix affiché, mais cela plafonne l'utilisation ; l'instance de RAD est illimitée, auto-hébergée, et les données ne quittent jamais votre propre projet.
-- Le véritable compromis ici est entre le plafond et le contrôle, pas le prix : un plan SaaS géré est moins cher à cette échelle, et le coût d'exécution de RAD est ce que coûtent réellement Cloud SQL, le calcul et le réseau au prix catalogue de Google, sans rien de caché dans un prix de siège groupé.
-- RAD ne prétend pas être moins cher qu'un VPS nu en termes monétaires — ce n'est généralement pas le cas. L'intérêt de RAD est ce qui est géré pour vous.
+- Le plan payant le moins cher de **Formbricks Cloud**, Pro, est de 74 US$/mois (3 espaces de travail, 2 000 réponses mensuelles, sièges illimités) — vérifié sur [https://formbricks.com/pricing](https://formbricks.com/pricing). Cela est inférieur à la facture Google Cloud de RAD d'environ 83,61 US$/mois pour la variante Cloud Run, rien qu'au prix affiché, mais cela limite l'utilisation ; l'instance de RAD est illimitée, auto-hébergée, et les données ne quittent jamais votre propre projet.
+- Le véritable compromis ici est entre la limite et le contrôle, pas le prix : un plan SaaS géré est moins cher à cette échelle, et le coût d'exécution de RAD est ce que coûtent réellement Cloud SQL, le calcul et le réseau au prix catalogue de Google, sans rien de caché dans un prix de siège groupé.
+- RAD ne prétend pas être moins cher qu'un VPS nu en termes d'argent — ce n'est généralement pas le cas. L'intérêt de RAD est ce qui est géré pour vous.
 
 ### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-Si Formbricks est exécuté dans un **projet géré par RAD**, vous pouvez arrêter de le payer entièrement sans le détruire. La suppression de ce projet délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression du module Formbricks seul, cela ne supprime pas Cloud SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
+Si Formbricks est exécuté dans un **projet géré par RAD**, vous pouvez arrêter de le payer entièrement sans le détruire. La suppression de ce projet délie d'abord sa facturation, puis demande à Google de supprimer le projet purement et simplement — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression du module Formbricks seul, cela ne supprime pas Cloud SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être invoquée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Les frais de module de 99 crédits ne sont pas facturés à nouveau.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit. Les frais de module de 99 crédits ne sont pas facturés à nouveau.
 
-Ce qu'il faut : vous devez être propriétaire du projet (pas un projet pour lequel RAD ne gère que la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, de sorte que votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox, ce qui convient à la plupart des utilisations d'étude/démo). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
 Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé Formbricks et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
-### Payer uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Si Formbricks est dans votre propre projet (ou si plus de 30 jours se sont écoulés sur un projet géré par RAD), la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer plus tard lorsque vous en aurez à nouveau besoin.
+Si Formbricks se trouve dans votre propre projet (ou si plus de 30 jours se sont écoulés sur un projet géré par RAD), la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer plus tard lorsque vous en aurez à nouveau besoin.
 
-Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) : 110 crédits (11,00 $ US) dans votre propre projet, ou **99 crédits** sur un projet géré par RAD.
+Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) : 110 crédits (11,00 US$) dans votre propre projet, ou **99 crédits** sur un projet géré par RAD.
 
-La suppression ne permet d'économiser de l'argent que si Formbricks devait rester inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution : environ **5 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa facture Google Cloud d'environ 83,61 $ US/mois), ou **environ 4 jours ou plus** d'inactivité dans un projet géré par RAD (par rapport à ses ~32 crédits/jour).
+La suppression ne permet d'économiser de l'argent que si Formbricks resterait inutilisé assez longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution : environ **5 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa facture Google Cloud d'environ 83,61 US$/mois), ou **environ 4 jours ou plus** d'inactivité dans un projet géré par RAD (par rapport à ses ~67 crédits/jour).
 
 La majeure partie du coût d'exécution de Formbricks est la base de données et la VM de fichier/cache partagée. Elles ne s'arrêtent que si rien d'autre dans le projet ne les utilise, donc la suppression de cette application alors que quelque chose d'autre partage le projet n'économise que la part de calcul de cette application sur le total ci-dessus.
 
-Priorité aux données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+Conservez d'abord les données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, donc copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant reçoit l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est interrompue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 - Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
 **Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les propres frais de RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration ; [tarification de Formbricks Cloud](https://formbricks.com/pricing) pour les chiffres de Formbricks Cloud.
 
 ## 1. Vue d'ensemble du module {#1-module-overview}
 
-Formbricks est une plateforme open source de gestion d'enquêtes et d'expériences. Elle permet aux équipes de créer des enquêtes produit, des enquêtes NPS, des flux d'intégration et des widgets de feedback in-app à partir d'une seule plateforme. Basée sur Next.js avec Prisma ORM, elle nécessite PostgreSQL, Redis en option et un stockage d'objets compatible S3. `Formbricks CloudRun` est un **module wrapper** construit au-dessus de `App CloudRun`. Il utilise `App CloudRun` pour toutes les provisions d'infrastructure GCP et injecte la configuration d'application spécifique à Formbricks, les secrets, l'initialisation de la base de données et le stockage compatible S3 basé sur GCS via `Formbricks Common`.
+Formbricks est une plateforme open source de gestion d'enquêtes et d'expériences. Elle permet aux équipes de créer des enquêtes produit, des enquêtes NPS, des flux d'intégration et des widgets de feedback in-app à partir d'une seule plateforme. Basée sur Next.js avec Prisma ORM, elle nécessite PostgreSQL, Redis en option et un stockage d'objets compatible S3. `Formbricks CloudRun` est un **module enveloppe** construit sur `App CloudRun`. Il utilise `App CloudRun` pour toutes les provisions d'infrastructure GCP et injecte la configuration d'application spécifique à Formbricks, les secrets, l'initialisation de la base de données et le stockage compatible S3 basé sur GCS via `Formbricks Common`.
 
 **Capacités clés :**
-*   **Calcul** : Cloud Run v2 (Gen2), conteneur Next.js sur le port 3000, 1 vCPU / 2 Gio par défaut (2 vCPU / 2 Gio recommandés pour la production). Mise à l'échelle à zéro (`min_instance_count = 0`) avec `max_instance_count = 1`.
+*   **Calcul** : Cloud Run v2 (Gen2), conteneur Next.js sur le port 3000, 1 vCPU / 2 Gi par défaut (2 vCPU / 2 Gi recommandés pour la production). Mise à l'échelle à zéro (`min_instance_count = 0`) avec `max_instance_count = 1`.
 *   **Persistance des données** : Cloud SQL **PostgreSQL 15**. NFS (VM GCE ou Filestore) activé par défaut. Un bucket GCS `uploads` est automatiquement provisionné par `Formbricks Common` pour le stockage de fichiers compatible S3 via les identifiants HMAC GCS.
 *   **Sécurité** : Hérite de Cloud Armor WAF, IAP, Binary Authorization et VPC Service Controls de `App CloudRun`. Plusieurs secrets d'application auto-générés (clé NextAuth, clé de chiffrement, jeton cron, clés HMAC) sont provisionnés dans Secret Manager par `Formbricks Common`.
 *   **Mise en cache** : Redis **activé par défaut** (`enable_redis = true`) — Formbricks utilise Redis pour la mise en cache et les files d'attente de tâches en arrière-plan.
 *   **CI/CD** : Pipeline d'images personnalisées Cloud Build par défaut ; livraison progressive Cloud Deploy en option.
-*   **Sondes de santé** : La sonde de démarrage est **TCP** sur le port du conteneur par conception, pas HTTP `/api/v2/health` — ce point de terminaison ne renvoie 2xx qu'une fois que Formbricks signale une pleine disponibilité (DB + Redis + dépendances), de sorte qu'une sonde de démarrage HTTP ne passe jamais même si Next.js écoute déjà ("Ready" dans les journaux, mais le service n'est jamais créé). La sonde de vivacité est **désactivée par défaut** pour la même raison : la vivacité de Cloud Run ne peut pas utiliser un socket TCP, et le point de terminaison HTTP `/api/v2/health` redémarrerait en boucle un conteneur sain avant qu'il n'atteigne sa pleine disponibilité. La sonde de démarrage TCP seule gère le routage.
+*   **Sondes de santé** : La sonde de démarrage est **TCP** sur le port du conteneur par conception, pas HTTP `/api/v2/health` — ce point de terminaison ne renvoie 2xx qu'une fois que Formbricks signale une disponibilité COMPLÈTE (DB + Redis + dépendances), donc une sonde de démarrage HTTP ne passe jamais même si Next.js écoute déjà ("Ready" dans les logs, mais le service n'est jamais créé). La sonde de vivacité est **désactivée par défaut** pour la même raison : la vivacité de Cloud Run ne peut pas utiliser une socket TCP, et le point de terminaison HTTP `/api/v2/health` redémarrerait en boucle un conteneur sain avant qu'il n'atteigne une disponibilité complète. La sonde de démarrage TCP seule gère le routage.
 
 **Identité du projet et de l'application**
 
@@ -97,14 +97,14 @@ Formbricks est une plateforme open source de gestion d'enquêtes et d'expérienc
 | `project_id` | 1 | `string` | — | ID du projet GCP. **Obligatoire.** |
 | `tenant_id` | 2 | `string` | `'demo'` | Suffixe court ajouté à tous les noms de ressources. |
 | `support_users` | 2 | `list(string)` | `[]` | Destinataires des e-mails pour les alertes de surveillance. |
-| `resource_labels` | 2 | `map(string)` | `{}` | Étiquettes appliquées à toutes les ressources provisionnées. |
+| `resource_labels` | 2 | `map(string)` | `{}` | Libellés appliqués à toutes les ressources provisionnées. |
 | `application_name` | 3 | `string` | `'formbricks'` | Nom de ressource de base. Ne pas modifier après le déploiement initial. |
-| `display_name` | 3 | `string` | `'Formbricks Surveys'` | Nom lisible par l'homme affiché dans la console GCP. |
+| `display_name` | 3 | `string` | `'Formbricks Surveys'` | Nom lisible par l'utilisateur affiché dans la console GCP. |
 | `description` | 3 | `string` | `'Formbricks - Open Source Survey and Experience Management'` | Description du service Cloud Run. |
-| `application_version` | 3 | `string` | `'latest'` | Balise de version de l'image Formbricks. Incrémenter pour déployer une nouvelle version. |
-| `webapp_url` | 3 | `string` | `""` | URL publique de l'instance Formbricks. Définie après le premier déploiement. |
+| `application_version` | 3 | `string` | `'latest'` | Tag de version de l'image Formbricks. Incrémenter pour déployer une nouvelle version. |
+| `webapp_url` | 3 | `string` | `""` | URL publique de l'instance Formbricks. Définir après le premier déploiement. |
 
-**Architecture du wrapper :** `Formbricks CloudRun` appelle `Formbricks Common` pour construire un objet `application_config` contenant les variables d'environnement spécifiques à Formbricks, les secrets auto-générés, le câblage de stockage S3/GCS, la configuration des sondes et la définition de tâche `db-init`. `module_storage_buckets` contient le bucket `uploads` provisionné par `Formbricks Common`. `scripts_dir` est résolu au répertoire `Formbricks_Common/scripts` au moment de l'apply.
+**Architecture de l'enveloppe :** `Formbricks CloudRun` appelle `Formbricks Common` pour construire un objet `application_config` contenant des variables d'environnement spécifiques à Formbricks, des secrets auto-générés, le câblage de stockage S3/GCS, la configuration des sondes et la définition du job `db-init`. `module_storage_buckets` contient le bucket `uploads` provisionné par `Formbricks Common`. `scripts_dir` est résolu au répertoire `Formbricks_Common/scripts` au moment de l'apply.
 
 **Note sur l'URL de l'application web :** Lorsque `webapp_url` est laissé vide, `main.tf` calcule une URL de service Cloud Run déterministe (`https://<service>-<project-number>.<region>.run.app`) et la transmet à `Formbricks Common` comme `WEBAPP_URL`/`NEXTAUTH_URL` — Formbricks ne revient jamais réellement à la valeur par défaut `localhost:3000` de l'image sur Cloud Run (Cloud Run n'interpole pas les références `$(VAR)`, donc l'URL est calculée comme une chaîne de caractères simple). Définissez `webapp_url` explicitement uniquement pour pointer les rappels OAuth et les liens e-mail vers un domaine personnalisé au lieu de l'URL `run.app` prédite.
 
@@ -120,7 +120,7 @@ Formbricks est une plateforme open source de gestion d'enquêtes et d'expérienc
 |---|---|---|
 | `NEXTAUTH_SECRET` | `NEXTAUTH_SECRET` | Clé de chiffrement de session NextAuth.js (aléatoire de 32 caractères). |
 | `ENCRYPTION_KEY` | `ENCRYPTION_KEY` | Clé de chiffrement des données Formbricks. |
-| `CRON_SECRET` | `CRON_SECRET` | Jeton d'authentification de la tâche Cron. |
+| `CRON_SECRET` | `CRON_SECRET` | Jeton d'authentification des jobs cron. |
 | `HUB_API_KEY` | `HUB_API_KEY` | Clé API Formbricks Hub. |
 | `CUBEJS_API_SECRET` | `CUBEJS_API_SECRET` | Secret d'analyse Cube.js. |
 | `S3_ACCESS_KEY` | `S3_ACCESS_KEY` | Clé d'accès HMAC GCS pour les téléchargements compatibles S3. |
@@ -128,7 +128,7 @@ Formbricks est une plateforme open source de gestion d'enquêtes et d'expérienc
 | `SMTP_PASSWORD` | `SMTP_PASSWORD` | Créé uniquement lorsque `smtp_host` est configuré. |
 | `REDIS_URL` | `REDIS_URL` | Créé uniquement lorsque Redis est activé avec l'authentification. |
 
-Les secrets `DB_PASSWORD` et `ROOT_PASSWORD` sont provisionnés automatiquement par `App CloudRun` et consommés par la tâche `db-init`.
+Les secrets `DB_PASSWORD` et `ROOT_PASSWORD` sont provisionnés automatiquement par `App CloudRun` et consommés par le job `db-init`.
 
 **Accès à Secret Manager :** Le compte de service Cloud Run se voit accorder `roles/secretmanager.secretAccessor` sur tous les secrets provisionnés. Les valeurs en texte clair ne sont jamais écrites dans l'état du déploiement.
 
@@ -144,24 +144,24 @@ Formbricks est une application Next.js qui effectue des migrations de base de do
 
 **Le boost CPU au démarrage** est toujours activé (codé en dur dans `App CloudRun`).
 
-**Image de conteneur :** `container_image_source` par défaut à `'custom'`, ce qui signifie que Cloud Build construit une image personnalisée à l'aide du Dockerfile de `Formbricks_Common` (en encapsulant `ghcr.io/formbricks/formbricks`). Définissez `container_image_source = 'prebuilt'` et `container_image = 'ghcr.io/formbricks/formbricks:latest'` pour ignorer la construction et déployer directement en amont.
+**Image du conteneur :** `container_image_source` par défaut à `'custom'`, ce qui signifie que Cloud Build construit une image personnalisée à l'aide du Dockerfile de `Formbricks_Common` (en enveloppant `ghcr.io/formbricks/formbricks`). Définissez `container_image_source = 'prebuilt'` et `container_image = 'ghcr.io/formbricks/formbricks:latest'` pour ignorer la construction et déployer directement en amont.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
 | `deploy_application` | 4 | `true` | Définissez `false` pour un déploiement uniquement d'infrastructure (SQL, stockage, secrets). |
-| `container_image_source` | 4 | `'custom'` | `'custom'` construit via Cloud Build. `'prebuilt'` déploie une URI d'image existante. |
+| `container_image_source` | 4 | `'custom'` | `'custom'` construit via Cloud Build. `'prebuilt'` déploie un URI d'image existant. |
 | `container_image` | 4 | `""` | Remplace l'URI de l'image. Laissez vide pour que Cloud Build gère l'image. |
 | `cpu_limit` | 4 | `'1000m'` | CPU par instance. 1 vCPU minimum ; `'2000m'` recommandé pour la production. |
-| `memory_limit` | 4 | `'2Gi'` | Mémoire par instance. 2 Gio par défaut ; ne pas définir en dessous de 512 Mio. |
+| `memory_limit` | 4 | `'2Gi'` | Mémoire par instance. 2 Gi par défaut ; ne pas définir en dessous de 512 Mi. |
 | `container_port` | 4 | `3000` | Port HTTP natif de Formbricks. Ne pas modifier. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 requis pour les montages NFS et GCS Fuse. |
 | `timeout_seconds` | 4 | `300` | Durée maximale de la requête. Augmenter pour les téléchargements de fichiers volumineux. |
-| `enable_cloudsql_volume` | 4 | `true` | Monte le volume du socket Unix du proxy d'authentification Cloud SQL. Par défaut à `true` : une connexion TCP IP directe force `sslmode=require`, et le client `pg` de Formbricks/Prisma vérifie le certificat Cloud SQL IP privée, ce qui échoue contre son CA non fiable (chaque requête 500s). Le socket évite cela — le proxy fait le mTLS et l'application se connecte avec `sslmode=disable`. |
-| `traffic_split` | 4 | `[]` | Allocation de trafic canari/bleu-vert basée sur un pourcentage. |
+| `enable_cloudsql_volume` | 4 | `true` | Monte le volume de socket Unix du proxy d'authentification Cloud SQL. Par défaut à `true` : une connexion TCP IP directe force `sslmode=require`, et le client `pg` de Formbricks/Prisma vérifie le certificat Cloud SQL IP privée, ce qui échoue contre son CA non fiable (chaque requête renvoie 500). Le socket évite cela — le proxy effectue le mTLS et l'application se connecte avec `sslmode=disable`. |
+| `traffic_split` | 4 | `[]` | Allocation de trafic canary/blue-green basée sur un pourcentage. |
 | `service_annotations` | 4 | `{}` | Annotations Cloud Run avancées. |
-| `service_labels` | 4 | `{}` | Étiquettes appliquées au service Cloud Run. |
-| `min_instance_count` | 4 | `0` | Instances en cours d'exécution minimales. Définir à `1` pour éliminer les démarrages à froid. |
-| `max_instance_count` | 4 | `1` | Nombre maximal d'instances concurrentes. Augmenter pour les déploiements à trafic plus élevé. |
+| `service_labels` | 4 | `{}` | Libellés appliqués au service Cloud Run. |
+| `min_instance_count` | 4 | `0` | Instances minimales en cours d'exécution. Définir à `1` pour éliminer les démarrages à froid. |
+| `max_instance_count` | 4 | `1` | Instances concurrentes maximales. Augmenter pour les déploiements à trafic plus élevé. |
 | `cpu_always_allocated` | 4 | `false` | Facturation basée sur les requêtes par défaut : Formbricks sert les enquêtes/tableaux de bord sur demande, et son pipeline de réponse (e-mails de notification, webhooks, intégrations) ne s'exécute qu'après une réponse à l'enquête. Définissez `true` si vous exécutez des enquêtes en direct qui nécessitent des notifications/webhooks en temps réel livrés sans attendre la prochaine requête pour réveiller l'instance. |
 
 **Différences par rapport aux valeurs par défaut de `App CloudRun` :**
@@ -169,24 +169,24 @@ Formbricks est une application Next.js qui effectue des migrations de base de do
 | Variable | `App CloudRun` | `Formbricks CloudRun` | Raison |
 |---|---|---|---|
 | `container_port` | `8080` | `3000` | Le serveur Next.js de Formbricks se lie au port 3000. |
-| `cpu_limit` | `'1000m'` | `'1000m'` | Même valeur par défaut — mise à niveau vers `'2000m'` pour la production. |
-| `memory_limit` | `'512Mi'` | `'2Gi'` | Next.js + Prisma + rendu d'enquête nécessite beaucoup plus de RAM. |
-| `enable_image_mirroring` | `false` | `true` | Formbricks se met en miroir sur Artifact Registry pour éviter les limites de débit de ghcr.io. |
+| `cpu_limit` | `'1000m'` | `'1000m'` | Même valeur par défaut — passer à `'2000m'` pour la production. |
+| `memory_limit` | `'512Mi'` | `'2Gi'` | Next.js + Prisma + rendu d'enquête nécessitent beaucoup plus de RAM. |
+| `enable_image_mirroring` | `false` | `true` | Formbricks met en miroir vers Artifact Registry pour éviter les limites de débit de ghcr.io. |
 
 ### B. Base de données (Cloud SQL — PostgreSQL 15) {#b-database-cloud-sql--postgresql-15}
 
-Formbricks nécessite PostgreSQL. `Formbricks Common` corrige `database_type = "POSTGRES_15"`. Le module utilise `db_name` et `db_user` comme variables raccourcies spécifiques à Formbricks.
+Formbricks nécessite PostgreSQL. `Formbricks Common` fixe `database_type = "POSTGRES_15"`. Le module utilise `db_name` et `db_user` comme variables abrégées spécifiques à Formbricks.
 
-**Connexion par socket Unix :** `enable_cloudsql_volume` par défaut à `true`. Formbricks se connecte à Cloud SQL PostgreSQL via le socket Unix du proxy d'authentification Cloud SQL (monté à `cloudsql_volume_mount_path`, par défaut `/cloudsql`), injecté comme `DB_HOST`. Cela évite un échec de vérification de certificat qui se produit lorsque le client `pg` de Formbricks/Prisma se connecte directement via TCP IP privée avec `sslmode=require` contre l'autorité de certification non fiable de Cloud SQL. Définissez `enable_cloudsql_volume = false` uniquement pour une connexion TCP IP directe qui présente un certificat vérifiable.
+**Connexion par socket Unix :** `enable_cloudsql_volume` par défaut à `true`. Formbricks se connecte à Cloud SQL PostgreSQL via le socket Unix du proxy d'authentification Cloud SQL (monté à `cloudsql_volume_mount_path`, par défaut `/cloudsql`), injecté comme `DB_HOST`. Cela évite un échec de vérification de certificat qui se produit lorsque le client `pg` de Formbricks/Prisma se connecte directement via TCP IP privée avec `sslmode=require` contre l'autorité de certification non fiable de Cloud SQL. Définissez `enable_cloudsql_volume = false` uniquement pour une connexion TCP IP directe dont vous savez qu'elle présente un certificat vérifiable.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
 | `db_name` | 12 | `'formbricks'` | Nom de la base de données PostgreSQL. **Ne pas modifier après le déploiement initial.** |
 | `db_user` | 12 | `'formbricks'` | Utilisateur de l'application PostgreSQL. Mot de passe auto-généré dans Secret Manager. |
 | `database_password_length` | 12 | `32` | Longueur du mot de passe auto-généré. Plage : 16–64. |
-| `enable_auto_password_rotation` | 12 | `false` | Rotation automatisée des mots de passe sans interruption de service. |
+| `enable_auto_password_rotation` | 12 | `false` | Rotation automatisée du mot de passe sans interruption. |
 | `rotation_propagation_delay_sec` | 12 | `90` | Secondes à attendre après la rotation avant de redémarrer le service. |
-| `sql_instance_name` | 12 | `""` | Nom d'une instance Cloud SQL existante. Laissez vide pour une découverte automatique. |
+| `sql_instance_name` | 12 | `""` | Nom d'une instance Cloud SQL existante. Laissez vide pour la découverte automatique. |
 | `sql_instance_base_name` | 12 | `'app-sql'` | Nom de base pour une instance Cloud SQL intégrée. L'ID de déploiement est ajouté. |
 
 > `database_type` est fixé à `"POSTGRES_15"` par `Formbricks Common` et n'est pas modifiable par l'utilisateur via la variable standard `database_type`. Formbricks nécessite PostgreSQL et ne démarrera pas avec MySQL ou SQL Server.
@@ -206,9 +206,9 @@ Formbricks nécessite PostgreSQL. `Formbricks Common` corrige `database_type = "
 | `create_cloud_storage` | 11 | `true` | Définissez `false` pour ignorer la création de buckets supplémentaires. Le bucket `uploads` est toujours provisionné. |
 | `storage_buckets` | 11 | `[{ name_suffix = "data" }]` | Buckets GCS supplémentaires au-delà du bucket de téléchargement auto-provisionné. |
 | `gcs_volumes` | 11 | `[]` | Buckets GCS à monter via GCS Fuse (nécessite `gen2`). |
-| `nfs_instance_name` | 9 | `""` | Nom d'une VM GCE NFS existante. Laissez vide pour une découverte automatique. |
+| `nfs_instance_name` | 9 | `""` | Nom d'une VM GCE NFS existante. Laissez vide pour la découverte automatique. |
 | `nfs_instance_base_name` | 9 | `'app-nfs'` | Nom de base pour une VM GCE NFS intégrée. L'ID de déploiement est ajouté. |
-| `manage_storage_kms_iam` | 11 | `false` | Crée un trousseau de clés CMEK KMS et active CMEK sur tous les buckets de stockage. |
+| `manage_storage_kms_iam` | 11 | `false` | Crée un trousseau de clés KMS CMEK et active CMEK sur tous les buckets de stockage. |
 | `enable_artifact_registry_cmek` | 11 | `false` | Crée une clé KMS Artifact Registry pour le chiffrement des images au repos. |
 
 ### D. Réseau {#d-networking}
@@ -228,7 +228,7 @@ Un job Cloud Run `db-init` est automatiquement provisionné par `Formbricks Comm
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `initialization_jobs` | 13 | `[]` | Jobs Cloud Run ponctuels. Laissez vide pour que `Formbricks Common` fournisse le job `db-init` par défaut. |
+| `initialization_jobs` | 13 | `[]` | Jobs Cloud Run à exécution unique. Laissez vide pour que `Formbricks Common` fournisse le job `db-init` par défaut. |
 | `cron_jobs` | 13 | `[]` | Jobs récurrents déclenchés par Cloud Scheduler. |
 
 ---
@@ -241,18 +241,18 @@ Lorsque `enable_cloud_armor = true`, un équilibreur de charge HTTPS global avec
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `enable_cloud_armor` | 10 | `false` | Provisionne un équilibreur de charge HTTPS global + Cloud Armor WAF. Requis pour les domaines personnalisés, le CDN et la protection DDoS. |
-| `admin_ip_ranges` | 10 | `[]` | Plages CIDR exemptées des règles WAF (par exemple, VPN de bureau, adresses IP de sortie CI/CD). |
+| `enable_cloud_armor` | 10 | `false` | Provisionne un LB HTTPS global + Cloud Armor WAF. Requis pour les domaines personnalisés, le CDN et la protection DDoS. |
+| `admin_ip_ranges` | 10 | `[]` | Plages CIDR exemptées des règles WAF (par exemple, VPN de bureau, IP de sortie CI/CD). |
 
 ### B. Proxy conscient de l'identité (IAP) {#b-identity-aware-proxy-iap}
 
-Lorsque `enable_iap = true`, l'intégration IAP native de Cloud Run est activée directement sur le service. L'authentification d'identité Google est requise avant que les requêtes n'atteignent Formbricks. Utile pour les déploiements internes ou les environnements d'enquête de staging.
+Lorsque `enable_iap = true`, l'intégration IAP native de Cloud Run est activée directement sur le service. L'authentification par identité Google est requise avant que les requêtes n'atteignent Formbricks. Utile pour les déploiements internes ou les environnements d'enquête de pré-production.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
 | `enable_iap` | 5 | `false` | Active IAP nativement sur le service Cloud Run. |
-| `iap_authorized_users` | 5 | `[]` | Utilisateurs/comptes de service autorisés. Format : `'user:email'` ou `'serviceAccount:sa@...'`. |
-| `iap_authorized_groups` | 5 | `[]` | Groupes Google autorisés. Format : `'group:name@example.com'`. |
+| `iap_authorized_users` | 5 | `[]` | Utilisateurs/comptes de service ayant accès. Format : `'user:email'` ou `'serviceAccount:sa@...'`. |
+| `iap_authorized_groups` | 5 | `[]` | Groupes Google ayant accès. Format : `'group:name@example.com'`. |
 
 ### C. Autorisation binaire {#c-binary-authorization}
 
@@ -274,7 +274,7 @@ Lorsque `enable_vpc_sc = true`, tous les appels d'API GCP de ce module sont lié
 
 Les secrets d'application Formbricks sont stockés dans Secret Manager et injectés nativement par Cloud Run au démarrage de la révision — le texte en clair n'est jamais écrit dans l'état.
 
-`Formbricks Common` auto-génère tous les secrets d'application requis. Des secrets définis par l'utilisateur peuvent être ajoutés via `secret_environment_variables` pour les mots de passe SMTP et d'autres valeurs sensibles personnalisées.
+`Formbricks Common` génère automatiquement tous les secrets d'application requis. Les secrets définis par l'utilisateur peuvent être ajoutés via `secret_environment_variables` pour les mots de passe SMTP et d'autres valeurs sensibles personnalisées.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
@@ -288,9 +288,9 @@ Les secrets d'application Formbricks sont stockés dans Secret Manager et inject
 
 ### A. Équilibreur de charge HTTPS {#a-https-load-balancer}
 
-Lorsque `enable_cloud_armor = true`, un équilibreur de charge HTTPS global soutenu par un NEG sans serveur est provisionné. Le trafic circule : Internet → Cloud Armor → Équilibreur de charge HTTPS global → NEG sans serveur → Cloud Run.
+Lorsque `enable_cloud_armor = true`, un équilibreur de charge HTTPS global soutenu par un NEG sans serveur est provisionné. Le trafic circule : Internet → Cloud Armor → LB HTTPS global → NEG sans serveur → Cloud Run.
 
-La définition de `ingress_settings = 'internal-and-cloud-load-balancing'` force tout le trafic Formbricks à passer par l'équilibreur de charge, empêchant l'accès direct à l'URL `*.run.app`.
+La définition de `ingress_settings = 'internal-and-cloud-load-balancing'` force tout le trafic Formbricks à passer par le LB, empêchant l'accès direct à l'URL `*.run.app`.
 
 ### B. Cloud CDN {#b-cloud-cdn}
 
@@ -298,20 +298,20 @@ Lorsque `enable_cdn = true` (nécessite `enable_cloud_armor = true`), Cloud CDN 
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `enable_cdn` | 10 | `false` | Active Cloud CDN sur le backend de l'équilibreur de charge HTTPS. N'est efficace que lorsque `enable_cloud_armor = true`. |
+| `enable_cdn` | 10 | `false` | Active Cloud CDN sur le backend du LB HTTPS. N'est efficace que lorsque `enable_cloud_armor = true`. |
 | `max_images_to_retain` | 10 | `7` | Nombre maximal d'images de conteneurs récentes à conserver dans Artifact Registry. |
 | `delete_untagged_images` | 10 | `true` | Supprime automatiquement les images non taguées (pendantes) d'Artifact Registry. |
 | `image_retention_days` | 10 | `30` | Jours après lesquels les images sont éligibles à la suppression. |
 
 ### C. Domaines personnalisés {#c-custom-domains}
 
-Les domaines personnalisés sont attachés à l'équilibreur de charge HTTPS global via `application_domains`. Les certificats SSL gérés par Google sont provisionnés automatiquement. Le DNS doit pointer vers l'adresse IP de l'équilibreur de charge après l'application.
+Les domaines personnalisés sont attachés à l'équilibreur de charge HTTPS global via `application_domains`. Les certificats SSL gérés par Google sont provisionnés automatiquement. Le DNS doit pointer vers l'IP de l'équilibreur de charge après l'apply.
 
 Après avoir défini un domaine personnalisé, mettez à jour `webapp_url` pour qu'il corresponde — NextAuth.js utilise cette valeur pour les URI de redirection OAuth et les liens e-mail.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `application_domains` | 10 | `[]` | Noms de domaine personnalisés pour l'équilibreur de charge HTTPS. Certificats SSL gérés par Google provisionnés par domaine. |
+| `application_domains` | 10 | `[]` | Noms de domaine personnalisés pour le LB HTTPS. Certificats SSL gérés par Google provisionnés par domaine. |
 
 ---
 
@@ -325,7 +325,7 @@ Lorsque `enable_cicd_trigger = true`, une connexion GitHub Cloud Build et un dé
 |---|---|---|---|
 | `enable_cicd_trigger` | 8 | `false` | Provisionne un déclencheur GitHub Cloud Build. Nécessite `github_repository_url` et des identifiants. |
 | `github_repository_url` | 8 | `""` | URL HTTPS complète du dépôt GitHub. |
-| `github_token` | 8 | `""` | PAT GitHub (étendues `repo`, `admin:repo_hook`). Sensible. |
+| `github_token` | 8 | `""` | PAT GitHub (scopes `repo`, `admin:repo_hook`). Sensible. |
 | `github_app_installation_id` | 8 | `""` | ID d'installation de l'application GitHub (préféré pour les dépôts d'organisation). |
 | `cicd_trigger_config` | 8 | `{ branch_pattern = "^main$" }` | Configuration avancée du déclencheur : `branch_pattern`, `included_files`, `ignored_files`, `trigger_name`, `substitutions`. |
 
@@ -350,7 +350,7 @@ Lorsque Redis est activé (`enable_redis = true`), plusieurs instances Formbrick
 
 ### B. Répartition du trafic {#b-traffic-splitting}
 
-La répartition du trafic est prise en charge. Étant donné que Formbricks externalise l'état de session vers PostgreSQL et l'état du cache vers Redis, les déploiements canaris sont sûrs — les requêtes sont acheminées de manière cohérente, quelle que soit l'instance qui les gère.
+La répartition du trafic est prise en charge. Étant donné que Formbricks externalise l'état de session vers PostgreSQL et l'état du cache vers Redis, les déploiements canary sont sûrs — les requêtes sont acheminées de manière cohérente, quelle que soit l'instance qui les traite.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
@@ -358,28 +358,28 @@ La répartition du trafic est prise en charge. Étant donné que Formbricks exte
 
 ### C. Sondes de santé et surveillance de la disponibilité {#c-health-probes--uptime-monitoring}
 
-Formbricks expose `/api/v2/health` — un point de terminaison de santé dédié qui renvoie `HTTP 200` uniquement une fois que l'application ET ses dépendances de base de données/Redis signalent une pleine disponibilité. En raison de cette sémantique de "pleine disponibilité", les sondes ne ciblent délibérément **pas** les deux comme une vérification HTTP :
+Formbricks expose `/api/v2/health` — un point de terminaison de santé dédié qui renvoie `HTTP 200` uniquement une fois que l'application ET ses dépendances de base de données/Redis signalent une disponibilité complète. En raison de cette sémantique de "disponibilité complète", les sondes ne ciblent délibérément **pas** toutes les deux comme une vérification HTTP :
 
-- **`startup_probe` par défaut à TCP**, pas HTTP `/api/v2/health` : une sonde HTTP contre ce chemin ne passe jamais tant que la pleine disponibilité n'est pas atteinte, de sorte que la sonde de démarrage de Cloud Run ne réussirait jamais même si Next.js écoute déjà sur le port du conteneur ("Ready" dans les journaux, mais le service ne devient jamais routable). Une sonde TCP réussit dès que l'application lie le port — la bonne porte pour "acheminer le trafic ici".
-- **`liveness_probe` est désactivé par défaut** (`enabled = false`) : les sondes de vivacité de Cloud Run ne peuvent pas utiliser un socket TCP, et le chemin HTTP `/api/v2/health` redémarrerait en boucle un conteneur par ailleurs sain avant qu'il n'atteigne sa pleine disponibilité. La sonde de démarrage TCP gère déjà le trafic, donc la vivacité est désactivée.
+- **`startup_probe` par défaut à TCP**, pas HTTP `/api/v2/health` : une sonde HTTP sur ce chemin ne passe jamais avant la disponibilité complète, de sorte que la sonde de démarrage de Cloud Run ne réussirait jamais même si Next.js écoute déjà sur le port du conteneur ("Ready" dans les logs, mais le service ne devient jamais routable). Une sonde TCP réussit dès que l'application lie le port — la bonne porte pour "acheminer le trafic ici".
+- **`liveness_probe` est désactivé par défaut** (`enabled = false`) : les sondes de vivacité de Cloud Run ne peuvent pas utiliser une socket TCP, et le chemin HTTP `/api/v2/health` redémarrerait en boucle un conteneur par ailleurs sain avant qu'il n'atteigne une disponibilité complète. La sonde de démarrage TCP gère déjà le trafic, donc la vivacité est désactivée.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
 | `startup_probe` | 14 | `{ enabled=true, type="TCP", path="/api/v2/health", initial_delay_seconds=30, timeout_seconds=5, period_seconds=20, failure_threshold=10 }` | Sonde de disponibilité au démarrage. **TCP par conception** — voir l'explication ci-dessus. Le conteneur ne reçoit aucun trafic tant que cela ne réussit pas. |
-| `liveness_probe` | 14 | `{ enabled=false, type="HTTP", path="/api/v2/health", initial_delay_seconds=15, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Sonde de vivacité. **Désactivée par défaut** — voir l'explication ci-dessus. N'activez que si vous comprenez le risque de boucle de redémarrage contre `/api/v2/health` avant la pleine disponibilité. |
-| `startup_probe_config` | 14 | `{ enabled=true, type="TCP" }` | Sonde de démarrage de service au niveau App_CloudRun, indépendante de la sonde `startup_probe` spécifique à Formbricks ci-dessus. |
-| `health_check_config` | 14 | `{ enabled=true, type="HTTP", path="/" }` | Sonde de vivacité de service au niveau App_CloudRun, indépendante de la sonde `liveness_probe` spécifique à Formbricks ci-dessus. |
-| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Vérification de la disponibilité de Cloud Monitoring. Désactivée par défaut ; activez pour la surveillance de production — les alertes notifient `support_users` si inaccessible. |
-| `alert_policies` | 14 | `[]` | Politiques d'alerte métrique de Cloud Monitoring. |
+| `liveness_probe` | 14 | `{ enabled=false, type="HTTP", path="/api/v2/health", initial_delay_seconds=15, timeout_seconds=5, period_seconds=30, failure_threshold=3 }` | Sonde de vivacité. **Désactivée par défaut** — voir l'explication ci-dessus. N'activez que si vous comprenez le risque de boucle de redémarrage contre `/api/v2/health` avant la disponibilité complète. |
+| `startup_probe_config` | 14 | `{ enabled=true, type="TCP" }` | Sonde de démarrage de service de niveau App_CloudRun, indépendante de `startup_probe` spécifique à Formbricks ci-dessus. |
+| `health_check_config` | 14 | `{ enabled=true, type="HTTP", path="/" }` | Sonde de vivacité de service de niveau App_CloudRun, indépendante de `liveness_probe` spécifique à Formbricks ci-dessus. |
+| `uptime_check_config` | 14 | `{ enabled=false, path="/" }` | Vérification de disponibilité Cloud Monitoring. Désactivée par défaut ; activez pour la surveillance de production — les alertes notifient `support_users` si inaccessible. |
+| `alert_policies` | 14 | `[]` | Politiques d'alerte métrique Cloud Monitoring. |
 
 ### D. Rotation automatique des mots de passe {#d-auto-password-rotation}
 
-Lorsque `enable_auto_password_rotation = true`, un pipeline de rotation de mot de passe sans interruption de service est provisionné :
+Lorsque `enable_auto_password_rotation = true`, un pipeline de rotation de mot de passe sans interruption est provisionné :
 
 1. Secret Manager émet une notification de rotation à chaque intervalle `secret_rotation_period`.
-2. Eventarc déclenche une tâche de rotation Cloud Run.
-3. La tâche génère un nouveau mot de passe, met à jour l'utilisateur PostgreSQL de Cloud SQL, écrit une nouvelle version du secret.
-4. Après `rotation_propagation_delay_sec` secondes, la tâche redémarre le service Formbricks.
+2. Eventarc déclenche un job de rotation Cloud Run.
+3. Le job génère un nouveau mot de passe, met à jour l'utilisateur PostgreSQL de Cloud SQL, écrit une nouvelle version du secret.
+4. Après `rotation_propagation_delay_sec` secondes, le job redémarre le service Formbricks.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
@@ -392,12 +392,12 @@ Lorsque `enable_auto_password_rotation = true`, un pipeline de rotation de mot d
 
 ### A. Cache Redis {#a-redis-cache}
 
-Redis est **activé par défaut** (`enable_redis = true`). Formbricks utilise Redis pour mettre en cache les réponses API, limiter le débit et gérer les files d'attente des tâches en arrière-plan. Lorsque Redis est activé et que `redis_host` n'est pas fourni, le module utilise par défaut l'adresse IP du serveur NFS comme hôte Redis (une instance Redis légère co-localisée sur la VM GCE NFS). Pour les déploiements de production, pointez `redis_host` vers une instance Google Cloud Memorystore for Redis dédiée.
+Redis est **activé par défaut** (`enable_redis = true`). Formbricks utilise Redis pour mettre en cache les réponses API, limiter le taux de requêtes et gérer les files d'attente des jobs en arrière-plan. Lorsque Redis est activé et que `redis_host` n'est pas fourni, le module utilise par défaut l'IP du serveur NFS comme hôte Redis (une instance Redis légère colocalisée sur la VM GCE NFS). Pour les déploiements de production, pointez `redis_host` vers une instance Google Cloud Memorystore for Redis dédiée.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `enable_redis` | 21 | `true` | Active Redis pour la mise en cache et la limitation de débit de Formbricks. Recommandé pour tous les déploiements. |
-| `redis_host` | 21 | `""` | Nom d'hôte ou adresse IP du serveur Redis. Laissez vide pour utiliser l'adresse IP du serveur NFS. |
+| `enable_redis` | 21 | `true` | Active Redis pour la mise en cache et la limitation de taux de Formbricks. Recommandé pour tous les déploiements. |
+| `redis_host` | 21 | `""` | Nom d'hôte ou IP du serveur Redis. Laissez vide pour utiliser l'IP du serveur NFS. |
 | `redis_port` | 21 | `'6379'` | Port TCP du serveur Redis (chaîne). |
 | `redis_auth` | 21 | `""` | Mot de passe d'authentification Redis. Sensible — jamais stocké dans l'état. |
 
@@ -407,21 +407,21 @@ Formbricks utilise SMTP pour les e-mails transactionnels : invitations d'utilisa
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `smtp_host` | 5 | `'smtp.gmail.com'` | Nom d'hôte du serveur SMTP. Définissez sur `""` pour désactiver les e-mails. |
+| `smtp_host` | 5 | `'smtp.gmail.com'` | Nom d'hôte du serveur SMTP. Définissez sur `""` pour désactiver l'e-mail. |
 | `smtp_port` | 5 | `587` | Port SMTP. Utilisez 587 pour STARTTLS (recommandé) ou 465 pour TLS implicite. |
 | `smtp_user` | 5 | `""` | Nom d'utilisateur d'authentification SMTP. |
-| `smtp_password` | 5 | `""` | Mot de passe SMTP. Généré automatiquement et stocké dans Secret Manager si laissé vide. Sensible. |
-| `smtp_secure_enabled` | 5 | `false` | Active le TLS implicite. Définissez `true` lorsque `smtp_port = 465`. |
+| `smtp_password` | 5 | `""` | Mot de passe SMTP. Auto-généré et stocké dans Secret Manager si laissé vide. Sensible. |
+| `smtp_secure_enabled` | 5 | `false` | Activer TLS implicite. Définissez `true` lorsque `smtp_port = 465`. |
 | `mail_from` | 5 | `""` | Adresse de l'expéditeur affichée dans les e-mails Formbricks (par exemple, `'noreply@surveys.example.com'`). |
 
-### C. Formbricks Hub et Cube.js {#c-formbricks-hub--cubejs}
+### C. Formbricks Hub & Cube.js {#c-formbricks-hub--cubejs}
 
 À partir de Formbricks v5, la plateforme se connecte à un service Formbricks Hub pour la gestion des licences et l'analyse, et à un sidecar Cube.js pour les requêtes d'analyse.
 
 | Variable | Groupe | Valeur par défaut | Description |
 |---|---|---|---|
-| `hub_api_url` | 21 | `'http://localhost:8080'` | URL de l'API Formbricks Hub. À remplacer lors de l'exécution de Hub en tant que service Cloud Run distinct. |
-| `cubejs_api_url` | 21 | `'http://localhost:4000'` | URL de l'API d'analyse Cube.js. À remplacer pour un déploiement Cube.js distinct. |
+| `hub_api_url` | 21 | `'http://localhost:8080'` | URL de l'API Formbricks Hub. À remplacer lors de l'exécution de Hub en tant que service Cloud Run séparé. |
+| `cubejs_api_url` | 21 | `'http://localhost:4000'` | URL de l'API d'analyse Cube.js. À remplacer pour un déploiement Cube.js séparé. |
 
 ### D. Importation et récupération de sauvegarde {#d-backup-import--recovery}
 
@@ -448,60 +448,60 @@ Les comportements suivants sont appliqués automatiquement par `Formbricks Cloud
 | **Stockage compatible S3 via GCS** | `STORAGE_PROVIDER=s3`, `S3_ENDPOINT_URL=https://storage.googleapis.com` injectés automatiquement | Le client de téléchargement de fichiers S3 de Formbricks est pointé vers GCS via l'API XML. Les identifiants HMAC dans Secret Manager authentifient la connexion. |
 | **Bucket de téléchargement GCS** | Bucket `uploads` provisionné par `Formbricks Common` via `module_storage_buckets` | Un bucket GCS dédié aux téléchargements de fichiers Formbricks est provisionné séparément de `storage_buckets`. |
 | **Secrets auto-générés** | `NEXTAUTH_SECRET`, `ENCRYPTION_KEY`, `CRON_SECRET`, `HUB_API_KEY`, `CUBEJS_API_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` | Tous les secrets au niveau de l'application sont créés une seule fois par `Formbricks Common` et restent stables. |
-| **NFS activé par défaut** | Valeur par défaut `enable_nfs = true` | Le stockage NFS partagé est provisionné. Nécessite `execution_environment = 'gen2'`. |
-| **Redis activé par défaut** | Valeur par défaut `enable_redis = true` | La mise en cache Redis est activée par défaut. Lorsque `redis_host` est vide, l'adresse IP du serveur NFS est utilisée. |
-| **Mise en miroir des images** | Valeur par défaut `enable_image_mirroring = true` | Les images Formbricks sont mises en miroir de `ghcr.io` vers Artifact Registry pour éviter les limites de débit. |
-| **Connexion à la base de données via socket Unix** | Valeur par défaut `enable_cloudsql_volume = true` | Formbricks se connecte à PostgreSQL via le socket Unix du proxy d'authentification Cloud SQL plutôt que via TCP direct-IP, évitant ainsi un échec de vérification de certificat Prisma contre l'autorité de certification non fiable de Cloud SQL. |
-| **Sonde de démarrage TCP** | Valeur par défaut `startup_probe.type = "TCP"` | Le point de terminaison `/api/v2/health` de Formbricks ne renvoie 2xx qu'en cas de pleine disponibilité (DB + Redis + dépendances), de sorte qu'une sonde HTTP ne passe jamais ; TCP réussit dès que l'application lie le port. |
-| **Sonde de vivacité désactivée** | Valeur par défaut `liveness_probe.enabled = false` | La sonde de vivacité de Cloud Run ne peut pas utiliser TCP, et HTTP `/api/v2/health` relancerait en boucle un conteneur sain mais pas entièrement prêt. La sonde de démarrage TCP gère déjà le routage. |
-| **Répertoire de scripts** | `scripts_dir = abspath("${module.formbricks_app.path}/scripts")` | Les scripts d'initialisation proviennent de `Formbricks Common`. |
+| **NFS activé par défaut** | `enable_nfs = true` par défaut | Le stockage NFS partagé est provisionné. Nécessite `execution_environment = 'gen2'`. |
+| **Redis activé par défaut** | `enable_redis = true` par défaut | La mise en cache Redis est activée par défaut. Lorsque `redis_host` est vide, l'IP du serveur NFS est utilisée. |
+| **Mise en miroir des images** | `enable_image_mirroring = true` par défaut | Les images Formbricks sont mises en miroir de `ghcr.io` vers Artifact Registry pour éviter les limites de taux. |
+| **Connexion à la base de données via socket Unix** | `enable_cloudsql_volume = true` par défaut | Formbricks se connecte à PostgreSQL via le socket Unix du proxy d'authentification Cloud SQL plutôt que par TCP direct, évitant ainsi un échec de vérification de certificat Prisma contre l'autorité de certification non fiable de Cloud SQL. |
+| **Sonde de démarrage TCP** | `startup_probe.type = "TCP"` par défaut | Le propre endpoint `/api/v2/health` de Formbricks ne renvoie 2xx qu'à pleine disponibilité (DB + Redis + dépendances), donc une sonde HTTP contre celui-ci ne passe jamais ; TCP réussit dès que l'application lie le port. |
+| **Sonde de vivacité désactivée** | `liveness_probe.enabled = false` par défaut | La vivacité de Cloud Run ne peut pas utiliser TCP, et HTTP `/api/v2/health` relancerait en boucle un conteneur sain mais pas entièrement prêt. La sonde de démarrage TCP gère déjà le routage. |
+| **Répertoire des scripts** | `scripts_dir = abspath("${module.formbricks_app.path}/scripts")` | Les scripts d'initialisation proviennent de `Formbricks Common`. |
 
 ---
 
 ## 10. Exploration avec la console GCP {#10-exploring-with-the-gcp-console}
 
-Après le déploiement, utilisez la console GCP pour observer et opérer le déploiement Formbricks.
+Après le déploiement, utilisez la console GCP pour observer et exploiter le déploiement Formbricks.
 
 **Service Cloud Run :**
 - Accédez à **Cloud Run** dans la console et sélectionnez votre service Formbricks (nommé `appformbricks<tenant><id>`).
-- L'onglet **Revisions** affiche chaque révision déployée avec son allocation de trafic, le nombre d'instances et l'horodatage de création.
-- L'onglet **Metrics** affiche le nombre de requêtes, les latences de requêtes, le nombre d'instances de conteneurs et la latence de démarrage — utile pour évaluer les paramètres `min_instance_count`.
-- L'onglet **Logs** diffuse directement les journaux des conteneurs. Recherchez la sortie de migration Prisma et les messages de démarrage NextAuth.js lors du premier démarrage.
+- L'onglet **Révisions** affiche chaque révision déployée avec son allocation de trafic, son nombre d'instances et son horodatage de création.
+- L'onglet **Métriques** affiche le nombre de requêtes, les latences des requêtes, le nombre d'instances de conteneur et la latence de démarrage — utile pour évaluer les paramètres `min_instance_count`.
+- L'onglet **Journaux** diffuse directement les journaux du conteneur. Recherchez la sortie de migration Prisma et les messages de démarrage de NextAuth.js au premier démarrage.
 - L'onglet **YAML** révèle la spécification complète du service Cloud Run, y compris toutes les variables d'environnement injectées (les références de secrets apparaissent comme des noms de secrets, pas des valeurs).
 
 **Secret Manager :**
-- Accédez à **Security → Secret Manager** et filtrez par le préfixe de déploiement (par exemple, `formbricks-demo`).
+- Accédez à **Sécurité → Secret Manager** et filtrez par le préfixe de déploiement (par exemple, `formbricks-demo`).
 - Les secrets auto-générés — `NEXTAUTH_SECRET`, `ENCRYPTION_KEY`, `CRON_SECRET`, `HUB_API_KEY`, `CUBEJS_API_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` — seront tous présents.
 - L'onglet **Versions** de chaque secret indique quand il a été créé. Un secret avec une seule version et aucune activité de rotation est dans son état initial.
-- Cliquez sur un nom de secret pour voir quels services Cloud Run le référencent (sous **Usage**).
+- Cliquez sur un nom de secret pour voir quels services Cloud Run le référencent (sous **Utilisation**).
 
 **Cloud SQL :**
 - Accédez à **SQL** et sélectionnez l'instance PostgreSQL utilisée par Formbricks.
-- L'onglet **Connections** affiche les connexions de base de données actives depuis le compte de service Cloud Run.
-- L'onglet **Databases** confirme l'existence de la base de données `formbricks`.
-- L'onglet **Users** confirme que l'utilisateur `formbricks` a été créé par le job `db-init`.
-- L'onglet **Operations** enregistre toutes les actions administratives, y compris la création d'utilisateurs et les changements de mot de passe.
+- L'onglet **Connexions** affiche les connexions de base de données actives depuis le compte de service Cloud Run.
+- L'onglet **Bases de données** confirme l'existence de la base de données `formbricks`.
+- L'onglet **Utilisateurs** confirme que l'utilisateur `formbricks` a été créé par le job `db-init`.
+- L'onglet **Opérations** enregistre toutes les actions administratives, y compris la création d'utilisateurs et les changements de mot de passe.
 
 **Cloud Storage :**
-- Accédez à **Cloud Storage → Buckets** et recherchez le bucket `uploads` (nommé avec le préfixe de l'application et du déploiement).
-- Les pièces jointes de fichiers de réponse aux sondages téléchargées par les utilisateurs apparaissent comme des objets dans le bucket.
-- L'onglet **Permissions** confirme que le compte de service HMAC a `roles/storage.objectAdmin` sur le bucket.
+- Accédez à **Cloud Storage → Buckets** et recherchez le bucket `uploads` (nommé avec l'application et le préfixe de déploiement).
+- Les pièces jointes de fichiers de réponses aux sondages téléchargées par les utilisateurs apparaissent comme des objets sous le bucket.
+- L'onglet **Autorisations** confirme que le compte de service HMAC a `roles/storage.objectAdmin` sur le bucket.
 - L'onglet **Configuration** affiche l'état CMEK si `manage_storage_kms_iam = true`.
 
 **Cloud Build :**
-- Accédez à **Cloud Build → History** pour voir l'historique de build de l'image Formbricks.
+- Accédez à **Cloud Build → Historique** pour voir l'historique de build de l'image Formbricks.
 - Chaque build correspond à un déploiement ou à une incrémentation de version.
 - Cliquez sur n'importe quel build pour voir les étapes du Dockerfile, les arguments de build et la cible de push dans Artifact Registry.
 
 **Artifact Registry :**
 - Accédez à **Artifact Registry** et trouvez le dépôt pour le déploiement Formbricks.
-- Les images sont étiquetées avec la valeur `application_version`.
-- L'onglet **Vulnerabilities** (si l'analyse est activée) affiche les CVE détectées dans l'image Formbricks.
+- Les images sont taguées avec la valeur `application_version`.
+- L'onglet **Vulnérabilités** (si l'analyse est activée) affiche les CVE détectées dans l'image Formbricks.
 
 **Cloud Monitoring :**
-- Accédez à **Monitoring → Uptime checks** pour voir le test de disponibilité créé par le module (lorsque `uptime_check_config.enabled = true`).
-- Accédez à **Monitoring → Alerting** pour voir les `alert_policies` configurées.
-- Dans **Metrics Explorer**, interrogez `run.googleapis.com/request_latencies` filtré par le nom de votre service pour suivre les temps de réponse p50/p95/p99.
+- Accédez à **Monitoring → Tests de disponibilité** pour voir le test de disponibilité créé par le module (lorsque `uptime_check_config.enabled = true`).
+- Accédez à **Monitoring → Alertes** pour voir toutes les `alert_policies` configurées.
+- Dans **Explorateur de métriques**, interrogez `run.googleapis.com/request_latencies` filtré sur le nom de votre service pour suivre les temps de réponse p50/p95/p99.
 
 ---
 
@@ -526,7 +526,7 @@ gcloud run revisions list \
   --format="table(metadata.name, status.conditions[0].status, spec.containerConcurrency, metadata.creationTimestamp)"
 ```
 
-**Suivre les journaux de conteneurs Cloud Run en direct :**
+**Afficher les journaux de conteneurs Cloud Run en direct :**
 ```bash
 gcloud logging read \
   'resource.type="cloud_run_revision" AND resource.labels.service_name="appformbricks<DEPLOYMENT_ID>"' \
@@ -622,42 +622,42 @@ Toutes les variables configurables par l'utilisateur exposées par `Formbricks C
 | `region` | 1 | `'us-central1'` | Région GCP pour le déploiement des ressources. |
 | `tenant_id` | 2 | `'demo'` | Court suffixe ajouté à tous les noms de ressources. |
 | `support_users` | 2 | `[]` | Adresses e-mail pour les alertes de surveillance. |
-| `resource_labels` | 2 | `{}` | Étiquettes appliquées à toutes les ressources provisionnées. |
+| `resource_labels` | 2 | `{}` | Libellés appliqués à toutes les ressources provisionnées. |
 | `application_name` | 3 | `'formbricks'` | Nom de ressource de base. Ne pas modifier après le déploiement initial. |
 | `display_name` | 3 | `'Formbricks Surveys'` | Nom lisible par l'homme affiché dans la console GCP. |
 | `description` | 3 | `'Formbricks - Open Source Survey and Experience Management'` | Description du service. |
 | `application_version` | 3 | `'latest'` | Tag de l'image du conteneur. Incrémenter pour déployer une nouvelle version. |
 | `webapp_url` | 3 | `""` | URL publique de l'instance Formbricks. **À définir après le premier déploiement.** |
-| `deploy_application` | 4 | `true` | Définissez `false` pour un déploiement uniquement d'infrastructure. |
+| `deploy_application` | 4 | `true` | Définissez `false` pour un déploiement d'infrastructure uniquement. |
 | `container_image_source` | 4 | `'custom'` | `'custom'` (Cloud Build) ou `'prebuilt'` (image existante). |
 | `container_image` | 4 | `""` | URI de l'image du conteneur. Laissez vide pour que Cloud Build le gère. |
-| `container_build_config` | 4 | `{ enabled = true }` | Configuration de Cloud Build : chemin Dockerfile, contexte, arguments de build. |
-| `cpu_limit` | 4 | `'1000m'` | CPU par instance. Mettez à niveau vers `'2000m'` pour la production. |
-| `memory_limit` | 4 | `'2Gi'` | Mémoire par instance. Formbricks (Next.js 16) nécessite un minimum de 2 Gi — 512 Mi provoque des plantages OOM au démarrage. |
+| `container_build_config` | 4 | `{ enabled = true }` | Configuration Cloud Build : chemin Dockerfile, contexte, arguments de build. |
+| `cpu_limit` | 4 | `'1000m'` | CPU par instance. Mettre à niveau vers `'2000m'` pour la production. |
+| `memory_limit` | 4 | `'2Gi'` | Mémoire par instance. Formbricks (Next.js 16) nécessite un minimum de 2 Gio — 512 Mio provoque des plantages OOM au démarrage. |
 | `container_port` | 4 | `3000` | Port natif de Formbricks. Ne pas modifier. |
 | `execution_environment` | 4 | `'gen2'` | Gen2 requis pour les montages NFS. |
 | `timeout_seconds` | 4 | `300` | Durée maximale de la requête. |
-| `enable_cloudsql_volume` | 4 | `true` | Monte le socket du proxy d'authentification Cloud SQL. Valeur par défaut `true` — évite un échec de vérification de certificat sur TCP direct-IP. |
+| `enable_cloudsql_volume` | 4 | `true` | Monter le socket du proxy d'authentification Cloud SQL. Valeur par défaut `true` — évite un échec de vérification de certificat sur TCP direct. |
 | `cloudsql_volume_mount_path` | 4 | `'/cloudsql'` | Chemin du conteneur pour le socket du proxy d'authentification lorsque `enable_cloudsql_volume = true`. |
 | `container_protocol` | 4 | `'http1'` | `'http1'` ou `'h2c'`. |
 | `enable_image_mirroring` | 4 | `true` | Met en miroir l'image Formbricks dans Artifact Registry. |
-| `traffic_split` | 4 | `[]` | Allocation de trafic Canary/bleu-vert. |
-| `min_instance_count` | 4 | `0` | Instances minimales en cours d'exécution. Définissez sur `1` pour la production. |
-| `max_instance_count` | 4 | `1` | Nombre maximal d'instances concurrentes. Augmentez pour un trafic plus élevé. |
-| `cpu_always_allocated` | 4 | `false` | Facturation basée sur les requêtes par défaut (Formbricks sert les sondages/tableaux de bord sur demande ; le pipeline de réponse — e-mails de notification, webhooks, intégrations — ne s'exécute qu'après une réponse à un sondage). Définissez `true` pour les sondages en direct nécessitant des notifications/webhooks en temps réel sans attendre la prochaine requête. |
+| `traffic_split` | 4 | `[]` | Allocation de trafic Canary/blue-green. |
+| `min_instance_count` | 4 | `0` | Nombre minimum d'instances en cours d'exécution. Définir sur `1` pour la production. |
+| `max_instance_count` | 4 | `1` | Nombre maximal d'instances concurrentes. Augmenter pour un trafic plus élevé. |
+| `cpu_always_allocated` | 4 | `false` | Facturation basée sur les requêtes par défaut (Formbricks sert les sondages/tableaux de bord sur demande ; le pipeline de réponse — e-mails de notification, webhooks, intégrations — ne s'exécute qu'après une réponse au sondage). Définissez `true` pour les sondages en direct nécessitant des notifications/webhooks en temps réel sans attendre la prochaine requête. |
 | `max_revisions_to_retain` | 4 | `7` | Nombre maximal de révisions Cloud Run à conserver. |
 | `service_annotations` | 4 | `{}` | Annotations Cloud Run avancées. |
-| `service_labels` | 4 | `{}` | Étiquettes appliquées au service Cloud Run. |
+| `service_labels` | 4 | `{}` | Libellés appliqués au service Cloud Run. |
 | `ingress_settings` | 5 | `'all'` | `'all'`, `'internal'` ou `'internal-and-cloud-load-balancing'`. |
 | `vpc_egress_setting` | 5 | `'PRIVATE_RANGES_ONLY'` | `'PRIVATE_RANGES_ONLY'` ou `'ALL_TRAFFIC'`. |
 | `enable_iap` | 5 | `false` | Active IAP nativement sur le service Cloud Run. |
 | `iap_authorized_users` | 5 | `[]` | Utilisateurs/comptes de service ayant accès à IAP. |
 | `iap_authorized_groups` | 5 | `[]` | Groupes Google ayant accès à IAP. |
-| `smtp_host` | 5 | `'smtp.gmail.com'` | Nom d'hôte du serveur SMTP. Définissez sur `""` pour désactiver les e-mails. |
+| `smtp_host` | 5 | `'smtp.gmail.com'` | Nom d'hôte du serveur SMTP. Définissez sur `""` pour désactiver l'e-mail. |
 | `smtp_port` | 5 | `587` | Port SMTP (587 pour STARTTLS, 465 pour TLS implicite). |
 | `smtp_user` | 5 | `""` | Nom d'utilisateur d'authentification SMTP. |
-| `smtp_password` | 5 | `""` | Mot de passe SMTP. Généré automatiquement dans Secret Manager si vide. Sensible. |
-| `smtp_secure_enabled` | 5 | `false` | Active le TLS implicite (`true` pour le port 465). |
+| `smtp_password` | 5 | `""` | Mot de passe SMTP. Auto-généré dans Secret Manager si vide. Sensible. |
+| `smtp_secure_enabled` | 5 | `false` | Activer TLS implicite (`true` pour le port 465). |
 | `mail_from` | 5 | `""` | Adresse de l'expéditeur dans les e-mails Formbricks. |
 | `environment_variables` | 6 | Valeurs par défaut SMTP | Variables d'environnement en texte brut. Valeurs par défaut SMTP pré-remplies. |
 | `secret_environment_variables` | 6 | `{}` | Références Secret Manager pour des valeurs sensibles supplémentaires. |
@@ -680,10 +680,10 @@ Toutes les variables configurables par l'utilisateur exposées par `Formbricks C
 | `enable_custom_sql_scripts` | 9 | `false` | Exécute des scripts SQL depuis GCS après le provisionnement. |
 | `custom_sql_scripts_bucket` | 9 | `""` | Bucket GCS contenant les scripts SQL. |
 | `custom_sql_scripts_path` | 9 | `""` | Préfixe de chemin dans le bucket. |
-| `custom_sql_scripts_use_root` | 9 | `false` | Exécute les scripts en tant qu'utilisateur racine de la base de données. |
-| `nfs_instance_name` | 9 | `""` | Nom d'une VM GCE NFS existante. Laissez vide pour une découverte automatique. |
+| `custom_sql_scripts_use_root` | 9 | `false` | Exécuter les scripts en tant qu'utilisateur root de la base de données. |
+| `nfs_instance_name` | 9 | `""` | Nom d'une VM GCE NFS existante. Laissez vide pour la découverte automatique. |
 | `nfs_instance_base_name` | 9 | `'app-nfs'` | Nom de base pour la VM NFS intégrée. |
-| `enable_cloud_armor` | 10 | `false` | Provisionne un équilibreur de charge HTTPS global + WAF Cloud Armor. |
+| `enable_cloud_armor` | 10 | `false` | Provisionne un équilibreur de charge HTTPS global + Cloud Armor WAF. |
 | `admin_ip_ranges` | 10 | `[]` | Plages CIDR exemptées des règles WAF. |
 | `application_domains` | 10 | `[]` | Domaines personnalisés avec certificats SSL gérés par Google. |
 | `enable_cdn` | 10 | `false` | Active Cloud CDN sur le backend de l'équilibreur de charge HTTPS. |
@@ -695,13 +695,13 @@ Toutes les variables configurables par l'utilisateur exposées par `Formbricks C
 | `enable_nfs` | 11 | `true` | Provisionne le stockage partagé NFS. Nécessite `gen2`. |
 | `nfs_mount_path` | 11 | `'/mnt/nfs'` | Chemin du conteneur où NFS est monté. |
 | `gcs_volumes` | 11 | `[]` | Buckets GCS à monter via GCS Fuse. |
-| `manage_storage_kms_iam` | 11 | `false` | Crée une clé CMEK KMS et active CMEK sur les buckets de stockage. |
+| `manage_storage_kms_iam` | 11 | `false` | Crée une clé KMS CMEK et active CMEK sur les buckets de stockage. |
 | `enable_artifact_registry_cmek` | 11 | `false` | Crée une clé KMS Artifact Registry pour le chiffrement des images au repos. |
 | `db_name` | 12 | `'formbricks'` | Nom de la base de données PostgreSQL. Ne pas modifier après le déploiement initial. |
 | `db_user` | 12 | `'formbricks'` | Utilisateur de l'application PostgreSQL. |
 | `database_type` | 12 | `'POSTGRES_15'` | Moteur de base de données. Ne pas modifier — Formbricks nécessite PostgreSQL. |
 | `database_password_length` | 12 | `32` | Longueur du mot de passe auto-généré. Plage : 16–64. |
-| `enable_auto_password_rotation` | 12 | `false` | Rotation automatisée du mot de passe sans interruption. |
+| `enable_auto_password_rotation` | 12 | `false` | Rotation automatisée du mot de passe sans interruption de service. |
 | `rotation_propagation_delay_sec` | 12 | `90` | Secondes à attendre après la rotation avant de redémarrer le service. |
 | `initialization_jobs` | 13 | `[]` | Jobs Cloud Run ponctuels. Laissez vide pour que `Formbricks Common` fournisse le job `db-init` par défaut. |
 | `cron_jobs` | 13 | `[]` | Jobs Cloud Run planifiés récurrents. |
@@ -711,7 +711,7 @@ Toutes les variables configurables par l'utilisateur exposées par `Formbricks C
 | `health_check_config` | 14 | `{ enabled=true, type="HTTP", path="/" }` | Sonde de vivacité du service au niveau App_CloudRun. |
 | `uptime_check_config` | 14 | `{ enabled=true, path="/" }` | Test de disponibilité Cloud Monitoring. |
 | `alert_policies` | 14 | `[]` | Politiques d'alerte métrique Cloud Monitoring. |
-| `enable_redis` | 21 | `true` | Redis pour la mise en cache et la limitation de débit de Formbricks. |
+| `enable_redis` | 21 | `true` | Redis pour la mise en cache et la limitation de taux de Formbricks. |
 | `redis_host` | 21 | `""` | Nom d'hôte/IP Redis. Par défaut, l'IP du serveur NFS si vide. |
 | `redis_port` | 21 | `'6379'` | Port TCP Redis (chaîne). |
 | `redis_auth` | 21 | `""` | Mot de passe d'authentification Redis. Sensible. |
@@ -720,7 +720,7 @@ Toutes les variables configurables par l'utilisateur exposées par `Formbricks C
 | `enable_vpc_sc` | 22 | `false` | Enregistre les appels API dans le périmètre VPC-SC du projet. |
 | `vpc_cidr_ranges` | 22 | `[]` | Plages CIDR du sous-réseau VPC pour le niveau d'accès réseau VPC-SC. |
 | `vpc_sc_dry_run` | 22 | `true` | Enregistre les violations VPC-SC sans bloquer. Définissez `false` pour appliquer. |
-| `organization_id` | 22 | `""` | ID d'organisation GCP pour VPC-SC. Découvert automatiquement si vide. |
+| `organization_id` | 22 | `""` | ID de l'organisation GCP pour VPC-SC. Découvert automatiquement si vide. |
 | `enable_audit_logging` | 22 | `false` | Active les journaux d'audit Cloud détaillés. |
 
 ---
@@ -733,7 +733,7 @@ Toutes les variables configurables par l'utilisateur exposées par `Formbricks C
 | `service_url` | URL publique du service Cloud Run. |
 | `service_location` | Région GCP où le service Cloud Run est déployé. |
 | `project_id` | ID du projet GCP. |
-| `deployment_id` | Suffixe de l'ID de déploiement utilisé dans les noms de ressources. |
+| `deployment_id` | Suffixe d'ID de déploiement utilisé dans les noms de ressources. |
 | `database_instance_name` | Nom de l'instance Cloud SQL PostgreSQL. |
 | `database_name` | Nom de la base de données de l'application. |
 | `database_user` | Nom de l'utilisateur de la base de données de l'application. |
@@ -747,32 +747,32 @@ Toutes les variables configurables par l'utilisateur exposées par `Formbricks C
 
 ## Pièges de configuration et valeurs par défaut judicieuses {#configuration-pitfalls--sensible-defaults}
 
-> Niveaux de risque : **Critique** (perte de données, panne complète, violation de sécurité) — **Élevé** (service indisponible ou dégradation significative) — **Moyen** (fonction dégradée ou coût accru) — **Faible** (impact mineur).
+> Niveaux de risque : **Critique** (perte de données, panne totale, faille de sécurité) — **Élevé** (service indisponible ou dégradation significative) — **Moyen** (fonction dégradée ou coût accru) — **Faible** (impact mineur).
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
 | `project_id` | _(obligatoire)_ | **Critique** | Pas de valeur par défaut — le déploiement échoue immédiatement. |
 | `webapp_url` | `""` (calculé automatiquement) | **Moyen** | Si laissé vide, `main.tf` calcule une URL de service Cloud Run déterministe et l'injecte comme `WEBAPP_URL`/`NEXTAUTH_URL` — Formbricks ne revient pas réellement à `localhost:3000` sur cette plateforme. Définissez `webapp_url` explicitement pour pointer les URI de redirection OAuth et les liens e-mail vers un domaine personnalisé au lieu de l'URL `run.app` prédite. |
-| `db_name` | `"formbricks"` | **Critique** | Immuable après le premier déploiement — la modification entraîne la recréation de la base de données, détruisant toutes les définitions de sondages, les réponses et les données utilisateur. |
-| `db_user` | `"formbricks"` | **Critique** | Immuable après le premier déploiement — la modification recrée l'utilisateur PostgreSQL et invalide tous les identifiants stockés. |
-| `enable_redis` | `true` | **Élevé** | Redis est activé par défaut. Lorsque `redis_host = ""`, le module revient à l'adresse IP du serveur NFS. Si `enable_nfs = false` et `redis_host` est également vide, Formbricks ne peut pas initialiser sa couche de mise en cache et échouera au démarrage. |
+| `db_name` | `"formbricks"` | **Critique** | Immuable après le premier déploiement — la modification de cette valeur entraîne la recréation de la base de données, détruisant toutes les définitions de sondages, les réponses et les données utilisateur. |
+| `db_user` | `"formbricks"` | **Critique** | Immuable après le premier déploiement — la modification de cette valeur recrée l'utilisateur PostgreSQL et invalide toutes les informations d'identification stockées. |
+| `enable_redis` | `true` | **Élevé** | Redis est activé par défaut. Lorsque `redis_host = ""`, le module revient à l'IP du serveur NFS. Si `enable_nfs = false` et `redis_host` est également vide, Formbricks ne peut pas initialiser sa couche de mise en cache et échouera au démarrage. |
 | `redis_host` | `""` (résolution automatique vers l'IP NFS) | **Élevé** | S'appuie sur l'IP du serveur NFS si vide. Si NFS est également désactivé, la connectivité Redis échoue au démarrage. |
-| `enable_nfs` | `true` | **Élevé** | Sans NFS, les actifs de sondage téléchargés et les pièces jointes de fichiers sont stockés sur le système de fichiers éphémère du conteneur. Tous les téléchargements sont perdus à chaque nouvelle révision Cloud Run. Plusieurs instances serviront un contenu de fichier incohérent. |
-| `memory_limit` | `"2Gi"` | **Élevé** | Le runtime Next.js et l'ORM Prisma de Formbricks nécessitent une mémoire importante. Une réduction en dessous de `512Mi` provoque des plantages OOM sous un trafic de sondage normal. `2Gi` est le minimum recommandé pour la production. |
-| `min_instance_count` | `0` | **Moyen** | La mise à l'échelle à zéro entraîne des démarrages à froid de 15 à 20 secondes. Les utilisateurs visitant un sondage immédiatement après une période d'inactivité subiront ce délai. Définissez sur `1` pour tout sondage de production avec des exigences SLA. |
+| `enable_nfs` | `true` | **Élevé** | Sans NFS, les actifs de sondage et les pièces jointes téléchargés sont stockés sur le système de fichiers éphémère du conteneur. Tous les téléchargements sont perdus à chaque nouvelle révision Cloud Run. Plusieurs instances serviront un contenu de fichier incohérent. |
+| `memory_limit` | `"2Gi"` | **Élevé** | Le runtime Next.js et l'ORM Prisma de Formbricks nécessitent une heap importante. Réduire en dessous de `512Mi` provoque des plantages OOM sous un trafic de sondage normal. `2Gi` est le minimum recommandé pour la production. |
+| `min_instance_count` | `0` | **Moyen** | La mise à l'échelle à zéro provoque des démarrages à froid de 15 à 20 secondes. Les utilisateurs visitant un sondage immédiatement après une période d'inactivité subiront ce délai. Définissez sur `1` pour tout sondage de production avec des exigences de SLA. |
 | `cpu_always_allocated` | `false` | **Moyen** | Facturation basée sur les requêtes par défaut — le pipeline de réponse (e-mails de notification, webhooks, intégrations) ne s'exécute que lorsqu'une instance sert une requête. Si vous exécutez des sondages en direct qui nécessitent des notifications/webhooks en temps réel sans attendre la prochaine requête pour réveiller l'instance, définissez `true` (facturation basée sur l'instance, coût plus élevé). |
-| `smtp_host` | `'smtp.gmail.com'` (espace réservé) | **Élevé** | Par défaut, un nom d'hôte d'espace réservé est utilisé afin que la validation d'environnement de Formbricks dispose d'un bloc SMTP complet ; sans de véritables identifiants `smtp_user`/`smtp_password`, l'envoi d'e-mails échoue toujours. Configurez un véritable fournisseur SMTP avant d'inviter des membres de l'équipe. |
+| `smtp_host` | `'smtp.gmail.com'` (espace réservé) | **Élevé** | Par défaut, un nom d'hôte d'espace réservé est utilisé afin que la validation d'environnement de Formbricks dispose d'un bloc SMTP complet ; sans de véritables informations d'identification `smtp_user`/`smtp_password`, la livraison des e-mails échoue toujours. Configurez un véritable fournisseur SMTP avant d'inviter des membres de l'équipe. |
 | `enable_cloud_armor` | `false` | **Moyen** | Sans Cloud Armor, le panneau d'administration de Formbricks est accessible depuis l'internet public, protégé uniquement par l'authentification propre à Formbricks. Activez-le pour tout déploiement de production. |
 | `backup_retention_days` | `7` | **Moyen** | Sept jours sont insuffisants pour les déploiements de sondages actifs. Augmentez à plus de 30 jours pour toute instance Formbricks de production collectant des réponses de sondages précieuses. |
-| `container_port` | `3000` | **Critique** | Formbricks se lie au port 3000. La modification de ce port sans faire correspondre la configuration du serveur d'applications entraîne l'échec de toutes les sondes de santé Cloud Run et le service est marqué comme non sain. |
-| `enable_backup_import` | `false` | **Critique** | Nécessite que `backup_uri` soit un chemin GCS ou Drive valide et accessible. L'activation avec un `backup_uri` vide entraîne l'échec du job de restauration lors de l'apply. |
-| `secret_propagation_delay` | `30` | **Faible** | Parfois insuffisant dans les configurations multi-régions. Augmentez à 60-90s si les secrets Formbricks ne sont pas trouvés lors de l'apply. |
+| `container_port` | `3000` | **Critique** | Formbricks se lie au port 3000. Modifier cela sans faire correspondre la configuration du serveur d'applications entraîne l'échec de toutes les sondes de santé Cloud Run et le service est marqué comme non sain. |
+| `enable_backup_import` | `false` | **Critique** | Nécessite que `backup_uri` soit un chemin GCS ou Drive valide et accessible. L'activation avec un `backup_uri` vide entraîne l'échec du job de restauration pendant l'apply. |
+| `secret_propagation_delay` | `30` | **Faible** | Parfois insuffisant dans les configurations multi-régions. Augmentez à 60-90s si les secrets Formbricks ne sont pas trouvés pendant l'apply. |
 
 ---
 
 ## Destruction des ressources {#destroying-resources}
 
-### Problème de suppression connu : libération de l'adresse IPv4 sans serveur {#known-deletion-issue-serverless-ipv4-address-release}
+### Problème de suppression connu : libération d'adresse IPv4 sans serveur {#known-deletion-issue-serverless-ipv4-address-release}
 
 Lors de la destruction d'un déploiement Cloud Run, vous pouvez rencontrer une erreur similaire à :
 
@@ -792,7 +792,7 @@ La deuxième exécution réussira une fois que GCP aura libéré les adresses r�
 
 ## Guides associés {#related-guides}
 
-- [Labo pratique : Formbricks sur Cloud Run](../labs/Formbricks_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
+- [Lab pratique : Formbricks sur Cloud Run](../labs/Formbricks_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Module Formbricks GKE — Guide de configuration](Formbricks_GKE.md) — la même application sur Kubernetes, pour lorsque vous avez besoin de l'autre cible de déploiement.
 - [Module de configuration partagée commune Formbricks](Formbricks_Common.md) — la configuration partagée par les deux cibles de déploiement.
 - Déployé aux côtés de [Flarum sur Google Cloud Run](Flarum_CloudRun.md), [Fider sur Google Cloud Run](Fider_CloudRun.md), [LimeSurvey sur Google Cloud Run](LimeSurvey_CloudRun.md), [Rallly sur Google Cloud Run](Rallly_CloudRun.md) dans la solution **Communauté et Voix du client**.

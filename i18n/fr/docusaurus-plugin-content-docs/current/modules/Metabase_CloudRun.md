@@ -3,32 +3,30 @@ title: "Metabase sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Metabase sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Metabase_CloudRun.md @ 60462a86 sha256:18f998853484 -->
+<!-- translated-from: docs/modules/Metabase_CloudRun.md @ 40c83c3f sha256:70cd786cdd53 -->
 
 # Metabase sur Google Cloud Run {#metabase-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Metabase_CloudRun.png" alt="Metabase sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
 Metabase est une plateforme open source de business intelligence et d'analyse qui
-permet aux utilisateurs non techniques d'interroger, de visualiser et de partager des
-données sans écrire de SQL. Ce module déploie Metabase sur **Cloud Run v2**
-sur la base de la fondation [App_CloudRun](App_CloudRun.md), qui provisionne et
-gère l'infrastructure Google Cloud partagée.
+permet aux utilisateurs non techniques d'interroger, de visualiser et de partager des données
+sans écrire de SQL. Ce module déploie Metabase sur **Cloud Run v2** au-dessus de la
+fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
+l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud utilisés par Metabase et sur la
-manière de les explorer et de les opérer depuis la console Google Cloud et la
-ligne de commande. Pour les mécanismes communs à chaque application Cloud Run —
-identité de service, ingress et équilibrage de charge, mise à l'échelle et
-concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
-sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter
-ici.
+Ce guide se concentre sur les services cloud utilisés par Metabase et sur la manière de les explorer et de les
+opérer depuis la console Google Cloud et la ligne de commande. Pour les mécanismes
+communs à toutes les applications Cloud Run — identité de service, ingress et équilibrage de charge,
+mise à l'échelle et concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization,
+VPC Service Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au
+[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
 ## Ce que coûte Metabase sur RAD, et comment cela se compare {#what-metabase-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Metabase dans votre propre projet GCP coûte environ 88,56 $/mois en frais Google Cloud ; les frais de module de RAD sont de 75 crédits uniques (ou 67,5 crédits dans un projet géré par RAD), couvrant la configuration et le support — pas la facture cloud continue, que Google vous facture directement dans votre propre projet ou que RAD mesure à l'heure en crédits dans un projet géré par RAD.**
+**L'exécution de Metabase dans votre propre projet GCP coûte environ 88,56 $/mois en frais Google Cloud ; les frais de module de RAD sont de 75 crédits uniques (ou 67,5 crédits dans un projet géré par RAD), couvrant la configuration et le support — pas la facture cloud continue, que Google vous facture directement dans votre propre projet ou que RAD facture à l'heure en crédits dans un projet géré par RAD.**
 Ou consultez le guide GKE pour la cible de déploiement alternative ; dans tous les cas, si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement lorsque vous ne l'utilisez pas — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
@@ -36,10 +34,10 @@ Ou consultez le guide GKE pour la cible de déploiement alternative ; dans tous 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 75 crédits, une fois | 67,5 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | ~88,56 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~26 crédits/jour, mesuré à l'heure par RAD au prix catalogue plus marge |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien à supprimer ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Coût d'exécution Google Cloud | ~88,56 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~61 crédits/jour, facturé à l'heure par RAD au prix catalogue plus marge |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant des frais : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
 **Coût d'exécution par défaut dans votre propre projet**
 
@@ -55,138 +53,125 @@ Votre premier déploiement réussi sur RAD est exempté des frais de module lors
 
 - Le cloud géré officiel de Metabase (Metabase Cloud) commence à **90 $/mois** (Starter, facturé mensuellement ; 100 $/mois prix catalogue) (source : https://www.metabase.com/pricing), géré par le projet lui-même sans infrastructure à opérer — la comparaison qui importe ici est moins le prix affiché que de savoir si vous voulez le cloud du fournisseur ou votre propre projet GCP avec RAD le gérant.
 - L'exécuter vous-même sur un VPS nu reste l'option la moins chère en espèces — Hetzner CPX22 (2 vCPU/4 Go) coûte environ **24 $/mois**, un Droplet DigitalOcean 2 vCPU/4 Go est également à **24 $/mois**, et un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) est à environ **49 $/mois** — plus le temps de l'administrateur pour les sauvegardes, les correctifs de sécurité et les mises à niveau, que le Cloud SQL géré par RAD, Secret Manager et la surveillance couvrent pour vous — mais le prix de RAD n'est jamais destiné à battre un VPS, seulement à remplacer le temps d'administration qu'un VPS nécessite encore.
-- Dans tous les cas, il s'agit d'un outil BI/analytique d'équipe interrogé occasionnellement plutôt que continuellement, donc le coût d'exécution ci-dessus est ce qui génère réellement la facture, pas les frais de module — et ce coût d'exécution est celui que vous pouvez mettre en pause (voir ci-dessous).
+- Dans tous les cas, il s'agit d'un outil de BI/analyse d'équipe interrogé occasionnellement plutôt que continuellement, donc le coût d'exécution ci-dessus est ce qui génère réellement la facture, pas les frais de module — et ce coût d'exécution est celui que vous pouvez mettre en pause (voir ci-dessous).
 
-### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 **C'est le titre pour un projet géré par RAD.** La suppression d'un projet géré par RAD
-délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement
-le projet — la suppression logicielle récupérable de 30 jours de Google. Contrairement
-à la suppression d'un module, cela ne démantèle pas Cloud SQL, aucune VM ou la
-ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien
-n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
+délie d'abord sa facturation, puis demande à Google de supprimer le projet
+purement et simplement — la suppression logicielle récupérable de 30 jours de Google.
+Contrairement à la suppression d'un module, cela ne détruit pas Cloud SQL, aucune VM ou la
+ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est facturé
+pendant qu'il attend, car la facturation est déjà déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande
-à Google de restaurer le projet et de rattacher son compte de facturation, puis vous
-demande d'exécuter la mise à jour sur chaque déploiement pour confirmer que tout est
-revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les
-mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et
-une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de
+réactiver le projet et de rattacher son compte de facturation, puis vous demande d'exécuter
+une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été
+détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes —
+il s'agit d'une vérification, pas d'une reconstruction, et une mise à jour ne facture jamais les frais de module
+à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement),
+donc une restauration ne coûte normalement aucun crédit.
 
-Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère
-uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours —
-après cela, Google le supprime définitivement — et la restauration est admise comme
-la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours
-dépasser le seuil du palier (100 crédits pour le palier sandbox que la plupart des
-utilisations d'étude/démo conviennent). Google affirme que la plupart des services
-fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation),
+vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement —
+et la restauration est admise comme la création d'un nouveau projet, donc votre solde de crédits
+achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox
+qui convient à la plupart des utilisations d'étude/démo). Google affirme que la plupart des services
+sont entièrement fonctionnels dans les 36 heures suivant une restauration.
 
-**Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket à
-l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage
-explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous
-supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours.
-Si vous avez personnalisé l'application et que vous souhaitez conserver ce travail,
-copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de
-supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas
-d'importance.
+**Un véritable manque :** les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet,
+et ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée, il est donc
+très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est
+récupérable pendant 30 jours. Si vous avez personnalisé l'application et que vous souhaitez conserver ce travail,
+copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de supprimer.
+Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
 ### Payez uniquement pendant que vous l'utilisez, l'autre façon : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de
-restauration de 30 jours ci-dessus), l'alternative est de supprimer Metabase
-purement et simplement et de le redéployer plus tard. Un redéploiement coûte
-à nouveau les frais de module (les builds sont inclus) — 75 crédits.
+Dans votre propre projet (ou une fois que vous avez dépassé la fenêtre de restauration de 30 jours ci-dessus),
+l'alternative est de supprimer Metabase purement et simplement et de le redéployer plus tard. Un redéploiement
+coûte à nouveau les frais de module (les builds sont inclus) — 75 crédits.
 
-La suppression ne permet d'économiser de l'argent que si Metabase reste
-inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par
-rapport à son propre coût d'exécution quotidien — par rapport au total du
-projet ci-dessus, cela représente environ 3 jours ou plus. La majeure partie
-du coût d'exécution ici est généralement la base de données ; elle ne s'arrête
-que si rien d'autre dans le projet ne l'utilise, donc la suppression de cette
-application alors que quelque chose d'autre partage le projet n'économise que
-la partie calcul de cette application.
+La suppression ne permet d'économiser de l'argent que si Metabase resterait inutilisé assez longtemps
+pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution quotidien — par rapport
+au total du projet ci-dessus, cela représente environ 3 jours ou plus. La majeure partie du coût
+d'exécution ici est généralement la base de données ; elle ne s'arrête que si rien d'autre dans le projet
+ne l'utilise, donc la suppression de cette application alors que quelque chose d'autre partage le projet
+n'économise que la partie calcul de cette application.
 
-**Gardez les données en premier :** les sauvegardes nocturnes vont dans un
-bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez
-la dernière sauvegarde avant de supprimer si vous voulez la conserver.
+**Conservez d'abord les données :** les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement
+et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation :** un formateur anime une session pour une
-  classe. Chaque participant obtient l'application dans son propre projet Google
-  Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie
-  par le formateur. Soit le formateur finance toutes les places, soit chaque
-  participant paie la sienne. Tout est supprimé à la fin de la session et les
-  crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute
-  l'application pour un client à partir d'un portefeuille cloisonné qu'il finance,
-  et règle directement avec le client. Si le portefeuille est faible, la facturation
-  est suspendue et les données sont conservées, de sorte que personne ne reçoit de
-  facture inattendue. À la fin, le partenaire remet le projet et les déploiements
-  deviennent la propriété du client.
-- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF,
-  NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant
+  obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite
+  d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque
+  participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés
+  retournent au formateur.
+- **Environnements gérés, pour les cabinets de conseil :** un partenaire exécute l'application pour un client
+  à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille
+  est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit
+  de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent
+  la propriété du client.
+- Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR,
+  par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les frais propres à RAD et les estimations de crédits quotidiens ; https://cloud.google.com/resource-manager/docs/delete-restore-projects pour les mécanismes de pause/restauration ; https://www.metabase.com/pricing pour le prix du concurrent nommé.
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les propres frais de RAD et les estimations de crédits quotidiens ; https://cloud.google.com/resource-manager/docs/delete-restore-projects pour les mécanismes de pause/restauration ; https://www.metabase.com/pricing pour le prix du concurrent nommé.
 
 ## 1. Vue d'ensemble {#1-overview}
 
-Metabase s'exécute en tant que conteneur Java/JVM (Jetty) sur Cloud Run v2. Le
-déploiement relie un ensemble ciblé de services Google Cloud :
+Metabase s'exécute en tant que conteneur Java/JVM (Jetty) sur Cloud Run v2. Le déploiement
+relie un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
 | Calcul | Cloud Run v2 | Service JVM, 2 vCPU / 4 GiB par défaut, autoscaling basé sur les requêtes |
 | Base de données | Cloud SQL pour PostgreSQL 15 | Requis — Metabase stocke tout l'état de l'application (questions, tableaux de bord, utilisateurs) dans PostgreSQL |
 | Secrets | Secret Manager | Mot de passe de base de données auto-généré ; Metabase gère ses propres clés internes |
-| Ingress | URL Cloud Run / Cloud Load Balancing | URL par défaut `run.app`, équilibreur de charge HTTPS externe optionnel + domaine personnalisé |
+| Ingress | URL Cloud Run / Cloud Load Balancing | URL par défaut `run.app`, équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
-**Valeurs par défaut judicieuses à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître à l'avance :**
 
-- **PostgreSQL 15 est le seul moteur pris en charge.** Tout l'état de l'application
-  réside dans cette base de données.
-- **Aucun Redis n'est requis.** Metabase n'utilise pas Redis ; `enable_redis` par
-  défaut `false`.
-- **`min_instance_count` par défaut `0` (mise à l'échelle à zéro).** Les démarrages
-  à froid de la JVM prennent 60 à 120 secondes. Définissez sur `1` pour la
-  production afin d'éliminer cette latence.
-- **`cpu_always_allocated` par défaut `false` (facturation basée sur les requêtes).** Metabase
-  sert des requêtes interactives à la demande, donc le CPU n'est facturé que
-  lors du traitement d'un appel. Si vous comptez sur des **abonnements/pulsations
-  planifiés ou des analyses périodiques de synchronisation de base de données**,
-  ce travail s'exécute sans requête entrante et est ralenti par la facturation
-  basée sur les requêtes — définissez `cpu_always_allocated = true` pour que les jobs planifiés
+- **PostgreSQL 15 est le seul moteur pris en charge.** Tout l'état de l'application réside dans
+  cette base de données.
+- **Aucun Redis n'est requis.** Metabase n'utilise pas Redis ; `enable_redis` par défaut
+  à `false`.
+- **`min_instance_count` par défaut à `0` (mise à l'échelle à zéro).** Les démarrages à froid de la JVM prennent
+  60 à 120 secondes. Définissez sur `1` pour la production afin d'éliminer cette latence.
+- **`cpu_always_allocated` par défaut à `false` (facturation basée sur les requêtes).** Metabase
+  sert des requêtes interactives sur demande, donc le CPU n'est facturé que lors du traitement d'un
+  appel. Si vous comptez sur des **abonnements/pulsations planifiés ou des analyses périodiques de synchronisation de base de données**,
+  ce travail s'exécute sans requête entrante et est ralenti sous
+  la facturation basée sur les requêtes — définissez `cpu_always_allocated = true` pour que les jobs planifiés
   se terminent réellement.
-- **Les sondes de santé ciblent `/api/health`** (HTTP), qui renvoie 200 seulement
-  une fois que la JVM est entièrement démarrée. La sonde de démarrage utilise un
-  délai initial de 120 secondes avec 15 tentatives, ce qui donne une tolérance
-  totale d'environ 270 secondes.
-- **`MB_JETTY_PORT = "3000"` et `JAVA_TIMEZONE = "UTC"` sont injectés automatiquement** — ne les
-  remplacez pas.
-- **Aucun bucket de stockage GCS n'est créé par défaut.** Metabase stocke tout
-  dans PostgreSQL.
+- **Les sondes de santé ciblent `/api/health`** (HTTP), qui renvoie 200 seulement une fois que la
+  JVM est entièrement opérationnelle. La sonde de démarrage utilise un délai initial de 120 secondes avec 15
+  tentatives, ce qui donne une tolérance totale d'environ 270 secondes.
+- **`MB_JETTY_PORT = "3000"` et `JAVA_TIMEZONE = "UTC"` sont injectés
+  automatiquement** — ne les surchargez pas.
+- **Aucun bucket de stockage GCS n'est créé par défaut.** Metabase stocke tout dans
+  PostgreSQL.
 
 ---
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de
-services et de ressources sont rapportés dans les [Sorties](#5-outputs) du
-déploiement.
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de services et de ressources sont
+rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Metabase {#a-cloud-run--the-metabase-service}
 
-Metabase s'exécute en tant que service Cloud Run v2 qui s'adapte automatiquement
-à la charge de requêtes entre le nombre minimal et maximal d'instances. Chaque
-déploiement crée une révision immuable ; le trafic peut être réparti entre les
-révisions pour des déploiements sûrs. Avec `min_instance_count = 0`, le service s'adapte à
-zéro lorsqu'il est inactif ; les démarrages à froid de la JVM prennent 60 à 120
-secondes, alors définissez `min_instance_count = 1` pour la production.
+Metabase s'exécute en tant que service Cloud Run v2 qui s'adapte automatiquement en fonction de la charge de requêtes entre
+les nombres d'instances minimum et maximum. Chaque déploiement crée une révision immuable ; le trafic
+peut être réparti entre les révisions pour des déploiements sûrs. Avec
+`min_instance_count = 0`, le service s'adapte à zéro lorsqu'il est inactif ; les démarrages à froid de la JVM
+prennent 60 à 120 secondes, donc définissez `min_instance_count = 1` pour la production.
 
-- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic,
-  les logs et les métriques.
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic, les logs et
+  les métriques.
 - **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION"
@@ -194,20 +179,18 @@ secondes, alors définissez `min_instance_count = 1` pour la production.
   gcloud run revisions list --service <service-name> --project "$PROJECT" --region "$REGION"
   ```
 
-Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence,
-l'environnement d'exécution et la répartition du trafic.
+Voir [App_CloudRun](App_CloudRun.md) pour la mise à l'échelle, la concurrence, l'environnement
+d'exécution et la répartition du trafic.
 
 ### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Metabase stocke l'intégralité de l'état de son application — questions, tableaux
-de bord, collections, utilisateurs, permissions et paramètres — dans une instance
-gérée de Cloud SQL pour PostgreSQL 15. Le service se connecte en privé via le
-**Cloud SQL Auth Proxy** sur un socket Unix (pas d'IP publique). Lors du premier
-déploiement, un job d'initialisation crée la base de données et l'utilisateur de
-l'application.
+Metabase stocke l'intégralité de l'état de son application — questions, tableaux de bord, collections,
+utilisateurs, permissions et paramètres — dans une instance Cloud SQL pour PostgreSQL 15 gérée.
+Le service se connecte en privé via le **Cloud SQL Auth Proxy** sur
+un socket Unix (pas d'IP publique). Lors du premier déploiement, un job d'initialisation crée la
+base de données et l'utilisateur de l'application.
 
-- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes,
-  les drapeaux, les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -215,15 +198,14 @@ l'application.
   gcloud sql connect <instance-name> --user=<db-user> --project "$PROJECT"
   ```
 
-Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de
-passe se trouvent dans les [Sorties](#5-outputs). Voir [App_CloudRun](App_CloudRun.md)
-pour le modèle de connexion, les sauvegardes et la rotation des mots de passe.
+Le nom de l'instance, la base de données, l'utilisateur et le secret du mot de passe se trouvent dans les
+[Sorties](#5-outputs). Voir [App_CloudRun](App_CloudRun.md) pour le
+modèle de connexion, les sauvegardes et la rotation des mots de passe.
 
 ### C. Secret Manager {#c-secret-manager}
 
-Le mot de passe de la base de données est stocké dans Secret Manager et injecté
-dans le service au moment de l'exécution. Metabase gère ses propres clés de
-chiffrement internes séparément.
+Le mot de passe de la base de données est stocké dans Secret Manager et injecté dans le service au
+moment de l'exécution. Metabase gère ses propres clés de chiffrement internes séparément.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -236,10 +218,9 @@ Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotatio
 
 ### D. Réseau et ingress {#d-networking--ingress}
 
-Le service est accessible par son URL `run.app` par défaut. Un équilibreur de
-charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peut
-être superposé ; les paramètres d'ingress et le contrôle d'égresse VPC contrôlent
-la connectivité.
+Le service est accessible par son URL `run.app` par défaut. Un équilibreur de charge HTTPS externe avec un
+domaine personnalisé, Cloud CDN et Cloud Armor peuvent être superposés ;
+les paramètres d'ingress et le contrôle d'egress VPC contrôlent la connectivité.
 
 - **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
 - **CLI :**
@@ -252,11 +233,10 @@ Voir [App_CloudRun](App_CloudRun.md).
 
 ### E. Cloud Logging et Monitoring {#e-cloud-logging--monitoring}
 
-Les logs de conteneurs (y compris la sortie JVM) sont envoyés à Cloud Logging ;
-les métriques Cloud Run et Cloud SQL sont envoyées à Cloud Monitoring, avec des
-tests de disponibilité et des politiques d'alerte optionnels.
+Les logs de conteneur (y compris la sortie JVM) sont envoyés à Cloud Logging ; les métriques Cloud Run et Cloud SQL
+sont envoyées à Cloud Monitoring, avec des tests de disponibilité et des politiques d'alerte facultatifs.
 
-- **Console :** Logging → Explorateur de logs ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Logs Explorer ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -266,40 +246,36 @@ tests de disponibilité et des politiques d'alerte optionnels.
 
 ## 3. Comportement de l'application Metabase {#3-metabase-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un job
-  d'initialisation s'exécute avant le démarrage du service. Il utilise `postgres:15-alpine`
-  pour se connecter à Cloud SQL et créer de manière idempotente la base de données
-  et l'utilisateur de l'application. Il peut être réexécuté en toute sécurité.
-- **Pas de migration automatique au démarrage.** Metabase applique les migrations
-  dans le cadre de son propre processus de démarrage — le job `db-init` doit
-  réussir en premier afin que la base de données et l'utilisateur existent déjà
-  lorsque Metabase démarre.
-- **Attention à la mise à niveau.** Les migrations Metabase sont unidirectionnelles.
-  La rétrogradation après l'exécution d'une migration corrompt le schéma. Testez
-  toujours les mises à niveau en staging avant de les appliquer en production.
-- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/api/health`
-  (HTTP 200 lorsque la JVM est entièrement initialisée). La sonde de démarrage
-  permet un délai initial de 120 secondes plus 15 × 10s de tentatives (~270
-  secondes au total). Ne réduisez pas ces valeurs.
-- **Configuration administrateur.** Au premier démarrage, Metabase présente un
-  assistant de configuration dans le navigateur. Les identifiants administrateur
-  sont gérés à l'intérieur de Metabase lui-même — aucun secret administrateur
-  n'est créé par ce module.
-- **Sources de données.** Après le déploiement, configurez les sources de données
-  dans Metabase Admin → Databases. Les sources natives GCP courantes incluent
-  BigQuery, Cloud SQL PostgreSQL/MySQL et Google Sheets.
+- **Configuration de la base de données lors du premier déploiement.** Un job d'initialisation s'exécute avant le démarrage du service.
+  Il utilise `postgres:15-alpine` pour se connecter à Cloud SQL et créer de manière idempotente
+  la base de données et l'utilisateur de l'application. Il peut être réexécuté en toute sécurité.
+- **Pas de migration automatique au démarrage.** Metabase applique les migrations dans le cadre de son
+  propre processus de démarrage — le job `db-init` doit d'abord réussir pour que la base de données et
+  l'utilisateur existent déjà lorsque Metabase démarre.
+- **Attention à la mise à niveau.** Les migrations Metabase sont unidirectionnelles. La rétrogradation après une
+  migration corrompt le schéma. Testez toujours les mises à niveau en staging avant
+  de les appliquer en production.
+- **Chemin de santé.** Les sondes de démarrage et de vivacité ciblent `/api/health` (HTTP 200
+  lorsque la JVM est entièrement initialisée). La sonde de démarrage autorise un délai initial de 120 secondes
+  plus 15 × 10s tentatives (~270 secondes au total). Ne réduisez pas ces
+  valeurs.
+- **Configuration administrateur.** Au premier démarrage, Metabase présente un assistant de configuration dans le navigateur.
+  Les identifiants administrateur sont gérés à l'intérieur de Metabase lui-même — aucun secret administrateur n'est
+  créé par ce module.
+- **Sources de données.** Après le déploiement, configurez les sources de données dans Metabase Admin →
+  Bases de données. Les sources natives GCP courantes incluent BigQuery, Cloud SQL
+  PostgreSQL/MySQL et Google Sheets.
 - **`MB_JETTY_PORT` et `JAVA_TIMEZONE` sont fixes.** Injectés automatiquement par
-  `Metabase_Common`. Les remplacer rompt le routage ou produit des horodatages de
-  rapports incohérents.
+  `Metabase_Common`. Les surcharger interrompt le routage ou produit des
+  horodatages de rapport incohérents.
 
 ---
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement telles qu'elles apparaissent sur la
-plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
-Metabase sont listés ; toutes les autres entrées sont héritées de
-[App_CloudRun](App_CloudRun.md) avec son comportement standard.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls
+les paramètres spécifiques ou notables pour Metabase sont listés ; toute autre entrée est
+héritée de [App_CloudRun](App_CloudRun.md) avec son comportement standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
@@ -314,7 +290,7 @@ Metabase sont listés ; toutes les autres entrées sont héritées de
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails auxquels sont accordés l'accès au projet et les alertes de surveillance. |
-| `resource_labels` | `{}` | Libellés appliqués à toutes les ressources. |
+| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
 
@@ -329,24 +305,24 @@ Metabase sont listés ; toutes les autres entrées sont héritées de
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
+| `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
 | `cpu_limit` | `2000m` | CPU par instance ; minimum 1 vCPU, 2 vCPU recommandés. |
 | `memory_limit` | `4Gi` | Mémoire par instance ; la JVM nécessite au moins 2 GiB ; 4 GiB recommandés pour la production. |
-| `min_instance_count` | `0` | Instances minimales. Définir sur `1` pour la production afin d'éliminer les démarrages à froid de la JVM de 60 à 120 secondes. |
+| `min_instance_count` | `0` | Instances minimales. Définissez sur `1` pour la production afin d'éliminer les démarrages à froid de la JVM de 60 à 120 secondes. |
 | `max_instance_count` | `3` | Instances maximales (plafond de coût). |
-| `cpu_always_allocated` | `false` | Facturation basée sur les requêtes par défaut — Metabase sert à la demande. Définir `true` si vous comptez sur des abonnements/pulsations planifiés ou des analyses périodiques de synchronisation de base de données, qui s'exécutent sans requête entrante et seraient autrement ralenties. |
+| `cpu_always_allocated` | `false` | Facturation basée sur les requêtes par défaut — Metabase sert sur demande. Définissez `true` si vous comptez sur des abonnements/pulsations planifiés ou des analyses périodiques de synchronisation de base de données, qui s'exécutent sans requête entrante et seraient autrement ralenties. |
 | `container_port` | `3000` | Port Jetty de Metabase — doit correspondre à `MB_JETTY_PORT`. |
 | `execution_environment` | `gen2` | Gen2 recommandé pour des performances de démarrage améliorées. |
 | `enable_cloudsql_volume` | `true` | Cloud SQL Auth Proxy pour les connexions de socket Unix. Requis. |
-| `timeout_seconds` | `300` | Durée maximale de la requête ; augmenter pour les requêtes analytiques de longue durée. |
-| `traffic_split` | `[]` | Répartir le trafic entre les révisions pour les déploiements échelonnés. |
+| `timeout_seconds` | `300` | Durée maximale de la requête ; augmentez pour les requêtes analytiques de longue durée. |
+| `traffic_split` | `[]` | Répartir le trafic entre les révisions pour des déploiements échelonnés. |
 | `max_revisions_to_retain` | `7` | Combien d'anciennes révisions conserver. |
 
-### Groupe 5 — Contrôle d'accès et d'ingress {#group-5--access--ingress-control}
+### Groupe 5 — Accès et contrôle d'ingress {#group-5--access--ingress-control}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `ingress_settings` | `all` | Quels réseaux peuvent atteindre le service. Utiliser `internal-and-cloud-load-balancing` pour la production. |
+| `ingress_settings` | `all` | Quels réseaux peuvent atteindre le service. Utilisez `internal-and-cloud-load-balancing` pour la production. |
 | `vpc_egress_setting` | `PRIVATE_RANGES_ONLY` | Comment le trafic sortant est acheminé via le VPC. |
 | `enable_iap` | `false` | Exiger la connexion Google via Identity-Aware Proxy. Recommandé pour les déploiements internes. |
 | `iap_authorized_users` / `iap_authorized_groups` | `[]` | Qui peut accéder via IAP. |
@@ -355,7 +331,7 @@ Metabase sont listés ; toutes les autres entrées sont héritées de
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres supplémentaires non secrets. `MB_JETTY_PORT` et `JAVA_TIMEZONE` sont injectés automatiquement — ne pas les remplacer. |
+| `environment_variables` | `{}` | Paramètres supplémentaires non secrets. `MB_JETTY_PORT` et `JAVA_TIMEZONE` sont injectés automatiquement — ne pas les surcharger. |
 | `secret_environment_variables` | `{}` | Mappage de var d'environnement → nom de secret Secret Manager (par exemple, mot de passe SMTP). |
 | `secret_propagation_delay` / `secret_rotation_period` | _(défini)_ | Attente de réplication / cadence de rotation. |
 
@@ -364,10 +340,10 @@ Metabase sont listés ; toutes les autres entrées sont héritées de
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `backup_schedule` | `0 2 * * *` | Cron de sauvegarde automatisée (UTC). |
-| `backup_retention_days` | `7` | Rétention ; augmenter pour la production/conformité. |
+| `backup_retention_days` | `7` | Rétention ; augmentez pour la production/conformité. |
 | `enable_backup_import` / `backup_source` / `backup_uri` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
-### Groupe 8 — CI/CD et Binary Authorization {#group-8--cicd--binary-authorization}
+### Groupe 8 — CI/CD et autorisation binaire {#group-8--cicd--binary-authorization}
 
 Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 [App_CloudRun](App_CloudRun.md). Entrées clés : `enable_cicd_trigger`,
@@ -433,7 +409,7 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 | `enable_redis` | `false` | Metabase n'utilise pas Redis ; laisser désactivé. |
 | `redis_host` / `redis_port` / `redis_auth` | _(défini)_ | Pertinent uniquement si un plugin ou une configuration personnalisée nécessite Redis. |
 
-### Groupe 22 — VPC Service Controls et Audit Logging {#group-22--vpc-service-controls--audit-logging}
+### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -445,16 +421,16 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 
 ## 5. Sorties {#5-outputs}
 
-Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et
-d'explorer les ressources en cours d'exécution.
+Retournées lors d'un déploiement réussi — le moyen le plus rapide de localiser et d'explorer les
+ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Cloud Run. |
 | `service_url` | URL `run.app` par défaut du service. |
 | `service_location` | Région dans laquelle le service s'exécute. |
-| `stage_services` | URL de service spécifiques à l'étape (Cloud Deploy). |
-| `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'activé). |
+| `stage_services` | URLs de service spécifiques à l'étape (Cloud Deploy). |
+| `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
 | `database_password_secret` | Secret Manager secret contenant le mot de passe de la base de données. |
@@ -469,7 +445,7 @@ d'explorer les ressources en cours d'exécution.
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | Statut et détails CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | Statut VPC-SC. |
-| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Statut de l'audit logging et CMEK. |
+| `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et statut CMEK. |
 
 ---
 
@@ -480,17 +456,17 @@ d'explorer les ressources en cours d'exécution.
 
 | Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
-| `database_type` | `POSTGRES_15` | Critique | Metabase nécessite PostgreSQL ; tout autre moteur interrompt le démarrage. |
+| `database_type` | `POSTGRES_15` | Critique | Metabase nécessite PostgreSQL ; tout autre moteur provoque un échec au démarrage. |
 | `enable_cloudsql_volume` | `true` | Critique | La désactivation interrompt toutes les connexions à la base de données (sidecar Auth Proxy requis). |
 | `memory_limit` | `4Gi` | Critique | En dessous de 2 GiB, la JVM plante avec OutOfMemoryError au démarrage. |
 | `db_name` / `db_user` | défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données de l'application. |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans `backup_uri` valide fait échouer le job d'importation. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans un `backup_uri` valide fait échouer le job d'importation. |
 | `application_version` | incrémenter avec précaution | Critique | Les migrations Metabase sont unidirectionnelles ; la rétrogradation corrompt le schéma. |
 | `startup_probe.failure_threshold` | `15` (≥ 15) | Élevé | La réduction entraîne des arrêts prématurés du conteneur avant que la JVM ne termine son démarrage. |
 | `min_instance_count` | `1` pour la production | Élevé | `0` provoque des démarrages à froid de 60 à 120 secondes ; échecs de la sonde de démarrage à la première requête. |
 | `cpu_limit` | `2000m` | Élevé | En dessous de 500m, la compilation JIT de la JVM bloque le démarrage, déclenchant des échecs de sonde. |
-| `cpu_always_allocated` | `true` si utilisation d'abonnements/pulsations planifiés/analyses de synchronisation de base de données | Moyen | Par défaut `false` (facturation basée sur les requêtes) ; les abonnements/pulsations planifiés/analyses de synchronisation de base de données s'exécutent sans requête entrante et sont limités à un CPU quasi nul, de sorte qu'ils peuvent ne pas se terminer à moins d'être basculés sur `true`. |
-| `enable_iap` / `ingress_settings` | IAP activé ; `internal-and-cloud-load-balancing` | Élevé | La page de connexion Metabase est autrement accessible publiquement. |
+| `cpu_always_allocated` | `true` si vous utilisez des abonnements/pulsations planifiés/analyses de synchronisation de base de données | Moyen | Par défaut `false` (facturation basée sur les requêtes) ; les abonnements/pulsations planifiés/analyses de synchronisation de base de données s'exécutent sans requête entrante et sont limités à un CPU quasi nul, de sorte qu'ils peuvent ne pas se terminer à moins d'être basculés sur `true`. |
+| `enable_iap` / `ingress_settings` | IAP activé ; `internal-and-cloud-load-balancing` | Élevé | La page de connexion Metabase est sinon accessible publiquement. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité. |
 | `timeout_seconds` | `300` | Moyen | La réduction en dessous de 120s interrompt les requêtes analytiques en cours. |
 | `enable_auto_password_rotation` | `false` | Moyen | L'activation sans `rotation_propagation_delay_sec` suffisant provoque de brèves erreurs 500 pendant la rotation. |
@@ -498,18 +474,18 @@ d'explorer les ressources en cours d'exécution.
 
 ---
 
-Pour le comportement de la fondation référencé tout au long — identité de service,
-mise à l'échelle et concurrence, ingress et équilibrage de charge, CI/CD, Cloud
-Armor, IAP, Binary Authorization, VPC-SC, sauvegardes et mise en miroir d'images
-— voir **[App_CloudRun](App_CloudRun.md)**. La configuration d'application
-spécifique à Metabase partagée avec la variante GKE est décrite dans
+Pour le comportement de base référencé tout au long — identité de service, mise à l'échelle et
+concurrence, ingress et équilibrage de charge, CI/CD, Cloud Armor, IAP, Binary
+Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
+**[App_CloudRun](App_CloudRun.md)**. La configuration d'application spécifique à Metabase
+partagée avec la variante GKE est décrite dans
 **[Metabase_Common](Metabase_Common.md)**.
 
 <!-- related-guides -->
 
 ## Guides associés {#related-guides}
 
-- [Lab pratique : Metabase sur Cloud Run](../labs/Metabase_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
+- [Lab pratique : Metabase sur Cloud Run](../labs/Metabase_CloudRun.md) — déployez-le étape par étape, avec les écrans de console et les commandes à chaque étape.
 - [Metabase sur GKE Autopilot](Metabase_GKE.md) — la même application sur Kubernetes, pour quand vous avez besoin de l'autre cible de déploiement.
 - [Metabase Common — Configuration d'application partagée](Metabase_Common.md) — la configuration partagée par les deux cibles de déploiement.
-- Déployé aux côtés de [Odoo sur Cloud Run](Odoo_CloudRun.md), [Paperless-ngx sur Google Cloud Run](Paperless_CloudRun.md), [OnlyOffice sur Google Cloud Run](OnlyOffice_CloudRun.md), [Passbolt sur Google Cloud Run](Passbolt_CloudRun.md) dans la solution **Plateforme ERP intégrée**.
+- Déployé avec [Odoo sur Cloud Run](Odoo_CloudRun.md), [Paperless-ngx sur Google Cloud Run](Paperless_CloudRun.md), [OnlyOffice sur Google Cloud Run](OnlyOffice_CloudRun.md), [Passbolt sur Google Cloud Run](Passbolt_CloudRun.md) dans la solution **Plateforme ERP intégrée**.

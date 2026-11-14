@@ -3,20 +3,20 @@ title: "Zitadel sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Zitadel sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Zitadel_CloudRun.md @ 60462a86 sha256:51629b76e5cd -->
+<!-- translated-from: docs/modules/Zitadel_CloudRun.md @ 40c83c3f sha256:c6e1035054a4 -->
 
 # Zitadel sur Google Cloud Run {#zitadel-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Zitadel_CloudRun.png" alt="Zitadel sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Zitadel est une plateforme open source et cloud-native de gestion des identités et des accès (IAM)
-fournissant OpenID Connect, OAuth 2.0, SAML et la gestion des utilisateurs/organisations. Ce
+Zitadel est une plateforme open source de gestion des identités et des accès (IAM)
+native du cloud, offrant OpenID Connect, OAuth 2.0, SAML et la gestion des utilisateurs/organisations. Ce
 module déploie Zitadel sur **Cloud Run v2** au-dessus de la fondation [App_CloudRun](App_CloudRun.md),
 qui provisionne et gère l'infrastructure Google Cloud partagée.
 
-Ce guide se concentre sur les services cloud que Zitadel utilise et sur la manière de les explorer et de les opérer
+Ce guide se concentre sur les services cloud utilisés par Zitadel et sur la manière de les explorer et de les exploiter
 depuis la console Google Cloud et la ligne de commande. Pour les mécanismes communs à
-chaque application Cloud Run — identité de service, ingress et équilibrage de charge, mise à l'échelle et
+toutes les applications Cloud Run — identité de service, ingress et équilibrage de charge, mise à l'échelle et
 concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
 sauvegardes et cycle de vie du déploiement — reportez-vous au
 [guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
@@ -25,21 +25,21 @@ sauvegardes et cycle de vie du déploiement — reportez-vous au
 
 ## Ce que coûte Zitadel sur RAD, et comment cela se compare {#what-zitadel-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Zitadel sur Cloud Run dans votre propre projet Google Cloud coûte environ 167,44 $/mois en frais Google Cloud**, en plus d'un frais de module RAD unique de 300 crédits facturé une fois au moment du déploiement. Zitadel a besoin d'une base de données PostgreSQL derrière lui et fonctionne en permanence plutôt que de se mettre à l'échelle à zéro, ce qui représente la majeure partie des 167,44 $ ci-dessus. Dans un projet géré par RAD, les frais de module tombent à 270 crédits (10 % de moins) et le coût d'exécution est mesuré à l'heure en crédits au lieu d'être facturé directement par Google — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous pour le seul avantage géré par RAD qu'un VPS auto-hébergé ne peut pas égaler — ou voir le [guide GKE](Zitadel_GKE.md) si vous préférez l'exécuter sur Kubernetes, qui est également l'option la moins chère pour cette application.
+**L'exécution de Zitadel sur Cloud Run dans votre propre projet Google Cloud coûte environ 167,44 $/mois en frais Google Cloud**, en plus d'un frais de module RAD unique de 300 crédits facturé une fois au moment du déploiement. Zitadel a besoin d'une base de données PostgreSQL derrière lui et fonctionne en permanence plutôt que de se mettre à l'échelle à zéro, ce qui représente la majeure partie des 167,44 $ ci-dessus. Dans un projet géré par RAD, les frais de module tombent à 270 crédits (10 % de moins) et le coût d'exécution est mesuré à l'heure en crédits au lieu d'être facturé directement par Google — voir [Mettez-le en pause gratuitement](#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it) ci-dessous pour le seul avantage géré par RAD qu'un VPS auto-hébergé ne peut égaler — ou voir le [guide GKE](Zitadel_GKE.md) si vous préférez l'exécuter sur Kubernetes, qui est également l'option la moins chère pour cette application.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 300 crédits | 270 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | 167,44 $/mois, facturé par Google au prix catalogue | ~77 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | 167,44 $/mois, facturé par Google au prix catalogue | ~107 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
 **Coût d'exécution par défaut dans votre propre projet**
 
 | Ressource | US$/mois (prix catalogue Google, us-central1) |
 |---|---|
-| Cloud Run, 2x vCPU / 4 Gio (toujours actif) | 110,42 $ |
+| Cloud Run, 2x vCPU / 4 GiB (alwaysOn) | 110,42 $ |
 | Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ |
 | Cloud NAT et réseau | 5,00 $ |
 | Cloud Storage (modules complémentaires, sauvegardes) | 1,00 $ |
@@ -47,35 +47,34 @@ sauvegardes et cycle de vie du déploiement — reportez-vous au
 
 ### Comment cela se compare {#how-it-compares}
 
-- ZITADEL, le fournisseur derrière ce projet open source, vend également une version Cloud hébergée : sa [page de tarification](https://zitadel.com/pricing) (vérifiée le 8 octobre 2026) liste un niveau gratuit à 0 $/mois pour un maximum de 100 utilisateurs actifs quotidiens et un niveau Pro à 100 $/mois pour un maximum de 25 000 utilisateurs actifs quotidiens, avec un prix personnalisé pour l'Enterprise au-delà.
-- Pour un petit déploiement (quelques applications internes, bien en dessous de 100 DAU), le niveau gratuit de ZITADEL Cloud est plus avantageux que le coût d'exécution de 167,44 $/mois de RAD en termes monétaires ; le module de RAD devient plus adapté une fois que vous souhaitez votre propre instance Postgres dédiée, un contrôle total de l'infrastructure, ou une utilisation au-delà du plafond DAU du niveau gratuit sans facture SaaS récurrente.
-- Une alternative VPS nue fonctionne également : un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) à environ 49 $/mois, ou une boîte Hetzner/DigitalOcean de taille similaire à environ 24 $/mois, peut auto-héberger Zitadel et Postgres ensemble — moins cher que RAD en termes monétaires, sans aucune des sauvegardes gérées, des correctifs ou de la surveillance que RAD fournit.
+- ZITADEL, le fournisseur derrière ce projet open source, vend également une version Cloud hébergée : sa [page de tarification](https://zitadel.com/pricing) (vérifiée le 8 octobre 2026) liste un niveau Gratuit à 0 $/mois pour jusqu'à 100 utilisateurs actifs quotidiens et un niveau Pro à 100 $/mois pour jusqu'à 25 000 utilisateurs actifs quotidiens, avec un prix personnalisé pour l'Entreprise au-delà.
+- Pour un petit déploiement (une poignée d'applications internes, bien moins de 100 DAU), le niveau gratuit de ZITADEL Cloud bat le coût d'exécution de 167,44 $/mois de RAD en termes monétaires ; le module de RAD devient plus adapté lorsque vous souhaitez votre propre instance Postgres dédiée, un contrôle total de l'infrastructure, ou une utilisation au-delà du plafond de DAU du niveau gratuit sans facture SaaS récurrente.
+- Une alternative VPS nue fonctionne également : un GCP Compute Engine e2-standard-2 (2 vCPU/8 Go) à environ 49 $/mois, ou une machine Hetzner/DigitalOcean de taille similaire à environ 24 $/mois, peut auto-héberger Zitadel et Postgres ensemble — moins cher que RAD en termes monétaires, sans aucune des sauvegardes gérées, des correctifs ou de la surveillance fournis par RAD.
 
-### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-C'est l'avantage principal d'un projet géré par RAD, et il ne coûte rien pendant la pause.
-La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le
-projet purement et simplement — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression d'un module,
-cela ne démolit **pas** Cloud SQL, aucune VM, ou la ressource de calcul une par une : l'ensemble du
-projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà
+C'est l'avantage principal d'un projet géré par RAD, et il ne coûte rien lorsqu'il est en pause.
+La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer
+le projet purement et simplement — la suppression logique récupérable de 30 jours de Google. Contrairement à la suppression d'un module,
+cela ne détruit **pas** Cloud SQL, aucune VM, ni la ressource de calcul une par une : l'ensemble
+du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà
 déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le
-projet et de rattacher son compte de facturation, puis vous demande d'exécuter la mise à jour sur chaque déploiement pour
-confirmer que tout est revenu. Parce que rien n'a été détruit individuellement, cette mise à jour trouve
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le
+projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour
+confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve
 les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture
-jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
+jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
 
-Ce qu'il faut : vous devez posséder le projet (pas un que RAD gère uniquement pour la facturation), vous devez
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez
 le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est
-admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser le
-seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google dit que la plupart des
-services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
+admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser
+le seuil du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services sont entièrement fonctionnels dans les 36 heures suivant une restauration.
 
 Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a
-la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous
+la suppression logique de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous
 supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez
 personnalisé Zitadel et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive, ou un bucket
 en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable,
@@ -84,32 +83,32 @@ cela n'a pas d'importance.
 ### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
 Dans votre propre projet, ou une fois que 30 jours se sont écoulés sur un projet géré par RAD, il n'y a pas de pause gratuite —
-la suppression supprime les ressources définitivement, et la réactivation de Zitadel signifie un redéploiement à partir de
+la suppression supprime les ressources définitivement, et ramener Zitadel signifie redéployer à partir de
 zéro. Cela coûte 300 crédits (les frais de module ; les builds sont inclus).
 
-La suppression ne permet d'économiser de l'argent que si Zitadel devait rester inutilisé assez longtemps pour compenser ce
+La suppression ne permet d'économiser de l'argent que si Zitadel restait inutilisé suffisamment longtemps pour compenser ce
 coût de redéploiement par rapport à son propre coût d'exécution — pour Zitadel, c'est environ 6 jours ou plus.
 La majeure partie de ce coût d'exécution est généralement la base de données — elle ne s'arrête que lorsque rien d'autre dans le projet ne l'utilise, donc la suppression de cette application alors que quelque chose d'autre partage le projet n'économise que sa propre part de calcul.
 
-Priorité aux données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec celui-ci,
-donc copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+Conservez d'abord les données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui,
+donc copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-Sessions de lab, pour la formation : un formateur anime une session pour une classe. Chaque participant obtient l'
-application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le
-formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+Sessions de lab, pour la formation : un formateur anime une session pour une classe. Chaque participant obtient
+l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par
+le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
 Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 
-Environnements gérés, pour les cabinets de conseil : un partenaire exécute l'application pour un client à partir d'un
+Environnements gérés, pour les sociétés de conseil : un partenaire exécute l'application pour un client à partir d'un
 portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,
-la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le
-partenaire transfère le projet et les déploiements deviennent la propriété du client.
+la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin,
+le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR,
 par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les propres frais de RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les affirmations de pause/restauration. Prix de ZITADEL Cloud sur [zitadel.com/pricing](https://zitadel.com/pricing), vérifiés le 8 octobre 2026.
+**Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; [radmodules.dev/pricing](https://radmodules.dev/pricing) pour les propres frais de RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les affirmations de pause/restauration. Prix de ZITADEL Cloud depuis [zitadel.com/pricing](https://zitadel.com/pricing), vérifiés le 8 octobre 2026.
 
 ## 1. Vue d'ensemble {#1-overview}
 
@@ -118,30 +117,30 @@ ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | Cloud Run v2 | Service Go, 2 vCPU / 4 Gio par défaut ; HTTP/2 (gRPC + REST) sur le port 8080 |
-| Base de données | Cloud SQL pour PostgreSQL 15 | Obligatoire — Zitadel ne prend en charge que PostgreSQL ; MySQL est rejeté au moment de la planification |
+| Calcul | Cloud Run v2 | Service Go, 2 vCPU / 4 GiB par défaut ; HTTP/2 (gRPC + REST) sur le port 8080 |
+| Base de données | Cloud SQL pour PostgreSQL 15 | Requis — Zitadel ne prend en charge que PostgreSQL ; MySQL est rejeté au moment de la planification |
 | Stockage d'objets | Cloud Storage | Un bucket provisionné automatiquement (utilisation par l'opérateur ; l'état principal réside dans Postgres) |
 | Cache et file d'attente | Aucun | Zitadel stocke tout l'état dans PostgreSQL — pas de Redis, pas de file d'attente |
 | Secrets | Secret Manager | `ZITADEL_MASTERKEY` et mot de passe administrateur initial générés automatiquement ; mot de passe de la base de données |
 | Ingress | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut (publique) ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
-**Valeurs par défaut judicieuses à connaître d'emblée :**
+**Valeurs par défaut judicieuses à connaître à l'avance :**
 
-- **PostgreSQL est obligatoire.** `database_type = POSTGRES_15` par défaut ; une validation
-  au moment de la planification rejette MySQL et tout moteur non-Postgres. PostgreSQL 13/14 sont également
+- **PostgreSQL est obligatoire.** `database_type = POSTGRES_15` par défaut ; une
+  garde de validation au moment de la planification rejette MySQL et tout moteur non-Postgres. PostgreSQL 13/14 sont également
   acceptés.
-- **`ZITADEL_MASTERKEY` est généré automatiquement et immuable.** Il fait exactement 32
-  octets et chiffre toutes les données sensibles au repos. **Ne le faites jamais pivoter après le premier démarrage** —
-  cela rendrait les données précédemment chiffrées (secrets client, matériel de clé) illisibles.
+- **`ZITADEL_MASTERKEY` est générée automatiquement et immuable.** Elle fait exactement 32
+  octets et chiffre toutes les données sensibles au repos. **Ne la faites jamais pivoter après le premier démarrage** —
+  cela rendrait illisibles les données précédemment chiffrées (secrets clients, matériel de clé).
 - **Zitadel exécute sa propre configuration + migrations.** Le conteneur démarre avec
   `zitadel start-from-init`, qui crée le schéma et applique les migrations
-  de manière idempotente au premier démarrage — il n'y a pas de tâche de migration distincte.
-- **Un administrateur de première instance est créé au premier démarrage.** L'organisation `ZITADEL` et l'
-  administrateur humain `zitadel-admin` sont initialisés avec un mot de passe généré par Secret Manager
+  de manière idempotente au premier démarrage — il n'y a pas de job de migration séparé.
+- **Un administrateur de première instance est créé au premier démarrage.** L'organisation `ZITADEL` et l'administrateur
+  humain `zitadel-admin` sont initialisés avec un mot de passe généré à partir de Secret Manager
   (`PASSWORDCHANGEREQUIRED = false`), afin que vous puissiez vous connecter immédiatement.
 - **HTTP/2 avec TLS terminé en amont.** `ZITADEL_EXTERNALSECURE = true`,
-  `ZITADEL_EXTERNALPORT = 443`, `ZITADEL_TLS_ENABLED = false`. Zitadel sert HTTP/2 en clair
-  sur 8080 et fait confiance à Cloud Run pour terminer TLS sur `:443`. Définissez
+  `ZITADEL_EXTERNALPORT = 443`, `ZITADEL_TLS_ENABLED = false`. Zitadel sert du HTTP/2 en clair
+  sur le port 8080 et fait confiance à Cloud Run pour terminer TLS sur `:443`. Définissez
   `container_protocol = "h2c"` si vous avez besoin d'HTTP/2 de bout en bout pour les clients API gRPC.
 - **`ZITADEL_EXTERNALDOMAIN` est dérivé de l'URL du service.** Le point d'entrée le définit
   à partir de l'hôte `run.app` d'exécution. Derrière un domaine personnalisé, vous devez le remplacer (voir le
@@ -149,7 +148,7 @@ ensemble ciblé de services Google Cloud :
 - **Ingress public par défaut.** `ingress_settings = "all"` afin que la console et les points de terminaison OIDC
   soient accessibles. L'activation d'IAP place la connexion Google devant tout,
   y compris les clients OIDC/machine.
-- **Le service est maintenu actif.** `cpu_always_allocated = true` et `min_instance_count = 1`
+- **Le service est maintenu chaud.** `cpu_always_allocated = true` et `min_instance_count = 1`
   (pas de mise à l'échelle à zéro), de sorte que les points de terminaison de jetons n'ont pas de latence de démarrage à froid ; `max_instance_count = 5`.
 - **NFS est désactivé par défaut.** Zitadel conserve tout l'état dans PostgreSQL et n'écrit jamais
   sur un montage NFS, donc `enable_nfs = false`.
@@ -159,11 +158,11 @@ ensemble ciblé de services Google Cloud :
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
 Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms de services et de ressources sont
-signalés dans les [Sorties](#5-outputs) du déploiement.
+rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. Cloud Run — le service Zitadel {#a-cloud-run--the-zitadel-service}
 
-Zitadel s'exécute comme un service Cloud Run v2 qui s'adapte automatiquement en fonction de la charge de requêtes entre le
+Zitadel s'exécute comme un service Cloud Run v2 qui s'adapte automatiquement en fonction de la charge des requêtes entre le
 nombre minimal et maximal d'instances. Chaque déploiement crée une révision immuable ;
 le trafic peut être réparti entre les révisions pour des déploiements sûrs.
 
@@ -186,7 +185,7 @@ la répartition du trafic.
 
 Zitadel stocke toutes les données d'application (organisations, utilisateurs, projets, applications,
 sessions, clés) dans une instance gérée de Cloud SQL pour PostgreSQL 15. Le service se connecte
-privément via le **Cloud SQL Auth Proxy** sur un socket Unix ; aucune IP publique n'est
+privément via le **proxy d'authentification Cloud SQL** sur un socket Unix ; aucune IP publique n'est
 exposée. Lors du premier déploiement, un job d'initialisation crée la base de données de l'application et un
 rôle avec `CREATEDB`/`CREATEROLE` ; Zitadel crée ensuite son propre schéma via
 `start-from-init`.
@@ -220,8 +219,8 @@ Voir [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
 ### D. Secret Manager {#d-secret-manager}
 
 Deux secrets sont générés automatiquement et stockés dans Secret Manager : `ZITADEL_MASTERKEY`
-(chiffre toutes les données au repos) et le mot de passe administrateur initial (initialise l'administrateur
-humain de première instance au démarrage). Le mot de passe de la base de données est géré séparément par la fondation.
+(chiffre toutes les données au repos) et le mot de passe administrateur initial (initialise l'humain de première instance
+au démarrage). Le mot de passe de la base de données est géré séparément par la fondation.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -237,7 +236,7 @@ Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotatio
 
 ### E. Réseau et ingress {#e-networking--ingress}
 
-Le service est accessible par son URL `run.app` par défaut, ce qui permet l'accès public dont la console et les points de terminaison OIDC ont besoin. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peuvent être superposés ; les paramètres d'ingress et le contrôle d'egress VPC contrôlent la connectivité. Étant donné que Zitadel sert gRPC + REST sur HTTP/2, définissez `container_protocol = "h2c"` pour un HTTP/2 de bout en bout si nécessaire.
+Le service est accessible par son URL `run.app` par défaut, ce qui permet l'accès public dont la console et les points de terminaison OIDC ont besoin. Un équilibreur de charge HTTPS externe avec un domaine personnalisé, Cloud CDN et Cloud Armor peuvent être superposés ; les paramètres d'ingress et de contrôle d'égression VPC contrôlent la connectivité. Étant donné que Zitadel sert gRPC + REST sur HTTP/2, définissez `container_protocol = "h2c"` pour un HTTP/2 de bout en bout lorsque cela est nécessaire.
 
 - **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de charge.
 - **CLI :**
@@ -250,11 +249,11 @@ Voir [App_CloudRun](App_CloudRun.md).
 
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
-Les journaux de conteneurs sont acheminés vers Cloud Logging ; les métriques Cloud Run et Cloud SQL sont acheminées vers Cloud
+Les journaux de conteneurs sont envoyés à Cloud Logging ; les métriques Cloud Run et Cloud SQL sont envoyées à Cloud
 Monitoring, avec des vérifications de disponibilité et des politiques d'alerte facultatives. Les lignes de journal
 `[cloud-entrypoint]` affichent le mode SSL de la base de données résolu et le domaine externe.
 
-- **Console :** Logging → Logs Explorer ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -265,16 +264,16 @@ Monitoring, avec des vérifications de disponibilité et des politiques d'alerte
 ## 3. Comportement de l'application Zitadel {#3-zitadel-application-behaviour}
 
 - **Configuration de la base de données au premier déploiement.** Un job d'initialisation exécute `db-init.sh` en utilisant
-  `postgres:15-alpine`. Il se connecte via le Cloud SQL Auth Proxy et crée de manière idempotente
+  `postgres:15-alpine`. Il se connecte via le proxy d'authentification Cloud SQL et crée de manière idempotente
   la base de données de l'application et un rôle avec `LOGIN CREATEDB CREATEROLE`, puis
   accorde des privilèges sur la base de données et le schéma `public`. Le job peut être réexécuté en toute sécurité. Il
   ne crée **pas** le schéma de Zitadel — Zitadel le fait lui-même.
 - **Configuration + migrations au démarrage.** Le conteneur exécute `zitadel start-from-init`, qui
   crée le schéma et applique les migrations de manière idempotente à chaque démarrage. La mise à niveau de la
-  version de l'application applique les modifications de schéma sans étape de migration distincte.
-- **`ZITADEL_MASTERKEY` est immuable après le premier démarrage.** Il est généré une fois (exactement
-  32 octets) et écrit dans Secret Manager. Le modifier rend toutes les données précédemment chiffrées
-  illlisibles. Ne le touchez que lors d'une migration planifiée et comprise.
+  version de l'application applique les modifications de schéma sans étape de migration séparée.
+- **`ZITADEL_MASTERKEY` est immuable après le premier démarrage.** Elle est générée une fois (exactement
+  32 octets) et écrite dans Secret Manager. La modifier rend toutes les données précédemment chiffrées
+  illlisibles. Ne la touchez que lors d'une migration planifiée et comprise.
 - **Administrateur de première exécution.** Connectez-vous avec le nom d'utilisateur `zitadel-admin` (par défaut) et le mot de passe
   de Secret Manager :
   ```bash
@@ -283,14 +282,14 @@ Monitoring, avec des vérifications de disponibilité et des politiques d'alerte
   ```
   Créez ensuite un véritable administrateur, désactivez ou restreignez le compte initial, et configurez vos
   organisations, projets et applications OIDC/SAML dans la console.
-- **Le domaine externe doit correspondre à l'hôte du navigateur.** L'émetteur OIDC et la redirection de la console
-  Les URI sont construits à partir de `ZITADEL_EXTERNALDOMAIN`. Le point d'entrée le dérive de l'
-  URL `run.app` ; derrière un domaine personnalisé, définissez `ZITADEL_EXTERNALDOMAIN` (via
+- **Le domaine externe doit correspondre à l'hôte du navigateur.** L'émetteur OIDC et les URI de redirection de la console
+  sont construits à partir de `ZITADEL_EXTERNALDOMAIN`. Le point d'entrée le dérive de l'URL
+  `run.app` ; derrière un domaine personnalisé, définissez `ZITADEL_EXTERNALDOMAIN` (via
   `environment_variables`) sur cet hôte ou les connexions/échanges de jetons échoueront.
 - **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité ciblent `/debug/healthz` — un
   point de terminaison `200` non authentifié. Prévoyez environ 7 à 8 minutes au premier démarrage (délai initial de 60 secondes
   plus une fenêtre de nouvelle tentative d'environ 450 secondes) pour la configuration + les migrations.
-- **Inspecter la configuration / les jobs en cours d'exécution :**
+- **Inspecter la configuration/les jobs en cours d'exécution :**
   ```bash
   gcloud run services describe <service-name> --region "$REGION" \
     --format='value(spec.template.spec.containers[0].env)'
@@ -310,7 +309,7 @@ spécifiques ou notables pour Zitadel sont listés ; toutes les autres entrées 
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `project_id` | _(obligatoire)_ | Projet Google Cloud cible. |
+| `project_id` | _(requis)_ | Projet Google Cloud cible. |
 | `region` | `us-central1` | Région pour le service et les ressources régionales. |
 
 ### Groupe 2 — Environnement de déploiement {#group-2--deployment-environment}
@@ -333,16 +332,16 @@ spécifiques ou notables pour Zitadel sont listés ; toutes les autres entrées 
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `deploy_application` | `true` | Définir `false` pour provisionner l'infrastructure uniquement. |
-| `container_image_source` | `custom` | Zitadel est un build personnalisé léger À PARTIR de l'image ghcr — laisser comme `custom`. |
+| `deploy_application` | `true` | Définissez `false` pour provisionner uniquement l'infrastructure. |
+| `container_image_source` | `custom` | Zitadel est une build personnalisée légère À PARTIR de l'image ghcr — laissez comme `custom`. |
 | `cpu_limit` | `2000m` | CPU par instance ; 2 vCPU recommandés. |
 | `memory_limit` | `4Gi` | Mémoire par instance. |
-| `container_port` | `8080` | Zitadel sert gRPC + REST sur HTTP/2 sur 8080. |
-| `container_protocol` | `http1` | Définir `h2c` pour HTTP/2 de bout en bout vers les clients API gRPC. |
-| `min_instance_count` | `1` | Maintenu actif (pas de mise à l'échelle à zéro) afin que les points de terminaison de jetons n'aient pas de démarrage à froid. |
-| `max_instance_count` | `5` | Nombre maximal d'instances ; sûr à augmenter — tout l'état est dans PostgreSQL. |
+| `container_port` | `8080` | Zitadel sert gRPC + REST sur HTTP/2 sur le port 8080. |
+| `container_protocol` | `http1` | Définissez `h2c` pour un HTTP/2 de bout en bout vers les clients API gRPC. |
+| `min_instance_count` | `1` | Maintenu chaud (pas de mise à l'échelle à zéro) afin que les points de terminaison de jetons n'aient pas de démarrage à froid. |
+| `max_instance_count` | `5` | Nombre maximal d'instances ; peut être augmenté en toute sécurité — tout l'état est dans PostgreSQL. |
 | `cpu_always_allocated` | `true` | Facturation basée sur l'instance ; maintient Zitadel réactif pour le trafic d'authentification. |
-| `enable_cloudsql_volume` | `true` | Connexion socket du Cloud SQL Auth Proxy. |
+| `enable_cloudsql_volume` | `true` | Connexion socket du proxy d'authentification Cloud SQL. |
 | `enable_image_mirroring` | `true` | Mettre en miroir l'image construite dans Artifact Registry. |
 | `timeout_seconds` | `300` | Durée maximale de la requête. |
 
@@ -359,8 +358,8 @@ spécifiques ou notables pour Zitadel sont listés ; toutes les autres entrées 
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `environment_variables` | `{}` | Paramètres `ZITADEL_*` supplémentaires (par exemple `ZITADEL_EXTERNALDOMAIN`, remplacements d'organisation/administrateur). Les valeurs principales de la base de données/TLS/clé maîtresse sont définies automatiquement. |
-| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. |
+| `environment_variables` | `{}` | Paramètres `ZITADEL_*` supplémentaires (par exemple `ZITADEL_EXTERNALDOMAIN`, remplacements org/admin). Les valeurs principales DB/TLS/masterkey sont définies automatiquement. |
+| `secret_environment_variables` | `{}` | Mappage de var d'env → nom de secret Secret Manager. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Fréquence de notification de rotation de Secret Manager. **Ne pas activer la rotation de la clé maîtresse.** |
 
@@ -372,7 +371,7 @@ spécifiques ou notables pour Zitadel sont listés ; toutes les autres entrées 
 | `backup_retention_days` | `7` | Rétention ; augmenter pour la production/conformité. |
 | `enable_backup_import` / `backup_source` / `backup_file` / `backup_format` | options de restauration | Restaurer à partir d'une sauvegarde lors du déploiement. |
 
-### Groupe 8 — CI/CD et autorisation binaire {#group-8--cicd--binary-authorization}
+### Groupe 8 — CI/CD et Binary Authorization {#group-8--cicd--binary-authorization}
 
 Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 [App_CloudRun](App_CloudRun.md). Entrées clés : `enable_cicd_trigger`,
@@ -383,7 +382,7 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_cloud_armor` | `false` | Provisionner un équilibreur de charge HTTPS global + Cloud Armor WAF. |
+| `enable_cloud_armor` | `false` | Provisionner un équilibreur de charge HTTPS global + WAF Cloud Armor. |
 | `admin_ip_ranges` | `[]` | Plages CIDR exemptées des règles WAF. |
 | `application_domains` | `[]` | Domaines personnalisés — n'oubliez pas de définir `ZITADEL_EXTERNALDOMAIN` pour qu'il corresponde. |
 | `enable_cdn` | `false` | Activer Cloud CDN sur le backend de l'équilibreur de charge HTTPS. |
@@ -420,7 +419,7 @@ Intégration standard App_CloudRun Cloud Build / Cloud Deploy — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/debug/healthz`, délai de 60s | Sonde de démarrage. Prévoir environ 7 à 8 minutes au premier démarrage. |
+| `startup_probe` | HTTP `/debug/healthz`, délai de 60s | Sonde de démarrage. Prévoir ~7-8 minutes au premier démarrage. |
 | `liveness_probe` | HTTP `/debug/healthz`, délai de 60s | Sonde de vivacité. |
 | `uptime_check_config` | _(défini)_ | Vérification de disponibilité Cloud Monitoring (points de terminaison publics uniquement). |
 | `alert_policies` | `[]` | Politiques d'alerte métrique. |
@@ -435,7 +434,7 @@ Zitadel n'utilise pas Redis (tout l'état est dans PostgreSQL). `enable_redis` e
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode de simulation. |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
 | `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 Toutes les autres entrées suivent le comportement standard d'App_CloudRun.
@@ -452,10 +451,10 @@ Retourné lors d'un déploiement réussi — le moyen le plus rapide de localise
 | `service_url` | URL `run.app` par défaut du service (la console Zitadel). |
 | `service_location` | Région dans laquelle le service s'exécute. |
 | `stage_services` | URL de service spécifiques à l'étape (Cloud Deploy). |
-| `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
+| `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'activé). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
-| `database_password_secret` | Secret Manager secret contenant le mot de passe de la base de données. |
+| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
 | `database_host` / `database_port` | Point de terminaison / port de la base de données. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
@@ -476,20 +475,20 @@ Retourné lors d'un déploiement réussi — le moyen le plus rapide de localise
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-> **Validation héritée au moment de la planification.** Ce module transmet sa configuration via le moteur de fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et les combinaisons* au moment de la planification — un `database_type` non-Postgres, `enable_cloudsql_volume` avec `database_type = NONE`, `min_instance_count > max_instance_count`, Redis activé sans hôte résolvable, un `redis_port`/`backup_retention_days` hors de portée. Une configuration invalide échoue la **planification** avec une erreur claire et nommée avant qu'aucune ressource ne soit créée, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à l'exécution.
+> **Validation héritée au moment de la planification.** Ce module transmet sa configuration au moteur de la fondation [App_CloudRun](App_CloudRun.md), qui valide les valeurs *et les combinaisons* au moment de la planification — un `database_type` non-Postgres, `enable_cloudsql_volume` avec `database_type = NONE`, `min_instance_count > max_instance_count`, Redis activé sans hôte résolvable, un `redis_port`/`backup_retention_days` hors plage. Une configuration invalide fait échouer le **plan** avec une erreur claire et nommée avant la création de toute ressource, de sorte que la plupart des erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à l'exécution.
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
-| `ZITADEL_MASTERKEY` (auto-généré) | Ne jamais faire pivoter après le premier démarrage | Critique | Le faire pivoter rend toutes les données précédemment chiffrées (secrets client, matériel de clé) illisibles de manière permanente. |
-| `database_type` | `POSTGRES_15` | Critique | Zitadel ne prend en charge que PostgreSQL ; MySQL/autre est rejeté au moment de la planification, et un moteur incorrect bloque le démarrage. |
+| `ZITADEL_MASTERKEY` (auto-généré) | Ne jamais faire pivoter après le premier démarrage | Critique | Le faire pivoter rend toutes les données précédemment chiffrées (secrets clients, matériel de clé) définitivement illisibles. |
+| `database_type` | `POSTGRES_15` | Critique | Zitadel ne prend en charge que PostgreSQL ; MySQL/autre est rejeté au moment de la planification, et un moteur incorrect interrompt le démarrage. |
 | `db_name` / `db_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/le rôle et détruit toutes les données d'identité. |
-| `enable_backup_import` | `false` sauf en cas de restauration | Critique | L'activation sans source de sauvegarde valide échoue le job d'importation. |
-| `ZITADEL_EXTERNALDOMAIN` | Correspondre au navigateur/hôte | Critique | S'il ne correspond pas à l'hôte que les utilisateurs atteignent, l'émetteur OIDC et les redirections de la console sont incorrects et chaque échange de connexion/jeton échoue. Définissez-le explicitement derrière un domaine personnalisé. |
-| `enable_cloudsql_volume` | `true` | Élevé | Le socket du proxy d'authentification est requis pour la connectivité PostgreSQL ; sa désactivation avec une base de données configurée est bloquée par une protection au moment de la planification. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans source de sauvegarde valide fait échouer le job d'importation. |
+| `ZITADEL_EXTERNALDOMAIN` | Correspondre au navigateur/hôte | Critique | S'il ne correspond pas à l'hôte que les utilisateurs atteignent, l'émetteur OIDC et les redirections de la console sont incorrects et chaque connexion/échange de jetons échoue. Définissez-le explicitement derrière un domaine personnalisé. |
+| `enable_cloudsql_volume` | `true` | Élevé | Le socket du proxy d'authentification est requis pour la connectivité PostgreSQL ; sa désactivation avec une base de données configurée est bloquée par une garde au moment de la planification. |
 | `ingress_settings` | `all` | Élevé | `internal` bloque la console et tous les clients OIDC/OAuth externes. |
 | `enable_iap` | uniquement pour les consoles privées | Élevé | IAP nécessite une connexion Google pour toutes les requêtes, bloquant les clients OIDC/machine et les points de terminaison de jetons. |
 | `application_version` | Épingler une version | Élevé | `latest` correspond à un tag épinglé aujourd'hui, mais l'épinglage explicite évite les migrations surprises lors du redéploiement. |
-| `memory_limit` | `4Gi` | Moyen | Un réglage trop bas risque un OOM sous charge ; gen2 impose également un plancher de 512 Mio. |
+| `memory_limit` | `4Gi` | Moyen | Un réglage trop bas risque un OOM sous charge ; gen2 impose également un plancher de 512 MiB. |
 | `min_instance_count` | `1` | Moyen | `0` (mise à l'échelle à zéro) ajoute une latence de démarrage à froid aux requêtes de jetons/connexion après l'inactivité. |
 | `enable_nfs` | `false` (par défaut) | Faible | Zitadel ne stocke aucun état sur disque ; l'activer n'ajoute qu'un montage NFS inutilisé. |
 | `backup_retention_days` | `7` (augmenter pour la production) | Moyen | Trop court pour la rétention de conformité des données d'identité. |
@@ -505,8 +504,8 @@ La configuration d'application spécifique à Zitadel partagée avec la variante
 
 <!-- related-guides -->
 
-## Guides associés {#related-guides}
+## Guides associées {#related-guides}
 
 - [Lab pratique : Zitadel sur Cloud Run](../labs/Zitadel_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
-- [Zitadel sur GKE Autopilot](Zitadel_GKE.md) — la même application sur Kubernetes, lorsque vous avez besoin de l'autre cible de déploiement.
+- [Zitadel sur GKE Autopilot](Zitadel_GKE.md) — la même application sur Kubernetes, pour quand vous avez besoin de l'autre cible de déploiement.
 - [Zitadel Common — Configuration d'application partagée](Zitadel_Common.md) — la configuration partagée par les deux cibles de déploiement.

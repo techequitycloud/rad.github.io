@@ -3,50 +3,67 @@ title: "Docuseal sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Docuseal sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Docuseal_CloudRun.md @ 60462a86 sha256:f483f78a0736 -->
+<!-- translated-from: docs/modules/Docuseal_CloudRun.md @ 40c83c3f sha256:a1188471e3c3 -->
 
 # Docuseal sur Google Cloud Run {#docuseal-on-google-cloud-run}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Docuseal_CloudRun.png" alt="Docuseal sur Google Cloud Run" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-DocuSeal est une plateforme open source de signature de documents — une
-alternative auto-hébergée à DocuSign pour créer, remplir et signer des documents
-PDF avec un constructeur de formulaires visuel, des modèles réutilisables et des
-pistes d'audit. Ce module déploie DocuSeal sur **Cloud Run v2** au-dessus de la
-fondation [App_CloudRun](App_CloudRun.md), qui provisionne et gère
-l'infrastructure Google Cloud partagée.
+DocuSeal est une plateforme de signature de documents open source — une
+alternative auto-hébergée à DocuSign pour créer, remplir et signer des
+documents PDF avec un constructeur de formulaires visuel, des modèles
+réutilisables et des pistes d'audit. Ce module déploie DocuSeal sur **Cloud Run
+v2** au-dessus de la fondation [App_CloudRun](App_CloudRun.md), qui provisionne
+et gère l'infrastructure Google Cloud partagée.
 
 Ce guide se concentre sur les services cloud utilisés par DocuSeal et sur la
-manière de les explorer et de les opérer depuis la console Google Cloud et la
+manière de les explorer et de les exploiter depuis la console Google Cloud et la
 ligne de commande. Pour les mécanismes communs à chaque application Cloud Run —
 identité de service, ingress et équilibrage de charge, mise à l'échelle et
-concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service Controls,
-sauvegardes et cycle de vie du déploiement — reportez-vous au
-[guide de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter
-ici.
+concurrence, CI/CD, Cloud Armor, IAP, Binary Authorization, VPC Service
+Controls, sauvegardes et cycle de vie du déploiement — reportez-vous au [guide
+de la fondation App_CloudRun](App_CloudRun.md) plutôt que de les répéter ici.
 
 ---
 
-## Ce que coûte Docuseal sur RAD, et comment cela se compare {#what-docuseal-costs-on-rad-and-how-that-compares}
+## Ce que coûte Docuseal sur RAD, et comparaison {#what-docuseal-costs-on-rad-and-how-that-compares}
 
-**Docuseal sur le module Cloud Run de RAD coûte environ 180,87 $ US par mois, sans licence par utilisateur.** Cela se compare à 20 $ US par utilisateur et par mois pour le plan Pro hébergé de Docuseal. Un serveur auto-géré est moins cher en espèces, mais vous devez alors gérer vous-même la base de données, les sauvegardes, les correctifs de sécurité et les mises à niveau. Fait inhabituel pour ce catalogue, GKE Autopilot est en fait l'option la moins chère pour Docuseal — environ 149,81 $ US par mois — car la configuration par défaut de Cloud Run de ce module maintient la puissance de calcul allouée en continu plutôt que de la réduire à zéro ; voir le [guide GKE](Docuseal_GKE.md). Les chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de cette section.
+**Docuseal sur le module Cloud Run de RAD coûte environ 180,87 $ US par mois,
+sans licence par utilisateur.** Cela se compare à 20 $ US par utilisateur et par
+mois pour le plan Pro hébergé de Docuseal. Un serveur auto-géré est moins cher
+en espèces, mais vous devez alors gérer vous-même la base de données, les
+sauvegardes, les correctifs de sécurité et les mises à niveau. Exceptionnellement
+pour ce catalogue, GKE Autopilot est en fait l'option la moins chère pour
+Docuseal — environ 149,81 $ US par mois — car la configuration par défaut de
+Cloud Run de ce module maintient la puissance de calcul allouée en permanence
+plutôt que de la réduire à zéro ; voir le [guide GKE](Docuseal_GKE.md). Les
+chiffres sont valables au 8 octobre 2026 ; les sources sont listées à la fin de
+cette section.
 
-Si vous n'en avez besoin qu'occasionnellement — pour des études, une démo, une activité saisonnière — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que les 180,87 $ US deviennent quelques dollars par mois. Voir **Mettez-le en pause gratuitement**, ci-dessous.
+Si vous n'en avez besoin qu'occasionnellement — pour des études, une démo, une
+activité saisonnière — un projet géré par RAD peut être supprimé et restauré
+dans les 30 jours sans frais supplémentaires, de sorte que les 180,87 $ US
+deviennent quelques dollars par mois. Voir **Mettre en pause gratuitement**,
+ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
-| | Dans un projet Google Cloud que vous possédez | Dans un projet que RAD gère pour vous |
+| | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **180,87 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **83 crédits par jour**, soit environ 2 490 par mois (environ 249 $ US au prix de la recharge) |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites, puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **180,87 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **113 crédits par jour**, soit environ 3 390 par mois (environ 339 $ US au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
-10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins avec un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas de deuxième base de données.
+10 crédits coûtent 1 $ US pour une recharge unique, et moins pour un plan
+mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers
+et le réseau sont partagés par toutes les applications du projet, de sorte qu'une
+deuxième application n'ajoute pas une deuxième base de données.
 
-**Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
+**Coût d'exécution par défaut dans votre propre projet** (us-central1, prix
+catalogue Google) :
 
-| Ressource (par défaut du module) | Par mois |
+| Ressource (module par défaut) | Par mois |
 |---|---|
 | Cloud Run, 2x vCPU / 4 GiB (alwaysOn) | 110,42 $ US |
 | Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
@@ -55,46 +72,137 @@ Si vous n'en avez besoin qu'occasionnellement — pour des études, une démo, u
 | Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
 | **Total** | **environ 180,87 $ US** |
 
-### Comment cela se compare {#how-it-compares}
+### Comparaison {#how-it-compares}
 
 | Option | Par mois | Qui l'exécute |
 |---|---|---|
 | Docuseal, plan Pro (par utilisateur) | 20 $ US par mois | Docuseal |
-| **RAD, Cloud Run, votre propre projet** | **Environ 180,87 $ US** | L'automatisation de RAD, dans votre projet |
+| **RAD, Cloud Run, votre propre projet** | **Environ 180,87 $ US** | Automatisation de RAD, dans votre projet |
 | **RAD, Cloud Run, un projet géré par RAD** | **Environ 249 $ US** | RAD |
 
-- Le plan Pro de Docuseal est tarifé par signataire ; même avec cinq utilisateurs (100 $ US/mois), il coûte plus cher que le coût d'exécution du projet propre à RAD, et le coût de RAD ne change pas lorsque vous ajoutez un autre signataire.
-- Le plan Basic de Docuseal est gratuit mais plafonné à 10 e-mails de demande de signature par mois ; le module de RAD exécute le même logiciel open source sans une telle limite.
+- Le plan Pro de Docuseal est tarifé par signataire ; même avec cinq
+  utilisateurs (100 $/mois), il coûte plus cher que le coût d'exécution du
+  projet propre à RAD, et le coût de RAD ne change pas lorsque vous ajoutez un
+  nouveau signataire.
+- Le plan Basic de Docuseal est gratuit mais plafonné à 10 e-mails de demande
+  de signature par mois ; le module de RAD exécute le même logiciel open source
+  sans un tel plafond.
 
-### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-Si Docuseal s'exécute dans **un projet que RAD gère pour vous**, vous avez une deuxième option qui va bien au-delà de la mise à l'échelle à zéro : **supprimez l'ensemble du projet et restaurez-le dans les 30 jours pour presque rien.** Cela convient bien mieux à Docuseal dont vous n'avez besoin qu'occasionnellement — pour des études, une démo, une activité saisonnière — que de le faire fonctionner en continu.
+Si Docuseal s'exécute dans **un projet géré par RAD pour vous**, vous avez une
+deuxième option qui va bien au-delà de la mise à l'échelle à zéro : **supprimer
+l'ensemble du projet et le restaurer dans les 30 jours pour presque rien.** Cela
+convient bien mieux à Docuseal dont vous n'avez besoin qu'occasionnellement —
+pour des études, une démo, une activité saisonnière — que de le faire
+fonctionner en continu.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.**
+> Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou
+> les ressources qu'il contient, sera utilisable après sa restauration. La
+> restauration ne peut donc pas être considérée comme un moyen de récupérer un
+> projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des
+> sauvegardes appropriées des données et de la configuration de l'application et
+> de les avoir stockées en dehors du projet. Si une restauration échoue, ou si
+> le projet restauré ne fonctionne pas, la solution de repli consiste à
+> redéployer l'application (voir la section suivante) et à restaurer sa
+> configuration et ses données à partir de ces sauvegardes.
 
-- **Comment ça marche.** La suppression d'un projet géré par RAD délie d'abord sa facturation, puis demande à Google de supprimer le projet. Google ne supprime pas le projet immédiatement : il le conserve, récupérable, pendant 30 jours. Comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un seul module, cela ne supprime pas Cloud SQL, la VM NFS ou Cloud Run un par un — l'ensemble du projet, et tout ce qu'il contient, s'arrête simplement.
-- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut le restaurer. RAD demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
-- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, pas 180,87 $ US.** Déployez Docuseal, utilisez-le pendant un certain temps, supprimez le projet. Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Update, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez les frais de module qu'une seule fois, et les heures pendant lesquelles Docuseal était réellement en ligne.
-- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet que vous apportez et dont RAD ne gère que la facturation), et vous le restaurez vous-même dans les 30 jours — après cela, Google le supprime définitivement. La restauration est admise comme la création d'un nouveau projet : votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude et de démo). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
-- **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes sont écrites dans un bucket à l'intérieur du projet, et ce bucket n'est **pas** protégé par la suppression logicielle de Cloud Storage, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé les données et que vous souhaitez les conserver, copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer, comme pour le flux de travail de redéploiement ci-dessous. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+- **Comment ça marche.** La suppression d'un projet géré par RAD commence par
+  dissocier sa facturation, puis demande à Google de supprimer le projet. Google
+  ne supprime pas le projet immédiatement : il le conserve, récupérable, pendant
+  30 jours. Comme la facturation est déjà dissociée, rien n'est facturé pendant
+  cette période d'attente. Contrairement à la suppression d'un seul module, cela
+  ne supprime pas Cloud SQL, la VM NFS ou Cloud Run un par un — l'ensemble du
+  projet, et tout ce qu'il contient, s'arrête simplement.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30
+  jours, le propriétaire du projet peut le restaurer. RAD demande à Google de
+  réactiver le projet et de rattacher son compte de facturation, puis vous
+  demande d'exécuter **Mettre à jour** sur chaque déploiement pour confirmer que
+  tout est revenu. Comme rien n'a été détruit individuellement, cette mise à
+  jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas
+  une reconstruction, et une mise à jour ne facture plus jamais les frais de
+  module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque
+  déploiement), donc une restauration ne coûte normalement aucun crédit.
+- **Ainsi, un mois d'utilisation occasionnelle peut coûter quelques dollars, et
+  non les 339 $ US par mois pour le maintenir en fonctionnement.** Déployez
+  Docuseal, utilisez-le pendant un certain temps, supprimez le projet.
+  Restaurez-le la prochaine fois que vous en avez besoin, confirmez avec Mettre
+  à jour, et supprimez-le à nouveau lorsque vous avez terminé. Vous ne payez que
+  les frais de module une seule fois et les heures pendant lesquelles Docuseal
+  était réellement actif.
+- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un
+  projet que vous apportez et dont RAD ne gère que la facturation), et vous le
+  restaurez vous-même dans les 30 jours — après cela, Google le supprime
+  définitivement. La restauration est admise comme la création d'un nouveau
+  projet : votre solde de crédits achetés doit toujours dépasser le seuil du
+  palier (100 crédits pour le palier sandbox qui convient à la plupart des
+  utilisations d'étude et de démo). Google indique que la plupart des services
+  sont de nouveau pleinement fonctionnels dans les 36 heures suivant une
+  restauration.
+- **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les
+  sauvegardes sont écrites dans un bucket à l'intérieur du projet, et ce bucket
+  n'est **pas** protégé par la suppression logicielle de Cloud Storage, il est
+  donc très probable qu'il disparaisse dès que vous supprimez le projet — même
+  si le projet lui-même est récupérable pendant 30 jours. Si vous avez
+  personnalisé les données et que vous souhaitez les conserver, copiez une
+  sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de
+  supprimer, comme pour le flux de travail de redéploiement ci-dessous. Pour une
+  installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
-### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-La configuration par défaut de Docuseal sur Cloud Run maintient 2 vCPU et 4 GiB alloués en continu (cpu_always_allocated), donc, contrairement à la plupart des modules Cloud Run de ce catalogue, il ne se réduit **pas** à zéro entre les requêtes. L'option ci-dessus ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le déploiement et de le déployer à nouveau lorsque vous en avez besoin.**
+La configuration par défaut de Docuseal sur Cloud Run maintient 2 vCPU et 4 GiB
+alloués en permanence (cpu_always_allocated), de sorte que, contrairement à la
+plupart des modules Cloud Run de ce catalogue, il ne se réduit **pas** à zéro
+entre les requêtes. L'option ci-dessus ne s'applique qu'à un projet géré par
+RAD ; **dans votre propre projet, ou une fois la fenêtre de 30 jours passée, la
+façon d'arrêter de payer est de supprimer le déploiement et de le déployer à
+nouveau lorsque vous en avez besoin.**
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 175 crédits (17,50 $ US), et environ une heure, car RAD recrée le projet et les services partagés avant Docuseal. La suppression permet d'économiser de l'argent une fois que Docuseal resterait inutilisé pendant environ **3 jours ou plus** dans votre propre projet (environ 6,03 $ US par jour), ou environ **2 jours ou plus** dans un projet géré par RAD (83 crédits par jour).
-- **Supprimez tout ce que Docuseal utilise.** La majeure partie du coût d'exécution est la base de données et la VM NFS/cache. Elles ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc les supprimer pendant que quelque chose d'autre partage le projet n'économise que la partie calcul propre à Docuseal.
-- **Conservez d'abord vos données.** Les sauvegardes nocturnes de la base de données sont écrites dans un bucket à l'intérieur du déploiement, et ce bucket est supprimé avec lui. Avant de supprimer, copiez la dernière sauvegarde sur Google Drive, ou dans un bucket que vous conservez.
-- **Notez vos paramètres.** RAD ne recrée pas un déploiement supprimé pour vous ; vous saisissez à nouveau les paramètres lors du déploiement.
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds
+  sont inclus) : 175 crédits (17,50 $ US), et environ une heure, car RAD
+  recrée le projet et les services partagés avant Docuseal. La suppression
+  permet d'économiser de l'argent une fois que Docuseal resterait inutilisé
+  pendant environ **3 jours ou plus** dans votre propre projet (environ 6,03 $
+  US par jour), ou environ **2 jours ou plus** dans un projet géré par RAD (113
+  crédits par jour).
+- **Supprimez tout ce que Docuseal utilise.** La majeure partie du coût
+  d'exécution est la base de données et la VM NFS/cache. Elles ne s'arrêtent
+  que lorsque rien d'autre dans le projet ne les utilise, donc les supprimer
+  alors que quelque chose d'autre partage le projet n'économise que la partie
+  calcul de Docuseal.
+- **Conservez d'abord vos données.** Les sauvegardes nocturnes de la base de
+  données sont écrites dans un bucket à l'intérieur du déploiement, et ce
+  bucket est supprimé avec lui. Avant de supprimer, copiez la dernière
+  sauvegarde sur Google Drive, ou sur un bucket que vous conservez.
+- **Notez vos paramètres.** RAD ne recrée pas un déploiement supprimé pour vous
+  ; vous devez saisir à nouveau les paramètres lors du déploiement.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose de Docuseal dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute Docuseal pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour
+  une classe. Chaque participant dispose de Docuseal dans son propre projet
+  Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
+  définie par le formateur. Soit le formateur finance toutes les places, soit
+  chaque participant paie la sienne. Tout est supprimé à la fin de la session et
+  les crédits inutilisés sont reversés au formateur.
+- **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute
+  Docuseal pour un client à partir d'un portefeuille cloisonné qu'il finance, et
+  règle directement avec le client. Si le portefeuille est faible, la
+  facturation est suspendue et les données sont conservées, de sorte que
+  personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le
+  projet et les déploiements deviennent la propriété du client.
 
-Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
+Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF,
+NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
-**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud Billing Catalog ; frais propres à RAD et estimations de crédits quotidiens de [radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes et la fenêtre de pause/restauration. [Tarification DocuSeal](https://www.docuseal.com/pricing) pour le chiffre du plan Pro ;
+**Sources (8 octobre 2026) :** Prix catalogue Google Cloud de l'API Cloud
+Billing Catalog ; frais propres à RAD et estimations de crédits quotidiens de
+[radmodules.dev/pricing](https://radmodules.dev/pricing) ; [Supprimer et
+restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects)
+pour les mécanismes et la fenêtre de pause/restauration. [Tarification
+DocuSeal](https://www.docuseal.com/pricing) pour le chiffre du plan Pro ;
 
 ## 1. Vue d'ensemble {#1-overview}
 
@@ -108,32 +216,31 @@ v2. Le déploiement relie un ensemble ciblé de services Google Cloud :
 | Documents persistants | Filestore / NFS | `enable_nfs = true` ; les documents téléchargés se trouvent à `/data/docuseal` |
 | Stockage d'objets | Cloud Storage | Un bucket provisionné automatiquement (pas le magasin de documents par défaut) |
 | Secrets | Secret Manager | `SECRET_KEY_BASE` auto-généré ; mot de passe de la base de données |
-| Ingress | URL Cloud Run / Cloud Load Balancing | URL `run.app` par défaut ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
+| Ingress | URL Cloud Run / Équilibrage de charge Cloud | URL `run.app` par défaut ; équilibreur de charge HTTPS externe facultatif + domaine personnalisé |
 
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
-- **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par la
-  couche d'application partagée ; la sélection de tout autre moteur interrompt le
-  démarrage.
-- **DocuSeal se connecte via TCP IP privé, pas le socket Cloud SQL.** L'analyseur
-  URI de Ruby ne peut pas analyser le DSN du socket Unix de Cloud SQL, donc
-  `enable_cloudsql_volume` par défaut à `false` et le point d'entrée compose un
-  `DATABASE_URL` contre l'IP privée de l'instance avec `sslmode=require`.
-- **`SECRET_KEY_BASE` est généré automatiquement** et stocké dans Secret Manager. Il
-  ne doit jamais être renouvelé après le premier démarrage — cela invaliderait
+- **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixé par
+  la couche d'application partagée ; la sélection de tout autre moteur
+  interrompt le démarrage.
+- **DocuSeal se connecte via TCP IP privé, et non via le socket Cloud SQL.** Le
+  parseur URI de Ruby ne peut pas analyser le DSN du socket Unix de Cloud SQL,
+  donc `enable_cloudsql_volume` par défaut à `false` et le point d'entrée compose un `DATABASE_URL`
+  contre l'IP privée de l'instance avec `sslmode=require`.
+- **`SECRET_KEY_BASE` est généré automatiquement** et stocké dans Secret Manager. Il ne
+  doit jamais être renouvelé après le premier démarrage — cela invaliderait
   tous les cookies de session signés, déconnectant chaque utilisateur.
-- **Les documents téléchargés résident sur NFS, pas dans le conteneur.**
-  `enable_nfs = true` monte le volume NFS partagé à `/data/docuseal` ; sans cela,
-  chaque document téléchargé est perdu lors de la prochaine révision ou du
-  démarrage à froid.
-- **Une instance est maintenue chaude par défaut** (`min_instance_count = 1`,
-  `cpu_always_allocated = true`). DocuSeal est une application de requête/réponse dont les
-  documents résident sur un NFS durable, elle peut donc se réduire à zéro en toute
-  sécurité — définissez `min_instance_count = 0` pour échanger la latence de la première
-  requête contre le coût.
+- **Les documents téléchargés résident sur NFS, pas dans le conteneur.** `enable_nfs = true`
+  monte le volume NFS partagé à `/data/docuseal` ; sans cela, chaque document
+  téléchargé est perdu lors de la prochaine révision ou du prochain démarrage à
+  froid.
+- **Une instance est maintenue chaude par défaut** (`min_instance_count = 1`, `cpu_always_allocated = true`). DocuSeal
+  est une application de requête/réponse dont les documents résident sur un NFS
+  durable, elle peut donc se réduire à zéro en toute sécurité — définissez
+  `min_instance_count = 0` pour échanger la latence de la première requête contre le coût.
 - **Pas de Redis.** DocuSeal utilise une file d'attente/cache basée sur
   PostgreSQL, donc aucun Redis n'est requis ou câblé (`enable_redis = false`).
-- **Ingress public par défaut.** `ingress_settings = "all"` pour que l'interface utilisateur de
+- **Ingress public par défaut.** `ingress_settings = "all"` afin que l'interface utilisateur de
   signature et tous les liens de signataire/API soient accessibles. L'activation
   d'IAP place une passerelle de connexion Google devant ces liens.
 - **Les migrations s'exécutent au démarrage.** DocuSeal applique ses propres
@@ -144,19 +251,19 @@ v2. Le déploiement relie un ensemble ciblé de services Google Cloud :
 
 ## 2. Services Google Cloud et comment les explorer {#2-google-cloud-services--how-to-explore-them}
 
-Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms
-de service et de ressource sont rapportés dans les [Sorties](#5-outputs) du
+Toutes les commandes supposent que `PROJECT` et `REGION` sont définis. Les noms des
+services et des ressources sont signalés dans les [Sorties](#5-outputs) du
 déploiement.
 
 ### A. Cloud Run — le service DocuSeal {#a-cloud-run--the-docuseal-service}
 
-DocuSeal s'exécute comme un service Cloud Run v2 qui s'adapte automatiquement en
-fonction de la charge des requêtes entre le nombre minimal et maximal
-d'instances. Chaque déploiement crée une révision immuable ; le trafic peut être
-réparti entre les révisions pour des déploiements sûrs.
+DocuSeal s'exécute en tant que service Cloud Run v2 qui s'adapte
+automatiquement en fonction de la charge de requêtes entre le nombre minimum et
+maximum d'instances. Chaque déploiement crée une révision immuable ; le trafic
+peut être réparti entre les révisions pour des déploiements sûrs.
 
-- **Console :** Cloud Run → sélectionnez le service pour les révisions, le trafic,
-  les logs et les métriques.
+- **Console :** Cloud Run → sélectionnez le service pour les révisions, le
+  trafic, les journaux et les métriques.
 - **CLI :**
   ```bash
   gcloud run services list --project "$PROJECT" --region "$REGION" \
@@ -174,12 +281,12 @@ DocuSeal stocke toutes les données de l'application (modèles, soumissions,
 soumissionnaires, utilisateurs, piste d'audit) dans une instance gérée de Cloud
 SQL pour PostgreSQL 15. Comme Ruby ne peut pas analyser le DSN du socket Cloud
 SQL, le service se connecte via l'**IP privée** de l'instance avec `sslmode=require` (le
-`DB_IP` que la fondation injecte), accessible via l'egress VPC ; aucune IP
+`DB_IP` que la fondation injecte), accessible via l'égression VPC ; aucune IP
 publique n'est exposée. Lors du premier déploiement, un job d'initialisation
 crée la base de données et le rôle de l'application.
 
 - **Console :** SQL → sélectionnez l'instance pour les connexions, les
-  sauvegardes, les drapeaux, les métriques.
+  sauvegardes, les indicateurs, les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -195,9 +302,9 @@ la rotation des mots de passe.
 ### C. Filestore / NFS — documents persistants {#c-filestore--nfs--persistent-documents}
 
 DocuSeal écrit les documents et pièces jointes téléchargés dans le système de
-fichiers local à `/data/docuseal`. `enable_nfs = true` monte le volume NFS (classe
-Filestore) partagé à cet endroit afin que les documents survivent aux révisions
-et aux démarrages à froid.
+fichiers local à `/data/docuseal`. `enable_nfs = true` monte le volume NFS partagé (classe
+Filestore) à cet endroit afin que les documents survivent aux révisions et aux
+démarrages à froid.
 
 - **Console :** Filestore → Instances (ou Compute Engine pour la VM NFS
   auto-gérée, selon la configuration de la plateforme).
@@ -232,7 +339,7 @@ Voir [App_CloudRun](App_CloudRun.md) pour les options GCS Fuse et CMEK.
 
 Un secret cryptographique est généré automatiquement et stocké dans Secret
 Manager : `SECRET_KEY_BASE` (utilisé par Rails pour signer les cookies de session et
-autres valeurs signées). Le mot de passe de la base de données est géré
+d'autres valeurs signées). Le mot de passe de la base de données est géré
 séparément par la fondation.
 
 - **Console :** Sécurité → Secret Manager.
@@ -242,15 +349,16 @@ séparément par la fondation.
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de rotation.
+Voir [App_CloudRun](App_CloudRun.md) pour les détails d'injection et de
+rotation.
 
 ### F. Réseau et ingress {#f-networking--ingress}
 
-Le service est accessible par son URL `run.app` par défaut, ce qui permet
-l'accès public nécessaire aux liens de signataire et à l'interface utilisateur
-de signature. Un équilibreur de charge HTTPS externe avec un domaine
-personnalisé, Cloud CDN et Cloud Armor peuvent être superposés ; les paramètres
-d'ingress et l'egress VPC contrôlent la connectivité.
+Le service est accessible par son URL `run.app` par défaut, ce qui permet l'accès
+public nécessaire aux liens de signataire et à l'interface utilisateur de
+signature. Un équilibreur de charge HTTPS externe avec un domaine personnalisé,
+Cloud CDN et Cloud Armor peuvent être superposés ; les paramètres d'ingress et
+l'égression VPC contrôlent la connectivité.
 
 - **Console :** Cloud Run (URL du service) ; Services réseau → Équilibrage de
   charge.
@@ -264,12 +372,13 @@ Voir [App_CloudRun](App_CloudRun.md).
 
 ### G. Cloud Logging et Monitoring {#g-cloud-logging--monitoring}
 
-Les logs des conteneurs (Rails logue vers stdout) sont envoyés à Cloud Logging ;
-les métriques Cloud Run et Cloud SQL sont envoyées à Cloud Monitoring, avec des
-tests de disponibilité et des règles d'alerte facultatifs.
+Les journaux de conteneur (journaux Rails vers stdout) sont acheminés vers
+Cloud Logging ; les métriques Cloud Run et Cloud SQL sont acheminées vers Cloud
+Monitoring, avec des tests de disponibilité et des politiques d'alerte
+facultatifs.
 
-- **Console :** Logging → Explorateur de logs ; Monitoring → Tableaux de bord /
-  Alertes.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de
+  bord / Alertes.
 - **CLI :**
   ```bash
   gcloud run services logs read <service-name> --project "$PROJECT" --region "$REGION" --limit 50
@@ -279,33 +388,33 @@ tests de disponibilité et des règles d'alerte facultatifs.
 
 ## 3. Comportement de l'application DocuSeal {#3-docuseal-application-behaviour}
 
-- **Configuration de la base de données au premier déploiement.** Un job
-  d'initialisation exécute `db-init.sh` en utilisant `postgres:15-alpine`. Il crée de
-  manière idempotente le rôle et la base de données `docuseal`, accorde tous les
-  privilèges et réaffecte la propriété du schéma `public` au rôle de
-  l'application (PostgreSQL 15 n'accorde plus `CREATE` sur `public` par
-  défaut). Le job peut être réexécuté en toute sécurité.
-- **Migrations au démarrage.** DocuSeal exécute ses propres migrations
-  ActiveRecord automatiquement à chaque démarrage en tant que rôle de
-  l'application, de sorte que la mise à niveau de la version de l'application
-  applique les modifications de schéma sans étape de migration distincte.
-- **`SECRET_KEY_BASE` est immuable après le premier démarrage.** Il est généré une
-  fois et écrit dans Secret Manager. Le renouveler invalide tous les cookies de
-  session signés, forçant chaque utilisateur à se reconnecter. Ne le renouvelez
-  que pendant une fenêtre de maintenance planifiée.
+- **Configuration de la base de données lors du premier déploiement.** Un job
+  d'initialisation exécute `db-init.sh` en utilisant `postgres:15-alpine`. Il crée de manière
+  idempotente le rôle et la base de données `docuseal`, accorde tous les privilèges
+  et réaffecte la propriété du schéma `public` au rôle de l'application
+  (PostgreSQL 15 n'accorde plus `CREATE` sur `public` par défaut). Le job peut être
+  réexécuté en toute sécurité.
+- **Migrations au démarrage.** DocuSeal exécute automatiquement ses propres
+  migrations ActiveRecord à chaque démarrage en tant que rôle de l'application,
+  de sorte que la mise à niveau de la version de l'application applique les
+  modifications de schéma sans étape de migration distincte.
+- **`SECRET_KEY_BASE` est immuable après le premier démarrage.** Il est généré une fois et
+  écrit dans Secret Manager. Le renouveler invalide tous les cookies de session
+  signés, forçant chaque utilisateur à se reconnecter. Ne le renouvelez que
+  pendant une fenêtre de maintenance planifiée.
 - **Chemin de santé.** Les sondes de démarrage, de vivacité et de disponibilité
   ciblent `/up` — le point de terminaison de santé intégré de Rails, qui
-  renvoie un `200` non authentifié une fois l'application démarrée. La
-  sonde de démarrage par défaut autorise un délai initial de 60 secondes plus
-  une large fenêtre de nouvelle tentative pour les migrations au premier
-  démarrage.
-- **Configuration initiale.** DocuSeal n'a pas d'identifiants par défaut. Lors du
-  premier accès, ouvrez l'URL du service et complétez l'écran de configuration
-  pour créer le compte administrateur initial (e-mail + mot de passe) avant
-  d'inviter d'autres utilisateurs ou de créer des modèles.
-- **Documents persistants.** Les documents téléchargés résident à `/data/docuseal`
-  sur le volume NFS. Vérifiez la connexion injectée et le répertoire de travail
-  sur la révision en cours :
+  renvoie un `200` non authentifié une fois l'application démarrée. La sonde
+  de démarrage par défaut autorise un délai initial de 60 secondes plus une
+  large fenêtre de nouvelle tentative pour les migrations de premier démarrage.
+- **Configuration initiale.** DocuSeal n'a pas de
+  informations d'identification par défaut. Lors du premier accès, ouvrez l'URL
+  du service et complétez l'écran de configuration pour créer le compte
+  administrateur initial (e-mail + mot de passe) avant d'inviter d'autres
+  utilisateurs ou de créer des modèles.
+- **Documents persistants.** Les documents téléchargés résident à `/data/docuseal` sur le
+  volume NFS. Vérifiez la connexion injectée et le répertoire de travail sur la
+  révision en cours d'exécution :
   ```bash
   gcloud run services describe <service-name> --region "$REGION" --project "$PROJECT" \
     --format='value(spec.template.spec.containers[0].env)'
@@ -320,7 +429,7 @@ tests de disponibilité et des règles d'alerte facultatifs.
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la
+Les variables sont regroupées exactement telles qu'elles apparaissent sur la
 plateforme de déploiement. Seuls les paramètres spécifiques ou notables pour
 DocuSeal sont listés ; toutes les autres entrées sont héritées de
 [App_CloudRun](App_CloudRun.md) avec son comportement standard.
@@ -336,7 +445,7 @@ DocuSeal sont listés ; toutes les autres entrées sont héritées de
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
+| `tenant_id` | `demo` | Court suffixe qui rend les noms de ressources uniques par environnement. |
 | `support_users` | `[]` | E-mails ayant accès au projet et aux alertes de surveillance. |
 | `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources. |
 
@@ -355,10 +464,10 @@ DocuSeal sont listés ; toutes les autres entrées sont héritées de
 | `cpu_limit` | `2000m` | CPU par instance (2 vCPU). |
 | `memory_limit` | `4Gi` | Mémoire par instance. |
 | `min_instance_count` | `1` | Instances maintenues chaudes. DocuSeal tolère `0` (mise à l'échelle à zéro) puisque les documents résident sur NFS. |
-| `max_instance_count` | `5` | Nombre maximal d'instances. |
+| `max_instance_count` | `5` | Nombre maximum d'instances. |
 | `container_port` | `3000` | Puma écoute sur le port 3000. Ne pas modifier. |
-| `cpu_always_allocated` | `true` | **Incohérence valeur par défaut/description :** la description de la variable elle-même indique qu'elle est "par défaut FALSE pour DocuSeal : c'est une application Rails de type requête/réponse sans planificateur d'arrière-plan ni worker de file d'attente... donc la facturation basée sur les requêtes... est moins chère sans perte fonctionnelle", mais la valeur par défaut codée est `true` (facturation basée sur l'instance). DocuSeal n'a réellement aucun worker/beat/planificateur intégré (voir [§3](#3-docuseal-application-behaviour)), donc les opérateurs qui souhaitent le comportement décrit, moins cher, devraient explicitement définir `cpu_always_allocated = false`. |
-| `container_resources` | `null` | Surcharge structurée CPU/mémoire ; si définie, elle remplace `cpu_limit`/`memory_limit`. |
+| `cpu_always_allocated` | `true` | **Incohérence entre la valeur par défaut et la description :** la description de la variable elle-même indique qu'elle est "par défaut FALSE pour DocuSeal : c'est une application Rails de type requête/réponse sans planificateur d'arrière-plan ni travailleur de file d'attente... donc la facturation basée sur les requêtes... est moins chère sans perte fonctionnelle", mais la valeur par défaut codée est `true` (facturation basée sur l'instance). DocuSeal n'a véritablement pas de travailleur/battement/planificateur en cours (voir [§3](#3-docuseal-application-behaviour)), donc les opérateurs qui souhaitent le comportement décrit, moins cher, doivent explicitement définir `cpu_always_allocated = false`. |
+| `container_resources` | `null` | Remplacement structuré du CPU/mémoire ; lorsqu'il est défini, il remplace `cpu_limit`/`memory_limit`. |
 | `execution_environment` | `gen2` | Gen2 requis pour les montages NFS (et impose un plancher de mémoire de 512 MiB). |
 | `timeout_seconds` | `300` | Durée maximale de la requête (0–3600 secondes). |
 | `enable_image_mirroring` | `true` | Mettre en miroir l'image DocuSeal dans Artifact Registry. |
@@ -376,9 +485,9 @@ DocuSeal sont listés ; toutes les autres entrées sont héritées de
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_nfs` | `true` | Monte le volume NFS partagé à `/data/docuseal` pour les documents persistants. **Gardez activé** ou les téléchargements seront perdus lors du redéploiement. |
+| `enable_nfs` | `true` | Monter le volume NFS partagé à `/data/docuseal` pour les documents persistants. **Maintenir activé** ou les téléchargements sont perdus lors du redéploiement. |
 | `nfs_mount_path` | `/data/docuseal` | Chemin de montage — doit correspondre à `WORKDIR` de DocuSeal. |
-| `create_cloud_storage` | `true` | Crée les buckets GCS déclarés. |
+| `create_cloud_storage` | `true` | Créer le(s) bucket(s) GCS déclaré(s). |
 | `gcs_volumes` | `[]` | Montages de volume GCS Fuse facultatifs (nécessite gen2). |
 
 ### Groupe 12 — Backend de base de données {#group-12--database-backend}
@@ -387,7 +496,7 @@ DocuSeal sont listés ; toutes les autres entrées sont héritées de
 |---|---|---|
 | `db_name` | `docuseal` | Nom de la base de données PostgreSQL. Immuable après le premier déploiement. |
 | `db_user` | `docuseal` | Utilisateur de la base de données de l'application. Mot de passe auto-généré dans Secret Manager. |
-| `enable_cloudsql_volume` | `false` | **Gardez `false`** — Ruby ne peut pas analyser le DSN du socket Cloud SQL ; DocuSeal utilise TCP IP privé avec `sslmode=require`. |
+| `enable_cloudsql_volume` | `false` | **Conserver `false`** — Ruby ne peut pas analyser le DSN du socket Cloud SQL ; DocuSeal utilise le TCP IP privé avec `sslmode=require`. |
 | `database_password_length` | `32` | Longueur du mot de passe généré (16–64). |
 
 ### Groupe 13 — Jobs et tâches planifiées {#group-13--jobs--scheduled-tasks}
@@ -400,7 +509,7 @@ DocuSeal sont listés ; toutes les autres entrées sont héritées de
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `startup_probe` | HTTP `/up`, délai de 60s | Sonde de démarrage. Laisser le temps pour les migrations au premier démarrage. |
+| `startup_probe` | HTTP `/up`, délai de 60s | Sonde de démarrage. Laisser le temps pour les migrations de premier démarrage. |
 | `liveness_probe` | HTTP `/up`, délai de 60s | Sonde de vivacité contre le point de terminaison de santé de Rails. |
 | `uptime_check_config` | désactivé, chemin `/` | Test de disponibilité Cloud Monitoring (points de terminaison publics uniquement) ; définir `enabled = true` pour le provisionner. |
 
@@ -410,13 +519,14 @@ DocuSeal sont listés ; toutes les autres entrées sont héritées de
 |---|---|---|
 | `enable_redis` | `false` | DocuSeal utilise une file d'attente/cache basée sur PostgreSQL ; laisser désactivé. |
 
-Toutes les autres entrées suivent le comportement standard de [App_CloudRun](App_CloudRun.md).
+Toutes les autres entrées suivent le comportement standard de
+[App_CloudRun](App_CloudRun.md).
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Retournées lors d'un déploiement réussi — le moyen le plus rapide de localiser et
+Retourné lors d'un déploiement réussi — le moyen le plus rapide de localiser et
 d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
@@ -428,7 +538,7 @@ d'explorer les ressources en cours d'exécution.
 | `load_balancer_ip` / `load_balancer_url` | IP / URL de l'équilibreur de charge HTTPS externe (lorsqu'il est activé). |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` / `database_user` | Nom / utilisateur de la base de données de l'application. |
-| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
+| `database_password_secret` | Secret Manager secret contenant le mot de passe de la base de données. |
 | `database_host` / `database_port` | Point de terminaison / port de la base de données. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions. |
@@ -454,27 +564,27 @@ d'explorer les ressources en cours d'exécution.
 > configuration au moteur de fondation [App_CloudRun](App_CloudRun.md), qui
 > valide les valeurs *et les combinaisons* au moment de la planification — un
 > réplica en lecture sans son primaire, IAP sans identités autorisées, un
-> runtime `gen1` avec des montages NFS/GCS, un `database_type` qui ne
+> environnement d'exécution `gen1` avec des montages NFS/GCS, un `database_type` qui ne
 > correspond pas à une extension activée, un `backup_retention_days` hors de portée. Une
 > configuration invalide fait échouer le **plan** avec une erreur claire et
 > nommée avant la création de toute ressource, de sorte que la plupart des
 > erreurs ci-dessous sont détectées en amont plutôt qu'à l'application ou à
 > l'exécution.
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence si erroné |
+| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
 |---|---|---|---|
 | `SECRET_KEY_BASE` (auto-généré) | Ne jamais renouveler après le premier démarrage | Critique | Le renouvellement invalide tous les cookies de session signés — chaque utilisateur est déconnecté. |
-| `enable_nfs` | `true` | Critique | Le désactiver stocke les documents sur le disque éphémère du conteneur ; chaque document téléchargé est perdu lors de la prochaine révision ou du démarrage à froid. |
-| `nfs_mount_path` | `/data/docuseal` | Critique | Doit correspondre à `WORKDIR` de DocuSeal ; un chemin non concordant signifie que les documents sont écrits sur un stockage non persistant. |
-| `db_name` / `db_user` | Définir une seule fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
+| `enable_nfs` | `true` | Critique | Le désactiver stocke les documents sur le disque éphémère du conteneur ; chaque document téléchargé est perdu lors de la prochaine révision ou du prochain démarrage à froid. |
+| `nfs_mount_path` | `/data/docuseal` | Critique | Doit correspondre à `WORKDIR` de DocuSeal ; un chemin non concordant signifie que les documents sont écrits dans un stockage non persistant. |
+| `db_name` / `db_user` | Définir une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et détruit toutes les données. |
 | `enable_cloudsql_volume` | `false` | Élevé | Ruby ne peut pas analyser le DSN du socket Cloud SQL ; l'activation du sidecar de socket interrompt le `DATABASE_URL` et le démarrage échoue. |
-| `container_port` | `3000` | Élevé | Puma écoute sur le port 3000 ; un port non concordant fait que les sondes atteignent un port mort et la révision ne devient jamais prête. |
+| `container_port` | `3000` | Élevé | Puma écoute sur le port 3000 ; un port non concordant fait que les sondes atteignent un port mort et que la révision ne devient jamais prête. |
 | `execution_environment` | `gen2` | Élevé | Gen1 ne peut pas monter NFS ; l'application perd le stockage de documents persistant. |
 | `enable_iap` | uniquement pour usage interne | Élevé | IAP protège chaque requête derrière la connexion Google, bloquant les liens de signataire publics. |
 | `memory_limit` | `4Gi` | Moyen | Le rendu/la signature PDF consomme beaucoup de mémoire ; une réduction excessive risque un OOM sous charge. |
 | `min_instance_count` | `1` (ou `0` pour le coût) | Moyen | La mise à l'échelle à zéro ajoute un délai de démarrage à froid à la première requête après l'inactivité ; les documents sur NFS sont sûrs dans les deux cas. |
 | `application_version` | Épingler en production | Moyen | `latest` peut tirer une nouvelle version majeure lors du redéploiement, appliquant des migrations que vous n'avez pas examinées. |
-| `cpu_always_allocated` | `false` (basé sur les requêtes) | Moyen | La valeur par défaut codée est `true` (facturation basée sur l'instance), ce que la description de la variable elle-même indique comme inutile pour la charge de travail requête/réponse de DocuSeal — la laisser par défaut paie pour le CPU inactif sans avantage fonctionnel. |
+| `cpu_always_allocated` | `false` (basé sur les requêtes) | Moyen | La valeur par défaut codée est `true` (facturation basée sur l'instance), ce que la description de la variable elle-même indique comme inutile pour la charge de travail de requête/réponse de DocuSeal — la laisser à la valeur par défaut paie pour le CPU inactif sans avantage fonctionnel. |
 
 ---
 
@@ -487,7 +597,7 @@ dans **[Docuseal_Common](Docuseal_Common.md)**.
 
 <!-- related-guides -->
 
-## Guides associés {#related-guides}
+## Guides connexes {#related-guides}
 
 - [Lab pratique : Docuseal sur Cloud Run](../labs/Docuseal_CloudRun.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Docuseal sur GKE Autopilot](Docuseal_GKE.md) — la même application sur Kubernetes, pour quand vous avez besoin de l'autre cible de déploiement.

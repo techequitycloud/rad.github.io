@@ -3,7 +3,7 @@ title: "Cal.diy sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Cal.diy sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CalDiy_GKE.md @ 60462a86 sha256:edcfa75bddc9 -->
+<!-- translated-from: docs/modules/CalDiy_GKE.md @ 40c83c3f sha256:8d4ca60cf9e8 -->
 
 # Cal.diy sur GKE Autopilot {#caldiy-on-gke-autopilot}
 
@@ -11,38 +11,41 @@ description: "Référence de configuration pour le déploiement de Cal.diy sur G
 
 Cal.diy est le fork auto-hébergeable sous licence MIT de Cal.com — la plateforme
 de planification open source utilisée par des millions de personnes dans le monde
-pour éliminer la coordination fastidieuse des réunions. Ce module déploie Cal.diy
-sur **GKE Autopilot** au-dessus du module socle [App_GKE](App_GKE.md), qui
-provisionne et gère l'infrastructure partagée Google Cloud et Kubernetes.
+pour éliminer les allers-retours de coordination de réunions. Ce module déploie
+Cal.diy sur **GKE Autopilot** au-dessus de la fondation
+[App_GKE](App_GKE.md), qui provisionne et gère l'infrastructure partagée de
+Google Cloud et Kubernetes.
 
 Ce guide se concentre sur les services cloud utilisés par Cal.diy et sur la
 manière de les explorer et de les exploiter depuis la console Google Cloud et la
-ligne de commande. Pour les mécanismes communs à toutes les applications GKE —
-Workload Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC Service Controls, sauvegardes et cycle de vie du déploiement
-— veuillez vous référer au [guide du module socle App_GKE](App_GKE.md) plutôt
-que de les répéter ici.
+ligne de commande. Pour les mécanismes communs à chaque application GKE — Workload
+Identity, ingress, autoscaling, CI/CD, Cloud Armor, IAP, Binary Authorization,
+VPC Service Controls, sauvegardes et cycle de vie du déploiement —
+référez-vous au [guide de la fondation App_GKE](App_GKE.md) plutôt que de les
+répéter ici.
 
 ---
 
 ## Ce que coûte Cal.diy sur RAD, et comment cela se compare {#what-caldiy-costs-on-rad-and-how-that-compares}
 
-**Le module GKE Autopilot de Cal.diy sur RAD coûte environ 129 $ US par mois dans votre propre projet Google Cloud, sans frais de licence supplémentaires** — Cal.diy est open source. Dans un projet géré par RAD, le même déploiement est facturé à **101 crédits par jour** (environ 3 030 par mois, soit environ 303 $ US au prix de la recharge). Ou consultez le [guide Cloud Run](CalDiy_CloudRun.md) pour l'option moins chère. Si vous n'avez besoin de Cal.diy qu'occasionnellement — pour des études, une démo, un projet de courte durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ce chiffre mensuel ne représente que quelques dollars. Voir **Mettre en pause gratuitement**, ci-dessous.
+**Cal.diy sur le module GKE Autopilot de RAD coûte environ 129 $ US par mois dans votre propre projet Google Cloud, sans frais de licence supplémentaires** — Cal.diy est open source. Dans un projet géré par RAD pour vous, le même déploiement est facturé à **131 crédits par jour** (environ 3 930 par mois, soit environ 393 $ US au prix de la recharge). Ou consultez le [guide Cloud Run](CalDiy_CloudRun.md) pour l'option moins chère. Si vous n'avez besoin de Cal.diy qu'occasionnellement — pour des études, une démo, un projet de courte durée — un projet géré par RAD peut être supprimé et restauré dans les 30 jours sans frais supplémentaires, de sorte que ce chiffre mensuel devient quelques dollars à la place. Voir **Mettez-le en pause gratuitement**, ci-dessous.
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 Cal.diy est open source, il n'y a donc pas de frais de licence. Vous payez pour trois choses :
 
-| | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD |
+| | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 110 crédits (11 $ US au prix de la recharge) | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **129 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Facturé à l'heure en crédits ; RAD publie **101 crédits par jour**, environ 3 030 par mois (environ 303 $ US au prix de la recharge) |
-| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde acheté minimum est conservé en réserve |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **129 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **131 crédits par jour**, environ 3 930 par mois (environ 393 $ US au prix de la recharge ; estimé à partir des prix catalogue de Google, et incluant les frais de cluster) |
+| Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+**Pourquoi les deux colonnes diffèrent.** Le chiffre géré par RAD inclut les frais de gestion du cluster GKE (environ 73 $ US par mois) et la fondation partagée du projet. Dans votre propre projet, le niveau gratuit de Google couvre les frais de gestion d'un cluster par compte de facturation, ce que le chiffre du projet propre suppose. Il est estimé à partir des prix catalogue de Google, car il n'y a pas encore suffisamment d'historique GKE géré par RAD pour le mesurer, de sorte que la confirmation de déploiement ne le cite pas. Une deuxième application GKE dans le même projet géré par RAD partage le cluster et n'ajoute que ses propres pods.
 
-10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins avec un abonnement mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par toutes les applications du projet, de sorte qu'une deuxième application n'ajoute pas une deuxième base de données.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant des frais : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
+
+10 crédits coûtent 1 $ US pour une recharge ponctuelle, et moins sur un plan mensuel. Dans un projet géré par RAD, la base de données, le serveur de fichiers et le réseau sont partagés par chaque application du projet, de sorte qu'une deuxième application n'ajoute pas de deuxième base de données.
 
 **Coût d'exécution par défaut dans votre propre projet** (us-central1, prix catalogue Google) :
 
@@ -52,39 +55,39 @@ Votre premier déploiement réussi sur RAD est exempté des frais de module lors
 | Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
 | Cloud NAT et réseau | 5 $ US |
 | Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
-| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 $ |
-| **Total (hors frais de cluster GKE partagés)** | **environ 129 $ US** |
+| Frais de gestion du cluster GKE | partagés entre chaque application GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 $ |
+| **Total (hors frais de cluster GKE partagé)** | **environ 129 $ US** |
 
 Ces prix sont les mêmes en africa-south1 (Johannesburg).
 
-- **GKE Autopilot ne se met pas à l'échelle à zéro.** Au moins un pod est toujours en cours d'exécution, de sorte que le coût ci-dessus s'applique que quelqu'un utilise ou non l'application ; des pods supplémentaires ne sont ajoutés qu'en cas de charge.
+- **GKE Autopilot ne se met pas à l'échelle à zéro.** Au moins un pod est toujours en cours d'exécution, de sorte que le coût ci-dessus s'applique que quelqu'un utilise ou non l'application ; des pods supplémentaires ne sont ajoutés que sous charge.
 
-### Comparaison pour une équipe auto-hébergeant sans licence par siège {#how-it-compares-for-a-team-self-hosting-without-per-seat-licensing}
+### Comment cela se compare, pour une équipe auto-hébergée sans licence par siège {#how-it-compares-for-a-team-self-hosting-without-per-seat-licensing}
 
-Cal.diy existe spécifiquement comme un fork auto-hébergeable, il n'y a donc pas de plan Cal.diy hébergé officiel à comparer (les propres plans hébergés de Cal.com sont un code et une licence différents, ils ne sont donc pas cités ici comme substitut). La comparaison honnête est un serveur nu :
+Cal.diy existe spécifiquement en tant que fork auto-hébergeable, il n'y a donc pas de plan Cal.diy hébergé officiel à comparer (les propres plans hébergés de Cal.com sont une base de code et une licence différentes, ils ne sont donc pas cités ici comme substitut). La comparaison honnête est un serveur nu :
 
-- Un Hetzner CPX22 ou un droplet DigitalOcean (2 vCPU/4 Go, environ 24 $ US/mois) ou un GCP e2-standard-2 (2 vCPU/8 Go, environ 49 $ US/mois) exécuterait Cal.diy et sa base de données PostgreSQL — à peu près la même catégorie de machine que ce module utilise lui-même.
+- Un Hetzner CPX22 ou un droplet DigitalOcean (2 vCPU/4 Go, environ 24 $/mois) ou un GCP e2-standard-2 (2 vCPU/8 Go, environ 49 $/mois) exécuterait Cal.diy et sa base de données PostgreSQL — à peu près la même classe de machine que ce module utilise lui-même.
 - Sur un VPS nu, vous exécutez PostgreSQL, les sauvegardes, les correctifs de sécurité et les mises à niveau vous-même. Le module de RAD vous offre Cloud SQL géré, Secret Manager et Cloud Monitoring pour les frais de module plus l'utilisation de Google Cloud ci-dessus.
 
-### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
+### Mettez-le en pause gratuitement : supprimez un projet géré par RAD, restaurez-le lorsque vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
-Si Cal.diy s'exécute dans **un projet géré par RAD**, la suppression de l'ensemble du projet — plutôt que la suppression de ce seul module — délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet. Google le conserve, récupérable, pendant 30 jours, et comme la facturation est déjà déliée, rien n'est facturé pendant cette attente. Contrairement à la suppression d'un module, cela ne supprime pas Cloud SQL, une VM ou la ressource de calcul un par un : l'ensemble du projet s'arrête simplement.
+Si Cal.diy s'exécute dans **un projet géré par RAD pour vous**, la suppression de l'ensemble du projet — plutôt que la suppression de ce seul module — délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet. Google le conserve, récupérable, pendant 30 jours, et comme la facturation est déjà déliée, rien n'est facturé pendant qu'il attend. Contrairement à la suppression d'un module, cela ne supprime pas Cloud SQL, une VM ou la ressource de calcul un par un : l'ensemble du projet s'arrête simplement.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être considérée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut demander à Google de récupérer le projet et de rattacher son compte de facturation, puis d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes, et une mise à jour ne facture plus les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit.
-- **Ce que cela nécessite.** Vous devez posséder le projet (pas un projet dont RAD gère uniquement la facturation), le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et franchir à nouveau le seuil d'admission du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude/démo). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
-- **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage désactivée, il est donc très probable qu'il disparaisse dès que le projet est supprimé — même si le projet lui-même est récupérable pendant 30 jours. Copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de la supprimer s'il y a quelque chose à conserver ; pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+- **La restauration est une vérification, pas une reconstruction.** Dans les 30 jours, le propriétaire du projet peut demander à Google de récupérer le projet et de rattacher son compte de facturation, puis d'exécuter **Update** sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit.
+- **Ce que cela nécessite.** Vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), le restaurer vous-même dans les 30 jours — après quoi Google le supprime définitivement — et effacer à nouveau le seuil d'admission du niveau (100 crédits pour le niveau sandbox que la plupart des utilisations d'étude/démo conviennent). Google indique que la plupart des services sont à nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
+- **Un véritable manque : les sauvegardes nocturnes ne survivent pas.** Les sauvegardes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage désactivée, il est donc très probable qu'il disparaisse dès que le projet est supprimé — même si le projet lui-même est récupérable pendant 30 jours. Copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer s'il y a quelque chose à conserver ; pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
 Source : [Supprimer et restaurer des projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects).
 
-### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
+### Payez uniquement pendant que vous l'utilisez, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
-Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée, le moyen d'arrêter de payer est de supprimer le déploiement et de le redéployer lorsque vous en avez besoin.
+Dans votre propre projet, ou une fois que la fenêtre de restauration de 30 jours ci-dessus est passée, la façon d'arrêter de payer est de supprimer le déploiement et de le déployer à nouveau lorsque vous en avez besoin.
 
-- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 $ US) au prix de la recharge. La suppression ne permet d'économiser de l'argent que si Cal.diy restait inutilisé pendant environ **2 jours ou plus** — dans votre propre projet, cela représente environ 4,31 $ US par jour, et dans un projet géré par RAD, c'est 101 crédits par jour.
+- **Ce que coûte un redéploiement.** Les frais de module à nouveau (les builds sont inclus) : 110 crédits (11,00 $ US) au prix de la recharge. La suppression ne permet d'économiser de l'argent que si Cal.diy reste inutilisé pendant environ **2 jours ou plus** — dans votre propre projet, cela représente environ 4,31 $ US par jour, et dans un projet géré par RAD, c'est 131 crédits par jour.
 - La majeure partie du coût d'exécution ici est généralement la base de données et/ou la VM ou le cluster de fichiers/cache partagé. Ils ne s'arrêtent que lorsque rien d'autre dans le projet ne les utilise, donc la suppression de Cal.diy alors qu'une autre application partage le projet n'économise que la partie calcul de Cal.diy.
-- **Conserver les données en premier.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
+- **Conservez les données en premier.** Les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de la supprimer si vous voulez la conserver.
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
@@ -98,11 +101,11 @@ Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF,
 ## 1. Vue d'ensemble {#1-overview}
 
 Cal.diy s'exécute comme une charge de travail web Next.js (Node.js). Le déploiement
-connecte un ensemble ciblé de services Google Cloud :
+relie un ensemble ciblé de services Google Cloud :
 
 | Capacité | Service Google Cloud | Notes |
 |---|---|---|
-| Calcul | GKE Autopilot | Pods Next.js, 2 vCPU / 2 GiB par défaut, auto-mis à l'échelle horizontalement |
+| Calcul | GKE Autopilot | Pods Next.js, 2 vCPU / 2 GiB par défaut, mise à l'échelle horizontale automatique |
 | Base de données | Cloud SQL pour PostgreSQL 15 | Requis — Cal.diy utilise Prisma ORM ciblant PostgreSQL |
 | Stockage d'objets | Cloud Storage | Un bucket `data` provisionné par défaut |
 | Secrets | Secret Manager | `NEXTAUTH_SECRET` et `CALENDSO_ENCRYPTION_KEY` auto-générés |
@@ -111,23 +114,23 @@ connecte un ensemble ciblé de services Google Cloud :
 **Valeurs par défaut judicieuses à connaître d'emblée :**
 
 - **PostgreSQL 15 est obligatoire.** Le moteur de base de données est fixe ; la
-  sélection de MySQL ou `NONE` interrompt le démarrage.
+  sélection de MySQL ou `NONE` empêche le démarrage.
 - **Redis est désactivé par défaut.** Activez-le pour les déploiements multi-réplicas
   afin de partager l'état de session entre les pods.
 - **L'affinité de session est `None` par défaut.** Cal.diy stocke les sessions
   dans PostgreSQL (NextAuth.js), donc le routage persistant n'est pas requis — mais
   l'activation de Redis est recommandée pour la production multi-réplicas.
 - **Trois jobs d'initialisation s'exécutent lors du premier déploiement :** `db-init`
-  (configuration PostgreSQL), `db-migrate` (migrations de schéma Prisma) et `seed-app-store`
-  (initialise la table du magasin d'applications Cal.diy). Tous sont idempotents et
-  s'exécutent séquentiellement.
-- **`NEXTAUTH_SECRET` et `CALENDSO_ENCRYPTION_KEY`** sont générés automatiquement et stockés dans
-  Secret Manager ; vous ne les définissez jamais en texte clair.
+  (configuration PostgreSQL), `db-migrate` (migrations de schéma Prisma) et
+  `seed-app-store` (initialise la table du magasin d'applications Cal.diy). Tous sont
+  idempotents et s'exécutent séquentiellement.
+- **`NEXTAUTH_SECRET` et `CALENDSO_ENCRYPTION_KEY`** sont générés automatiquement et
+  stockés dans Secret Manager ; vous ne les définissez jamais en texte clair.
 - **`NEXT_PUBLIC_WEBAPP_URL` et `NEXTAUTH_URL`** sont définis sur la sentinelle `$(GKE_SERVICE_URL)`,
   que `App_GKE` résout en l'adresse IP réelle du LoadBalancer ou le domaine
   personnalisé au moment de l'apply.
-- **`calcom/cal.diy` n'a pas de tag `latest`** — épinglez toujours `application_version` à
-  une version spécifique (par exemple, `v6.2.0`).
+- **`calcom/cal.diy` n'a pas de tag `latest`** — toujours épingler `application_version` à
+  une version (par exemple, `v6.2.0`).
 
 ---
 
@@ -135,18 +138,18 @@ connecte un ensemble ciblé de services Google Cloud :
 
 Toutes les commandes supposent que vous avez exécuté
 `gcloud container clusters get-credentials <cluster> --region <region> --project <project>`
-et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et les
-autres identifiants sont indiqués dans les [Sorties](#5-outputs) du déploiement.
+et que `PROJECT`, `REGION` et `NAMESPACE` sont définis. L'espace de noms et
+les autres identifiants sont rapportés dans les [Sorties](#5-outputs) du déploiement.
 
 ### A. GKE Autopilot — la charge de travail Cal.diy {#a-gke-autopilot--the-caldiy-workload}
 
-Les pods Cal.diy sont planifiés sur Autopilot, qui facture le CPU/la mémoire que les pods
-demandent réellement. L'autoscaling horizontal des pods dimensionne le déploiement entre les
-nombres minimum et maximum de réplicas.
+Les pods Cal.diy sont planifiés sur Autopilot, qui facture le CPU/la mémoire que les
+pods demandent réellement. L'autoscaling horizontal des pods dimensionne le
+déploiement entre le nombre minimum et maximum de réplicas.
 
-- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de travail Cal.diy pour voir
-  les pods, les révisions et les événements. Kubernetes Engine → Services et Ingress affiche l'adresse
-  IP externe.
+- **Console :** Kubernetes Engine → Charges de travail → sélectionnez la charge de
+  travail Cal.diy pour voir les pods, les révisions et les événements. Kubernetes
+  Engine → Services et Ingress affiche l'adresse IP externe.
 - **CLI :**
   ```bash
   kubectl get pods,svc,hpa -n "$NAMESPACE"
@@ -154,18 +157,20 @@ nombres minimum et maximum de réplicas.
   kubectl describe hpa -n "$NAMESPACE"          # current vs target utilisation
   ```
 
-Voir [App_GKE](App_GKE.md) pour savoir comment Autopilot, la mise à l'échelle et le type de charge de travail
-(Deployment vs StatefulSet) sont gérés.
+Voir [App_GKE](App_GKE.md) pour la gestion d'Autopilot, de la mise à l'échelle et
+du type de charge de travail (Deployment vs StatefulSet).
 
 ### B. Cloud SQL pour PostgreSQL 15 {#b-cloud-sql-for-postgresql-15}
 
-Cal.diy stocke toutes les données d'application (réservations, utilisateurs, plannings, intégrations) dans une
-instance Cloud SQL pour PostgreSQL 15 gérée. Les pods y accèdent en privé via le sidecar **Cloud SQL Auth Proxy**
-sur un socket Unix, de sorte qu'aucune IP publique n'est exposée. Lors du premier déploiement, une séquence de
-jobs d'initialisation crée la base de données et l'utilisateur, exécute les migrations de schéma Prisma et
-initialise le magasin d'applications.
+Cal.diy stocke toutes les données de l'application (réservations, utilisateurs,
+plannings, intégrations) dans une instance Cloud SQL pour PostgreSQL 15 gérée. Les
+pods l'atteignent en privé via le sidecar **Cloud SQL Auth Proxy** sur un socket
+Unix, de sorte qu'aucune IP publique n'est exposée. Lors du premier déploiement, une
+séquence de Jobs d'initialisation crée la base de données et l'utilisateur, exécute
+les migrations de schéma Prisma et initialise le magasin d'applications.
 
-- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes, les indicateurs et les métriques.
+- **Console :** SQL → sélectionnez l'instance pour les connexions, les sauvegardes,
+  les indicateurs et les métriques.
 - **CLI :**
   ```bash
   gcloud sql instances list --project "$PROJECT"
@@ -174,15 +179,17 @@ initialise le magasin d'applications.
   gcloud sql connect <instance-name> --user=<db-user> --database=<db-name> --project "$PROJECT"
   ```
 
-Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret Secret Manager contenant le
-mot de passe sont tous affichés dans les [Sorties](#5-outputs). Pour le modèle de connexion, les sauvegardes
-automatisées et la rotation des mots de passe, voir [App_GKE](App_GKE.md).
+Le nom de l'instance, le nom de la base de données, l'utilisateur et le secret
+Secret Manager contenant le mot de passe sont tous affichés dans les
+[Sorties](#5-outputs). Pour le modèle de connexion, les sauvegardes automatisées et
+la rotation des mots de passe, voir [App_GKE](App_GKE.md).
 
 ### C. Cloud Storage {#c-cloud-storage}
 
-Un bucket Cloud Storage par défaut (suffixe `data`) est provisionné et le compte de service de la charge de travail
-se voit accorder un accès automatique. Cal.diy ne nécessite pas de stockage NFS partagé par défaut — la base de
-données stocke tout l'état des réservations.
+Un bucket Cloud Storage par défaut (suffixe `data`) est provisionné et le compte
+de service de la charge de travail se voit accorder l'accès automatiquement. Cal.diy
+ne nécessite pas de stockage NFS partagé par défaut — la base de données stocke tout
+l'état des réservations.
 
 - **Console :** Cloud Storage → Buckets.
 - **CLI :**
@@ -191,14 +198,15 @@ données stocke tout l'état des réservations.
   gcloud storage ls gs://<data-bucket>/          # bucket name is in the Outputs
   ```
 
-Voir [App_GKE](App_GKE.md) pour les options CMEK et les options de bucket supplémentaires.
+Voir [App_GKE](App_GKE.md) pour CMEK et les options de bucket supplémentaires.
 
 ### D. Secret Manager {#d-secret-manager}
 
-`NEXTAUTH_SECRET` (signature de session NextAuth.js) et `CALENDSO_ENCRYPTION_KEY` (chiffrement des données Cal.diy) sont générés
-automatiquement et stockés en tant que secrets Secret Manager. Le mot de passe de la base de données est également
-géré ici. Les secrets sont injectés dans les pods au moment de l'exécution ; le texte clair n'apparaît jamais dans la
-configuration.
+`NEXTAUTH_SECRET` (signature de session NextAuth.js) et `CALENDSO_ENCRYPTION_KEY` (chiffrement des
+données Cal.diy) sont générés automatiquement et stockés en tant que secrets Secret
+Manager. Le mot de passe de la base de données est également géré ici. Les secrets
+sont injectés dans les pods au moment de l'exécution ; le texte en clair n'apparaît
+jamais dans la configuration.
 
 - **Console :** Sécurité → Secret Manager.
 - **CLI :**
@@ -207,14 +215,16 @@ configuration.
   gcloud secrets versions access latest --secret=<secret-name> --project "$PROJECT"
   ```
 
-Le nom du secret du mot de passe de la base de données se trouve dans les [Sorties](#5-outputs). Voir
-[App_GKE](App_GKE.md) pour l'intégration et la rotation de Secret Store CSI.
+Le nom du secret du mot de passe de la base de données se trouve dans les
+[Sorties](#5-outputs). Voir [App_GKE](App_GKE.md) pour l'intégration et la
+rotation de Secret Store CSI.
 
-### E. Réseau et Ingress {#e-networking--ingress}
+### E. Réseau et ingress {#e-networking--ingress}
 
-Par défaut, la charge de travail est exposée via une adresse IP externe de Cloud Load Balancing. Un domaine
-personnalisé avec un certificat géré par Google peut être activé, et une adresse IP statique peut être réservée
-afin que l'adresse survive aux redéploiements.
+Par défaut, la charge de travail est exposée via une adresse IP externe de Cloud
+Load Balancing. Un domaine personnalisé avec un certificat géré par Google peut être
+activé, et une adresse IP statique peut être réservée afin que l'adresse survive aux
+redéploiements.
 
 - **Console :** Services réseau → Équilibrage de charge ; Réseau VPC → Adresses IP.
 - **CLI :**
@@ -223,14 +233,17 @@ afin que l'adresse survive aux redéploiements.
   gcloud compute addresses list --project "$PROJECT"
   ```
 
-Voir [App_GKE](App_GKE.md) pour les détails sur les domaines personnalisés, Cloud CDN et les adresses IP statiques.
+Voir [App_GKE](App_GKE.md) pour les domaines personnalisés, Cloud CDN et les
+détails de l'adresse IP statique.
 
 ### F. Cloud Logging et Monitoring {#f-cloud-logging--monitoring}
 
-Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les métriques GKE et Cloud SQL sont acheminées
-vers Cloud Monitoring. Des vérifications de disponibilité et des politiques d'alerte facultatives sont disponibles.
+Les sorties stdout/stderr des pods sont acheminées vers Cloud Logging ; les métriques
+GKE et Cloud SQL sont acheminées vers Cloud Monitoring. Des tests de disponibilité
+et des stratégies d'alerte facultatifs sont disponibles.
 
-- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord / Alertes.
+- **Console :** Logging → Explorateur de journaux ; Monitoring → Tableaux de bord /
+  Alertes.
 - **CLI :**
   ```bash
   gcloud logging read 'resource.type="k8s_container" AND resource.labels.namespace_name="'"$NAMESPACE"'"' \
@@ -241,8 +254,8 @@ vers Cloud Monitoring. Des vérifications de disponibilité et des politiques d'
 
 ## 3. Comportement de l'application Cal.diy {#3-caldiy-application-behaviour}
 
-- **Séquence d'initialisation du premier déploiement.** Trois jobs Kubernetes s'exécutent avant le
-  démarrage de l'application, dans l'ordre :
+- **Séquence d'initialisation au premier déploiement.** Trois Jobs Kubernetes
+  s'exécutent avant le démarrage de l'application, dans l'ordre :
 
   | Job | Image | Objectif |
   |---|---|---|
@@ -250,7 +263,8 @@ vers Cloud Monitoring. Des vérifications de disponibilité et des politiques d'
   | `db-migrate` | Image de l'application Cal.diy | Exécute `prisma migrate deploy` pour appliquer le schéma complet |
   | `seed-app-store` | Image de l'application Cal.diy | Initialise la table `App` avec les intégrations disponibles |
 
-  Les trois sont idempotents et peuvent être réexécutés en toute sécurité. Vérifiez leur statut :
+  Les trois sont idempotents et peuvent être réexécutés en toute sécurité.
+  Inspectez leur statut :
   ```bash
   kubectl get jobs -n "$NAMESPACE" --sort-by=.metadata.creationTimestamp
   kubectl logs -n "$NAMESPACE" job/db-init
@@ -258,7 +272,7 @@ vers Cloud Monitoring. Des vérifications de disponibilité et des politiques d'
   kubectl logs -n "$NAMESPACE" job/seed-app-store
   ```
 
-- **Assemblage `DATABASE_URL`.** Le script d'entrée assemble `DATABASE_URL` et
+- **Assemblage de `DATABASE_URL`.** Le script de point d'entrée assemble `DATABASE_URL` et
   `DATABASE_DIRECT_URL` à partir des variables d'environnement `DB_*` au démarrage du
   conteneur, puis lance le serveur Next.js. Cela rend la connectivité de la base de
   données indépendante de la variante d'image (miroir de base ou construite par CI/CD)
@@ -272,31 +286,31 @@ vers Cloud Monitoring. Des vérifications de disponibilité et des politiques d'
 - **Câblage de l'URL publique.** `NEXT_PUBLIC_WEBAPP_URL` et `NEXTAUTH_URL` sont définis sur la
   sentinelle `$(GKE_SERVICE_URL)` au moment du déploiement. `App_GKE` remplace cela par
   l'adresse IP réelle du LoadBalancer ou le domaine personnalisé. Lors de l'utilisation
-  d'un domaine personnalisé, définissez `NEXT_PUBLIC_WEBAPP_URL` dans `environment_variables` sur l'URL
-  du domaine personnalisé afin que les rappels OAuth et les liens de réservation soient
+  d'un domaine personnalisé, définissez `NEXT_PUBLIC_WEBAPP_URL` dans `environment_variables` sur l'URL du
+  domaine personnalisé afin que les rappels OAuth et les liens de réservation soient
   corrects.
 
-- **E-mail (SMTP).** Cal.diy utilise SMTP pour les confirmations de réservation, les
+- **Email (SMTP).** Cal.diy utilise SMTP pour les confirmations de réservation, les
   avis d'annulation, les rappels et les réinitialisations de mot de passe. Configurez
-  `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `EMAIL_FROM` dans
-  `environment_variables` et stockez `SMTP_PASSWORD` comme référence `secret_environment_variables` avant la
-  mise en production.
+  `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `EMAIL_FROM` dans `environment_variables` et
+  stockez `SMTP_PASSWORD` comme référence `secret_environment_variables` avant de passer en production.
 
 - **Les rappels nécessitent un appel cron externe.** Les réservations fonctionnent sans
-  jobs planifiés, mais cal.com envoie des rappels de réservation et de Workflow
-  uniquement lorsque quelque chose appelle ses points de terminaison `/api/cron/*` avec la
-  clé partagée `CRON_API_KEY`. Sans clé, ces appels sont rejetés (401) et aucun rappel
-  n'est jamais déclenché, alors que l'application semble par ailleurs saine. Pour
-  activer les rappels, définissez `cron_api_key` (stocké dans Secret Manager) **ET**
-  ajoutez une entrée `cron_jobs` qui appelle le point de terminaison.
+  jobs planifiés, mais cal.com n'envoie les rappels de réservation et de Workflow que
+  lorsque quelque chose appelle ses points de terminaison `/api/cron/*` avec la clé
+  partagée `CRON_API_KEY`. Sans clé, ces appels sont rejetés (401) et aucun rappel ne se
+  déclenche, alors que l'application semble par ailleurs saine. Pour activer les
+  rappels, définissez `cron_api_key` (stocké dans Secret Manager) **ET** ajoutez une
+  entrée `cron_jobs` qui appelle le point de terminaison.
 
 ---
 
 ## 4. Variables de configuration {#4-configuration-variables}
 
-Les variables sont regroupées exactement comme elles apparaissent sur la plateforme de déploiement. Seuls les
-paramètres spécifiques ou notables pour Cal.diy sont listés ; toutes les autres entrées sont héritées de
-[App_GKE](App_GKE.md) avec leur comportement standard et leurs valeurs par défaut.
+Les variables sont regroupées exactement comme elles apparaissent sur la plateforme
+de déploiement. Seuls les paramètres spécifiques ou notables pour Cal.diy sont listés
+; toutes les autres entrées sont héritées de [App_GKE](App_GKE.md) avec son
+comportement et ses valeurs par défaut standard.
 
 ### Groupe 1 — Projet et identité {#group-1--project--identity}
 
@@ -310,7 +324,7 @@ paramètres spécifiques ou notables pour Cal.diy sont listés ; toutes les autr
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `tenant_id` | `demo` | Suffixe court qui rend les noms de ressources uniques par environnement. |
-| `support_users` | `[]` | E-mails autorisés à accéder au projet et aux alertes de surveillance. |
+| `support_users` | `[]` | Adresses e-mail ayant accès au projet et aux alertes de surveillance. |
 | `resource_labels` | `{}` | Libellés appliqués à toutes les ressources pour le suivi des coûts/propriétés. |
 
 ### Groupe 3 — Identité de l'application {#group-3--application-identity}
@@ -318,64 +332,64 @@ paramètres spécifiques ou notables pour Cal.diy sont listés ; toutes les autr
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `application_name` | `caldiy` | Nom de base des ressources. Ne pas modifier après le premier déploiement. |
-| `application_display_name` | `Cal.com Scheduling` | Nom convivial affiché dans la Console. |
+| `application_display_name` | `Cal.com Scheduling` | Nom convivial affiché dans la console. |
 | `application_description` | _(défini)_ | Annotation de description de la charge de travail. |
-| `application_version` | `v6.2.0` | Tag de version de l'image Cal.diy — **aucun tag `latest` n'existe**, toujours épingler à une version spécifique. |
+| `application_version` | `v6.2.0` | Tag de version de l'image Cal.diy — **aucun tag `latest` n'existe**, toujours épingler à une version. |
 
 ### Groupe 4 — Exécution et mise à l'échelle {#group-4--runtime--scaling}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `deploy_application` | `true` | Définir `false` pour provisionner uniquement l'infrastructure. |
-| `container_image_source` | `custom` | `custom` construit l'image wrapper via Cloud Build ; `prebuilt` utilise l'image officielle Cal.diy. Gardez la même que la variante Cloud Run : les deux publient sur le même tag d'image, donc une variante `prebuilt` écraserait le build `custom`. |
+| `container_image_source` | `custom` | `custom` construit l'image wrapper via Cloud Build ; `prebuilt` utilise l'image officielle Cal.diy. Gardez-le identique à la variante Cloud Run : les deux publient sur le même tag d'image, donc une variante `prebuilt` écraserait le build `custom`. |
 | `container_image` | `""` | Remplace l'URI de l'image du conteneur. Laisser vide pour utiliser la valeur par défaut. |
 | `container_resources` | `{ cpu_limit="2000m", memory_limit="2Gi" }` | Limites de CPU et de mémoire ; augmenter `memory_limit` à `4Gi` pour une charge multi-utilisateur en production. |
-| `container_port` | `3000` | Port natif Next.js de Cal.diy. Ne pas modifier. |
+| `container_port` | `3000` | Port Next.js natif de Cal.diy. Ne pas modifier. |
 | `container_protocol` | `http1` | Version du protocole HTTP : `http1` ou `h2c`. |
-| `min_instance_count` | `1` | Réplicas minimum. GKE Autopilot n'a pas de mise à l'échelle à zéro par défaut ; maintenir ≥ 1. |
-| `max_instance_count` | `5` | Réplicas maximum (plafond de l'autoscaler). |
+| `min_instance_count` | `1` | Nombre minimal de réplicas. GKE Autopilot n'a pas de mise à l'échelle à zéro par défaut ; garder ≥ 1. |
+| `max_instance_count` | `5` | Nombre maximal de réplicas (plafond de l'autoscaler). |
 | `enable_cloudsql_volume` | `true` | Sidecar Cloud SQL Auth Proxy pour les connexions socket. Doit être `true` lorsque `database_type != "NONE"`. |
 | `enable_image_mirroring` | `true` | Mettre en miroir l'image Cal.diy dans Artifact Registry avant le déploiement. |
 | `enable_vertical_pod_autoscaling` | `false` | Laisser Autopilot ajuster automatiquement les requêtes de ressources. |
-| `timeout_seconds` | `300` | Secondes maximales pendant lesquelles l'équilibreur de charge attend une réponse du pod. |
+| `timeout_seconds` | `300` | Nombre maximal de secondes pendant lesquelles l'équilibreur de charge attend une réponse du pod. |
 
 ### Groupe 5 — Variables d'environnement et secrets {#group-5--environment-variables--secrets}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `environment_variables` | Squelette SMTP | Paramètres en texte clair. Définir `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `EMAIL_FROM` ici. Définir également `NEXT_PUBLIC_WEBAPP_URL` une fois qu'un domaine personnalisé est connu. |
-| `secret_environment_variables` | `{}` | Mappage variable d'environnement → nom du secret Secret Manager. Utiliser pour `SMTP_PASSWORD`. |
+| `secret_environment_variables` | `{}` | Mappage de la variable d'environnement → nom du secret Secret Manager. Utiliser pour `SMTP_PASSWORD`. |
 | `secret_propagation_delay` | `30` | Secondes à attendre après la création du secret avant de continuer. |
 | `secret_rotation_period` | `2592000s` | Période de notification de rotation de Secret Manager. |
 | `enable_auto_password_rotation` | `false` | Rotation du mot de passe de la base de données sans interruption. |
 | `rotation_propagation_delay_sec` | `90` | Secondes à attendre après la rotation avant de redémarrer les pods. |
 
-### Groupe 6 — Backend GKE et cluster {#group-6--gke-backend--cluster}
+### Groupe 6 — Backend et cluster GKE {#group-6--gke-backend--cluster}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `gke_cluster_name` | `""` | Nom du cluster GKE ; auto-découvert si vide. |
 | `namespace_name` | `""` | Espace de noms Kubernetes ; auto-généré si vide. |
-| `service_type` | `LoadBalancer` | Comment le Service est exposé. |
+| `service_type` | `LoadBalancer` | Comment le service est exposé. |
 | `workload_type` | `null` | Se résout automatiquement en `StatefulSet` lorsque le stockage par pod est activé. |
 | `session_affinity` | `None` | `None` recommandé — les sessions Cal.diy sont stockées dans PostgreSQL. |
 | `network_tags` | `['nfsserver']` | Tags de nœud/pod pour les règles de pare-feu VPC. |
-| `deployment_timeout` | `1800` | Secondes maximales pendant lesquelles Terraform attend la fin du déploiement. |
+| `deployment_timeout` | `1800` | Nombre maximal de secondes pendant lesquelles Terraform attend la fin du déploiement. |
 
-### Groupe 7 — Politiques de fiabilité {#group-7--reliability-policies}
+### Groupe 7 — Stratégies de fiabilité {#group-7--reliability-policies}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_pod_disruption_budget` | `false` | Protège la disponibilité pendant les mises à niveau de nœuds. Activer lorsque `max_instance_count > 1`. |
-| `pdb_min_available` | `1` | Nombre minimum de pods disponibles pendant les perturbations. |
+| `pdb_min_available` | `1` | Nombre minimal de pods disponibles pendant les perturbations. |
 | `enable_topology_spread` | `false` | Répartir les pods sur les zones de disponibilité. |
-| `topology_spread_strict` | `false` | Rejeter les pods si la répartition des zones ne peut être satisfaite. |
+| `topology_spread_strict` | `false` | Rejeter les pods si la répartition zonale ne peut pas être satisfaite. |
 
 ### Groupe 8 — Quota de ressources {#group-8--resource-quota}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_resource_quota` | `false` | Limite les comptes de CPU/mémoire/objets de l'espace de noms. |
+| `enable_resource_quota` | `false` | Plafonner les comptes CPU/mémoire/objets de l'espace de noms. |
 | `quota_memory_requests` / `quota_memory_limits` | `""` | **Doit utiliser des unités binaires (`4Gi`, `8192Mi`)** — les entiers bruts sont lus comme des octets et bloquent la planification. |
 
 ### Groupe 10 — Observabilité et santé {#group-10--observability--health}
@@ -384,8 +398,8 @@ paramètres spécifiques ou notables pour Cal.diy sont listés ; toutes les autr
 |---|---|---|
 | `startup_probe` / `startup_probe_config` | HTTP `/api/auth/session`, délai de 60s, fenêtre d'échec de 12 × 10s | Le `/api/auth/session` de Cal.diy renvoie 200 lorsque NextAuth est prêt. |
 | `liveness_probe` / `health_check_config` | HTTP `/api/auth/session` | Sonde de vivacité après le démarrage. |
-| `uptime_check_config` | désactivé | Vérification de disponibilité facultative de Cloud Monitoring. |
-| `alert_policies` | `[]` | Politiques d'alerte métrique facultatives. |
+| `uptime_check_config` | désactivé | Test de disponibilité Cloud Monitoring facultatif. |
+| `alert_policies` | `[]` | Stratégies d'alerte métriques facultatives. |
 
 ### Groupe 11 — Jobs et tâches planifiées {#group-11--jobs--scheduled-tasks}
 
@@ -393,7 +407,7 @@ paramètres spécifiques ou notables pour Cal.diy sont listés ; toutes les autr
 |---|---|---|
 | `initialization_jobs` | `[]` | Laisser vide pour utiliser les jobs intégrés `db-init`, `db-migrate` et `seed-app-store`. |
 | `cron_jobs` | `[]` | CronJobs Kubernetes récurrents. Nécessaire pour les rappels : en ajouter un qui appelle `/api/cron/*` avec `CRON_API_KEY` (voir `cron_api_key`). |
-| `additional_services` | `[]` | Sidecar ou services d'aide à exécuter en parallèle du conteneur principal. |
+| `additional_services` | `[]` | Services sidecar ou auxiliaires à exécuter à côté du conteneur principal. |
 
 ### Groupe 12 — CI/CD et intégration GitHub {#group-12--cicd--github-integration}
 
@@ -424,7 +438,7 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | `stateful_pvc_enabled` | `false` | Activer les modèles PVC (sélectionne automatiquement StatefulSet). |
 | `stateful_pvc_size` | `10Gi` | Taille de stockage par PVC. |
 | `stateful_pvc_mount_path` | `/data` | Chemin du conteneur où le PVC est monté. |
-| `stateful_pvc_storage_class` | `""` | Kubernetes StorageClass ; utilise la valeur par défaut du cluster si vide. |
+| `stateful_pvc_storage_class` | `""` | StorageClass Kubernetes ; utilise la valeur par défaut du cluster si vide. |
 | `stateful_headless_service` | `false` | Service sans tête pour des identités de pod DNS stables. |
 | `stateful_pod_management_policy` | `OrderedReady` | `OrderedReady` ou `Parallel`. |
 | `stateful_update_strategy` | `RollingUpdate` | `RollingUpdate` ou `OnDelete`. |
@@ -459,12 +473,12 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_custom_domain` | `true` | Provisionner Ingress pour les noms d'hôtes personnalisés + certificat géré. |
-| `application_domains` | `[]` | Noms d'hôtes à servir. Lorsque défini, mettre également à jour `NEXT_PUBLIC_WEBAPP_URL` dans `environment_variables`. |
-| `reserve_static_ip` | `true` | IP externe stable entre les redéploiements. |
+| `enable_custom_domain` | `true` | Provisionner Ingress pour les noms d'hôte personnalisés + certificat géré. |
+| `application_domains` | `[]` | Noms d'hôte à servir. Lorsque défini, mettre également à jour `NEXT_PUBLIC_WEBAPP_URL` dans `environment_variables`. |
+| `reserve_static_ip` | `true` | IP externe stable sur les redéploiements. |
 | `enable_cdn` | `false` | Activer Cloud CDN sur le backend de l'équilibreur de charge. |
 
-### Groupe 20 — Proxy d'identité (IAP) {#group-20--identity-aware-proxy-iap}
+### Groupe 20 — Identity-Aware Proxy (IAP) {#group-20--identity-aware-proxy-iap}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -481,48 +495,48 @@ Intégration standard App_GKE Cloud Build / Cloud Deploy — voir
 | `redis_host` | `""` | Point de terminaison Redis. Requis lorsque `enable_redis = true`. |
 | `redis_port` | `6379` | Port Redis. |
 | `redis_auth` | `""` | Mot de passe d'authentification Redis facultatif (sensible). |
-| `enable_cloud_armor` | `false` | Attacher une politique Cloud Armor (WAF) au backend Ingress. |
+| `enable_cloud_armor` | `false` | Attacher une stratégie Cloud Armor (WAF) au backend Ingress. |
 | `admin_ip_ranges` | `[]` | CIDR autorisés à un accès privilégié. |
-| `cloud_armor_policy_name` | `default-waf-policy` | Nom de la politique Cloud Armor. |
+| `cloud_armor_policy_name` | `default-waf-policy` | Nom de la stratégie Cloud Armor. |
 
 ### Groupe 22 — VPC Service Controls et journalisation d'audit {#group-22--vpc-service-controls--audit-logging}
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Appliquer un périmètre VPC-SC (nécessite `organization_id`). |
-| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode dry-run. |
+| `vpc_cidr_ranges` / `vpc_sc_dry_run` | _(défini)_ | CIDR de niveau d'accès / mode simulation. |
 | `enable_audit_logging` | `false` | Journaux d'audit Cloud détaillés. |
 
 ---
 
 ## 5. Sorties {#5-outputs}
 
-Ces valeurs sont renvoyées lors d'un déploiement réussi et constituent le moyen le plus rapide de
-localiser et d'explorer les ressources en cours d'exécution.
+Ces valeurs sont renvoyées en cas de déploiement réussi et constituent le moyen
+le plus rapide de localiser et d'explorer les ressources en cours d'exécution.
 
 | Sortie | Description |
 |---|---|
 | `service_name` | Nom du service Kubernetes. |
 | `namespace` | Espace de noms dans lequel la charge de travail s'exécute. |
-| `service_cluster_ip` | ClusterIP intra-cluster. |
-| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à l'étape (Cloud Deploy). |
+| `service_cluster_ip` | ClusterIP interne au cluster. |
+| `stage_service_cluster_ips` | Mappage des ClusterIP pour les services spécifiques à chaque étape (Cloud Deploy). |
 | `service_external_ip` | IP externe du LoadBalancer (lorsqu'une IP statique est réservée). |
 | `service_url` | URL pour atteindre Cal.diy. |
 | `database_instance_name` | Nom de l'instance Cloud SQL. |
 | `database_name` | Nom de la base de données de l'application. |
 | `database_user` | Utilisateur de la base de données de l'application. |
-| `database_password_secret` | Secret Secret Manager contenant le mot de passe de la base de données. |
+| `database_password_secret` | Secret Manager secret contenant le mot de passe de la base de données. |
 | `database_host` / `database_port` | Point de terminaison de la base de données (127.0.0.1 via Auth Proxy) / port. |
 | `storage_buckets` | Buckets Cloud Storage créés. |
 | `network_name` / `network_exists` / `regions` | Réseau VPC, présence, régions disponibles. |
 | `container_image` / `container_registry` | Image déployée et dépôt Artifact Registry. |
 | `monitoring_enabled` / `monitoring_notification_channels` | Statut et canaux de surveillance. |
-| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et (facultatifs) d'importation. |
+| `initialization_jobs` / `db_import_job` | Noms des jobs de configuration et d'importation (facultatif). |
 | `deployment_id` / `tenant_id` / `resource_prefix` | Identifiants de nommage. |
 | `project_id` / `project_number` | Identifiants de projet. |
 | `cicd_enabled` / `github_repository_url` / `github_repository_owner` / `github_repository_name` / `cicd_configuration` | Statut et détails CI/CD. |
 | `artifact_registry_repository` / `cloudbuild_trigger_name` / `cloudbuild_trigger_id` | Registre et déclencheur de build. |
-| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt. |
+| `kubernetes_ready` | Indique si le cluster/la charge de travail est prêt(e). |
 | `vpc_sc_enabled` / `vpc_sc_perimeter_name` / `vpc_sc_dry_run_mode` | Statut VPC-SC. |
 | `audit_logging_enabled` / `artifact_registry_cmek_enabled` | Journalisation d'audit et statut CMEK. |
 
@@ -533,39 +547,39 @@ localiser et d'explorer les ressources en cours d'exécution.
 > Risque : **Critique** (perte de données / panne / sécurité) — **Élevé** (service dégradé) —
 > **Moyen** (coût ou dégradation partielle) — **Faible** (mineur).
 
-| Paramètre | Valeur judicieuse | Risque | Conséquence en cas d'erreur |
+| Paramètre | Valeur judicieuse | Risque | Conséquence si incorrect |
 |---|---|---|---|
 | `database_type` | `POSTGRES_15` | Critique | Cal.diy nécessite PostgreSQL avec Prisma ORM ; MySQL ou `NONE` interrompt les migrations de schéma et le démarrage. |
-| `container_port` | `3000` | Critique | Le serveur Next.js de Cal.diy écoute sur le port 3000 ; toute autre valeur redirige mal les vérifications de santé et le routage du trafic. |
+| `container_port` | `3000` | Critique | Le serveur Next.js de Cal.diy écoute sur le port 3000 ; toute autre valeur redirige mal les sondes de santé et le routage du trafic. |
 | `enable_cloudsql_volume` | `true` | Critique | Cal.diy se connecte à Cloud SQL via un socket Unix ; la désactivation supprime le socket et toutes les connexions à la base de données échouent. |
 | `application_database_name` / `_user` | défini une fois | Critique | Immuable après le premier déploiement ; le renommage recrée la base de données/l'utilisateur et orpheline les données existantes. |
-| `application_version` | version épinglée | Critique | `calcom/cal.diy` n'a pas de tag `latest` ; une version invalide échoue le pull d'image. |
-| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans `backup_uri` valide échoue le job d'importation et peut écraser les données en direct lors des applications ultérieures. |
-| `NEXT_PUBLIC_WEBAPP_URL` | correspond à l'URL publique | Critique | Cal.diy l'intègre dans les chunks Next.js ; une non-concordance interrompt les rappels OAuth et les liens de réservation. |
+| `application_version` | version épinglée | Critique | `calcom/cal.diy` n'a pas de tag `latest` ; une version invalide fait échouer le pull de l'image. |
+| `enable_backup_import` | `false` sauf restauration | Critique | L'activation sans `backup_uri` valide fait échouer le job d'importation et peut écraser les données en direct lors des applys suivants. |
+| `NEXT_PUBLIC_WEBAPP_URL` | correspond à l'URL publique | Critique | Cal.diy l'intègre dans les chunks Next.js ; une non-concordance interrompt les callbacks OAuth et les liens de réservation. |
 | `NEXTAUTH_URL` | correspond à l'URL publique | Critique | NextAuth valide les URI de redirection OAuth par rapport à cela ; une non-concordance bloque toutes les connexions. |
 | `quota_memory_requests` / `_limits` | unités binaires | Critique | Les entiers bruts sont des octets — bloque toute planification de pod. |
-| `container_resources.memory_limit` | `2Gi` minimum | Élevé | Le démarrage de Cal.diy (migration de la base de données + amorçage) nécessite ≥ 2 GiB ; OOM tue avant que l'application ne soit prête. |
+| `container_resources.memory_limit` | `2Gi` minimum | Élevé | Le démarrage de Cal.diy (migration + amorçage de la base de données) nécessite ≥ 2 Gio ; OOM tue avant que l'application ne soit prête. |
 | `startup_probe.failure_threshold` | `12` (période de 10s ≈ 2 min) | Élevé | Une réduction trop agressive tue les pods avant que `db-migrate` et `seed-app-store` ne soient terminés. |
 | `enable_redis` | `true` pour multi-réplica | Élevé | Sans Redis, les sessions sont par pod ; les utilisateurs sont déconnectés lorsque les requêtes atterrissent sur différents pods. |
-| `redis_host` | requis lorsque `enable_redis=true` | Élevé | Un `redis_host` vide avec Redis activé injecte une URL mal formée ; les opérations de session échouent au moment de l'exécution. |
+| `redis_host` | requis lorsque `enable_redis=true` | Élevé | Un `redis_host` vide avec Redis activé injecte une URL mal formée ; les opérations de session échouent à l'exécution. |
 | `enable_pod_disruption_budget` | `true` lorsque `max > 1` | Moyen | Sans PDB, la maintenance du cluster peut expulser tous les pods simultanément. |
 | `pdb_min_available` vs `min_instance_count` | laisser de la marge | Moyen | `1`/`1` peut bloquer les mises à niveau de nœuds (un seul pod ne peut pas être expulsé). |
-| `enable_topology_spread` | activer pour la production | Moyen | Sans répartition, tous les réplicas peuvent s'exécuter dans une seule zone ; une panne de zone entraîne l'arrêt du service. |
-| `min_instance_count` | `1` | Moyen | Le démarrage initial de Cal.diy est de 3 à 5 minutes ; `0` avec mise à l'échelle à zéro ajoute une latence de démarrage à froid significative. |
+| `enable_topology_spread` | activer pour la production | Moyen | Sans répartition, tous les réplicas peuvent s'exécuter dans une seule zone ; une défaillance de zone entraîne l'arrêt du service. |
+| `min_instance_count` | `1` | Moyen | Le démarrage initial de Cal.diy prend 3 à 5 minutes ; `0` avec mise à l'échelle à zéro ajoute une latence de démarrage à froid significative. |
 | `SMTP_HOST` / `EMAIL_FROM` | configuration SMTP réelle | Moyen | Sans SMTP valide, les confirmations de réservation, les rappels et les réinitialisations de mot de passe ne sont jamais livrés. |
 | `organization_id` | défini explicitement pour VPC-SC | Moyen | Le périmètre VPC-SC n'est activé que lorsque `organization_id` est défini ; `enable_vpc_sc = true` seul n'a aucun effet. |
 
 ---
 
-Pour le comportement du module socle référencé tout au long — IAM et Workload Identity,
+Pour le comportement du socle référencé partout — IAM et Workload Identity,
 autoscaling, ingress et certificats, CI/CD, Cloud Armor, IAP, Binary
-Authorization, VPC-SC, sauvegardes et mise en miroir d'images — voir
+Authorization, VPC-SC, sauvegardes et mise en miroir des images — voir
 **[App_GKE](App_GKE.md)**. La configuration d'application spécifique à Cal.diy partagée avec la
 variante Cloud Run est décrite dans **[CalDiy_Common](CalDiy_Common.md)**.
 
 <!-- related-guides -->
 
-## Guides connexes {#related-guides}
+## Guides associés {#related-guides}
 
 - [Lab pratique : CalDiy sur GKE Autopilot](../labs/CalDiy_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
 - [Cal.diy sur Google Cloud Run](CalDiy_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.

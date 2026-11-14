@@ -3,13 +3,13 @@ title: "Module Formbricks GKE — Guide de configuration"
 description: "Référence de configuration pour le déploiement de Formbricks sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Formbricks_GKE.md @ 60462a86 sha256:6049fa69b3e8 -->
+<!-- translated-from: docs/modules/Formbricks_GKE.md @ 40c83c3f sha256:9d25c7b78cfa -->
 
 # Module Formbricks GKE — Guide de configuration {#formbricks-gke-module--configuration-guide}
 
 <img src="https://storage.googleapis.com/rad-public-2b65/modules/Formbricks_GKE.png" alt="Module Formbricks GKE — Guide de configuration" style={{maxWidth: "100%", borderRadius: "8px"}} />
 
-Ce guide décrit toutes les variables de configuration disponibles dans le module `Formbricks_GKE`. `Formbricks_GKE` est un **module enveloppe** qui combine le module d'infrastructure générique `App_GKE` avec la configuration d'application partagée `Formbricks_Common` pour déployer la plateforme open source de sondage et de gestion d'expérience [Formbricks](https://formbricks.com/) sur Google Kubernetes Engine (GKE) Autopilot.
+Ce guide décrit chaque variable de configuration disponible dans le module `Formbricks_GKE`. `Formbricks_GKE` est un **module enveloppe** qui combine le module d'infrastructure générique `App_GKE` avec la configuration d'application partagée `Formbricks_Common` pour déployer la plateforme open source de gestion d'enquêtes et d'expériences [Formbricks](https://formbricks.com/) sur Google Kubernetes Engine (GKE) Autopilot.
 
 La plupart des options de configuration dans `Formbricks GKE` correspondent directement aux mêmes options dans `App GKE`. Lorsqu'une variable a un comportement identique, ce guide fait référence au guide `App GKE` plutôt que de répéter la même documentation. Seules les variables et les valeurs par défaut **spécifiques à Formbricks** sont décrites en détail ici.
 
@@ -19,66 +19,66 @@ La plupart des options de configuration dans `Formbricks GKE` correspondent dire
 
 ## Ce que coûte Formbricks sur RAD, et comment cela se compare {#what-formbricks-costs-on-rad-and-how-that-compares}
 
-**L'exécution de Formbricks dans votre propre projet Google Cloud coûte environ 142,62 $ US/mois en frais Google Cloud, en plus d'un frais de module RAD unique de 110 crédits** (99 crédits — 10 % de moins — dans un projet géré par RAD). Formbricks est une plateforme open source de sondage et de gestion d'expérience. Si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement et le reprendre plus tard — voir "Mettre en pause gratuitement" ci-dessous.
+**L'exécution de Formbricks dans votre propre projet Google Cloud coûte environ 142,62 US$/mois en frais Google Cloud, en plus de frais de module RAD uniques de 110 crédits** (99 crédits — 10 % de moins — dans un projet géré par RAD). Formbricks est une plateforme open source de gestion d'enquêtes et d'expériences. Si vous déployez dans un projet géré par RAD, vous pouvez tout mettre en pause gratuitement et le reprendre plus tard — voir "Mettre en pause gratuitement" ci-dessous.
 
-*Formbricks est également disponible sur Cloud Run — voir le [guide Cloud Run](Formbricks_CloudRun.md) pour l'option à moindre coût ; ce guide couvre la variante GKE.*
+*Formbricks est également disponible sur Cloud Run — voir le [guide Cloud Run](Formbricks_CloudRun.md) pour l'option moins chère ; ce guide couvre la variante GKE.*
 
 ### Ce que vous payez sur RAD {#what-you-pay-on-rad}
 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | **110 crédits** (une fois) | **99 crédits** (une fois, 10 % de moins) |
-| Builds | Inclus dans le prix : aucun frais de build à la création, 5 mises à jour par mois offertes puis 2 crédits chacune, et rien pour une suppression ou un build en échec | Idem |
-| Coût d'exécution Google Cloud | ~142,62 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~108 crédits/jour (~10,80 $ US/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Coût d'exécution Google Cloud | ~142,62 US$/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~138 crédits/jour (~13,80 US$/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
 
-Votre premier déploiement réussi sur RAD est exempté des frais de module lorsque ces frais sont de 110 crédits ou moins.
+Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).
 
 **Coût d'exécution par défaut dans votre propre projet**
 
-| Ressource | $ US/mois (prix catalogue Google, us-central1) |
+| Ressource | US$/mois (prix catalogue Google, us-central1) |
 |---|---|
-| Pod GKE Autopilot, 2x vCPU / 2 GiB | 72,16 $ US |
-| Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 $ US |
-| Serveur de fichiers NFS/cache (petite VM) | 13,43 $ US |
-| Cloud NAT et réseau | 5 $ US |
-| Cloud Storage (modules complémentaires, sauvegardes) | 1 $ US |
-| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 |
-| **Total** | **142,62 $ US** |
+| Pod GKE Autopilot, 2x vCPU / 2 Gio | 72,16 US$ |
+| Cloud SQL pour PostgreSQL, 1 vCPU / 3,75 Go, zonal, 10 Go SSD | 51,02 US$ |
+| Serveur de fichiers NFS/cache (petite VM) | 13,43 US$ |
+| Cloud NAT et réseau | 5 US$ |
+| Cloud Storage (modules complémentaires, sauvegardes) | 1 US$ |
+| Frais de gestion de cluster GKE | partagés entre toutes les applications GKE du projet ; 0 $ si c'est votre seul cluster, sinon ~73 $ |
+| **Total** | **142,62 US$** |
 
 ### Comment cela se compare {#how-it-compares}
 
-- Le plan payant le moins cher de **Formbricks Cloud**, Pro, est de 74 $ US/mois (3 espaces de travail, 2 000 réponses mensuelles, sièges illimités) — vérifié sur [https://formbricks.com/pricing](https://formbricks.com/pricing). Cela est inférieur à la facture Google Cloud de RAD d'environ 142,62 $ US/mois pour la variante GKE, rien qu'au prix affiché, mais cela plafonne l'utilisation ; l'instance de RAD est illimitée, auto-hébergée, et les données ne quittent jamais votre propre projet.
-- Le véritable compromis ici est entre le plafond et le contrôle, pas le prix : un plan SaaS géré est moins cher à cette échelle, et le coût d'exécution de RAD est ce que coûtent réellement Cloud SQL, le calcul et le réseau au prix catalogue de Google, sans rien de caché dans un prix de siège groupé.
-- RAD ne prétend pas être moins cher qu'un VPS nu en termes monétaires — ce n'est généralement pas le cas. L'intérêt de RAD est ce qui est géré pour vous.
+- Le plan payant le moins cher de **Formbricks Cloud**, Pro, est de 74 US$/mois (3 espaces de travail, 2 000 réponses mensuelles, sièges illimités) — vérifié sur [https://formbricks.com/pricing](https://formbricks.com/pricing). Cela est inférieur à la facture Google Cloud de RAD d'environ 142,62 US$/mois pour la variante GKE, rien qu'au prix affiché, mais cela limite l'utilisation ; l'instance de RAD est illimitée, auto-hébergée, et les données ne quittent jamais votre propre projet.
+- Le véritable compromis ici est entre la limite et le contrôle, pas le prix : un plan SaaS géré est moins cher à cette échelle, et le coût d'exécution de RAD est ce que coûtent réellement Cloud SQL, le calcul et le réseau au prix catalogue de Google, sans rien de caché dans un prix de siège groupé.
+- RAD ne prétend pas être moins cher qu'un VPS nu en termes d'argent — ce n'est généralement pas le cas. L'intérêt de RAD est ce qui est géré pour vous.
 
 ### Mettre en pause gratuitement : supprimer un projet géré par RAD, le restaurer quand vous en avez besoin {#pause-it-for-free-delete-a-rad-managed-project-restore-it-when-you-need-it}
 
 Si Formbricks est exécuté dans un **projet géré par RAD**, vous pouvez arrêter de le payer entièrement sans le détruire. La suppression de ce projet délie d'abord sa facturation, puis demande à Google de supprimer purement et simplement le projet — la suppression logicielle récupérable de 30 jours de Google. Contrairement à la suppression du module Formbricks seul, cela ne supprime pas Cloud SQL, aucune VM ou la ressource de calcul une par une : l'ensemble du projet s'arrête simplement, et rien n'est facturé pendant qu'il attend, car la facturation est déjà déliée.
 
-> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ni les ressources qu'il contient, sera utilisable après sa restauration : la restauration ne peut donc pas servir de moyen fiable de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application, stockées en dehors du projet. Si la restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
+> **Une restauration n'est pas garantie — conservez vos propres sauvegardes.** Les conditions de Google Cloud ne garantissent pas qu'un projet restauré, ou les ressources qu'il contient, seront utilisables après sa restauration, de sorte que la restauration ne peut pas être invoquée comme un moyen de récupérer un projet supprimé. Avant de supprimer, assurez-vous d'avoir effectué des sauvegardes appropriées des données et de la configuration de l'application et de les avoir stockées en dehors du projet. Si une restauration échoue, ou si le projet restauré ne fonctionne pas, la solution de repli consiste à redéployer l'application (voir la section suivante) et à restaurer sa configuration et ses données à partir de ces sauvegardes.
 
-La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de restaurer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais à nouveau les frais de module. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), une restauration ne coûte donc normalement aucun crédit. Les frais de module de 99 crédits ne sont pas facturés à nouveau.
+La restauration, dans les 30 jours et uniquement par le propriétaire du projet, demande à Google de récupérer le projet et de rattacher son compte de facturation, puis vous demande d'exécuter une mise à jour sur chaque déploiement pour confirmer que tout est revenu. Comme rien n'a été détruit individuellement, cette mise à jour trouve les mêmes ressources déjà présentes — c'est une vérification, pas une reconstruction, et une mise à jour ne facture jamais les frais de module à nouveau. Les mises à jour sont incluses dans le prix (5 par mois pour chaque déploiement), donc une restauration ne coûte normalement aucun crédit. Les frais de module de 99 crédits ne sont pas facturés à nouveau.
 
-Ce qu'il faut : vous devez être propriétaire du projet (pas un projet que RAD gère uniquement pour la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser le seuil du niveau (100 crédits pour le niveau sandbox qui convient à la plupart des utilisations d'étude/démo). Google indique que la plupart des services fonctionnent à nouveau pleinement dans les 36 heures suivant une restauration.
+Ce qu'il faut : vous devez être propriétaire du projet (pas un projet dont RAD gère uniquement la facturation), vous devez le restaurer vous-même dans les 30 jours — après cela, Google le supprime définitivement — et la restauration est admise comme la création d'un nouveau projet, donc votre solde de crédits achetés doit toujours dépasser le seuil du palier (100 crédits pour le palier sandbox qui convient à la plupart des utilisations d'étude/démo). Google indique que la plupart des services sont de nouveau pleinement fonctionnels dans les 36 heures suivant une restauration.
 
-Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé Formbricks et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
+Un véritable manque : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du projet, et ce bucket a la suppression logicielle de Cloud Storage explicitement désactivée, il est donc très probable qu'il disparaisse dès que vous supprimez le projet — même si le projet lui-même est récupérable pendant 30 jours. Si vous avez personnalisé Formbricks et que vous souhaitez conserver ce travail, copiez une sauvegarde (vers Google Drive, ou un bucket en dehors du projet) avant de supprimer. Pour une installation par défaut sans rien d'irremplaçable, cela n'a pas d'importance.
 
 ### Payer uniquement pendant l'utilisation, l'autre méthode : supprimer et redéployer {#pay-only-while-you-use-it-the-other-way-delete-and-redeploy}
 
 Si Formbricks se trouve dans votre propre projet (ou si plus de 30 jours se sont écoulés sur un projet géré par RAD), la façon d'arrêter de payer est de supprimer le déploiement et de le redéployer plus tard lorsque vous en aurez à nouveau besoin.
 
-Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) : 110 crédits (11,00 $ US) dans votre propre projet, ou **99 crédits** sur un projet géré par RAD.
+Un redéploiement coûte à nouveau les frais de module (les builds sont inclus) : 110 crédits (11,00 US$) dans votre propre projet, ou **99 crédits** sur un projet géré par RAD.
 
-La suppression ne permet d'économiser de l'argent que si Formbricks reste inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution : environ **3 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa facture Google Cloud d'environ 142,62 $ US/mois), ou **environ 1 jour ou plus** d'inactivité dans un projet géré par RAD (par rapport à ses ~108 crédits/jour).
+La suppression ne permet d'économiser de l'argent que si Formbricks resterait inutilisé suffisamment longtemps pour compenser ce coût de redéploiement par rapport à son propre coût d'exécution : environ **3 jours ou plus** d'inactivité dans votre propre projet (par rapport à sa facture Google Cloud d'environ 142,62 US$/mois), ou **environ 1 jour ou plus** d'inactivité dans un projet géré par RAD (par rapport à ses ~138 crédits/jour).
 
 La majeure partie du coût d'exécution de Formbricks est la base de données et la VM de fichier/cache partagée. Elles ne s'arrêtent que si rien d'autre dans le projet ne les utilise, donc la suppression de cette application alors que quelque chose d'autre partage le projet n'économise que la part de calcul propre à cette application du total ci-dessus.
 
-Priorité aux données : les sauvegardes nocturnes sont écrites dans un bucket à l'intérieur du déploiement et sont supprimées avec celui-ci, donc copiez la dernière sauvegarde avant de la supprimer si vous souhaitez la conserver.
+Conservez d'abord les données : les sauvegardes nocturnes vont dans un bucket à l'intérieur du déploiement et sont supprimées avec lui, alors copiez la dernière sauvegarde avant de supprimer si vous voulez la conserver.
 
-### Sessions de labo et environnements gérés {#lab-sessions-and-managed-environments}
+### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de labo, pour la formation :** un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
-- **Environnements gérés, pour les cabinets de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
+- **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés retournent au formateur.
+- **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 - Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.
 
 **Sources (8 octobre 2026) :** Prix catalogue de l'API Google Cloud Billing Catalog ; radmodules.dev/pricing pour les propres frais de RAD et les estimations de crédits quotidiens ; [documentation de Google sur la suppression/restauration de projets](https://cloud.google.com/resource-manager/docs/delete-restore-projects) pour les mécanismes de pause/restauration ; [tarification de Formbricks Cloud](https://formbricks.com/pricing) pour les chiffres de Formbricks Cloud.
@@ -106,7 +106,7 @@ Les zones de configuration suivantes sont fournies par le module sous-jacent `Ap
 | Planification et rétention des sauvegardes | Identique à `App_GKE`. |
 | Observabilité et vérifications de santé | Point de terminaison `/api/v2/health` ; voir [Groupe 13 : Observabilité et santé](#group-13-observability--health). |
 | Cloud Armor WAF | Identique à `App_GKE`. |
-| Proxy compatible avec l'identité | Identique à `App_GKE`. |
+| Proxy conscient de l'identité | Identique à `App_GKE`. |
 | Autorisation binaire | Identique à `App_GKE`. |
 | Trafic et Ingress | Identique à `App_GKE`. |
 | Domaine personnalisé et IP statique | Formbricks `webapp_url` doit être configuré pour correspondre ; voir [Groupe 11 : Domaine personnalisé et IP statique](#group-11-database-configuration). |
@@ -124,22 +124,22 @@ Les zones de configuration suivantes sont fournies par le module sous-jacent `Ap
 
 ## Comment Formbricks GKE est lié à App GKE {#how-formbricks-gke-relates-to-app-gke}
 
-`Formbricks GKE` transmet toutes les variables à `App GKE` et ajoute un sous-module `Formbricks Common` qui fournit les valeurs par défaut, les secrets et la configuration d'application spécifiques à Formbricks. Les principaux effets sont les suivants :
+`Formbricks GKE` transmet toutes les variables à `App GKE` et ajoute un sous-module `Formbricks Common` qui fournit des valeurs par défaut, des secrets et une configuration d'application spécifiques à Formbricks. Les principaux effets sont les suivants :
 
 1.  **PostgreSQL 15 est requis.** Formbricks est construit sur Prisma ORM ciblant PostgreSQL. La valeur par défaut de `database_type` est `"POSTGRES_15"`.
-2.  **Les secrets d'application sont générés automatiquement.** `Formbricks Common` crée `NEXTAUTH_SECRET`, `ENCRYPTION_KEY`, `CRON_SECRET`, `HUB_API_KEY`, `CUBEJS_API_SECRET`, `S3_ACCESS_KEY` et `S3_SECRET_KEY` dans Secret Manager lors du premier déploiement. Ceux-ci sont injectés dans le pod en tant que variables d'environnement secrètes via le pilote CSI du magasin de secrets.
+2.  **Les secrets d'application sont auto-générés.** `Formbricks Common` crée `NEXTAUTH_SECRET`, `ENCRYPTION_KEY`, `CRON_SECRET`, `HUB_API_KEY`, `CUBEJS_API_SECRET`, `S3_ACCESS_KEY` et `S3_SECRET_KEY` dans Secret Manager lors du premier déploiement. Ceux-ci sont injectés dans le pod en tant que variables d'environnement secrètes via le pilote CSI du magasin de secrets.
 3.  **Un bucket GCS `uploads` est provisionné automatiquement.** `Formbricks Common` fournit un bucket `uploads` que Formbricks utilise via l'API XML compatible S3 de GCS. Les identifiants HMAC dans Secret Manager authentifient la connexion. Vous n'avez pas besoin de le définir dans `storage_buckets`.
 4.  **Un job `db-init` s'exécute lors du premier déploiement.** `Formbricks Common` fournit un job Kubernetes `db-init` par défaut qui initialise le schéma PostgreSQL et crée l'utilisateur de l'application. Les migrations Prisma s'exécutent ensuite automatiquement lorsque le conteneur Formbricks démarre.
-5.  **Les valeurs par défaut des ressources sont dimensionnées pour Formbricks.** Les valeurs par défaut de `cpu_limit` (2 vCPU) et `memory_limit` (2 Gi) reflètent les exigences d'exécution de Next.js de Formbricks et du pool de connexions Prisma.
-6.  **La mise en cache Redis est activée par défaut.** Formbricks utilise Redis pour la mise en cache des réponses API et la limitation du débit. Obligatoire pour une mise à l'échelle horizontale sécurisée.
+5.  **Les valeurs par défaut des ressources sont dimensionnées pour Formbricks.** Les valeurs par défaut de `cpu_limit` (2 vCPU) et `memory_limit` (2 Gio) reflètent les exigences d'exécution de Next.js de Formbricks et du pool de connexions Prisma.
+6.  **La mise en cache Redis est activée par défaut.** Formbricks utilise Redis pour la mise en cache des réponses API et la limitation du débit. Obligatoire pour une mise à l'échelle horizontale sûre.
 7.  **`webapp_url` doit être défini après le premier déploiement.** NextAuth.js nécessite l'URL publique de l'instance Formbricks pour les URI de redirection OAuth et les liens e-mail. Laissez vide lors du premier déploiement ; mettez à jour avec l'IP externe, le domaine nip.io ou le domaine personnalisé une fois que l'IP de l'équilibreur de charge est connue.
-8.  **L'affinité de session est par défaut à `ClientIP`.** La gestion des sessions Next.js de Formbricks bénéficie de l'acheminement des requêtes répétées du même navigateur vers le même pod. Requis pour maintenir un état d'authentification cohérent dans le panneau d'administration.
+8.  **L'affinité de session est par défaut `ClientIP`.** La gestion des sessions Next.js de Formbricks bénéficie du routage des requêtes répétées du même navigateur vers le même pod. Requis pour maintenir un état d'authentification cohérent dans le panneau d'administration.
 
 ---
 
 ## Groupe 0 : Métadonnées du module {#group-0-module-metadata}
 
-Métadonnées de la plateforme/UI lues par la plateforme RAD pour le catalogue, l'ordonnancement des dépendances, la facturation des crédits et le contrôle d'accès. Aucune de ces métadonnées n'est transmise à `App_GKE` — elles n'ont aucun effet sur l'infrastructure déployée.
+Métadonnées de la plateforme/UI lues par la plateforme RAD pour la liste du catalogue, l'ordre des dépendances, la facturation des crédits et le contrôle d'accès. Aucune de ces métadonnées n'est transmise à `App_GKE` — elles n'ont aucun effet sur l'infrastructure déployée.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -148,8 +148,8 @@ Métadonnées de la plateforme/UI lues par la plateforme RAD pour le catalogue, 
 | `module_dependency` | `["Services_GCP"]` | Modules que la plateforme déploie en premier. |
 | `requires_services` | `{ create_postgres=true, create_network_filesystem=true, create_google_kubernetes_engine=true, ... }` | Indique à la plateforme quels basculements `Services_GCP` `create_*` doivent être activés lors du provisionnement automatique de `Services_GCP` pour ce déploiement. |
 | `module_services` | `["GKE Autopilot", "Cloud SQL (PostgreSQL 15)", ...]` | Services GCP affichés dans l'interface utilisateur de la plateforme. |
-| `credit_cost` | `110` | Crédits de plateforme consommés par déploiement. |
-| `require_credit_purchases` | `false` | Lorsque `true`, les frais de module ne peuvent être payés qu'avec des crédits achetés (abonnement ou recharge), et non avec des crédits offerts ou d'événements gratuits. |
+| `credit_cost` | `110` | Crédits de la plateforme consommés par déploiement. |
+| `require_credit_purchases` | `false` | Lorsque `true`, les frais de module ne peuvent être payés qu'avec des crédits achetés (abonnement ou recharge), et non avec des crédits offerts ou d'événement gratuits. |
 | `enable_purge` | `true` | Permet la suppression complète des ressources lors de la destruction. |
 | `public_access` | `true` | Liste ce module dans le catalogue public. |
 | `require_services_gcp_module` | `true` | Échoue au moment de la planification si aucun VPC géré par `Services_GCP` n'est détecté. Définir `false` pour un déploiement autonome avec des prérequis intégrés. |
@@ -160,7 +160,7 @@ Métadonnées de la plateforme/UI lues par la plateforme RAD pour le catalogue, 
 | `impersonation_service_account` | `""` | Non référencé — n'a aucun effet dans ce module d'application. |
 | `job_execution_wait_timeout` | `900` | Nombre maximal de secondes qu'un déploiement attend pour le job `db-init` avant d'annuler l'apply. |
 | `explicit_secret_values` | `{}` | Non référencé — n'a aucun effet dans ce module d'application (les propres valeurs secrètes de `Formbricks_Common` sont câblées en interne à la place). |
-| `scripts_dir` | `""` | Non référencé — n'a aucun effet dans ce module d'application (le module pointe toujours vers le propre répertoire `scripts/` de `Formbricks_Common`). |
+| `scripts_dir` | `""` | Non référencé — n'a aucun effet dans ce module d'application (le module pointe toujours vers le propre répertoire `Formbricks_Common` `scripts/`). |
 
 ---
 
@@ -172,9 +172,9 @@ Identique à `App_GKE`.
 |---|---|---|
 | `project_id` | — | ID du projet GCP. **Obligatoire.** |
 | `region` | `"us-central1"` | Région GCP pour le déploiement des ressources. Utilisée comme solution de repli pour la découverte de VPC et comme emplacement du bucket de stockage pour le bucket `uploads`. |
-| `tenant_id` | `"demo"` | Suffixe court ajouté à tous les noms de ressources. |
+| `tenant_id` | `"demo"` | Court suffixe ajouté à tous les noms de ressources. |
 | `support_users` | `[]` | Adresses e-mail pour les alertes de surveillance. |
-| `resource_labels` | `{}` | Étiquettes appliquées à toutes les ressources provisionnées. |
+| `resource_labels` | `{}` | Libellés appliqués à toutes les ressources provisionnées. |
 
 ---
 
@@ -186,9 +186,9 @@ Identique à `App_GKE`.
 |---|---|---|---|
 | `application_name` | `"formbricks"` | `"gkeapp"` | Utilisé comme nom de base pour toutes les ressources GCP et Kubernetes. **Ne pas modifier après le déploiement.** |
 | `application_display_name` | `"Formbricks Surveys"` | `"App GKE Application"` | Affiché dans les tableaux de bord et l'interface utilisateur de la plateforme. Peut être modifié librement. |
-| `application_description` | `"Formbricks Surveys on GKE Autopilot"` | `"App GKE Custom Application"` | Étiquette descriptive. Non transmise à `App_GKE` — la variable `description` contrôle cela. |
+| `application_description` | `"Formbricks Surveys on GKE Autopilot"` | `"App GKE Custom Application"` | Libellé descriptif. Non transmis à `App_GKE` — la variable `description` contrôle cela. |
 | `application_version` | `"latest"` | `"1.0.0"` | Le tag de version Formbricks à construire et déployer. Définir sur une version spécifique pour la production (par exemple, `"v2.3.0"`). |
-| `description` | `"Formbricks - Open Source Survey and Experience Management"` | — | Transmis à `Formbricks Common` comme description du job db-init. |
+| `description` | `"Formbricks - Open Source Survey and Experience Management"` | — | Passé à `Formbricks Common` comme description du job db-init. |
 | `webapp_url` | `""` | — | URL publique de l'instance Formbricks. Laisser vide lors du premier déploiement ; mettre à jour après que l'IP externe est connue. |
 
 ---
@@ -200,16 +200,16 @@ Identique à `App_GKE`.
 | Variable | Valeur par défaut Formbricks GKE | Valeur par défaut App GKE | Notes |
 |---|---|---|---|
 | `container_port` | `3000` | `8080` | Port HTTP natif de Formbricks. Ne pas modifier. |
-| `cpu_limit` | `"2000m"` | `"1000m"` | Le serveur Next.js de Formbricks bénéficie de 2 vCPU ; `"1000m"` provoque une latence de réponse notable sous un trafic de sondage modéré. |
-| `memory_limit` | `"2Gi"` | `"512Mi"` | Formbricks avec pool de connexions Prisma et mise en cache des réponses nécessite au moins 1 Gi ; 2 Gi sont recommandés pour la production avec prise en charge du téléchargement de fichiers. |
+| `cpu_limit` | `"2000m"` | `"1000m"` | Le serveur Next.js de Formbricks bénéficie de 2 vCPU ; `"1000m"` provoque une latence de réponse notable sous un trafic d'enquête modéré. |
+| `memory_limit` | `"2Gi"` | `"512Mi"` | Formbricks avec pool de connexions Prisma et mise en cache des réponses nécessite au moins 1 Gio ; 2 Gio sont recommandés pour la production avec prise en charge du téléchargement de fichiers. |
 | `min_instance_count` | `0` | — | Par défaut à 0 (mise à l'échelle à zéro). Définir à `1` pour la production afin d'éliminer les démarrages à froid. |
-| `max_instance_count` | `3` | `3` | HPA maxReplicas. Augmenter pour les campagnes de sondage à fort trafic. |
+| `max_instance_count` | `3` | `3` | maxReplicas HPA. Augmenter pour les campagnes d'enquête à trafic plus élevé. |
 | `container_image_source` | `"custom"` | `"custom"` | `Formbricks Common` fournit un build basé sur Dockerfile. Définir à `"prebuilt"` pour déployer directement l'image `ghcr.io/formbricks/formbricks` en amont. |
 | `enable_cloudsql_volume` | `true` | `true` | Le sidecar Cloud SQL Auth Proxy fournit le point de terminaison PostgreSQL dans GKE (Cloud Run utilise le volume Cloud SQL natif — un socket Unix sous `/cloudsql`). |
 | `enable_image_mirroring` | `true` | varie | Met en miroir l'image Formbricks de `ghcr.io` vers Artifact Registry pour éviter les limites de débit et assurer la fiabilité du pull. |
-| `session_affinity` | `"ClientIP"` | varie | Requis pour un état d'authentification cohérent dans les sessions d'administration Formbricks. Voir la note ci-dessous. |
+| `session_affinity` | `"ClientIP"` | varie | Requis pour un état d'authentification cohérent entre les sessions d'administration Formbricks. Voir la note ci-dessous. |
 
-**Note `session_affinity` :** Le serveur Next.js de Formbricks gère l'état de session en cours de processus (avec Redis comme stockage externe). Sans affinité de session `ClientIP`, les requêtes du panneau d'administration peuvent être acheminées vers différents pods qui n'ont pas encore synchronisé leur cache de session en mémoire, ce qui entraîne des échecs d'authentification intermittents. Conservez `"ClientIP"` pour tous les déploiements Formbricks GKE.
+**Note `session_affinity` :** Le serveur Next.js de Formbricks gère l'état de session en cours de processus (avec Redis comme stockage externe). Sans affinité de session `ClientIP`, les requêtes du panneau d'administration peuvent être acheminées vers différents pods qui n'ont pas encore synchronisé leur cache de session en mémoire, ce qui provoque des échecs d'authentification intermittents. Conserver `"ClientIP"` pour tous les déploiements Formbricks GKE.
 
 **`container_resources` :** La valeur par défaut de la variable `container_resources` (`{ cpu_limit = "1000m", memory_limit = "512Mi" }`) est remplacée par les valeurs `cpu_limit` et `memory_limit` (respectivement `"2000m"` et `"2Gi"`) fournies par Formbricks Common dans la fusion des locaux `main.tf`. Pour définir des limites de ressources personnalisées, définissez `cpu_limit` et `memory_limit` directement plutôt que `container_resources`.
 
@@ -229,8 +229,8 @@ Identique à `App_GKE` — pas de valeurs par défaut spécifiques à Formbricks
 | `service_type` | `"LoadBalancer"` | `"LoadBalancer"`, `"ClusterIP"`, ou `"NodePort"`. |
 | `configure_service_mesh` | `false` | Active l'injection de sidecar Istio/Anthos Service Mesh pour l'espace de noms. |
 | `enable_network_segmentation` | `false` | Crée des NetworkPolicies Kubernetes restreignant le trafic pod-à-pod au même espace de noms. |
-| `termination_grace_period_seconds` | `30` | Secondes que Kubernetes attend après SIGTERM avant SIGKILL. |
-| `deployment_timeout` | `1800` | Secondes que Terraform attend que le déploiement soit terminé pendant l'apply. |
+| `termination_grace_period_seconds` | `30` | Secondes pendant lesquelles Kubernetes attend après SIGTERM avant SIGKILL. |
+| `deployment_timeout` | `1800` | Secondes pendant lesquelles Terraform attend que le déploiement soit terminé pendant l'apply. |
 | `network_name` | `""` | Réseau VPC à utiliser. Non référencé — n'a aucun effet dans ce module d'application. |
 | `gke_cluster_selection_mode` | `"primary"` | Non référencé — n'a aucun effet dans ce module d'application. |
 | `enable_multi_cluster_service` | `false` | Non référencé — n'a aucun effet dans ce module d'application. |
@@ -242,7 +242,7 @@ Identique à `App_GKE` — pas de valeurs par défaut spécifiques à Formbricks
 
 ## Groupe 4 : Accès et réseau {#group-4-access--networking}
 
-Les variables réseau suivantes sont disponibles dans `Formbricks GKE` :
+Les variables de réseau suivantes sont disponibles dans `Formbricks GKE` :
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
@@ -255,14 +255,14 @@ Les variables réseau suivantes sont disponibles dans `Formbricks GKE` :
 | `enable_custom_domain` | `true` | Configure l'API Kubernetes Gateway pour le routage de domaine personnalisé avec des certificats SSL gérés. |
 | `application_domains` | `[]` | Noms de domaine personnalisés (par exemple, `["surveys.example.com"]`). Lorsque `enable_custom_domain = true` et que ce champ est vide, un domaine nip.io est utilisé pour les tests. |
 | `reserve_static_ip` | `true` | Réserve une IP statique globale pour l'équilibreur de charge. Recommandé pour la production. |
-| `static_ip_name` | `""` | Nom de l'IP réservée. Généré automatiquement si vide. |
+| `static_ip_name` | `""` | Nom de l'IP réservée. Auto-généré si vide. |
 | `network_tags` | `["nfsserver"]` | Tags de pare-feu appliqués aux nœuds du cluster GKE. Le tag `nfsserver` est requis pour la connectivité NFS. |
 | `enable_cloud_armor` | `false` | Active une politique de sécurité Cloud Armor WAF. |
 | `admin_ip_ranges` | `[]` | Plages CIDR d'administration autorisées via Cloud Armor. |
 | `cloud_armor_policy_name` | `"default-waf-policy"` | Nom de la politique de sécurité Cloud Armor à attacher. |
 | `enable_cdn` | `false` | Active Cloud CDN via GCPBackendPolicy pour la passerelle. |
 
-> **Configuration de l'URL Formbricks :** Lorsque vous utilisez un domaine personnalisé, définissez `webapp_url` pour qu'il corresponde au domaine. Formbricks utilise cette valeur pour générer les URI de redirection NextAuth.js, les liens de confirmation par e-mail et les URL de partage de sondage. Une non-concordance entre l'URL de service réelle et `webapp_url` interrompt l'authentification et provoque des liens brisés dans les e-mails de sondage.
+> **Configuration de l'URL Formbricks :** Lorsque vous utilisez un domaine personnalisé, définissez `webapp_url` pour qu'il corresponde au domaine. Formbricks utilise cette valeur pour générer les URI de redirection NextAuth.js, les liens de confirmation par e-mail et les URL de partage d'enquête. Une non-concordance entre l'URL réelle du service et `webapp_url` interrompt l'authentification et provoque des liens brisés dans les e-mails d'enquête.
 
 ---
 
@@ -272,7 +272,7 @@ Identique à `App_GKE`. Exécute des scripts SQL arbitraires à partir d'un buck
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
-| `enable_custom_sql_scripts` | `false` | Exécute des scripts SQL personnalisés à partir de GCS pendant l'initialisation. |
+| `enable_custom_sql_scripts` | `false` | Exécute des scripts SQL personnalisés depuis GCS pendant l'initialisation. |
 | `custom_sql_scripts_bucket` | `""` | Bucket GCS contenant les scripts. |
 | `custom_sql_scripts_path` | `""` | Préfixe de chemin dans le bucket ; les scripts s'exécutent par ordre alphabétique. |
 | `custom_sql_scripts_use_root` | `false` | Exécute les scripts en tant qu'utilisateur root de la base de données au lieu de l'utilisateur de l'application. |
@@ -281,15 +281,15 @@ Identique à `App_GKE`. Exécute des scripts SQL arbitraires à partir d'un buck
 
 ## Groupe 4c : Quotas de ressources {#group-4c-resource-quotas}
 
-Identique à `App_GKE`. Crée un ResourceQuota Kubernetes limitant le total de CPU, de mémoire et le nombre d'objets dans l'espace de noms Formbricks — utile dans les clusters partagés. Les valeurs de mémoire nécessitent des suffixes binaires (`Gi`/`Mi`) ; les entiers bruts sont traités comme des octets et bloquent toute planification de pod.
+Identique à `App_GKE`. Crée un ResourceQuota Kubernetes limitant le total de CPU, de mémoire et le nombre d'objets dans l'espace de noms Formbricks — utile dans les clusters partagés. Les valeurs de mémoire nécessitent des suffixes binaires (`Gi`/`Mi`) ; les entiers nus sont traités comme des octets et bloquent toute planification de pod.
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_resource_quota` | `false` | Crée un ResourceQuota Kubernetes dans l'espace de noms. |
 | `quota_cpu_requests` | `""` | Total des requêtes CPU autorisées. Vide = pas de quota. |
 | `quota_cpu_limits` | `""` | Total des limites CPU autorisées. Vide = pas de quota. |
-| `quota_memory_requests` | `""` | Total des requêtes mémoire autorisées (par exemple, `"4Gi"`). Vide = pas de quota. |
-| `quota_memory_limits` | `""` | Total des limites mémoire autorisées (par exemple, `"8Gi"`). Vide = pas de quota. |
+| `quota_memory_requests` | `""` | Total des requêtes mémoire autorisées (par exemple `"4Gi"`). Vide = pas de quota. |
+| `quota_memory_limits` | `""` | Total des limites mémoire autorisées (par exemple `"8Gi"`). Vide = pas de quota. |
 | `quota_max_pods` | `""` | Nombre maximal de pods dans l'espace de noms. Vide = pas de quota. |
 | `quota_max_services` | `""` | Nombre maximal de services Kubernetes dans l'espace de noms. Vide = pas de quota. |
 | `quota_max_pvcs` | `""` | Nombre maximal de PVC dans l'espace de noms. Pertinent uniquement lorsque `workload_type = "StatefulSet"`. Vide = pas de quota. |
@@ -303,9 +303,9 @@ Identique à `App_GKE`.
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_vpc_sc` | `false` | Applique un périmètre de contrôles de service VPC autour des API GCP utilisées par ce module. |
-| `vpc_cidr_ranges` | `[]` | CIDR de sous-réseau pour le niveau d'accès VPC-SC. Découvert automatiquement à partir du VPC si vide. |
+| `vpc_cidr_ranges` | `[]` | CIDR de sous-réseau pour le niveau d'accès VPC-SC. Auto-découvert à partir du VPC si vide. |
 | `vpc_sc_dry_run` | `true` | Enregistre les violations sans bloquer, recommandé pour le déploiement initial. |
-| `organization_id` | `""` | ID d'organisation GCP pour Access Context Manager. Découvert automatiquement si vide. |
+| `organization_id` | `""` | ID d'organisation GCP pour Access Context Manager. Auto-découvert si vide. |
 | `enable_audit_logging` | `false` | Active les journaux d'audit Cloud détaillés (DATA_READ/DATA_WRITE/ADMIN_READ) pour le projet. |
 
 ---
@@ -318,8 +318,8 @@ Identique à `App_GKE`.
 |---|---|---|
 | `STORAGE_PROVIDER` | `"s3"` | Indique à Formbricks d'utiliser le pilote de stockage S3. |
 | `S3_ENDPOINT_URL` | `"https://storage.googleapis.com"` | Pointe le client S3 de Formbricks vers GCS. |
-| `S3_BUCKET_NAME` | `<uploads-bucket-name>` | Bucket GCS `uploads` provisionné automatiquement. |
-| `NEXTAUTH_URL` | `var.webapp_url` | URL de base de NextAuth.js. Vide jusqu'à ce que `webapp_url` soit défini. |
+| `S3_BUCKET_NAME` | `<uploads-bucket-name>` | Bucket GCS `uploads` auto-provisionné. |
+| `NEXTAUTH_URL` | `var.webapp_url` | URL de base NextAuth.js. Vide jusqu'à ce que `webapp_url` soit défini. |
 | `WEBAPP_URL` | `var.webapp_url` | URL publique de Formbricks pour les liens e-mail. |
 | `HUB_API_URL` | `var.hub_api_url` | Point de terminaison de l'API Formbricks Hub (v5+). |
 | `CUBEJS_API_URL` | `var.cubejs_api_url` | Point de terminaison de l'API d'analyse Cube.js (v5+). |
@@ -329,13 +329,13 @@ Identique à `App_GKE`.
 | `SMTP_SECURE_ENABLED` | `var.smtp_secure_enabled` (`"1"` / `"0"`) | Indicateur TLS implicite. `true` pour le port `465`, `false` pour STARTTLS sur `587`. |
 | `MAIL_FROM` | `var.mail_from` | Adresse de l'expéditeur. |
 
-`smtp_password` (valeur par défaut `""`, sensible) est injecté en tant que Secret Kubernetes `SMTP_PASSWORD` — voir le tableau des secrets ci-dessous. S'il est laissé vide, `Formbricks_Common` génère automatiquement une valeur aléatoire dans Secret Manager.
+`smtp_password` (valeur par défaut `""`, sensible) est injecté en tant que secret Kubernetes `SMTP_PASSWORD` — voir le tableau des secrets ci-dessous. S'il est laissé vide, `Formbricks_Common` génère automatiquement une valeur aléatoire dans Secret Manager.
 
-Les valeurs sensibles suivantes sont injectées en tant que Secrets Kubernetes via le pilote CSI du magasin de secrets (à partir de Secret Manager) :
+Les valeurs sensibles suivantes sont injectées en tant que secrets Kubernetes via le pilote CSI du magasin de secrets (depuis Secret Manager) :
 
 | Secret Kubernetes | Variable d'environnement | Notes |
 |---|---|---|
-| `NEXTAUTH_SECRET` | `NEXTAUTH_SECRET` | Clé de signature JWT — ne pas modifier après l'existence des utilisateurs. |
+| `NEXTAUTH_SECRET` | `NEXTAUTH_SECRET` | Clé de signature JWT — ne pas modifier après la création d'utilisateurs. |
 | `ENCRYPTION_KEY` | `ENCRYPTION_KEY` | Clé de chiffrement des données. |
 | `CRON_SECRET` | `CRON_SECRET` | Jeton d'authentification Cron. |
 | `HUB_API_KEY` | `HUB_API_KEY` | Clé de connectivité du Hub. |
@@ -357,15 +357,15 @@ Les variables de secrets restantes (`secret_rotation_period`, `secret_propagatio
 
 | Variable | Valeur par défaut | Notes |
 |---|---|---|
-| `backup_schedule` | `"0 2 * * *"` | Quotidiennement à 02:00 UTC. Ajuster pour correspondre à vos objectifs de récupération de données de sondage. |
-| `backup_retention_days` | `7` | Augmenter à plus de 30 jours pour les déploiements de sondages actifs avec des données de réponse précieuses. |
+| `backup_schedule` | `"0 2 * * *"` | Quotidiennement à 02:00 UTC. Ajuster pour correspondre à vos objectifs de récupération de données d'enquête. |
+| `backup_retention_days` | `7` | Augmenter à 30+ jours pour les déploiements d'enquêtes actives avec des données de réponse précieuses. |
 
 **Importation de sauvegarde :**
 
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `enable_backup_import` | `false` | Lorsque `true`, exécute un job d'importation unique pendant le déploiement. |
-| `backup_source` | `"gcs"` | `"gcs"` importe à partir d'un URI Cloud Storage ; `"gdrive"` importe à partir d'un ID de fichier Google Drive. |
+| `backup_source` | `"gcs"` | `"gcs"` importe depuis un URI Cloud Storage ; `"gdrive"` importe depuis un ID de fichier Google Drive. |
 | `backup_uri` | `""` | URI GCS complet (par exemple, `"gs://my-bucket/formbricks.sql"`) ou ID de fichier Google Drive. |
 | `backup_file` | `"backup.sql"` | Nom de fichier d'une sauvegarde déjà placée dans le bucket de sauvegardes géré par le module. |
 | `backup_format` | `"sql"` | Format : `sql`, `tar`, `gz`, `tgz`, `tar.gz`, `zip`, `auto`. |
@@ -392,37 +392,37 @@ Lorsque `initialization_jobs` est laissé comme liste vide par défaut, `Formbri
 | Exécuter à chaque apply | `true` |
 | CPU / Mémoire | `1000m` / `512Mi` |
 
-Les migrations Prisma s'exécutent ensuite automatiquement lorsque le conteneur Formbricks démarre — le job `db-init` garantit seulement que la base de données et l'utilisateur existent au préalable.
+Les migrations Prisma s'exécutent ensuite automatiquement au démarrage du conteneur Formbricks — le job `db-init` s'assure seulement que la base de données et l'utilisateur existent au préalable.
 
-Remplacez `initialization_jobs` par une liste non vide pour remplacer cette valeur par défaut par des jobs personnalisés. Chaque job personnalisé doit spécifier au moins l'un des éléments `command`, `args` ou `script_path`.
+Remplacez `initialization_jobs` par une liste non vide pour remplacer ce comportement par défaut par des jobs personnalisés. Chaque job personnalisé doit spécifier au moins l'un des éléments suivants : `command`, `args` ou `script_path`.
 
-`additional_services` (valeur par défaut `[]`) déploie des services GKE compagnons supplémentaires aux côtés de Formbricks — non utilisés par la configuration par défaut, disponibles pour une personnalisation avancée.
+`additional_services` (par défaut `[]`) déploie des services GKE compagnons supplémentaires à côté de Formbricks — non utilisé par la configuration par défaut, disponible pour une personnalisation avancée.
 
-> **Note :** Les jobs cron GKE (`cron_jobs`) utilisent les champs CronJob de Kubernetes (`restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend`) plutôt que les champs de style Cloud Run (`parallelism`, `paused`, `max_retries`, `task_count`) utilisés dans `Formbricks CloudRun`.
+> **Note :** Les jobs cron GKE (`cron_jobs`) utilisent les champs Kubernetes CronJob (`restart_policy`, `concurrency_policy`, `failed_jobs_history_limit`, `successful_jobs_history_limit`, `starting_deadline_seconds`, `suspend`) plutôt que les champs de style Cloud Run (`parallelism`, `paused`, `max_retries`, `task_count`) utilisés dans `Formbricks CloudRun`.
 
 ---
 
 ## Groupe 9 : Stockage et système de fichiers — NFS {#group-9-storage--filesystem--nfs}
 
-**Valeurs par défaut spécifiques à Formbricks :**
+**Paramètres par défaut spécifiques à Formbricks :**
 
 | Variable | Valeur par défaut | Notes |
 |---|---|---|
 | `enable_nfs` | `true` | Le stockage NFS est activé par défaut. Formbricks stocke les téléchargements de fichiers partagés, les actifs mis en cache et les données de session sur le volume NFS afin que toutes les répliques de pods accèdent au même système de fichiers. |
 | `nfs_mount_path` | `"/mnt/nfs"` | Le chemin où le volume NFS est monté à l'intérieur du conteneur Formbricks. |
 | `nfs_instance_name` | `""` | Nom d'une VM GCE NFS existante. Laisser vide pour la découverte automatique. |
-| `nfs_instance_base_name` | `"app-nfs"` | Nom de base pour une VM GCE NFS intégrée lorsqu'il n'en existe pas. |
-| `nfs_volume_name` | `"nfs-data-volume"` | Nom du volume Kubernetes pour le montage NFS. Déclaré pour la parité de convention ; non transféré, donc le paramétrage n'a aucun effet ici. |
+| `nfs_instance_base_name` | `"app-nfs"` | Nom de base pour une VM GCE NFS intégrée lorsqu'aucune n'existe. |
+| `nfs_volume_name` | `"nfs-data-volume"` | Nom du volume Kubernetes pour le montage NFS. Déclaré pour la parité de convention ; non transféré, donc le définir n'a aucun effet ici. |
 
 ---
 
 ## Groupe 10 : Stockage et système de fichiers — GCS {#group-10-storage--filesystem--gcs}
 
-`Formbricks Common` provisionne automatiquement un bucket GCS `uploads` en plus de tout bucket défini dans `storage_buckets`. Ce bucket est utilisé par Formbricks pour le stockage de fichiers compatible S3 — les pièces jointes aux réponses d'enquête, les images téléchargées et les actifs personnalisés y sont stockés via l'API XML de GCS avec des identifiants HMAC.
+`Formbricks Common` provisionne automatiquement un bucket GCS `uploads` en plus de tous les buckets définis dans `storage_buckets`. Ce bucket est utilisé par Formbricks pour le stockage de fichiers compatible S3 — les pièces jointes des réponses aux sondages, les images téléchargées et les actifs personnalisés y sont stockés via l'API XML de GCS avec des identifiants HMAC.
 
 | Bucket | `name_suffix` | Objectif |
 |---|---|---|
-| Provisionné automatiquement | `uploads` | Téléchargements de fichiers Formbricks via l'API XML GCS compatible S3 |
+| Auto-provisionné | `uploads` | Téléchargements de fichiers Formbricks via l'API XML GCS compatible S3 |
 
 Les variables `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_storage_kms_iam`, `enable_artifact_registry_cmek`, `max_images_to_retain` (par défaut `7`), `delete_untagged_images` (par défaut `true`) et `image_retention_days` (par défaut `30`) se comportent de manière identique à `App_GKE` — les trois dernières régissent le nettoyage des images d'Artifact Registry pour le dépôt créé en ligne.
 
@@ -430,15 +430,15 @@ Les variables `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_
 
 ## Groupe 11 : Configuration de la base de données {#group-11-database-configuration}
 
-**Valeurs par défaut et restrictions spécifiques à Formbricks :**
+**Paramètres par défaut et restrictions spécifiques à Formbricks :**
 
-| Variable | Valeur par défaut Formbricks GKE | Valeur par défaut App GKE | Notes |
+| Variable | Formbricks GKE par défaut | App GKE par défaut | Notes |
 |---|---|---|---|
 | `database_type` | `"POSTGRES_15"` | `"POSTGRES"` | Formbricks nécessite PostgreSQL. Ne pas changer pour MySQL ou SQL Server — l'ORM Prisma dans ce module cible PostgreSQL. |
 | `db_name` | `"formbricks"` | — | Raccourci pour le nom de la base de données Formbricks. **Ne pas modifier après le premier déploiement.** |
 | `db_user` | `"formbricks"` | — | Raccourci pour l'utilisateur de la base de données Formbricks. **Ne pas modifier après le premier déploiement.** |
-| `application_database_name` | `"formbricksdb"` | `"gkeappdb"` | La variable de niveau `App_GKE` pour le nom de la base de données. Ceci est effectivement remplacé par `db_name` dans `Formbricks Common` — utiliser `db_name` pour Formbricks. |
-| `application_database_user` | `"formbricksuser"` | `"gkeappuser"` | La variable de niveau `App_GKE` pour l'utilisateur de la base de données. Utiliser `db_user` pour Formbricks. |
+| `application_database_name` | `"formbricksdb"` | `"gkeappdb"` | La variable de niveau `App_GKE` pour le nom de la base de données. Ceci est effectivement remplacé par `db_name` dans `Formbricks Common` — utilisez `db_name` pour Formbricks. |
+| `application_database_user` | `"formbricksuser"` | `"gkeappuser"` | La variable de niveau `App_GKE` pour l'utilisateur de la base de données. Utilisez `db_user` pour Formbricks. |
 | `enable_postgres_extensions` | `true` | `false` | Les extensions PostgreSQL sont activées par défaut pour Formbricks. |
 | `postgres_extensions` | `["vector", "uuid-ossp"]` | `[]` | `vector` (pgvector) est requis par le schéma Prisma de Formbricks (fonctionnalités d'embeddings/IA) — sans cela, `prisma db push` échoue avec une erreur de permission car l'utilisateur de la base de données de l'application ne peut pas `CREATE EXTENSION`. `uuid-ossp` prend en charge la génération d'UUID. |
 | `enable_mysql_plugins` | `false` | `false` | N/A — Formbricks nécessite PostgreSQL. Transféré à `App_GKE` mais n'a aucun effet tant que `database_type` reste `POSTGRES_15`. |
@@ -459,7 +459,7 @@ Les variables `create_cloud_storage`, `storage_buckets`, `gcs_volumes`, `manage_
 | `rotation_propagation_delay_sec` | `90` | Secondes à attendre après la rotation avant de redémarrer les pods. |
 | `database_password_length` | `32` | Longueur du mot de passe de base de données auto-généré (16 à 64 caractères). |
 
-**Variables de parité de convention inertes :** `application_database_name` (`"formbricksdb"`) et `application_database_user` (`"formbricksuser"`) sont les variables d'identité de base de données de niveau `App_GKE` — Formbricks utilise `db_name`/`db_user` à la place (voir ci-dessus), donc celles-ci ne sont pas référencées. `db_host_env_var_name`, `db_name_env_var_name`, `db_password_env_var_name`, `db_port_env_var_name` et `db_user_env_var_name` (tous par défaut `""`) permettent à un module enveloppant d'exposer les détails de connexion à la base de données sous des noms de variables d'environnement supplémentaires, non standard ; `Formbricks_GKE` les déclare pour la parité de convention mais ne les transmet pas, donc les définir n'a aucun effet ici.
+**Variables de parité de convention inertes :** `application_database_name` (`"formbricksdb"`) et `application_database_user` (`"formbricksuser"`) sont les variables d'identité de base de données de niveau `App_GKE` — Formbricks utilise `db_name`/`db_user` à la place (voir ci-dessus), elles ne sont donc pas référencées. `db_host_env_var_name`, `db_name_env_var_name`, `db_password_env_var_name`, `db_port_env_var_name` et `db_user_env_var_name` (tous par défaut `""`) permettent à un module enveloppant d'exposer les détails de connexion à la base de données sous des noms de variables d'environnement supplémentaires, non standard ; `Formbricks_GKE` les déclare pour la parité de convention mais ne les transmet pas, donc les définir n'a aucun effet ici.
 
 ---
 
@@ -504,12 +504,12 @@ Formbricks expose `/api/v2/health` — un point de terminaison de santé dédié
 
 | Ensemble de variables | Configure |
 |---|---|
-| `startup_probe`, `liveness_probe` | Transmis à `Formbricks Common` ; configure la spécification de la sonde Kubernetes du conteneur d'application |
+| `startup_probe`, `liveness_probe` | Transmis à `Formbricks Common` ; configure la spécification de la sonde Kubernetes du conteneur de l'application |
 | `startup_probe_config`, `health_check_config` | Transmis directement à `App GKE` ; configure les vérifications de santé au niveau de l'infrastructure et de l'équilibreur de charge |
 
 **Sonde de démarrage** (`startup_probe` → Formbricks Common) :
 
-| Champ | Valeur par défaut Formbricks | Notes |
+| Champ | Formbricks par défaut | Notes |
 |---|---|---|
 | `path` | `"/api/v2/health"` | Point de terminaison de santé natif de Formbricks — reflète la connectivité de la base de données. |
 | `initial_delay_seconds` | `0` | La sonde de démarrage Kubernetes utilise `failureThreshold × periodSeconds` comme allocation totale. |
@@ -519,10 +519,10 @@ Formbricks expose `/api/v2/health` — un point de terminaison de santé dédié
 
 **Sonde de vivacité** (`liveness_probe` → Formbricks Common) :
 
-| Champ | Valeur par défaut Formbricks | Notes |
+| Champ | Formbricks par défaut | Notes |
 |---|---|---|
 | `path` | `"/api/v2/health"` | Même point de terminaison que la sonde de démarrage. |
-| `initial_delay_seconds` | `60` | Donne à Formbricks le temps de se stabiliser avant le début des vérifications de vivacité. |
+| `initial_delay_seconds` | `60` | Donne à Formbricks le temps de se stabiliser avant que les vérifications de vivacité ne commencent. |
 | `period_seconds` | `30` | |
 | `failure_threshold` | `3` | Conteneur redémarré après 3 échecs consécutifs (90 secondes). |
 
@@ -554,12 +554,12 @@ Lorsque `stateful_pvc_enabled = true`, le module utilise automatiquement un type
 | Variable | Valeur par défaut | Description |
 |---|---|---|
 | `stateful_pvc_enabled` | `false` | Active le PVC par pod pour StatefulSet. Définissez `true` si NFS est désactivé et qu'un stockage persistant local est nécessaire. |
-| `stateful_pvc_size` | `"10Gi"` | Taille du PVC par pod. Les téléchargements de fichiers d'enquête peuvent augmenter rapidement — prévoyez 50+ Gi pour les déploiements actifs. |
+| `stateful_pvc_size` | `"10Gi"` | Taille du PVC par pod. Les téléchargements de fichiers de sondage peuvent augmenter rapidement — prévoyez plus de 50 Gi pour les déploiements actifs. |
 | `stateful_pvc_mount_path` | `"/data"` | Chemin de montage pour le PVC par pod. |
 | `stateful_pvc_storage_class` | `"standard-rwo"` | Valeur par défaut de GKE Autopilot (PD équilibré, ReadWriteOnce). |
-| `stateful_headless_service` | `true` | Crée un Service sans tête pour des identités DNS de pod stables. |
+| `stateful_headless_service` | `true` | Crée un service sans tête pour des identités DNS de pod stables. |
 | `stateful_pod_management_policy` | `"OrderedReady"` | Démarrage séquentiel des pods. Utilisez `"Parallel"` pour démarrer tous les pods simultanément. |
-| `stateful_update_strategy` | `"RollingUpdate"` | Remplacements de pods en continu lors des changements de modèle. |
+| `stateful_update_strategy` | `"RollingUpdate"` | Remplacements de pods en cascade lors des changements de modèle. |
 
 > **Note :** `stateful_pvc_enabled = true` et `workload_type = "Deployment"` ne peuvent pas être utilisés ensemble — cela échoue au moment de la planification.
 
@@ -585,7 +585,7 @@ Lorsque `stateful_pvc_enabled = true`, le module utilise automatiquement un type
 | `container_image` | Image de conteneur utilisée pour le déploiement. |
 | `cicd_enabled` | Indique si le pipeline CI/CD est activé. |
 | `github_repository_url` | URL du dépôt GitHub connecté pour le CI/CD. |
-| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est accessible et que toutes les ressources Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster intégré — relancez l'apply pour terminer le déploiement. |
+| `kubernetes_ready` | `true` lorsque le point de terminaison du cluster GKE est accessible et que toutes les ressources Kubernetes sont déployées. `false` lors du premier apply d'un nouveau cluster intégré — réexécutez apply pour terminer le déploiement. |
 
 ---
 
@@ -594,40 +594,40 @@ Lorsque `stateful_pvc_enabled = true`, le module utilise automatiquement un type
 Après le déploiement, utilisez la console GCP pour observer et opérer le déploiement Formbricks GKE.
 
 **Charges de travail GKE :**
-- Naviguez vers **Kubernetes Engine → Workloads** et sélectionnez votre projet et votre cluster.
+- Accédez à **Kubernetes Engine → Charges de travail** et sélectionnez votre projet et votre cluster.
 - Filtrez par l'espace de noms Formbricks (par exemple, `formbricks-demo`). Vous verrez le `Deployment` ou `StatefulSet` Formbricks ainsi que tous les Jobs `db-init`.
-- Cliquez sur la charge de travail pour voir le nombre de pods, l'état de la mise à jour continue et les requêtes/limites de ressources.
-- L'onglet **Events** affiche les décisions du planificateur Kubernetes, l'état de l'extraction d'images et les échecs de sonde. C'est le premier endroit où chercher lorsque les pods ne démarrent pas.
+- Cliquez sur la charge de travail pour voir le nombre de pods, l'état de la mise à jour progressive et les requêtes/limites de ressources.
+- L'onglet **Événements** affiche les décisions du planificateur Kubernetes, l'état de l'extraction d'images et les échecs de sonde. C'est le premier endroit où chercher lorsque les pods ne démarrent pas.
 - L'onglet **YAML** affiche le manifeste Kubernetes complet, y compris toutes les variables d'environnement injectées et les montages de volumes secrets.
 
 **Services et Ingress GKE :**
-- Naviguez vers **Kubernetes Engine → Services & Ingress** et sélectionnez l'espace de noms Formbricks.
+- Accédez à **Kubernetes Engine → Services et Ingress** et sélectionnez l'espace de noms Formbricks.
 - Le service Formbricks (type `LoadBalancer`) affiche son adresse IP externe. C'est l'adresse IP à définir comme base `webapp_url` lors du premier déploiement.
 - Si `enable_custom_domain = true`, une ressource Gateway apparaît ici avec l'état du certificat SSL attaché.
-- L'onglet **Backend health** sur l'Ingress/Gateway indique si l'équilibreur de charge considère les pods Formbricks comme sains.
+- L'onglet **Santé du backend** sur l'Ingress/Gateway indique si l'équilibreur de charge considère les pods Formbricks comme sains.
 
 **HPA (Horizontal Pod Autoscaler) :**
-- Naviguez vers **Kubernetes Engine → Workloads**, sélectionnez le déploiement Formbricks, puis regardez la section **Horizontal Pod Autoscaler**.
-- Le nombre de répliques actuel, l'utilisation cible du CPU et les événements de mise à l'échelle sont visibles ici.
-- Alternativement, naviguez vers le cluster dans **Kubernetes Engine → Clusters** et utilisez le Cloud Shell intégré : `kubectl get hpa -n formbricks-demo`.
+- Accédez à **Kubernetes Engine → Charges de travail**, sélectionnez le déploiement Formbricks, puis consultez la section **Horizontal Pod Autoscaler**.
+- Le nombre actuel de répliques, l'utilisation cible du CPU et les événements de mise à l'échelle sont visibles ici.
+- Alternativement, accédez au cluster dans **Kubernetes Engine → Clusters** et utilisez le Cloud Shell intégré : `kubectl get hpa -n formbricks-demo`.
 
 **Secret Manager :**
-- Naviguez vers **Security → Secret Manager** et filtrez par `formbricks`.
+- Accédez à **Sécurité → Secret Manager** et filtrez par `formbricks`.
 - Tous les secrets auto-générés apparaissent ici : `NEXTAUTH_SECRET`, `ENCRYPTION_KEY`, `CRON_SECRET`, `HUB_API_KEY`, `CUBEJS_API_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, et conditionnellement `SMTP_PASSWORD` et `REDIS_URL`.
-- Cliquez sur n'importe quel secret pour voir son historique de versions, son horodatage de création et les charges de travail Kubernetes qui le référencent (sous **Usage**).
+- Cliquez sur n'importe quel secret pour voir son historique de versions, son horodatage de création et les charges de travail Kubernetes qui le référencent (sous **Utilisation**).
 
 **Cloud SQL :**
-- Naviguez vers **SQL** et sélectionnez l'instance PostgreSQL.
-- L'onglet **Connections** affiche les connexions actives des pods GKE. Sous forte charge, le nombre de connexions est un indicateur de santé clé — les limites du pool de connexions de Prisma le maintiennent généralement bas.
-- L'onglet **Operations** enregistre la création de la base de données et de l'utilisateur du job `db-init`.
+- Accédez à **SQL** et sélectionnez l'instance PostgreSQL.
+- L'onglet **Connexions** affiche les connexions actives des pods GKE. Sous forte charge, le nombre de connexions est un indicateur de santé clé — les limites du pool de connexions de Prisma le maintiennent généralement bas.
+- L'onglet **Opérations** enregistre la création de la base de données et de l'utilisateur du job `db-init`.
 
 **Cloud Storage :**
-- Naviguez vers **Cloud Storage → Buckets** et trouvez le bucket `uploads`.
-- Les pièces jointes aux fichiers d'enquête téléchargées par les répondants y sont stockées en tant qu'objets.
-- L'onglet **Permissions** confirme que le compte de service HMAC a `roles/storage.objectAdmin`.
+- Accédez à **Cloud Storage → Buckets** et trouvez le bucket `uploads`.
+- Les pièces jointes des sondages téléchargées par les répondants y sont stockées en tant qu'objets.
+- L'onglet **Autorisations** confirme que le compte de service HMAC dispose de `roles/storage.objectAdmin`.
 
 **Cloud Build :**
-- Naviguez vers **Cloud Build → History** pour voir l'historique de build de l'image Formbricks.
+- Accédez à **Cloud Build → Historique** pour voir l'historique de build de l'image Formbricks.
 - Chaque journal de build affiche les étapes du Dockerfile, les arguments de build référençant `application_version` et l'étape de push vers Artifact Registry.
 
 ---
@@ -645,7 +645,7 @@ gcloud container clusters get-credentials CLUSTER_NAME \
 kubectl config set-context --current --namespace=NAMESPACE
 ```
 
-**Lister tous les pods et leur statut :**
+**Lister tous les pods et leur état :**
 ```bash
 kubectl get pods -n NAMESPACE -o wide
 ```
@@ -655,12 +655,12 @@ kubectl get pods -n NAMESPACE -o wide
 kubectl describe pod POD_NAME -n NAMESPACE
 ```
 
-**Afficher les journaux en direct du conteneur Formbricks :**
+**Afficher les logs en direct du conteneur Formbricks :**
 ```bash
 kubectl logs -n NAMESPACE -l app=formbricks --follow --tail=100
 ```
 
-**Vérifier l'état de l'HPA et l'historique de mise à l'échelle :**
+**Vérifier l'état du HPA et l'historique de mise à l'échelle :**
 ```bash
 kubectl get hpa -n NAMESPACE
 kubectl describe hpa formbricks -n NAMESPACE
@@ -750,28 +750,28 @@ gcloud builds list \
 
 | Variable | Valeur par défaut judicieuse | Risque | Conséquence d'une valeur incorrecte |
 |---|---|---|---|
-| `project_id` | _(obligatoire)_ | **Critique** | Pas de valeur par défaut — le déploiement échoue immédiatement. |
-| `webapp_url` | Définie après le premier déploiement | **Élevé** | NextAuth.js génère des URI de redirection OAuth et des liens e-mail référençant la valeur de `webapp_url`. Si elle est laissée vide après le premier déploiement, l'authentification échoue pour tout fournisseur OAuth et les liens e-mail renvoient à localhost. Récupérez l'adresse IP externe de `kubectl get svc`, définissez `webapp_url` et redéployez. |
-| `db_name` | `"formbricks"` | **Critique** | Immuable après le premier déploiement — la modification recrée la base de données, détruisant toutes les définitions d'enquête, les réponses et les données d'équipe. |
+| `project_id` | _(requis)_ | **Critique** | Pas de valeur par défaut — le déploiement échoue immédiatement. |
+| `webapp_url` | Définir après le premier déploiement | **Élevé** | NextAuth.js génère des URI de redirection OAuth et des liens d'e-mail référençant la valeur de `webapp_url`. Si laissé vide après le premier déploiement, l'authentification échoue pour tout fournisseur OAuth et les liens d'e-mail se résolvent en localhost. Récupérez l'adresse IP externe de `kubectl get svc`, définissez `webapp_url` et redéployez. |
+| `db_name` | `"formbricks"` | **Critique** | Immuable après le premier déploiement — la modification recrée la base de données, détruisant toutes les définitions de sondages, les réponses et les données d'équipe. |
 | `db_user` | `"formbricks"` | **Critique** | Immuable après le premier déploiement — la modification recrée l'utilisateur de la base de données et rompt toutes les références d'identifiants existantes. |
 | `database_type` | `"POSTGRES_15"` | **Critique** | Le schéma Prisma de Formbricks cible PostgreSQL. La définition à `MYSQL_8_0` ou `NONE` entraîne l'échec de Formbricks au démarrage avec une erreur client Prisma. |
-| `enable_redis` | `true` | **Élevé** | Redis est activé par défaut. Lorsque `redis_host = ""`, le module utilise l'adresse IP du serveur NFS. Si `enable_nfs = false` et `redis_host` est également vide, Formbricks échoue au démarrage. Avec `max_instance_count > 1`, Redis est obligatoire — sans lui, chaque pod maintient un cache isolé, entraînant une limitation de débit et un comportement de réponse incohérents. |
-| `session_affinity` | `"ClientIP"` | **Élevé** | Sans affinité de session, les requêtes du panneau d'administration Formbricks sont acheminées vers différents pods. Les caches de session en mémoire divergent, provoquant des échecs d'authentification intermittents et des déconnexions inattendues. Gardez `"ClientIP"` pour tous les déploiements Formbricks multi-répliques. |
-| `enable_nfs` | `true` | **Élevé** | Sans NFS, les actifs d'enquête téléchargés sont stockés sur le système de fichiers éphémère du pod. Tous les téléchargements sont perdus lors du redémarrage du pod ou de la mise à jour continue. Plusieurs répliques servent un contenu de fichier incohérent. |
-| `memory_limit` | `"2Gi"` | **Élevé** | La valeur par défaut de base `container_resources` de GKE n'est que `"512Mi"`. Le runtime Next.js de Formbricks nécessite au moins 1 Gi ; le pool de connexions Prisma et la mise en cache des réponses sous un trafic d'enquête actif nécessitent 2 Gi. Un sous-provisionnement entraîne des plantages OOM de Node.js. |
-| `smtp_host` | `""` | **Élevé** | Sans SMTP, Formbricks ne peut pas envoyer d'invitations d'utilisateurs, de notifications de réponse d'enquête ou d'e-mails de connexion par lien magique. Configurez un fournisseur SMTP valide avant d'inviter des membres de l'équipe. |
-| `min_instance_count` | `0` | **Moyen** | La mise à l'échelle à zéro entraîne des démarrages à froid de 15 à 20 secondes. Les répondants à l'enquête qui visitent immédiatement après une période d'inactivité subissent ce délai. Définissez à `1` pour les enquêtes de production avec des exigences de SLA. |
-| `backup_retention_days` | `7` | **Moyen** | Sept jours sont insuffisants pour les déploiements d'enquêtes actives. Augmentez à plus de 30 jours pour tout déploiement Formbricks en production collectant des données de réponse d'enquête précieuses. |
-| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critique** (spécifique à GKE) | Doit utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'il est défini. Les entiers bruts sont traités comme des octets par Kubernetes et bloquent entièrement la planification de tous les pods. |
-| `enable_pod_disruption_budget` | `true` | **Moyen** | Déjà activé. La désactivation permet de terminer tous les pods simultanément lors des mises à niveau de nœuds GKE Autopilot, entraînant une panne de service complète. |
-| `pdb_min_available` | `"1"` | **Moyen** | Avec une seule réplique, PDB empêche toutes les perturbations volontaires jusqu'à ce que le pod soit replanifié. Utilisez au moins 2 répliques en production pour permettre une maintenance continue. |
-| `stateful_pvc_size` | `"10Gi"` | **Moyen** | Les téléchargements de fichiers d'enquête augmentent rapidement. `10Gi` est un minimum pour le développement. Prévoyez 50 à 100 Gi pour les déploiements de production actifs acceptant les pièces jointes. La taille du PVC peut être étendue mais pas réduite sans migration de données. |
+| `enable_redis` | `true` | **Élevé** | Redis est activé par défaut. Lorsque `redis_host = ""`, le module revient à l'adresse IP du serveur NFS. Si `enable_nfs = false` et `redis_host` est également vide, Formbricks échoue au démarrage. Avec `max_instance_count > 1`, Redis est obligatoire — sans lui, chaque pod maintient un cache isolé, ce qui entraîne une limitation de débit et un comportement de réponse incohérents. |
+| `session_affinity` | `"ClientIP"` | **Élevé** | Sans affinité de session, les requêtes du panneau d'administration Formbricks sont acheminées vers différents pods. Les caches de session en mémoire divergent, provoquant des échecs d'authentification intermittents et des déconnexions inattendues. Conservez `"ClientIP"` pour tous les déploiements Formbricks multi-répliques. |
+| `enable_nfs` | `true` | **Élevé** | Sans NFS, les actifs de sondage téléchargés sont stockés sur le système de fichiers éphémère du pod. Tous les téléchargements sont perdus lors du redémarrage du pod ou de la mise à jour progressive. Plusieurs répliques servent un contenu de fichier incohérent. |
+| `memory_limit` | `"2Gi"` | **Élevé** | La valeur par défaut de base `container_resources` de GKE n'est que `"512Mi"`. Le runtime Next.js de Formbricks nécessite au moins 1 Gi ; le pool de connexions Prisma et la mise en cache des réponses sous un trafic de sondage actif nécessitent 2 Gi. Un sous-provisionnement entraîne des plantages OOM de Node.js. |
+| `smtp_host` | `""` | **Élevé** | Sans SMTP, Formbricks ne peut pas envoyer d'invitations d'utilisateurs, de notifications de réponse aux sondages ou d'e-mails de connexion par lien magique. Configurez un fournisseur SMTP valide avant d'inviter des membres de l'équipe. |
+| `min_instance_count` | `0` | **Moyen** | La mise à l'échelle à zéro entraîne des démarrages à froid de 15 à 20 secondes. Les répondants aux sondages qui visitent immédiatement après une période d'inactivité subissent ce délai. Définissez à `1` pour les sondages de production avec des exigences SLA. |
+| `backup_retention_days` | `7` | **Moyen** | Sept jours sont insuffisants pour les déploiements de sondages actifs. Augmentez à plus de 30 jours pour tout déploiement Formbricks en production collectant des données de réponse aux sondages précieuses. |
+| `quota_memory_requests` / `quota_memory_limits` | `""` | **Critique** (spécifique à GKE) | Doit utiliser des suffixes binaires (`Gi`, `Mi`) lorsqu'il est défini. Les entiers bruts sont traités comme des octets par Kubernetes et bloquent entièrement toute planification de pod. |
+| `enable_pod_disruption_budget` | `true` | **Moyen** | Déjà activé. La désactivation permet de terminer tous les pods simultanément lors des mises à niveau de nœuds GKE Autopilot, ce qui entraîne une panne de service complète. |
+| `pdb_min_available` | `"1"` | **Moyen** | Avec une seule réplique, PDB empêche toutes les interruptions volontaires jusqu'à ce que le pod soit replanifié. Utilisez au moins 2 répliques en production pour permettre une maintenance progressive. |
+| `stateful_pvc_size` | `"10Gi"` | **Moyen** | Les téléchargements de fichiers de sondage augmentent rapidement. `10Gi` est un minimum pour le développement. Prévoyez 50 à 100 Gi pour les déploiements de production actifs acceptant les pièces jointes. La taille du PVC peut être étendue mais pas réduite sans migration de données. |
 | `enable_cloud_armor` | `false` | **Moyen** | Sans Cloud Armor, le panneau d'administration Formbricks n'est protégé que par l'authentification propre à Formbricks. Activez-le pour tout déploiement de production accessible publiquement. |
 
-<!-- related-guides -->
+---
 
 ## Guides associés {#related-guides}
 
-- [Labo pratique : Formbricks sur GKE Autopilot](../labs/Formbricks_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
-- [Formbricks sur Google Cloud Run](Formbricks_CloudRun.md) — la même application sur Cloud Run, lorsque vous avez besoin de l'autre cible de déploiement.
+- [Lab pratique : Formbricks sur GKE Autopilot](../labs/Formbricks_GKE.md) — déployez-le étape par étape, avec les écrans de la console et les commandes à chaque étape.
+- [Formbricks sur Google Cloud Run](Formbricks_CloudRun.md) — la même application sur Cloud Run, pour lorsque vous avez besoin de l'autre cible de déploiement.
 - [Module de configuration partagée Formbricks Common](Formbricks_Common.md) — la configuration partagée par les deux cibles de déploiement.
