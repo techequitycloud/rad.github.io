@@ -39,6 +39,7 @@ On **Solutions → Managed Environments**, filter to **Lab sessions** and choose
 - **Region** — one of RAD's regions, fixed for the session.
 - **Overrun ceiling (%)** — how far above an allowance an environment may run before it is switched off (default 20%). You can change this while the session is open.
 - **Participants buy their own place** — who pays. It is **on** when the dialog opens; switch it off to fund every place yourself. See the next section.
+- **Environment** — **Individual** (the default: every participant gets their own environment) or **Shared** (one environment you build for the whole class; participants use the same application and share its data). A shared session needs **By trainer** countdown, and asks for the **credits for the shared environment**, which you pay at create even when participants buy their own place. See **Shared class environment** below.
 
 You choose the module or solution later, on the session itself, not in this dialog.
 
@@ -48,9 +49,13 @@ You decide when you create the session. **That choice is fixed once the session 
 
 **You pay.** The whole cohort's allowance — participants × credits per participant — is reserved from your **purchased** credits when you create the session. Free credits you were given can't be used. The dialog shows what you hold, what is taken and what you'll have left. Adding participants or credits later is also paid from your purchased credits.
 
-**Participants buy their own place (the default for a new session).** Nothing is reserved from your credits. Each participant pays the credits per participant from their own purchased credits (free credits don't count), and that payment becomes their allowance. **Nobody's environment is built until they have paid.** Participants you add later buy their own place too.
+**Participants buy their own place (the default for a new session).** Nothing is reserved from your credits, apart from a shared session's environment. Each participant pays the credits per participant from their own purchased credits (free credits don't count), and that payment becomes their allowance. **Nobody's environment is built until they have paid.** Participants you add later buy their own place too.
 
 **VAT.** If RAD's finance team has set a VAT rate for whoever pays for a place, that place costs the allowance plus VAT, so the allowance lasts as long as the plan says: your rate for a session you fund or a place you pay for, the participant's own rate for a place they buy.
+
+**The minimum place price.** In a session where participants pay for individual environments, **Provision** is refused if a place costs less than one environment really needs: its builds (priced conservatively, because lab builds often run slower than usual), its teardown, and its expected Google Cloud running cost over the class — and, in a **By trainer** session, over the wait before you press Start — plus a 25% margin. The dialog shows each part and names the lowest price that works. Raise the price; you can then pay for the places of participants who can't afford it (below). Shared sessions are exempt, because participants have no environment of their own to set up; in a session you fund, the plan only warns.
+
+Invitations and the payment banner state the offer in one line, for example "10 credits ($1) for a 3-hour environment", so the time limit is never a surprise.
 
 When does a participant's payment become yours? Only once **that participant's clock starts**, which is the moment they get access to their lab. Until then their payment is held. If they never get access — their environment was never built, or failed to build, or was never started — their payment is returned to them when the session settles.
 
@@ -74,7 +79,9 @@ The price is taken from your **purchased** credits (free credits can't be used) 
 
 Whichever way the session is funded, whatever the participants did not use comes back to **you** when the session settles, into your top-up credits, which don't expire. In a session where participants pay, that remainder is your margin.
 
-If environments run beyond their allowance, the overrun is charged to your purchased credits, up to the ceiling you set.
+If environments run beyond their allowance, the overrun is charged to your purchased credits, up to the ceiling you set. The cost of setting up a paid place that was **never started** is yours in full, outside that ceiling, because the participant's payment is returned to them; builds that **failed** are written off. If RAD has set a **campaign subsidy** on your session (only an administrator can), it covers overrun up to the subsidy per participant who started, before anything is charged to you; the settlement shows it as its own line.
+
+Lab sessions are charged for build time by the minute from the session's allowance; the builds-included pricing ordinary deployments get does not apply to labs.
 
 ### When a session settles
 
@@ -101,15 +108,24 @@ If you remove someone before their environment was built, their banner tells the
 1. **Choose what to build** on the session: **Module** or **Solution** (from RAD's catalogue), or **Custom** for one of your own custom solutions from **Solutions → Solution Catalog → My solutions**. Then search the list. Your custom solutions are private to you, so only you (or an administrator) can pick one; your participants get the environment, not the solution. Fill in the module's first page of settings; the region always comes from the session. Your choice is saved with the session as you make it, so it is still selected when you leave the page and come back; it changes only when you pick something else or remove it.
 2. **Provision.** RAD shows a plan with the cost per participant and in total before anything starts. Environments build a few at a time, so a large cohort takes longer to finish. Participants who haven't signed up for RAD yet are left out and counted beneath the button ("N waiting to sign up"); provision again once they have.
 3. **Start the clocks.** An environment that has finished building shows **Ready** and waits for you; once every environment in a **By trainer** session is built, the sessions list shows the session as **Ready to start**. Use **Start all** or **Start selected**. With **When ready**, clocks start on their own. Each participant gets the full duration from their own start.
+   You can also **schedule the start**: set a start time on a **By trainer** session and the class starts by itself at that time, exactly as if you had pressed Start, and keeps starting environments that finish building late until the class's length has passed. If you don't press Start, RAD emails you once the class's environments are ready and again before the waiting deadline, reminding you that participants have no access — and paid places will be refunded — until you start it. The session page shows **N of M environments ready**, with how many are still building or failed; **Start** stays disabled, with the reason, until at least one is ready. An environment that fails to build is retried once automatically; if the retry fails too, you are emailed.
 4. **While it runs,** use **Extend time** to add time to running environments (the total can't pass the session's maximum), **Add credits** to top up allowances, or **Add to running** to deploy something extra into environments that are already running without touching their clocks.
 
-An environment that is built but never started can't wait for ever: by default, after a week unstarted it is torn down, not started. While any are waiting, **Keep waiting longer** gives them more time, up to the longest wait the platform allows.
+An environment that is built but never started can't wait for ever: after the waiting window your administrator sets (48 hours at present) it is torn down, not started. While any are waiting, **Keep waiting longer** gives them more time, up to the longest wait the platform allows.
 
 ### When time runs out
 
 Participants are emailed a warning before their time ends, by default at 15 and 5 minutes. The email states the time actually left. If you extend their time after a warning, they are warned again before the new end.
 
 At the end, the environment's billing is switched off, any build still running for it is cancelled, the participant's access to the project is removed and the lab project is deleted. An environment is also switched off early if it uses up its credits, or if its spending passes the overrun ceiling.
+
+### Shared class environment
+
+In a **Shared** session, **Provision** builds one environment for the whole class, owned by you and paid from the credits for the shared environment. Participants get no environment or Google Cloud console access of their own. When you press **Start**, every participant who has paid is let in, with the same end time; their banner links the class application. A participant who pays after you started is let in when you press **Start** again. You receive the environment's own emails (ready, time warnings, ended), and at Start you get editor access to the class project. Because setup is paid once, a low place price such as $1 works, and what participants pay beyond the environment's cost is your margin.
+
+### After the class
+
+The day after a session ends, each participant who kept their place is emailed a link to set up the same module or solution in their own account, mentioning that their free credits can pay the module fee.
 
 Each participant gets one email saying their lab has ended and why: its time was up, its credits were used up, or it was ended early. It says **you** ended it only when you did; when an administrator or Finance ended it, it says the lab was ended early.
 

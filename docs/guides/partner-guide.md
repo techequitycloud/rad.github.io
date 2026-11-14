@@ -53,7 +53,7 @@ On **Solutions → Solution Catalog → RAD modules** you see two sub-tabs:
 
 Everyone else sees a single combined catalog of public modules. Each module card shows the description, a documentation link, an average star rating, how many times it's been deployed, and its price: the module fee (or **Free module** when there is none) plus an estimate of the build.
 
-Deploying your own module waives the **module fee** — the module's own credit cost isn't charged when you deploy it yourself. The build cost is still metered after the build and deducted from your balance exactly as it is for everyone else, so a self-deploy isn't entirely free.
+Deploying your own module waives the **module fee** — the module's own credit cost isn't charged when you deploy it yourself. Build time is included in the price for you as for everyone else, so a self-deploy of your own module is free, apart from updates beyond the monthly allowance.
 
 ## Earning revenue
 
