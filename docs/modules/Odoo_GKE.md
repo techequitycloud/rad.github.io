@@ -42,8 +42,8 @@ fee per user. You pay for three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 175 credits (US$17.50 at the top-up price) | 157.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$150 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **99 credits a day**, about 2,970 a month (about US$297 at the top-up price, US$238 at the Scale plan's rate) |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$150 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **129 credits a day**, about 3,870 a month (about US$387 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages,
@@ -152,7 +152,7 @@ it.**
 - **What a redeploy costs.** The module fee again (builds are included): 175 credits (US$17.50)
   and about an hour, because RAD recreates the project and shared services before Odoo.
   Deleting saves money if Odoo would otherwise sit unused for about four days or more in your
-  own project (about US$5 a day), or about two days in a RAD-managed one (99 credits a day).
+  own project (about US$5 a day), or about two days in a RAD-managed one (129 credits a day).
 - **Delete everything Odoo uses.** Most of the running cost is the database and file server.
   They stop only when nothing else in the project uses them, so deleting Odoo while other
   applications share the project saves only the GKE part.

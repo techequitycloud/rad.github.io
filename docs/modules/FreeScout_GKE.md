@@ -34,10 +34,10 @@ repeating them here.
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | **110 credits** (one-time) | **99 credits** (one-time, 10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | ~US$110.13/month, billed to your own Google billing account at list price | ~99 credits/day (~US$9.90/day), metered hourly at list price plus RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | ~US$110.13/month, billed to your own Google billing account at list price | ~129 credits/day (~US$12.90/day), metered hourly at list price plus RAD's margin |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 **Default running cost in your own project**
 
@@ -96,7 +96,7 @@ in your own project, or **99 credits** on a RAD-managed one.
 Deleting only saves money once FreeScout would otherwise sit unused long enough to clear that redeploy cost
 against its own running cost: roughly **about 4 days or more** idle in your own project (against its
 ~US$110.13/month Google Cloud bill), or **about 2 days or more** idle in a RAD-managed project
-(against its ~99 credits/day).
+(against its ~129 credits/day).
 
 Most of FreeScout's running cost is the database and the shared file/cache VM. They stop only when nothing else in the project uses them, so deleting this app while something else shares the project saves only this app's own compute share of the total above.
 

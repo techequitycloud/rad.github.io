@@ -36,11 +36,11 @@ Controls, backups, and the deployment lifecycle — refer to the
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 40 credits (US$4.00 at the top-up price) | 36 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$16 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **7 credits a day**, about 210 a month (about US$21.00 at the top-up price, less on a plan) |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$16 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **16 credits a day**, about 480 a month (about US$48 at the top-up price) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database, file server and network are shared by every application in the project, so a second application does not add a second database.
 
@@ -86,7 +86,7 @@ environment, a seasonal or intermittent workload — far better than running it 
   asks you to run **Update** on each deployment to confirm everything came back. Because
   nothing was individually destroyed, that Update finds the same resources already there — it
   is a check, not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
-- **So a month of occasional use can cost a few dollars, not US$16.**
+- **So a month of occasional use can cost a few dollars, not the US$48 a month of keeping it running.**
   Deploy Loki, use it for a while, delete the project. Restore it next time you need it,
   confirm with Update, and delete it again when you're done. You pay only for the module fee once and whatever time it was actually live.
 - **What this needs.** You must own the project (not one RAD only manages billing for), and
@@ -112,7 +112,7 @@ again when you need it.**
 - **What a redeploy costs.** The module fee again (builds are included) — 40 credits (US$4.00) in total. Deleting saves money
   only once Loki would otherwise sit unused long enough to clear that redeploy cost
   against its own running cost — about **9 days or more**, both in your own project
-  (about US$0.53 a day) and in a RAD-managed one (7 credits a day).
+  (about US$0.53 a day) and in a RAD-managed one (16 credits a day).
 - **Nothing here is shared.** Loki does not depend on a database, VM or cluster of its own, so deleting it saves its full running cost immediately.
 - **Keep your data first.** Nightly backups go to a bucket inside the deployment and are
   deleted with it, so copy the latest backup out before deleting if you want to keep it.

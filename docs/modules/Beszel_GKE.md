@@ -24,7 +24,7 @@ than repeating them here.
 
 ## What Beszel costs on RAD, and how that compares
 
-**Beszel on RAD's GKE Autopilot module costs about US$42 a month in your own Google Cloud project, with no extra licence fee** — Beszel is open source. In a project RAD manages for you, the same deployment is metered at **67 credits a day** (about 2,010 a month, about US$201 at the top-up price). Or see the [Cloud Run guide](Beszel_CloudRun.md) for the lower-cost option. If you only need Beszel occasionally — studying, a demo, a short-lived project — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that monthly figure becomes a few dollars instead. See **Pause it for free**, below.
+**Beszel on RAD's GKE Autopilot module costs about US$42 a month in your own Google Cloud project, with no extra licence fee** — Beszel is open source. In a project RAD manages for you, the same deployment is metered at **75 credits a day** (about 2,250 a month, about US$225 at the top-up price). Or see the [Cloud Run guide](Beszel_CloudRun.md) for the lower-cost option. If you only need Beszel occasionally — studying, a demo, a short-lived project — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that monthly figure becomes a few dollars instead. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
@@ -33,11 +33,13 @@ Beszel is open source, so there is no licence fee. You pay for three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 75 credits (US$7.50 at the top-up price) | 67.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$42 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **67 credits a day**, about 2,010 a month (about US$201 at the top-up price) |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$42 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **75 credits a day**, about 2,250 a month (about US$225 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+**Why the two columns differ.** The RAD-managed figure includes the GKE cluster's management fee (about US$73 a month) and the project's shared foundation. In your own project, Google's free tier covers the management fee of one cluster per billing account, which the own-project figure assumes. It is estimated from Google's list prices, because there is not yet enough RAD-managed GKE history to measure it, so the deploy confirmation does not quote it. A second GKE application in the same RAD-managed project shares the cluster and adds only its own pods.
+
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the
 database, file server and network are shared by every application in the project, so a second
@@ -97,7 +99,7 @@ delete the deployment and deploy it again when you need it.
 
 - **What a redeploy costs.** The module fee again (builds are included): 75 credits (US$7.50) at the top-up price. Deleting saves money only once Beszel would otherwise sit unused for about
   **3 days or more** — in your own project that is about US$1.40 a day, and
-  in a RAD-managed one it is 67 credits a day.
+  in a RAD-managed one it is 75 credits a day.
 - Most of the running cost here is usually the database and/or the shared file/cache VM or cluster. They stop only when nothing else in the project uses them, so deleting Beszel while another application shares the project saves only Beszel's own compute part.
 - **Keep data first.** Nightly backups go to a bucket inside the deployment and are deleted with it, so
   copy the latest backup out before deleting if you want to keep it.

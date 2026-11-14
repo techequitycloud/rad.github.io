@@ -296,10 +296,93 @@ Implements a least-privilege IAM strategy using dedicated platform service accou
 
 - **Cloud Build service account** — CI/CD pipeline execution; builds images and manages deployments.
 - **Cloud Deploy service account** — progressive delivery; manages delivery pipelines and rollout jobs.
-- **Cloud Run service account** — runtime identity for Cloud Run containers; accesses secrets, Cloud SQL, and storage.
+- **Cloud Run service account** — runtime identity for Cloud Run containers; accesses Cloud SQL, storage, and the secrets each application grants it individually.
 - **NFS/Redis VM service account** — identity for the self-managed NFS/Redis VM.
 
 These accounts are tenant-scoped and shared. A GKE-enabled deployment also manages `gke-sa`, which `App GKE` creates under the same name. `Services GCP` is not the only creator of four of them (`cloudbuild-sa`, `cloudrun-sa`, `nfs-sa`, `gke-sa`) — an application deployed before `Services GCP` provisions `cloudbuild-sa` and `cloudrun-sa` (`App CloudRun`), `cloudbuild-sa` (`App GKE`), and `nfs-sa` on the inline-NFS path, and never deletes them. `clouddeploy-sa` is created here alone. An account that already exists is imported into state and managed normally, so it is also removed when this module is destroyed. Each account is therefore probed before the apply; one that already exists is imported into state and managed like any other, so deploying `Services GCP` into a project an application module reached first does not fail with `already exists`. IAM bindings are applied either way.
+
+**Secret Manager access is per secret.** No platform account holds a project-level Secret Manager role: not `cloudrun-sa`, `gke-sa`, `cloudbuild-sa`, nor the project's default Cloud Build account (`PROJECT_NUMBER@cloudbuild.gserviceaccount.com`). A workload can read only the secrets its own application hands it:
+
+| Secret | Who grants `secretAccessor`, to whom |
+|---|---|
+| Cloud SQL root password (`secret-<instance>-root-password`) | This module, to its tenant's `cloudrun-sa` and (with GKE) `gke-sa`. `App CloudRun` / `App GKE` additionally ensure the grant create-only, never revoking it, for an account this module does not manage. |
+| An application's DB password, its own secrets, `secret_environment_variables` | The application module, per secret (`App_Common/modules/app_iam`). |
+| Secrets referenced only by an initialization or cron job, an `additional_services` sibling, an `additional_containers` sidecar, or a Cloud Deploy stage's DB password | The application module, per secret (`App CloudRun` / `App GKE` `iam.tf`). |
+| The GitHub token (CI/CD) | The application module, to the Cloud Build accounts and the Cloud Build service agent, on that secret alone. |
+
+The root-password grant belongs here, not to an application, because every application on the instance shares one binding: when an application owned it, destroying that one application revoked the root password from all of its siblings' database jobs. The deploying identity keeps `roles/secretmanager.admin` (set by `Project GCP`), which it needs to create secrets and set their IAM policies.
+
+### Upgrading: Secret Manager access is per secret
+
+Projects deployed before this change hold project-level `roles/secretmanager.secretAccessor` on `cloudrun-sa-<tenant>`, `gke-sa-<tenant>`, `cloudbuild-sa-<tenant>` and `PROJECT_NUMBER@cloudbuild.gserviceaccount.com`, and `roles/secretmanager.secretVersionManager` on `cloudrun-sa-<tenant>`. **Applying the new module versions does not remove them**: `Services GCP` forgets those bindings rather than destroying them (so its apply cannot pull access from applications not yet updated), and the application modules' grants are create-only `gcloud add-iam-policy-binding` calls that never revoke. Remove them once, by hand, in this order:
+
+1. **Apply `Services GCP`.** It adds the root-password grants for `cloudrun-sa` / `gke-sa` and forgets the project-level ones (the plan shows `forget`, never `destroy`, for those bindings).
+2. **Apply every application module in the tenant** (`App CloudRun` / `App GKE` wrappers). Each adds its per-secret grants: job, sidecar, sibling-service and stage secrets that were previously reachable only through the project-level role.
+3. **Verify** that every secret each workload references is granted per secret (below), and that the applications and a fresh run of their jobs are healthy.
+4. **Revoke** the project-level grants (below). Repeat steps 1–4 per tenant when a project hosts several; revoke from the default Cloud Build account only after the **last** tenant in the project has been updated, because it is shared by all of them.
+
+**Verify (step 3).** Every secret a Cloud Run service or job references must list its runtime account as `secretAccessor`. Run per region:
+
+```bash
+PROJECT_ID=my-project
+REGION=us-central1
+PREFIX=abc123def4          # the tenant prefix: the suffix of cloudrun-sa-<prefix>
+SA="cloudrun-sa-${PREFIX}@${PROJECT_ID}.iam.gserviceaccount.com"
+
+{ gcloud run services list --project="$PROJECT_ID" --region="$REGION" --format="value(metadata.name)" |
+    while read -r s; do gcloud run services describe "$s" --project="$PROJECT_ID" --region="$REGION" --format=json; done
+  gcloud run jobs list --project="$PROJECT_ID" --region="$REGION" --format="value(metadata.name)" |
+    while read -r j; do gcloud run jobs describe "$j" --project="$PROJECT_ID" --region="$REGION" --format=json; done
+} | jq -r --arg sa "$SA" '.. | objects | select(.serviceAccountName? == $sa) | .. | .secretKeyRef?.name // empty' |
+  sort -u | while read -r secret; do
+    gcloud secrets get-iam-policy "$secret" --project="$PROJECT_ID" --format=json |
+      jq -e --arg m "serviceAccount:$SA" '.bindings[]? | select(.role == "roles/secretmanager.secretAccessor") | .members[] | select(. == $m)' >/dev/null \
+      && echo "ok       $secret" || echo "MISSING  $secret"
+  done
+```
+
+Any `MISSING` line means an application has not been re-applied with the new module version; apply it and re-check before revoking. For GKE, confirm every application's SecretSync has materialised (`kubectl get secretsync -A`, each `<prefix>-secrets` Secret present) after its apply.
+
+**Revoke (step 4).** `remove-iam-policy-binding` fails harmlessly with `not found` for a binding a project never had.
+
+```bash
+PROJECT_ID=my-project
+PREFIX=abc123def4
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
+
+# Cloud Run runtime account (Services GCP + App CloudRun)
+gcloud projects remove-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:cloudrun-sa-${PREFIX}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor" --condition=None
+gcloud projects remove-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:cloudrun-sa-${PREFIX}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretVersionManager" --condition=None
+
+# GKE workload account (Services GCP gke.tf + App GKE)
+gcloud projects remove-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:gke-sa-${PREFIX}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor" --condition=None
+
+# Tenant Cloud Build account (Services GCP + App CloudRun + App GKE)
+gcloud projects remove-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:cloudbuild-sa-${PREFIX}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor" --condition=None
+
+# Project's default Cloud Build account (Services GCP) -- shared by every tenant,
+# so only after the LAST tenant in the project is updated. First confirm nothing
+# outside these modules relies on it: a build config with availableSecrets, or a
+# trigger running as this account, needs its own per-secret grant instead.
+gcloud projects remove-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor" --condition=None
+
+# What remains project-wide (expect the deploying identity's secretmanager.admin)
+gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" \
+  --filter="bindings.role~^roles/secretmanager\." \
+  --format="table(bindings.role,bindings.members)"
+```
+
+A dedicated application account (`dedicated_service_account_id`) never held a project-level Secret Manager role and needs nothing here. To roll back a revoke, run the same command with `add-iam-policy-binding`.
 
 `support_users` grants no IAM access. Its only effect is to add email recipients to the Cloud Billing budget notification channels, and only when `create_billing_budget = true`; Cloud Monitoring alert recipients come from `notification_alert_emails` with `configure_email_notification`.
 

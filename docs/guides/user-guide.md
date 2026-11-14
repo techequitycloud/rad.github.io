@@ -183,10 +183,12 @@ Spending draws on awards first, then event credits, then subscription, then top-
 
 Deploying a module charges its **module fee** and nothing for build time: **builds are included in the price, so you pay only for success.** The fee is reserved when you confirm and charged when the deployment first succeeds — including when a failed deployment is later fixed by an update.
 
-- **Create** — the module fee. **Your first successful deployment is free** when its module fee is 110 credits or less: once per account, for a single module you deploy yourself (not a solution, a lab session, a client project or a module published by a partner, whose fee is the partner's income).
-- **Update** — the first 5 successful updates of each deployment in a calendar month (UTC) are free; each further successful update costs 2 credits.
+- **Create** — the module fee. **Your first successful deployment is free**, whatever the module and its fee: once per account, for a single module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project). Deploying Project_GCP or Services_GCP on their own does not use it up.
+- **Update** — the first 5 successful updates of each deployment in a calendar month (UTC) are free; each further successful update costs 2 credits. Updates RAD makes itself (for example, adding a database to your shared services because a new app needs one) are free and do not count.
 - **Teardown, purge and any build that fails** — free.
 - **The project and shared services RAD sets up beneath an application** — included. Deployed on their own, **Project_GCP** costs 10 credits and **Services_GCP** 20.
+
+**The exceptions: lab sessions and client projects.** A lab session's deployments are paid from the session's escrow, and a client project's from its wallet, and both are still charged for build time by the minute (6 credits an hour at the current rate), as well as their fees.
 
 These figures are set by RAD's finance team, who can also switch back to charging build time by the minute; the confirmation dialog always shows what applies to your deployment.
 
@@ -207,7 +209,7 @@ The Credits page has these tabs:
 
 Whether credits can be bought at all is a single platform switch. While it is off there are no new subscriptions and no one-off top-ups, and the two tabs above are not shown; if you already have a subscription, a notice on **Credit Transactions** still lets you cancel it.
 
-**To buy credits:** open the **Buy Credits** tab, pick a payment provider, choose a currency and amount, and complete checkout on the provider's secure page. The form shows the minimum top-up (set by RAD's finance team, in USD) converted into your currency, and the form tells you how many credits the amount will buy before you pay. The first option offered is the **starter pack** — 100 credits for $10, enough for a live app and a few days of running it. Your credits are added automatically once the payment confirms.
+**To buy credits:** open the **Buy Credits** tab, pick a payment provider, choose a currency and amount, and complete checkout on the provider's secure page. The form shows the minimum top-up (set by RAD's finance team, in USD) converted into your currency, and the form tells you how many credits the amount will buy before you pay. The first option offered is the **starter pack** — 150 credits for $15. It covers the purchased-credit reserve a RAD-managed sandbox project needs (100 credits), with some to spare for running costs: a few days for a typical app. A RAD-managed project is switched off when your purchased credits fall below that reserve, so top up to keep it running longer. Where you are deploying into a development or production project, whose reserve is higher, the console names the real shortfall instead of offering the pack. Your credits are added automatically once the payment confirms.
 
 **Refunds and chargebacks.** If a payment is refunded, or you dispute it with your card issuer (a chargeback), RAD takes back the credits that payment added, from the balance they went into — in proportion, for a partial refund. Your history shows it as a negative purchase line. That balance can go below zero, and then RAD switches off the Google Cloud projects it pays for on your behalf until you top up. If a dispute is decided in your favour, the credits are put back.
 

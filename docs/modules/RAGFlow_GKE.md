@@ -29,15 +29,15 @@ than repeating them here.
 
 ## What RAGFlow costs on RAD, and how that compares
 
-**Running RAGFlow in your own Google Cloud project costs about US$229.14/month in infrastructure, plus a one-time module fee of 300 RAD credits** (sized at 4 vCPU / 8 GiB on GKE Autopilot pods). RAD charges the module fee once, at deploy time — never again on Update — and builds are included in the price; Google Cloud usage itself is billed to your own billing account at Google's list price. On a **RAD-managed** project the same resources are metered hourly in credits at list price plus RAD's margin — about 150 credits/day — and the module fee is 10% lower, at 270 credits. See "Pause it for free" below for how a RAD-managed RAGFlow deployment can be stopped, at no running cost, until you need it again. (or see the [Cloud Run guide](RAGFlow_CloudRun.md) for the lower-cost option)
+**Running RAGFlow in your own Google Cloud project costs about US$229.14/month in infrastructure, plus a one-time module fee of 300 RAD credits** (sized at 4 vCPU / 8 GiB on GKE Autopilot pods). RAD charges the module fee once, at deploy time — never again on Update — and builds are included in the price; Google Cloud usage itself is billed to your own billing account at Google's list price. On a **RAD-managed** project the same resources are metered hourly in credits at list price plus RAD's margin — about 180 credits/day — and the module fee is 10% lower, at 270 credits. See "Pause it for free" below for how a RAD-managed RAGFlow deployment can be stopped, at no running cost, until you need it again. (or see the [Cloud Run guide](RAGFlow_CloudRun.md) for the lower-cost option)
 
 ### What you pay on RAD
 
 | Item | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | 300 credits (once) | 270 credits (once) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | ~$229.14/month, billed to your own billing account at Google's list price | ~150 credits/day, metered hourly at list price + RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | ~$229.14/month, billed to your own billing account at Google's list price | ~180 credits/day, metered hourly at list price + RAD's margin |
 
 **Default running cost in your own project**
 

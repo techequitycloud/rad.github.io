@@ -26,8 +26,8 @@ You pay for three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 300 credits (US$30 at the top-up price) | 270 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about US$181 a month for the default configuration (table below) | Metered hourly in credits; RAD publishes **83 credits a day**, about 2,490 a month (about US$249 at the top-up price, US$199 at the Scale plan's rate) |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about US$181 a month for the default configuration (table below) | Metered hourly in credits; RAD publishes **113 credits a day**, about 3,390 a month (about US$339 at the top-up price) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database and file/cache server are shared by every application in the project, so a second application does not add a second one.
@@ -88,7 +88,7 @@ passed: **delete the deployment, and deploy it again when you next need it.**
 
 - **What a redeploy costs.** The module fee again (builds are included): 300 credits (US$30.00) in your own project, or
   270 credits in a RAD-managed one, because RAD rebuilds the resources
-  from scratch. Deleting saves money once AFFiNE would otherwise sit unused long enough to clear that redeploy cost against its own running cost — roughly 5 days or more in your own project (US$6.03/day) or 3 days or more in a RAD-managed one (83 credits/day).
+  from scratch. Deleting saves money once AFFiNE would otherwise sit unused long enough to clear that redeploy cost against its own running cost — roughly 5 days or more in your own project (US$6.03/day) or 3 days or more in a RAD-managed one (113 credits/day).
 - **Most of the running cost is usually shared infrastructure.** The database and file or cache VM stop only when nothing else in the project uses them, so deleting AFFiNE while another application shares the project saves only AFFiNE's own compute part.
 - **Keep your data first.** Anything AFFiNE writes to a backup bucket inside the deployment is
   deleted with it — copy the latest backup out (to Google Drive, or a bucket you keep) before

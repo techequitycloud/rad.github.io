@@ -23,17 +23,17 @@ Authorization, VPC Service Controls, backups, and the deployment lifecycle — r
 
 ## What PocketBase costs on RAD, and how that compares
 
-**Running PocketBase in your own Google Cloud project costs about US$42.08/month in infrastructure, plus a one-time module fee of 75 RAD credits** (sized at 1 vCPU / 1 GiB on GKE Autopilot pods). RAD charges the module fee once, at deploy time — never again on Update — and builds are included in the price; Google Cloud usage itself is billed to your own billing account at Google's list price. On a **RAD-managed** project the same resources are metered hourly in credits at list price plus RAD's margin — about 67 credits/day — and the module fee is 10% lower, at 67.50 credits. See "Pause it for free" below for how a RAD-managed PocketBase deployment can be stopped, at no running cost, until you need it again. (or see the [Cloud Run guide](PocketBase_CloudRun.md) for the lower-cost option)
+**Running PocketBase in your own Google Cloud project costs about US$42.08/month in infrastructure, plus a one-time module fee of 75 RAD credits** (sized at 1 vCPU / 1 GiB on GKE Autopilot pods). RAD charges the module fee once, at deploy time — never again on Update — and builds are included in the price; Google Cloud usage itself is billed to your own billing account at Google's list price. On a **RAD-managed** project the same resources are metered hourly in credits at list price plus RAD's margin — about 75 credits/day — and the module fee is 10% lower, at 67.50 credits. See "Pause it for free" below for how a RAD-managed PocketBase deployment can be stopped, at no running cost, until you need it again. (or see the [Cloud Run guide](PocketBase_CloudRun.md) for the lower-cost option)
 
 ### What you pay on RAD
 
 | Item | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | 75 credits (once) | 67.50 credits (once) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | ~$42.08/month, billed to your own billing account at Google's list price | ~67 credits/day, metered hourly at list price + RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | ~$42.08/month, billed to your own billing account at Google's list price | ~75 credits/day, metered hourly at list price + RAD's margin |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 **Default running cost in your own project**
 

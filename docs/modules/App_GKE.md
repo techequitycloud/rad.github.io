@@ -244,7 +244,7 @@ These variables control how configuration and sensitive credentials are delivere
 **Google Cloud Console:**
 - **Kubernetes Secret contents (CSI):** Navigate to **Kubernetes Engine → Workloads → *your deployment* → YAML** to view the `env` and `envFrom` blocks showing secret references.
 - **Secret Manager secrets:** Navigate to **Security → Secret Manager** to view all secrets, their versions, rotation schedules, and access policies.
-- **Secret IAM access:** In Secret Manager, click a secret → **Permissions** to confirm the GKE workload service account has `Secret Accessor` permissions.
+- **Secret IAM access:** In Secret Manager, click a secret → **Permissions** to confirm the GKE workload service account has `Secret Accessor` permissions. The account has no project-level Secret Manager role: this module grants it each secret the SecretSync reads (the application's secrets, secrets named only in an initialization job's `secret_env_vars`, and each Cloud Deploy stage's DB password), and `Services GCP` grants the Cloud SQL root password.
 
 **gcloud CLI / kubectl:**
 ```bash

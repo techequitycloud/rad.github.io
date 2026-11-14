@@ -50,11 +50,13 @@ You pay for three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 40 credits (US$4 at the top-up price) | 36 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about US$40 a month for the default configuration (table below) | Metered hourly in credits; RAD publishes **63 credits a day**, about 1,890 a month (about US$189 at the top-up price, US$151 at the Scale plan's rate) |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about US$40 a month for the default configuration (table below) | Metered hourly in credits; RAD publishes **70 credits a day**, about 2,100 a month (about US$210 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+**Why the two columns differ.** The RAD-managed figure includes the GKE cluster's management fee (about US$73 a month) and the project's shared foundation. In your own project, Google's free tier covers the management fee of one cluster per billing account, which the own-project figure assumes. It is estimated from Google's list prices, because there is not yet enough RAD-managed GKE history to measure it, so the deploy confirmation does not quote it. A second GKE application in the same RAD-managed project shares the cluster and adds only its own pods.
+
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan.
 
@@ -113,7 +115,7 @@ passed: **delete the deployment, and deploy it again when you next need it.**
 
 - **What a redeploy costs.** The module fee again (builds are included): 40 credits (US$4.00) in your own project, or
   36 credits in a RAD-managed one, because RAD rebuilds the resources
-  from scratch. Deleting saves money once AdGuard Home would otherwise sit unused long enough to clear that redeploy cost against its own running cost — roughly 3 days or more in your own project (US$1.34/day) or 1 days or more in a RAD-managed one (63 credits/day).
+  from scratch. Deleting saves money once AdGuard Home would otherwise sit unused long enough to clear that redeploy cost against its own running cost — roughly 3 days or more in your own project (US$1.34/day) or 1 day or more in a RAD-managed one (70 credits/day).
 - **The GKE cluster itself is shared infrastructure.** If another application uses the same Autopilot cluster, deleting AdGuard Home alone saves only its own pod; the cluster management fee only drops once nothing else in the project needs it.
 - **Keep your data first.** Anything AdGuard Home writes to a backup bucket inside the deployment is
   deleted with it — copy the latest backup out (to Google Drive, or a bucket you keep) before

@@ -37,11 +37,13 @@ If you only need it occasionally — studying, a demo, a seasonal business — a
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 40 credits (US$4 at the top-up price) | 36 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$24.04 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **55 credits a day**, about 1,650 a month (about US$165 at the top-up price) |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$24.04 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **62 credits a day**, about 1,860 a month (about US$186 at the top-up price; estimated from Google list prices, and including the cluster fee) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+**Why the two columns differ.** The RAD-managed figure includes the GKE cluster's management fee (about US$73 a month) and the project's shared foundation. In your own project, Google's free tier covers the management fee of one cluster per billing account, which the own-project figure assumes. It is estimated from Google's list prices, because there is not yet enough RAD-managed GKE history to measure it, so the deploy confirmation does not quote it. A second GKE application in the same RAD-managed project shares the cluster and adds only its own pods.
+
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the database, file server and network are shared by every application in the project, so a second application does not add a second database.
 
@@ -79,7 +81,7 @@ business — far better than running it continuously.
   then asks you to run **Update** on each deployment to confirm everything came back. Because
   nothing was individually destroyed, that Update finds the same resources already there — it
   is a check, not a rebuild, and an Update never charges the module fee again. Updates are included in the price (5 a month for each deployment), so a restore normally costs no credits.
-- **So a month of occasional use can cost a few dollars, not US$24.04.** Deploy Element, use it
+- **So a month of occasional use can cost a few dollars, not the US$186 a month of keeping it running.** Deploy Element, use it
   for a while, delete the project. Restore it next time you want it, confirm with Update, and
   delete it again when you're done. You pay only for the module fee once and
   whatever hours Element was actually live.
@@ -102,7 +104,7 @@ it.**
 
 - **What a redeploy costs.** The module fee again (builds are included): 40 credits (US$4.00), and about an hour, because RAD recreates the project and shared services before Element. Deleting saves money once Element would otherwise sit unused
   for about **6 days or more** in your own project (about US$0.80 a day), or about
-  **1 day or more** in a RAD-managed one (55 credits a day).
+  **1 day or more** in a RAD-managed one (62 credits a day).
 - **Delete everything Element uses.** Element holds no server-side state at all — no database, no file storage — so deleting it stops all of its own running cost right away, and there is nothing it shares with other applications in the project to leave running.
 - **Keep your data first.** Element itself stores nothing to back up; it is a stateless client pointed at a Matrix homeserver you run separately, so deleting the deployment loses only its own configuration (ingress rules, domains), not any chat history or user data.
 - **Note your settings.** RAD does not recreate a deleted deployment for you; you enter the

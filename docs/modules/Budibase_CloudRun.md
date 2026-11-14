@@ -23,7 +23,7 @@ VPC Service Controls, backups, and the deployment lifecycle — refer to the
 
 ## What Budibase costs on RAD, and how that compares
 
-**Budibase on RAD's Cloud Run module costs about US$232 a month in your own Google Cloud project, with no extra licence fee** — Budibase is open source. In a project RAD manages for you, the same deployment is metered at **105 credits a day** (about 3,150 a month, about US$315 at the top-up price). Or see the [GKE guide](Budibase_GKE.md) for always-on capacity across pods. If you only need Budibase occasionally — studying, a demo, a short-lived project — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that monthly figure becomes a few dollars instead. See **Pause it for free**, below.
+**Budibase on RAD's Cloud Run module costs about US$232 a month in your own Google Cloud project, with no extra licence fee** — Budibase is open source. In a project RAD manages for you, the same deployment is metered at **113 credits a day** (about 3,390 a month, about US$339 at the top-up price). Or see the [GKE guide](Budibase_GKE.md) for always-on capacity across pods. If you only need Budibase occasionally — studying, a demo, a short-lived project — a RAD-managed project can be deleted and restored within 30 days at no extra charge, so that monthly figure becomes a few dollars instead. See **Pause it for free**, below.
 
 ### What you pay on RAD
 
@@ -32,8 +32,8 @@ Budibase is open source, so there is no licence fee. You pay for three things:
 | | In a Google Cloud project you own | In a project RAD manages for you |
 |---|---|---|
 | Module fee, once per deployment | 300 credits (US$30 at the top-up price) | 270 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | Billed by Google to your own billing account, about **US$232 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **105 credits a day**, about 3,150 a month (about US$315 at the top-up price) |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | Billed by Google to your own billing account, about **US$232 a month** for the default configuration (table below) | Metered hourly in credits; RAD publishes **113 credits a day**, about 3,390 a month (about US$339 at the top-up price) |
 | Who owns what | You own the project and its billing; RAD deploys and updates it | RAD owns the project, with guardrails, quotas and budget alerts; you get console access, and a minimum purchased balance is held in reserve |
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan. In a project RAD manages, the
@@ -99,7 +99,7 @@ delete the deployment and deploy it again when you need it.
 
 - **What a redeploy costs.** The module fee again (builds are included): 300 credits (US$30.00) at the top-up price. Deleting saves money only once Budibase would otherwise sit unused for about
   **3 days or more** — in your own project that is about US$7.74 a day, and
-  in a RAD-managed one it is 105 credits a day.
+  in a RAD-managed one it is 113 credits a day.
 - This module's running cost is entirely its own — nothing in the table above is shared with other applications in the project, so deleting Budibase stops all of it.
 - **Keep data first.** Nightly backups go to a bucket inside the deployment and are deleted with it, so
   copy the latest backup out before deleting if you want to keep it.

@@ -30,10 +30,10 @@ Controls, backups, and the deployment lifecycle — refer to the
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee (one-off) | 75 credits | 67.5 credits (10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | US$80.31/month, billed by Google at list price | ~36 credits/day (about 1080/month, US$108 at the top-up price), metered at list price plus RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | US$80.31/month, billed by Google at list price | ~67 credits/day (about 2,010/month, US$201 at the top-up price), metered at list price plus RAD's margin |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 10 credits cost US$1 on a one-off top-up, and less on a monthly plan.
 
@@ -95,7 +95,7 @@ scratch. That costs about 78-81 credits in your own project, or about
 Deleting only saves money once Vaultwarden would otherwise sit unused long enough to clear that
 redeploy cost against its own running cost — about 3 days or more in your own project
 (about US$2.68 a day), or about 2 days or more in a RAD-managed one
-(36 credits a day).
+(67 credits a day).
 
 Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it,
 so copy the latest backup out before deleting if you want to keep it.

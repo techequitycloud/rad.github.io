@@ -36,10 +36,10 @@ Controls, backups, and the deployment lifecycle — refer to the
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | **40 credits** (one-time) | **36 credits** (one-time, 10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | ~US$50.72/month, billed to your own Google billing account at list price | ~25 credits/day (~US$2.50/day), metered hourly at list price plus RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | ~US$50.72/month, billed to your own Google billing account at list price | ~33 credits/day (~US$3.30/day), metered hourly at list price plus RAD's margin |
 
-Your first successful deployment on RAD is free of the module fee when that fee is 110 credits or less.
+Your first successful deployment on RAD is free of the module fee, whatever the fee: once per account, for a module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project).
 
 **Default running cost in your own project**
 
@@ -95,7 +95,7 @@ in your own project, or **36 credits** on a RAD-managed one.
 Deleting only saves money once Gatus would otherwise sit unused long enough to clear that redeploy cost
 against its own running cost: roughly **about 3 days or more** idle in your own project (against its
 ~US$50.72/month Google Cloud bill), or **about 2 days or more** idle in a RAD-managed project
-(against its ~25 credits/day).
+(against its ~33 credits/day).
 
 Keep data first: nightly backups go to a bucket inside the deployment and are deleted with it, so copy the
 latest backup out before deleting if you want to keep it.

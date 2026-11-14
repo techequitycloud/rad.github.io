@@ -34,8 +34,8 @@ backups, and the deployment lifecycle — refer to the
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | **300 credits** (one-time) | **270 credits** (one-time, 10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month free and then 2 credits each, and nothing to delete or for a failed build | The same |
-| Google Cloud running cost | ~US$180.87/month, billed to your own Google billing account at list price | ~83 credits/day (~US$8.30/day), metered hourly at list price plus RAD's margin |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Google Cloud running cost | ~US$180.87/month, billed to your own Google billing account at list price | ~113 credits/day (~US$11.30/day), metered hourly at list price plus RAD's margin |
 
 **Default running cost in your own project**
 
@@ -92,7 +92,7 @@ in your own project, or **270 credits** on a RAD-managed one.
 Deleting only saves money once GlitchTip would otherwise sit unused long enough to clear that redeploy cost
 against its own running cost: roughly **about 6 days or more** idle in your own project (against its
 ~US$180.87/month Google Cloud bill), or **about 4 days or more** idle in a RAD-managed project
-(against its ~83 credits/day).
+(against its ~113 credits/day).
 
 Most of GlitchTip's running cost is the database and the shared file/cache VM. They stop only when nothing else in the project uses them, so deleting this app while something else shares the project saves only this app's own compute share of the total above.
 

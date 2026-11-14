@@ -45,7 +45,8 @@ during deployment and never appear in configuration files or Terraform state in 
 | `<prefix>-telegram-bot-token` | `TELEGRAM_BOT_TOKEN` | When `enable_telegram = true` |
 | `<prefix>-telegram-webhook-secret` | Not injected into agent — router use only | When `enable_telegram = true` |
 | `<prefix>-slack-bot-token` | `SLACK_BOT_TOKEN` | When `enable_slack = true` |
-| `<prefix>-slack-signing-secret` | Not injected into agent — router use only | When `enable_slack = true` |
+| `<prefix>-slack-app-token` | `SLACK_APP_TOKEN` | When `enable_slack = true` |
+| `<prefix>-slack-signing-secret` | Not injected into agent — optional, HTTP Request-URL router use only | When `enable_slack = true` and a value is provided |
 
 Retrieve any credential after deployment:
 
