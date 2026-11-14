@@ -3,7 +3,7 @@ title: "Zammad sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Zammad sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Zammad_CloudRun.md @ 40c83c3f sha256:6973b7c470bc -->
+<!-- translated-from: docs/modules/Zammad_CloudRun.md @ 92769a4a sha256:365236af6df9 -->
 
 # Zammad sur Google Cloud Run {#zammad-on-google-cloud-run}
 
@@ -43,7 +43,7 @@ Kubernetes.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 110 crédits | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud | 101,98 $/mois, facturé par Google au prix catalogue | ~67 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que

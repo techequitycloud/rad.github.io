@@ -3,7 +3,7 @@ title: "Dify sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Dify sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Dify_CloudRun.md @ 40c83c3f sha256:4944eb0b32b0 -->
+<!-- translated-from: docs/modules/Dify_CloudRun.md @ 92769a4a sha256:f0944c7a05d2 -->
 
 # Dify sur Google Cloud Run {#dify-on-google-cloud-run}
 
@@ -44,7 +44,7 @@ Voir **Mettre en pause gratuitement**, ci-dessous.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites, puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites, puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **102 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **67 crédits par jour**, soit environ 2 010 par mois (environ 201 $ US au prix de la recharge) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum de crédits achetés est conservé en réserve |
 

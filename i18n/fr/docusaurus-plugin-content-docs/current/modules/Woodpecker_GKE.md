@@ -3,7 +3,7 @@ title: "Woodpecker CI sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Woodpecker CI sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Woodpecker_GKE.md @ 40c83c3f sha256:397a4e12e17c -->
+<!-- translated-from: docs/modules/Woodpecker_GKE.md @ 92769a4a sha256:08e4b4cb91b2 -->
 
 # Woodpecker CI sur GKE Autopilot {#woodpecker-ci-on-gke-autopilot}
 
@@ -46,7 +46,7 @@ répéter ici.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 175 crédits | 157,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud | 136,37 $/mois, facturé par Google au prix catalogue | ~136 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
 **Coût d'exécution par défaut dans votre propre projet**

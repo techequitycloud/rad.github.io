@@ -3,7 +3,7 @@ title: "Miniflux sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Miniflux sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Miniflux_GKE.md @ 40c83c3f sha256:6e21d1f8177a -->
+<!-- translated-from: docs/modules/Miniflux_GKE.md @ 92769a4a sha256:90bd1644d81f -->
 
 # Miniflux sur GKE Autopilot {#miniflux-on-gke-autopilot}
 
@@ -35,7 +35,7 @@ Ou consultez le guide Cloud Run pour la cible de déploiement alternative ; dans
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 175 crédits, une fois | 157,5 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud | ~136,37 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~135 crédits/jour, facturé à l'heure par RAD au prix catalogue plus marge |
 
 **Coût d'exécution par défaut dans votre propre projet**

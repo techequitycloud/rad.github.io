@@ -3,7 +3,7 @@ title: "Windmill sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Windmill sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Windmill_CloudRun.md @ 40c83c3f sha256:1d6a93e92cae -->
+<!-- translated-from: docs/modules/Windmill_CloudRun.md @ 92769a4a sha256:908fe33043ed -->
 
 # Windmill sur Google Cloud Run {#windmill-on-google-cloud-run}
 
@@ -24,7 +24,7 @@ Ce guide se concentre sur les services cloud utilisés par Windmill et sur la ma
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (une seule fois) | 75 crédits | 67,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût d'exécution Google Cloud | 156,93 $/mois, facturé par Google au prix catalogue | ~102 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : le premier à réussir ; jamais une session de lab ou un projet client).

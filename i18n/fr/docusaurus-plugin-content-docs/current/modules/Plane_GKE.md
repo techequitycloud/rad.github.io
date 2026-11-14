@@ -3,7 +3,7 @@ title: "Plane sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Plane sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Plane_GKE.md @ 40c83c3f sha256:b8a5812f2f8c -->
+<!-- translated-from: docs/modules/Plane_GKE.md @ 92769a4a sha256:95f846b9e6a1 -->
 
 # Plane sur GKE Autopilot {#plane-on-gke-autopilot}
 
@@ -47,7 +47,7 @@ consultez le [guide Cloud Run](Plane_CloudRun.md) pour l'option moins chère)
 | Élément | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 300 crédits (une fois) | 270 crédits (une fois) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites, puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients font exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites, puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients font exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
 | Coût de fonctionnement Google Cloud | ~149,81 $ US/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~146 crédits/jour, mesurés à l'heure au prix catalogue + marge de RAD |
 
 **Coût de fonctionnement par défaut dans votre propre projet**

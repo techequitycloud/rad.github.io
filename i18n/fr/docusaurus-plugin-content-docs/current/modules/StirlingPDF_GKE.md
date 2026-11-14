@@ -3,7 +3,7 @@ title: "Stirling-PDF sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Stirling-PDF sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/StirlingPDF_GKE.md @ 40c83c3f sha256:7a64526f8a40 -->
+<!-- translated-from: docs/modules/StirlingPDF_GKE.md @ 92769a4a sha256:d8f28aeba1e2 -->
 
 # Stirling-PDF sur GKE Autopilot {#stirling-pdf-on-gke-autopilot}
 
@@ -36,7 +36,7 @@ répéter ici.
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 40 crédits (4 US$ au prix de la recharge) | 36 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **45,68 US$ par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **72 crédits par jour**, soit environ 2 160 par mois (environ 216 US$ au prix de la recharge ; estimé à partir des prix catalogue de Google, et incluant les frais de cluster) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde acheté minimum est conservé en réserve |
 

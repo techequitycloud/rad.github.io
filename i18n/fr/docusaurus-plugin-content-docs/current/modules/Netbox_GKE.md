@@ -3,7 +3,7 @@ title: "NetBox sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de NetBox sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Netbox_GKE.md @ 40c83c3f sha256:2813431c1e7c -->
+<!-- translated-from: docs/modules/Netbox_GKE.md @ 92769a4a sha256:b1d168dfdd97 -->
 
 # NetBox sur GKE Autopilot {#netbox-on-gke-autopilot}
 
@@ -38,7 +38,7 @@ RAD déploie **Netbox**, qui est open source, il n'y a donc pas de frais de lice
 | | Dans un projet Google Cloud que vous possédez | Dans un projet que RAD gère pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (18 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **143 $ US par mois** pour la configuration par défaut (tableau ci-dessous) — plus si ce n'est pas votre seul cluster Autopilot | Mesuré à l'heure en crédits ; RAD publie **143 crédits par jour**, environ 4 290 par mois (environ 429 $ US au prix de la recharge ; estimé à partir des prix catalogue Google, et incluant les frais de cluster) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 

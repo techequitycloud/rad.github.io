@@ -3,7 +3,7 @@ title: "Guide du formateur"
 description: "Guide du formateur de la plateforme RAD — gérer des sessions de lab : créer une session, choisir qui paie, intégrer les participants, provisionner et démarrer les environnements, et comment les crédits inutilisés vous sont restitués."
 ---
 
-<!-- translated-from: docs/guides/trainer-guide.md @ f38ac9d2 sha256:3be018342c1f -->
+<!-- translated-from: docs/guides/trainer-guide.md @ 92769a4a sha256:124634214ffd -->
 
 # Guide du formateur {#trainer-guide}
 
@@ -55,7 +55,7 @@ Vous décidez lors de la création de la session. **Ce choix est figé une fois 
 
 **TVA.** Si l'équipe financière de RAD a défini un taux de TVA pour celui qui paie une place, cette place coûte l'allocation plus la TVA, de sorte que l'allocation dure aussi longtemps que le plan l'indique : votre taux pour une session que vous financez ou une place que vous payez, le propre taux du participant pour une place qu'il achète.
 
-**Le prix minimum de la place.** Dans une session où les participants paient pour des environnements individuels, **Provision** est refusé si une place coûte moins que ce dont un environnement a réellement besoin : ses builds (tarifées de manière conservative, car les builds de lab s'exécutent souvent plus lentement que d'habitude), son démantèlement et son coût d'exécution Google Cloud prévu pendant le cours — et, dans une session **By trainer**, pendant l'attente avant que vous n'appuyiez sur Start — plus une marge de 25 %. La boîte de dialogue montre chaque partie et nomme le prix le plus bas qui fonctionne. Augmentez le prix ; vous pourrez alors payer les places des participants qui ne peuvent pas se le permettre (ci-dessous). Les sessions partagées sont exemptées, car les participants n'ont pas leur propre environnement à configurer ; dans une session que vous financez, le plan ne fait qu'avertir.
+**Le prix minimum de la place.** Dans une session où les participants paient pour des environnements individuels, **Provision** est refusé si une place coûte moins que ce dont un environnement a réellement besoin : ses builds (tarifées de manière conservative, car les builds de lab s'exécutent souvent plus lentement que d'habitude), son démantèlement et son coût d'exécution Google Cloud prévu pendant le cours — et, dans une session **By trainer**, pendant l'attente avant que vous n'appuyiez sur Start — plus une marge de 25 %. La boîte de dialogue nomme le prix le plus bas qui fonctionne. Augmentez le prix ; vous pourrez alors payer les places des participants qui ne peuvent pas se le permettre (ci-dessous). Les sessions partagées sont exemptées, car les participants n'ont pas leur propre environnement à configurer ; dans une session que vous financez, le plan ne fait qu'avertir.
 
 Les invitations et la bannière de paiement énoncent l'offre en une ligne, par exemple "10 crédits (1 $) pour un environnement de 3 heures", de sorte que la limite de temps n'est jamais une surprise.
 

@@ -3,7 +3,7 @@ title: "n8n sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de n8n sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/N8N_CloudRun.md @ 40c83c3f sha256:288d22dea9f4 -->
+<!-- translated-from: docs/modules/N8N_CloudRun.md @ 92769a4a sha256:5c5f1bcf506b -->
 
 # n8n sur Google Cloud Run {#n8n-on-google-cloud-run}
 
@@ -25,7 +25,7 @@ Ou consultez le guide GKE pour la cible de déploiement alternative ; dans tous 
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 110 crédits, une fois | 99 crédits, une fois (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients font exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients font exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût d'exécution Google Cloud | ~117,79 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~85 crédits/jour, facturé à l'heure par RAD au prix catalogue plus marge |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).

@@ -3,7 +3,7 @@ title: "Agent Hermes sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de l'agent Hermes sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Hermes_GKE.md @ 40c83c3f sha256:f23eba9a36ae -->
+<!-- translated-from: docs/modules/Hermes_GKE.md @ 92769a4a sha256:4c78325f6ed5 -->
 
 # Agent Hermes sur GKE Autopilot {#hermes-agent-on-gke-autopilot}
 
@@ -50,7 +50,7 @@ chère.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (unique) | 110 crédits | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
 | Coût d'exécution Google Cloud | 142,62 $/mois, facturé par Google au prix catalogue | ~138 crédits/jour, mesuré au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que

@@ -3,7 +3,7 @@ title: "Ghostfolio sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Ghostfolio sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Ghostfolio_CloudRun.md @ 40c83c3f sha256:09aedce2c732 -->
+<!-- translated-from: docs/modules/Ghostfolio_CloudRun.md @ 92769a4a sha256:4377e28376de -->
 
 # Ghostfolio sur Google Cloud Run {#ghostfolio-on-google-cloud-run}
 
@@ -48,7 +48,7 @@ l'option Cloud Run, moins coûteuse.*
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | **110 crédits** (une fois) | **99 crédits** (une fois, 10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build. | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build. | Idem |
 | Coût d'exécution Google Cloud | ~82,03 US$/mois, facturé sur votre propre compte de facturation Google au prix catalogue | ~67 crédits/jour (~6,70 US$/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que

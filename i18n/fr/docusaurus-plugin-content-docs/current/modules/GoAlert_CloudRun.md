@@ -3,7 +3,7 @@ title: "GoAlert sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de GoAlert sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/GoAlert_CloudRun.md @ 40c83c3f sha256:f9a378a1781c -->
+<!-- translated-from: docs/modules/GoAlert_CloudRun.md @ 92769a4a sha256:528537d57643 -->
 
 # GoAlert sur Google Cloud Run {#goalert-on-google-cloud-run}
 
@@ -49,7 +49,7 @@ l'option Cloud Run, moins coûteuse.*
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | **110 crédits** (une seule fois) | **99 crédits** (une seule fois, 10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Identique |
 | Coût d'exécution Google Cloud | ~101,74 US$/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~78 crédits/jour (~7,80 US$/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que

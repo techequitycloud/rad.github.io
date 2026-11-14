@@ -3,7 +3,7 @@ title: "Guide de l'utilisateur"
 description: "Guide de l'utilisateur de la plateforme RAD — créer une solution à partir d'une simple description, déployer des modules et des solutions sur Google Cloud, gérer vos déploiements, et crédits et abonnements."
 ---
 
-<!-- translated-from: docs/guides/user-guide.md @ 40c83c3f sha256:1396b19807b9 -->
+<!-- translated-from: docs/guides/user-guide.md @ 92769a4a sha256:37276e02e46b -->
 
 # Guide de l'utilisateur {#user-guide}
 
@@ -176,7 +176,7 @@ Ouvrez la page **Crédits** pour gérer votre solde.
 
 Vos crédits sont répartis en quatre soldes distincts, et ils se comportent différemment :
 
-- **Offerts** — crédits gratuits : votre dotation d'inscription, les dotations mensuelles et les récompenses de parrainage. Ceux-ci sont réinitialisés chaque mois (les crédits offerts non utilisés ne sont jamais reportés), sauf qu'un nouveau compte conserve ses crédits d'inscription pendant au moins 30 jours. À partir du **1er décembre 2026**, la dotation mensuelle ne sera accordée qu'aux comptes qui ont été actifs au cours des 30 jours précédents — un déploiement réussi ou un achat de crédits.
+- **Offerts** — crédits gratuits : votre dotation d'inscription, les dotations mensuelles et les récompenses de parrainage. Ceux-ci sont réinitialisés chaque mois (les crédits offerts non utilisés ne sont jamais reportés), sauf qu'un nouveau compte conserve ses crédits d'inscription pendant au moins 30 jours. À partir du **1er décembre 2026**, la dotation mensuelle ne sera accordée qu'aux comptes qui ont été actifs au cours des 30 jours précédents — un build réussi (un déploiement, une mise à jour ou une suppression) ou un achat de crédits.
 - **Crédits événementiels** — crédits gratuits que vous avez réclamés avec un code événementiel (voir ci-dessous). Ils expirent à leur propre date, affichée lorsque vous les réclamez, plutôt qu'avec la réinitialisation mensuelle.
 - **Abonnement** — crédits provenant d'un plan d'abonnement. Lorsque la plateforme est configurée pour les réinitialiser, un renouvellement remplace l'allocation plutôt que de l'ajouter.
 - **Recharge** — crédits que vous avez achetés directement en une seule fois. Ceux-ci n'expirent jamais.

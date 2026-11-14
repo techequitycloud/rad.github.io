@@ -3,7 +3,7 @@ title: "ToolJet sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de ToolJet sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/ToolJet_CloudRun.md @ 40c83c3f sha256:21c57ccd30b4 -->
+<!-- translated-from: docs/modules/ToolJet_CloudRun.md @ 92769a4a sha256:9f887c18b2ca -->
 
 # ToolJet sur Google Cloud Run {#tooljet-on-google-cloud-run}
 
@@ -47,7 +47,7 @@ l'exécuter sur Kubernetes.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (une seule fois) | 300 crédits | 270 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
 | Coût d'exécution Google Cloud | 180,87 $ US/mois, facturé par Google au prix catalogue | ~113 crédits/jour (environ 3 390/mois, 339 $ US au prix de la recharge), mesuré au prix catalogue plus la marge de RAD |
 
 10 crédits coûtent 1 $ US pour une recharge unique, et moins pour un abonnement

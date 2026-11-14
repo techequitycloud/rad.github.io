@@ -174,7 +174,7 @@ Open the **Credits** page to manage your balance.
 
 Your credits sit in four separate balances, and they behave differently:
 
-- **Awards** — free credits: your signup grant, monthly grants, and referral rewards. These are reset each month (unused awards never carry over), except that a new account keeps its sign-up credits for at least 30 days. From **1 December 2026** the monthly grant goes only to accounts that were active in the previous 30 days — a successful deployment or a credit purchase.
+- **Awards** — free credits: your signup grant, monthly grants, and referral rewards. These are reset each month (unused awards never carry over), except that a new account keeps its sign-up credits for at least 30 days. From **1 December 2026** the monthly grant goes only to accounts that were active in the previous 30 days — a successful build (a deployment, an update or a deletion) or a credit purchase.
 - **Event credits** — free credits you claimed with an event code (see below). They expire on their own date, shown when you claim them, rather than with the monthly reset.
 - **Subscription** — credits from a subscription plan. Where the platform is set to reset them, a renewal replaces the allowance rather than adding to it.
 - **Top-up** — credits you bought outright as a one-off. These never expire.

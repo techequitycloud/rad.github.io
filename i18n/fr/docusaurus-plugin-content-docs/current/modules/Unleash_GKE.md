@@ -3,7 +3,7 @@ title: "Unleash sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Unleash sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Unleash_GKE.md @ 40c83c3f sha256:eab07637790a -->
+<!-- translated-from: docs/modules/Unleash_GKE.md @ 92769a4a sha256:c84e105cfd9a -->
 
 # Unleash sur GKE Autopilot {#unleash-on-gke-autopilot}
 
@@ -44,7 +44,7 @@ ci-dessous.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module (une seule fois) | 110 crédits | 99 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Idem |
 | Coût d'exécution Google Cloud | 104,74 $ US/mois, facturé par Google au prix catalogue | ~122 crédits/jour (environ 3 660/mois, 366 $ US au prix de la recharge), mesuré au prix catalogue plus la marge de RAD |
 
 **Pourquoi les deux colonnes diffèrent.** Le chiffre pour les projets gérés par

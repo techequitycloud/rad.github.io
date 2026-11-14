@@ -35,6 +35,7 @@ Go to the **Users** page to manage everyone on the platform.
 **Edit roles.** Select **Edit** on a user's row, then set:
 
 - **Active** status — see Activate/deactivate below.
+- **Deploys paused** — refuses new deployments, updates and purges for that account until you clear it; teardowns stay allowed. Use it for an account whose builds keep failing or that is misusing the platform. Admins and Finance can set it, never on their own account, and each change is recorded in the audit log.
 - **Role flags** — Admin, User, Partner, Agent, Support and Trainer are always shown. **Finance** appears only once **Enable Subscription** is switched on in **Setup**. The **Agent** box can be ticked only while users can pay (see [Assigning roles](#assigning-roles)).
 
 Select **Save** to apply your changes.

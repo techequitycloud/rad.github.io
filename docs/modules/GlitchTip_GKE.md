@@ -33,7 +33,7 @@ refer to the [App_GKE foundation guide](App_GKE.md) rather than repeating them h
 | | Own project | RAD-managed project |
 |---|---|---|
 | Module fee | **175 credits** (one-time) | **157.5 credits** (one-time, 10% lower) |
-| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build. Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
+| Builds | Included in the price: no build charge to create, 5 updates a month (UTC calendar month) free and then 2 credits each, and nothing to delete or for a failed build, up to 10 failed builds a day (UTC). Lab sessions and client projects are the exception: they are still charged for build time by the minute | The same |
 | Google Cloud running cost | ~US$149.81/month, billed to your own Google billing account at list price | ~141 credits/day (~US$14.10/day), metered hourly at list price plus RAD's margin |
 
 **Default running cost in your own project**

@@ -3,7 +3,7 @@ title: "Guide de l'administrateur"
 description: "Guide de l'administrateur de la plateforme RAD — gestion des utilisateurs et des rôles, paramètres de la plateforme, catalogue de modules, demandes de configuration et tickets de support, et supervision des revenus, des coûts et de l'audit."
 ---
 
-<!-- translated-from: docs/guides/admin-guide.md @ f38ac9d2 sha256:5cd70b34d737 -->
+<!-- translated-from: docs/guides/admin-guide.md @ 92769a4a sha256:5a07e276e824 -->
 
 # Guide de l'administrateur {#administrator-guide}
 
@@ -37,6 +37,7 @@ Allez sur la page **Users** pour gérer tout le monde sur la plateforme.
 **Modifier les rôles.** Sélectionnez **Edit** sur la ligne d'un utilisateur, puis définissez :
 
 - Statut **Active** — voir Activer/désactiver ci-dessous.
+- **Deploys paused** — refuse les nouveaux déploiements, les mises à jour et les purges pour ce compte jusqu'à ce que vous le désactiviez ; les démantèlements restent autorisés. Utilisez-le pour un compte dont les builds échouent sans cesse ou qui fait un usage abusif de la plateforme. Les administrateurs et Finance peuvent le définir, jamais sur leur propre compte, et chaque modification est enregistrée dans le journal d'audit.
 - **Role flags** — Admin, User, Partner, Agent, Support et Trainer sont toujours affichés. **Finance** apparaît uniquement une fois que **Enable Subscription** est activé dans **Setup**. La case **Agent** ne peut être cochée que si les utilisateurs peuvent payer (voir [Assignation des rôles](#assigning-roles)).
 
 Sélectionnez **Save** pour appliquer vos modifications.

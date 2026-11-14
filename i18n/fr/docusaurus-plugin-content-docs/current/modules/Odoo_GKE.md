@@ -3,7 +3,7 @@ title: "Odoo sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Odoo sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Odoo_GKE.md @ 40c83c3f sha256:b9dfa6ff845c -->
+<!-- translated-from: docs/modules/Odoo_GKE.md @ 92769a4a sha256:0dd0177b9ddf -->
 
 # Odoo sur GKE Autopilot {#odoo-on-gke-autopilot}
 
@@ -49,7 +49,7 @@ frais de licence par utilisateur. Vous payez pour trois choses :
 | | Dans un projet Google Cloud que vous possédez | Dans un projet géré par RAD pour vous |
 |---|---|---|
 | Frais de module, une fois par déploiement | 175 crédits (17,50 $ US au prix de la recharge) | 157,5 crédits (10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien à supprimer ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien à supprimer ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés pour le temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud | Facturé par Google à votre propre compte de facturation, environ **150 $ US par mois** pour la configuration par défaut (tableau ci-dessous) | Mesuré à l'heure en crédits ; RAD publie **129 crédits par jour**, environ 3 870 par mois (environ 387 $ US au prix de la recharge ; estimé à partir des prix catalogue Google, et incluant les frais de cluster) |
 | Qui possède quoi | Vous possédez le projet et sa facturation ; RAD le déploie et le met à jour | RAD possède le projet, avec des garde-fous, des quotas et des alertes budgétaires ; vous avez accès à la console, et un solde minimum acheté est conservé en réserve |
 

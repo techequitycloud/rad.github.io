@@ -3,7 +3,7 @@ title: "FreshRSS sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de FreshRSS sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/FreshRSS_GKE.md @ 40c83c3f sha256:7f0ef9c2f035 -->
+<!-- translated-from: docs/modules/FreshRSS_GKE.md @ 92769a4a sha256:19b5c46d4666 -->
 
 # FreshRSS sur GKE Autopilot {#freshrss-on-gke-autopilot}
 
@@ -37,7 +37,7 @@ plutôt que de les répéter ici.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | **110 crédits** (une seule fois) | **99 crédits** (une seule fois, 10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés à la minute pour le temps de build | Identique |
 | Coût d'exécution Google Cloud | ~110,13 US$/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~129 crédits/jour (~12,90 US$/jour), facturé à l'heure au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).

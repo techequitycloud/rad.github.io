@@ -3,7 +3,7 @@ title: "Gitea sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Gitea sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gitea_GKE.md @ 40c83c3f sha256:71c8c91fedd4 -->
+<!-- translated-from: docs/modules/Gitea_GKE.md @ 92769a4a sha256:3a57c97a57a9 -->
 
 # Gitea sur GKE Autopilot {#gitea-on-gke-autopilot}
 
@@ -36,7 +36,7 @@ plutôt que de les répéter ici.
 | | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | **110 crédits** (une seule fois) | **99 crédits** (une seule fois, 10 % de moins) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Idem |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : ils sont toujours facturés au temps de build à la minute | Idem |
 | Coût d'exécution Google Cloud | ~142,62 $ US/mois, facturé à votre propre compte de facturation Google au prix catalogue | ~138 crédits/jour (~13,80 $ US/jour), mesuré à l'heure au prix catalogue plus la marge de RAD |
 
 Votre premier déploiement réussi sur RAD est exempt de frais de module, quel que soit le montant : une fois par compte, pour un module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client).

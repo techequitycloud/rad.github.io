@@ -3,7 +3,7 @@ title: "Plane sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Plane sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Plane_CloudRun.md @ 40c83c3f sha256:676cee59b24a -->
+<!-- translated-from: docs/modules/Plane_CloudRun.md @ 92769a4a sha256:3e55d5e15629 -->
 
 # Plane sur Google Cloud Run {#plane-on-google-cloud-run}
 
@@ -24,7 +24,7 @@ Ce guide se concentre sur les services cloud utilisés par Plane et sur la mani�
 | Élément | Votre propre projet | Projet géré par RAD |
 |---|---|---|
 | Frais de module | 175 crédits (une fois) | 157,50 crédits (une fois) |
-| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites, puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué. Les sessions de lab et les projets clients sont l'exception : le temps de build est toujours facturé à la minute | Identique |
+| Builds | Inclus dans le prix : pas de frais de build pour la création, 5 mises à jour par mois (mois calendaire UTC) gratuites, puis 2 crédits chacune, et rien pour la suppression ou pour un build échoué, dans la limite de 10 builds échoués par jour (UTC). Les sessions de lab et les projets clients sont l'exception : le temps de build est toujours facturé à la minute | Identique |
 | Coût d'exécution Google Cloud | ~109,88 $/mois, facturé à votre propre compte de facturation au prix catalogue de Google | ~79 crédits/jour, mesuré à l'heure au prix catalogue + marge de RAD |
 
 **Coût d'exécution par défaut dans votre propre projet**
