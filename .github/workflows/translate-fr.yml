@@ -12,6 +12,10 @@ name: French translations
 #
 # Cost guard: a broad English edit can make hundreds of pages stale at once. Above
 # max_pages the sync stops and asks for a manual run with approve_large=true.
+# Whatever the page count, translate.mjs stops cleanly after max_calls model
+# calls (default 150) and lists what it did not reach; run again to continue.
+# Stale pages send only their changed sections (see translate.mjs), and every
+# Vertex request is labelled caller=docs-translate for the billing export.
 #
 # AUTOMATIC TRANSLATION IS OFF by default: the sync job then only REPORTS which
 # French pages are out of date, in the run summary, and stays green. Retranslate
@@ -24,7 +28,7 @@ name: French translations
 # docs_translator.tf): no key is stored, and that identity can only call models.
 # Repository variables it needs: GCP_WIF_PROVIDER, GCP_TRANSLATOR_SA,
 # VERTEX_PROJECT; optional VERTEX_LOCATION (us-central1), TRANSLATE_MODEL
-# (gemini-2.5-flash).
+# (gemini-2.5-flash-lite; gemini-2.5-flash costs ~5x -- cost review 2026-11-15).
 
 # MANUAL-ONLY by owner decision 2026-10-13 (Actions spending limit): this no
 # longer runs on pull requests or on pushes to main. Start it with "Run workflow"
@@ -55,6 +59,9 @@ on:
         description: 'Proceed even above max_pages (cost: roughly proportional to pages)'
         type: boolean
         default: false
+      max_calls:
+        description: 'Stop cleanly after this many model calls (0 = no limit)'
+        default: '150'
 
 concurrency:
   group: translate-fr-${{ github.event_name == 'pull_request' && github.head_ref || 'sync' }}
@@ -87,7 +94,7 @@ jobs:
     env:
       AUTO_TRANSLATE: ${{ vars.FR_AUTO_TRANSLATE }}
       TRANSLATE_PROVIDER: vertex
-      TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'gemini-2.5-flash' }}
+      TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'gemini-2.5-flash-lite' }}
       VERTEX_PROJECT: ${{ vars.VERTEX_PROJECT }}
       VERTEX_LOCATION: ${{ vars.VERTEX_LOCATION || 'us-central1' }}
       WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
@@ -184,16 +191,21 @@ jobs:
         env:
           INCLUDE_MISSING: ${{ steps.plan.outputs.include_missing }}
           PAGES: ${{ steps.plan.outputs.pages }}
+          MAX_CALLS: ${{ inputs.max_calls || '150' }}
         run: |
+          case "$MAX_CALLS" in ''|*[!0-9]*) echo "max_calls must be a whole number"; exit 1;; esac
           flags="--from-stale"
           [ "$INCLUDE_MISSING" = "true" ] && flags="$flags --include-missing"
-          [ -n "$PAGES" ] && flags="$PAGES"
+          # An explicit list is deliberate: --force retranslates even an up-to-date page.
+          [ -n "$PAGES" ] && flags="--force $PAGES"
+          flags="$flags --max-calls $MAX_CALLS"
           # Failed pages are reported, not written; continue so the good ones still ship.
           node scripts/i18n/translate.mjs $flags > result.json || true
           cat result.json
           node -e "
             const r = require('./result.json');
-            const lines = ['', 'Translated: **' + r.translated + '** of ' + r.requested + ' (model ' + r.model + ')'];
+            const lines = ['', 'Translated: **' + r.translated + '** of ' + r.requested + ' (model ' + r.model + ', ' + r.calls + ' model calls, ' + r.incremental + ' page(s) sent only their changed sections)'];
+            if (r.stoppedBy) { lines.push('', 'Stopped at the ' + r.maxCalls + '-call limit; not translated this run (run again to continue):'); for (const p of r.notTranslated) lines.push('- ' + p); }
             if (r.failed.length) { lines.push('', 'Failed validation twice, left unchanged:'); for (const f of r.failed) lines.push('- ' + f.page + ': ' + String(f.error).split('\n')[0]); }
             require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
           "
