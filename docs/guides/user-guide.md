@@ -185,7 +185,7 @@ Deploying a module charges its **module fee** and nothing for build time: **buil
 
 - **Create** — the module fee. **Your first successful deployment is free**, whatever the module and its fee: once per account, for a single module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project). Project_GCP and Services_GCP deployed on their own are not covered: they are always charged (10 and 20 credits by default), and deploying them does not use the offer up.
 - **Update** — the first 5 successful updates of each deployment in a calendar month (UTC) are free; each further successful update costs 2 credits. Updates RAD makes itself (for example, adding a database to your shared services because a new app needs one) are free and do not count.
-- **Teardown, purge and any build that fails** — free.
+- **Teardown, purge and a build that fails** — free, up to 10 failed builds a day (UTC); past that, further failed builds are charged by the minute if you hold purchased credits, and otherwise you can build again the next day. Failures caused by RAD or Google never count. Without purchased credits your builds share 120 free build minutes a day, and at most 3 of your builds start at once (a solution's own applications excepted).
 - **The project and shared services RAD sets up beneath an application** — included. Deployed on their own, **Project_GCP** costs 10 credits and **Services_GCP** 20.
 
 **The exceptions: lab sessions and client projects.** A lab session's deployments are paid from the session's escrow, and a client project's from its wallet, and both are still charged for build time by the minute (6 credits an hour at the current rate), as well as their fees.
@@ -196,7 +196,7 @@ These figures are set by RAD's finance team, who can also switch back to chargin
 
 **VAT.** If RAD's finance team has set a VAT rate for your account, it is added to every module fee and credit charge you pay, and to the Google Cloud usage of your RAD-managed and linked projects. The confirmation dialog shows the net figures with a separate **VAT** line, and VAT must be paid from purchased credits — the dialog tells you how many more to buy if you are short. A rate change applies from your next deployment; it never re-prices one you have already confirmed.
 
-**Failed deployments cost you nothing**: no module fee and no build charge, and the same goes for a failed update or teardown. (Finance can choose to charge the module fee when a new deployment fails; the confirmation dialog says so when it does.)
+**Failed deployments cost you nothing** within that daily allowance: no module fee and no build charge, and the same goes for a failed update or teardown. (Finance can choose to charge the module fee when a new deployment fails; the confirmation dialog says so when it does.)
 
 The Credits page has these tabs:
 

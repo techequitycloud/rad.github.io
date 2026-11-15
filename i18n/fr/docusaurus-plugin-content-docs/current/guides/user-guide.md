@@ -3,7 +3,7 @@ title: "Guide de l'utilisateur"
 description: "Guide de l'utilisateur de la plateforme RAD — créer une solution à partir d'une simple description, déployer des modules et des solutions sur Google Cloud, gérer vos déploiements, et crédits et abonnements."
 ---
 
-<!-- translated-from: docs/guides/user-guide.md @ 92769a4a sha256:37276e02e46b -->
+<!-- translated-from: docs/guides/user-guide.md @ 6a7bd733 sha256:b43bab939df2 -->
 
 # Guide de l'utilisateur {#user-guide}
 
@@ -187,7 +187,7 @@ Le déploiement d'un module facture ses **frais de module** et rien pour le temp
 
 - **Créer** — les frais de module. **Votre premier déploiement réussi est gratuit**, quel que soit le module et ses frais : une fois par compte, pour un seul module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client). Project_GCP et Services_GCP déployés seuls ne sont pas couverts : ils sont toujours facturés (10 et 20 crédits par défaut), et leur déploiement n'utilise pas l'offre.
 - **Mettre à jour** — les 5 premières mises à jour réussies de chaque déploiement au cours d'un mois calendaire (UTC) sont gratuites ; chaque mise à jour réussie supplémentaire coûte 2 crédits. Les mises à jour effectuées par RAD (par exemple, l'ajout d'une base de données à vos services partagés parce qu'une nouvelle application en a besoin) sont gratuites et ne sont pas comptabilisées.
-- **Démontage, purge et tout build qui échoue** — gratuits.
+- **Démontage, purge et build qui échoue** — gratuits, dans la limite de 10 builds échoués par jour (UTC) ; au-delà, les builds échoués suivants sont facturés à la minute si vous détenez des crédits achetés, et sinon vous pourrez relancer un build le lendemain. Les échecs dus à RAD ou à Google ne sont jamais comptés. Sans crédits achetés, vos builds se partagent 120 minutes de build gratuites par jour, et au maximum 3 de vos builds démarrent en même temps (hors applications d'une même solution).
 - **Le projet et les services partagés que RAD configure sous une application** — inclus. Déployés seuls, **Project_GCP** coûte 10 crédits et **Services_GCP** 20.
 
 **Les exceptions : sessions de lab et projets clients.** Les déploiements d'une session de lab sont payés à partir du compte séquestre de la session, et ceux d'un projet client à partir de son portefeuille, et les deux sont toujours facturés pour le temps de build à la minute (6 crédits par heure au taux actuel), ainsi que pour leurs frais.
@@ -198,7 +198,7 @@ Ces chiffres sont fixés par l'équipe financière de RAD, qui peut également r
 
 **TVA.** Si l'équipe financière de RAD a défini un taux de TVA pour votre compte, il est ajouté à chaque frais de module et débit de crédit que vous payez, ainsi qu'à l'utilisation de Google Cloud de vos projets gérés par RAD et liés. La boîte de dialogue de confirmation affiche les chiffres nets avec une ligne **TVA** séparée, et la TVA doit être payée à partir des crédits achetés — la boîte de dialogue vous indique combien de crédits supplémentaires acheter si vous en manquez. Un changement de taux s'applique à partir de votre prochain déploiement ; il ne modifie jamais le prix d'un déploiement que vous avez déjà confirmé.
 
-**Les déploiements échoués ne vous coûtent rien** : pas de frais de module et pas de frais de build, et il en va de même pour une mise à jour ou un démontage échoué. (Le service financier peut choisir de facturer les frais de module lorsqu'un nouveau déploiement échoue ; la boîte de dialogue de confirmation l'indique le cas échéant.)
+**Les déploiements échoués ne vous coûtent rien** dans cette limite quotidienne : pas de frais de module et pas de frais de build, et il en va de même pour une mise à jour ou un démontage échoué. (Le service financier peut choisir de facturer les frais de module lorsqu'un nouveau déploiement échoue ; la boîte de dialogue de confirmation l'indique le cas échéant.)
 
 La page Crédits comporte ces onglets :
 
