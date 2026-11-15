@@ -116,7 +116,7 @@ A **solution** deploys several modules together as one unit, in the right order,
 
 **RAD solutions** are pre-composed by RAD — browse by category, open one to see its members, fill in the shared configuration once, and deploy the whole bundle. Members that depend on another wait for it automatically.
 
-A solution with three or more members costs less than deploying the same modules one by one: its **module fees** are discounted by 15% for three or four members, 20% for five or six, and 25% for seven or more. The discount covers module fees only — build time, and a RAD-managed project's own costs, are charged as normal. The confirmation dialog shows the discount it applied.
+A solution with three or more members costs less than deploying the same modules one by one: its **module fees** are discounted by 15% for three or four members, 20% for five or six, and 25% for seven or more. The discount applies to module fees. Build time is included in the price, discount or not (lab sessions and client projects are the exception: their builds are charged by the minute), and a RAD-managed project's own Google Cloud costs are charged as normal. The confirmation dialog shows the discount it applied.
 
 Your own solutions (**Solution Catalog → My solutions**) are composed in conversation. Describe what you want to build — "I need a marketing site with a blog and email campaigns" — and RAD suggests modules from the catalog with a short reason for each. Add the ones you want (up to 12), give it a name, and save it. Your custom solutions are private to you.
 
@@ -185,7 +185,8 @@ Deploying a module charges its **module fee** and nothing for build time: **buil
 
 - **Create** — the module fee. **Your first successful deployment is free**, whatever the module and its fee: once per account, for a single module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project). Project_GCP and Services_GCP deployed on their own are not covered: they are always charged (10 and 20 credits by default), and deploying them does not use the offer up.
 - **Update** — the first 5 successful updates of each deployment in a calendar month (UTC) are free; each further successful update costs 2 credits. Updates RAD makes itself (for example, adding a database to your shared services because a new app needs one) are free and do not count.
-- **Teardown, purge and a build that fails** — free, up to 10 failed builds a day (UTC); past that, further failed builds are charged by the minute if you hold purchased credits, and otherwise you can build again the next day. Failures caused by RAD or Google never count. Without purchased credits your builds share 120 free build minutes a day, and at most 3 of your builds start at once (a solution's own applications excepted).
+- **Teardown, purge and a build that fails** — free, up to 10 failed builds a day (UTC); past that, further failed deployments and updates are charged by the minute if you hold purchased credits, and otherwise you can build again the next day. Failures caused by RAD or Google never count. Without purchased credits your builds also share 120 free build minutes a day (UTC).
+- **Builds running at once** — on every account, with or without purchased credits, at most 3 of your builds run at once: a further deployment or update is refused until one of them finishes. A solution's own applications don't hold each other up, and teardowns and purges are never limited.
 - **The project and shared services RAD sets up beneath an application** — included. Deployed on their own, **Project_GCP** costs 10 credits and **Services_GCP** 20.
 
 **The exceptions: lab sessions and client projects.** A lab session's deployments are paid from the session's escrow, and a client project's from its wallet, and both are still charged for build time by the minute (6 credits an hour at the current rate), as well as their fees.
@@ -196,7 +197,7 @@ These figures are set by RAD's finance team, who can also switch back to chargin
 
 **VAT.** If RAD's finance team has set a VAT rate for your account, it is added to every module fee and credit charge you pay, and to the Google Cloud usage of your RAD-managed and linked projects. The confirmation dialog shows the net figures with a separate **VAT** line, and VAT must be paid from purchased credits — the dialog tells you how many more to buy if you are short. A rate change applies from your next deployment; it never re-prices one you have already confirmed.
 
-**Failed deployments cost you nothing** within that daily allowance: no module fee and no build charge, and the same goes for a failed update or teardown. (Finance can choose to charge the module fee when a new deployment fails; the confirmation dialog says so when it does.)
+**Failed deployments and updates cost you nothing** within that daily allowance: no module fee and no build charge. Past it, each further failed deployment or update is charged for its build time by the minute if you hold purchased credits. A failed teardown is always free. (Finance can choose to charge the module fee when a new deployment fails; the confirmation dialog says so when it does.)
 
 The Credits page has these tabs:
 
@@ -297,4 +298,4 @@ If you no longer need help with a ticket that isn't closed, expand it and choose
 
 ## Inviting others
 
-Your referral link is on your **Profile**, in the **Refer and earn** section (the **Credits** page also has a **Referral link** button that takes you there). People who sign up through it are linked to your account, and you earn referral credits for them once they have a successful build or buy credits (within 90 days of signing up), subject to any monthly limit the platform sets. The section shows how many of your referrals earned you credits this month and in total — a count only, never who they are. It is hidden only when the platform has turned referral rewards off.
+Your referral link is on your **Profile**, in the **Refer and earn** section (the **Credits** page also has a **Referral link** button that takes you there). People who sign up through it are linked to your account, and you earn referral credits for them once one of their builds succeeds (a create or an update) or they buy credits, within 90 days of signing up, subject to any monthly limit the platform sets. The section shows how many of your referrals earned you credits this month and in total — a count only, never who they are. It is hidden only when the platform has turned referral rewards off.

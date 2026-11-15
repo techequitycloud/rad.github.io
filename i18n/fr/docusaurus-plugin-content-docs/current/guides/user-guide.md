@@ -3,7 +3,7 @@ title: "Guide de l'utilisateur"
 description: "Guide de l'utilisateur de la plateforme RAD — créer une solution à partir d'une simple description, déployer des modules et des solutions sur Google Cloud, gérer vos déploiements, et crédits et abonnements."
 ---
 
-<!-- translated-from: docs/guides/user-guide.md @ 0878ac7d sha256:0fe43d11cd54 -->
+<!-- translated-from: docs/guides/user-guide.md @ 442aa5bd sha256:3eb2ac818273 -->
 
 # Guide de l'utilisateur {#user-guide}
 
@@ -118,7 +118,7 @@ Une **solution** déploie plusieurs modules ensemble comme une seule unité, dan
 
 Les **solutions RAD** sont pré-composées par RAD — parcourez par catégorie, ouvrez-en une pour voir ses membres, remplissez la configuration partagée une fois, et déployez l'ensemble du bundle. Les membres qui dépendent d'un autre attendent automatiquement.
 
-Une solution avec trois membres ou plus coûte moins cher que de déployer les mêmes modules un par un : ses **frais de module** sont réduits de 15 % pour trois ou quatre membres, 20 % pour cinq ou six, et 25 % pour sept ou plus. La réduction ne couvre que les frais de module — le temps de construction et les coûts propres à un projet géré par RAD sont facturés normalement. La boîte de dialogue de confirmation affiche la réduction appliquée.
+Une solution avec trois membres ou plus coûte moins cher que de déployer les mêmes modules un par un : ses **frais de module** sont réduits de 15 % pour trois ou quatre membres, 20 % pour cinq ou six, et 25 % pour sept ou plus. La réduction s'applique aux frais de module. Le temps de construction est inclus dans le prix, avec ou sans réduction (les sessions de lab et les projets clients font exception : leurs builds sont facturés à la minute), et les coûts Google Cloud propres à un projet géré par RAD sont facturés normalement. La boîte de dialogue de confirmation affiche la réduction appliquée.
 
 Vos propres solutions (**Catalogue de solutions → Mes solutions**) sont composées en conversation. Décrivez ce que vous voulez construire — "J'ai besoin d'un site marketing avec un blog et des campagnes e-mail" — et RAD suggère des modules du catalogue avec une brève raison pour chacun. Ajoutez ceux que vous voulez (jusqu'à 12), donnez-lui un nom et enregistrez-le. Vos solutions personnalisées vous sont privées.
 
@@ -187,7 +187,8 @@ Le déploiement d'un module facture ses **frais de module** et rien pour le temp
 
 - **Créer** — les frais de module. **Votre premier déploiement réussi est gratuit**, quel que soit le module et ses frais : une fois par compte, pour un seul module que vous déployez et payez vous-même (dans une solution, les frais d'une application : la première à réussir ; jamais une session de lab ou un projet client). Project_GCP et Services_GCP déployés seuls ne sont pas couverts : ils sont toujours facturés (10 et 20 crédits par défaut), et leur déploiement n'utilise pas l'offre.
 - **Mettre à jour** — les 5 premières mises à jour réussies de chaque déploiement au cours d'un mois calendaire (UTC) sont gratuites ; chaque mise à jour réussie supplémentaire coûte 2 crédits. Les mises à jour effectuées par RAD (par exemple, l'ajout d'une base de données à vos services partagés parce qu'une nouvelle application en a besoin) sont gratuites et ne sont pas comptabilisées.
-- **Démontage, purge et build qui échoue** — gratuits, dans la limite de 10 builds échoués par jour (UTC) ; au-delà, les builds échoués suivants sont facturés à la minute si vous détenez des crédits achetés, et sinon vous pourrez relancer un build le lendemain. Les échecs dus à RAD ou à Google ne sont jamais comptés. Sans crédits achetés, vos builds se partagent 120 minutes de build gratuites par jour, et au maximum 3 de vos builds démarrent en même temps (hors applications d'une même solution).
+- **Démontage, purge et build qui échoue** — gratuits, dans la limite de 10 builds échoués par jour (UTC) ; au-delà, les déploiements et mises à jour échoués suivants sont facturés à la minute si vous détenez des crédits achetés, et sinon vous pourrez relancer un build le lendemain. Les échecs dus à RAD ou à Google ne sont jamais comptés. Sans crédits achetés, vos builds se partagent également 120 minutes de build gratuites par jour (UTC).
+- **Builds simultanés** — sur tous les comptes, avec ou sans crédits achetés, au maximum 3 de vos builds s'exécutent en même temps : un nouveau déploiement ou une nouvelle mise à jour est refusé jusqu'à ce que l'un d'eux se termine. Les applications d'une même solution ne se bloquent pas entre elles, et les démontages et les purges ne sont jamais limités.
 - **Le projet et les services partagés que RAD configure sous une application** — inclus. Déployés seuls, **Project_GCP** coûte 10 crédits et **Services_GCP** 20.
 
 **Les exceptions : sessions de lab et projets clients.** Les déploiements d'une session de lab sont payés à partir du compte séquestre de la session, et ceux d'un projet client à partir de son portefeuille, et les deux sont toujours facturés pour le temps de build à la minute (6 crédits par heure au taux actuel), ainsi que pour leurs frais.
@@ -198,7 +199,7 @@ Ces chiffres sont fixés par l'équipe financière de RAD, qui peut également r
 
 **TVA.** Si l'équipe financière de RAD a défini un taux de TVA pour votre compte, il est ajouté à chaque frais de module et débit de crédit que vous payez, ainsi qu'à l'utilisation de Google Cloud de vos projets gérés par RAD et liés. La boîte de dialogue de confirmation affiche les chiffres nets avec une ligne **TVA** séparée, et la TVA doit être payée à partir des crédits achetés — la boîte de dialogue vous indique combien de crédits supplémentaires acheter si vous en manquez. Un changement de taux s'applique à partir de votre prochain déploiement ; il ne modifie jamais le prix d'un déploiement que vous avez déjà confirmé.
 
-**Les déploiements échoués ne vous coûtent rien** dans cette limite quotidienne : pas de frais de module et pas de frais de build, et il en va de même pour une mise à jour ou un démontage échoué. (Le service financier peut choisir de facturer les frais de module lorsqu'un nouveau déploiement échoue ; la boîte de dialogue de confirmation l'indique le cas échéant.)
+**Les déploiements et mises à jour échoués ne vous coûtent rien** dans cette limite quotidienne : pas de frais de module et pas de frais de build. Au-delà, chaque déploiement ou mise à jour échoué supplémentaire est facturé pour son temps de build à la minute si vous détenez des crédits achetés. Un démontage échoué est toujours gratuit. (Le service financier peut choisir de facturer les frais de module lorsqu'un nouveau déploiement échoue ; la boîte de dialogue de confirmation l'indique le cas échéant.)
 
 La page Crédits comporte ces onglets :
 
@@ -299,4 +300,4 @@ Si vous n'avez plus besoin d'aide pour un ticket qui n'est pas fermé, développ
 
 ## Inviter d'autres personnes {#inviting-others}
 
-Votre lien de parrainage se trouve sur votre **Profil**, dans la section **Parrainer et gagner** (la page **Crédits** a également un bouton **Lien de parrainage** qui vous y mène). Les personnes qui s'inscrivent via ce lien sont liées à votre compte, et vous gagnez des crédits de parrainage pour elles dès qu'elles réussissent un build ou achètent des crédits (dans les 90 jours suivant leur inscription), sous réserve de toute limite mensuelle fixée par la plateforme. La section indique combien de vos parrainages vous ont rapporté des crédits ce mois-ci et au total — un simple décompte, jamais leur identité. Elle n'est masquée que lorsque la plateforme a désactivé les récompenses de parrainage.
+Votre lien de parrainage se trouve sur votre **Profil**, dans la section **Parrainer et gagner** (la page **Crédits** a également un bouton **Lien de parrainage** qui vous y mène). Les personnes qui s'inscrivent via ce lien sont liées à votre compte, et vous gagnez des crédits de parrainage pour elles dès que l'un de leurs builds réussit (une création ou une mise à jour) ou qu'elles achètent des crédits, dans les 90 jours suivant leur inscription, sous réserve de toute limite mensuelle fixée par la plateforme. La section indique combien de vos parrainages vous ont rapporté des crédits ce mois-ci et au total — un simple décompte, jamais leur identité. Elle n'est masquée que lorsque la plateforme a désactivé les récompenses de parrainage.
