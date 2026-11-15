@@ -15,7 +15,7 @@ As an Agent your role is about referrals and commission:
 
 - Share your referral link. Everyone who signs up through it is linked to you.
 - Earn **commission in cash** on the module fees those users pay with credits they bought.
-- Earn **referral bonus credits** for everyone who signs up and then deploys successfully or buys credits, with no monthly limit.
+- Earn **referral bonus credits** for everyone who signs up and then, within 90 days, has a create or update build succeed or buys credits, with no monthly limit.
 - Track every commission, and every payout made to you, on **Credits → My Commission**.
 
 An agent's account usually also holds the **User** role, the one every signup starts with. If yours does, you keep everything a user has: deploying modules and solutions, your own credits and billing, and your deployments. See [Using RAD](using-rad.md).
@@ -32,7 +32,7 @@ Your link and code are on your **Profile** (open the profile menu, top right), i
 
 Anyone who signs up with your link is linked to your account. Self-referrals don't count, and neither does a pair of accounts referring each other.
 
-**Referral bonus credits.** Each person who signs up through your link adds referral credits to your balance once they have a successful build or buy credits, within 90 days of signing up. Ordinary users only get these up to a monthly limit. **Agents have no monthly limit**, so the card shows how many rewards you earned this month with no cap or progress bar, and beneath it your **all-time rewarded referrals**. These are counts only: RAD never shows you who the people you referred are — not their names, not their email addresses. These are *awarded* credits: you can spend them on deployments, but they are not commission and are never paid out.
+**Referral bonus credits.** Each person who signs up through your link adds referral credits to your balance once one of their builds succeeds (a create or an update) or they buy credits, within 90 days of signing up. Ordinary users only get these up to a monthly limit. **Agents have no monthly limit**, so the card shows how many rewards you earned this month with no cap or progress bar, and beneath it your **all-time rewarded referrals**. These are counts only: RAD never shows you who the people you referred are — not their names, not their email addresses. These are *awarded* credits: you can spend them on deployments, but they are not commission and are never paid out.
 
 ## How commission works
 
