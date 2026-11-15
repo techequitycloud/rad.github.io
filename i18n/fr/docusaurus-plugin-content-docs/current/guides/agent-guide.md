@@ -3,7 +3,7 @@ title: "Guide de l'agent"
 description: "Guide de l'agent de la plateforme RAD — partage de votre lien de parrainage, obtention de commissions en espèces sur les frais de module des utilisateurs parrainés, suivi sur Crédits → Ma commission, et fonctionnement des paiements."
 ---
 
-<!-- translated-from: docs/guides/agent-guide.md @ f38ac9d2 sha256:e5b7cbc84f3f -->
+<!-- translated-from: docs/guides/agent-guide.md @ 0878ac7d sha256:06b234ec7672 -->
 
 # Guide de l'agent {#agent-guide}
 
@@ -17,7 +17,7 @@ En tant qu'agent, votre rôle concerne les parrainages et les commissions :
 
 - Partagez votre lien de parrainage. Toute personne qui s'inscrit par son intermédiaire vous est liée.
 - Gagnez une **commission en espèces** sur les frais de module que ces utilisateurs paient avec les crédits qu'ils ont achetés.
-- Gagnez des **crédits bonus de parrainage** pour chaque inscription, sans limite mensuelle.
+- Gagnez des **crédits bonus de parrainage** pour chaque personne qui s'inscrit puis déploie avec succès ou achète des crédits, sans limite mensuelle.
 - Suivez chaque commission et chaque paiement qui vous est versé sur **Crédits → Ma commission**.
 
 Un compte d'agent détient généralement aussi le rôle **Utilisateur**, celui avec lequel chaque inscription commence. Si le vôtre le fait, vous conservez tout ce qu'un utilisateur a : le déploiement de modules et de solutions, vos propres crédits et facturation, et vos déploiements. Voir [Utiliser RAD](using-rad.md).
@@ -34,7 +34,7 @@ Votre lien et votre code se trouvent dans votre **Profil** (ouvrez le menu du pr
 
 Toute personne qui s'inscrit avec votre lien est liée à votre compte. Les auto-parrainages ne comptent pas, pas plus qu'une paire de comptes se parrainant mutuellement.
 
-**Crédits bonus de parrainage.** Chaque inscription via votre lien ajoute des crédits de parrainage à votre solde. Les utilisateurs ordinaires ne les obtiennent que jusqu'à une limite mensuelle. **Les agents n'ont pas de limite mensuelle**, donc la carte indique combien de récompenses vous avez gagnées ce mois-ci sans plafond ni barre de progression, et en dessous vos **parrainages récompensés de tous les temps**. Ce ne sont que des décomptes : RAD ne vous montre jamais qui sont les personnes que vous avez parrainées — ni leurs noms, ni leurs adresses e-mail. Ce sont des crédits *offerts* : vous pouvez les dépenser pour des déploiements, mais ce ne sont pas des commissions et ils ne sont jamais versés.
+**Crédits bonus de parrainage.** Chaque personne qui s'inscrit via votre lien ajoute des crédits de parrainage à votre solde dès qu'elle réussit un build ou achète des crédits, dans les 90 jours suivant son inscription. Les utilisateurs ordinaires ne les obtiennent que jusqu'à une limite mensuelle. **Les agents n'ont pas de limite mensuelle**, donc la carte indique combien de récompenses vous avez gagnées ce mois-ci sans plafond ni barre de progression, et en dessous vos **parrainages récompensés de tous les temps**. Ce ne sont que des décomptes : RAD ne vous montre jamais qui sont les personnes que vous avez parrainées — ni leurs noms, ni leurs adresses e-mail. Ce sont des crédits *offerts* : vous pouvez les dépenser pour des déploiements, mais ce ne sont pas des commissions et ils ne sont jamais versés.
 
 ## Comment fonctionne la commission {#how-commission-works}
 

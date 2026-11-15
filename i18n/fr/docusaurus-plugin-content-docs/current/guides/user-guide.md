@@ -3,7 +3,7 @@ title: "Guide de l'utilisateur"
 description: "Guide de l'utilisateur de la plateforme RAD — créer une solution à partir d'une simple description, déployer des modules et des solutions sur Google Cloud, gérer vos déploiements, et crédits et abonnements."
 ---
 
-<!-- translated-from: docs/guides/user-guide.md @ 6a7bd733 sha256:b43bab939df2 -->
+<!-- translated-from: docs/guides/user-guide.md @ 0878ac7d sha256:0fe43d11cd54 -->
 
 # Guide de l'utilisateur {#user-guide}
 
@@ -299,4 +299,4 @@ Si vous n'avez plus besoin d'aide pour un ticket qui n'est pas fermé, développ
 
 ## Inviter d'autres personnes {#inviting-others}
 
-Votre lien de parrainage se trouve sur votre **Profil**, dans la section **Parrainer et gagner** (la page **Crédits** a également un bouton **Lien de parrainage** qui vous y mène). Les personnes qui s'inscrivent via ce lien sont liées à votre compte, et vous gagnez des crédits de parrainage pour elles, sous réserve de toute limite mensuelle fixée par la plateforme. La section indique combien de vos parrainages vous ont rapporté des crédits ce mois-ci et au total — un simple décompte, jamais leur identité. Elle n'est masquée que lorsque la plateforme a désactivé les récompenses de parrainage.
+Votre lien de parrainage se trouve sur votre **Profil**, dans la section **Parrainer et gagner** (la page **Crédits** a également un bouton **Lien de parrainage** qui vous y mène). Les personnes qui s'inscrivent via ce lien sont liées à votre compte, et vous gagnez des crédits de parrainage pour elles dès qu'elles réussissent un build ou achètent des crédits (dans les 90 jours suivant leur inscription), sous réserve de toute limite mensuelle fixée par la plateforme. La section indique combien de vos parrainages vous ont rapporté des crédits ce mois-ci et au total — un simple décompte, jamais leur identité. Elle n'est masquée que lorsque la plateforme a désactivé les récompenses de parrainage.

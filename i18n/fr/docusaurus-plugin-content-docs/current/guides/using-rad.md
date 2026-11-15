@@ -3,7 +3,7 @@ title: "Utiliser RAD"
 description: "Comment utiliser la plateforme RAD : connexion, navigation, rôles, déploiement de modules sur votre propre projet Google Cloud, crédits et facturation."
 ---
 
-<!-- translated-from: docs/guides/using-rad.md @ 6a7bd733 sha256:cc9bcf6b575b -->
+<!-- translated-from: docs/guides/using-rad.md @ 0878ac7d sha256:7a863bd5a77b -->
 
 # Utiliser RAD {#using-rad}
 
@@ -189,7 +189,7 @@ Les rapports à l'échelle de la plateforme restent une vue administrateur et fi
 
 L'onglet **Send Message** de la page **Help** est un formulaire de contact qui génère un ticket de support et envoie un e-mail à l'équipe de support. La création d'un ticket nécessite des crédits achetés (un abonnement ou une recharge) tant que les crédits sont en vente, et vous pouvez en créer jusqu'à 5 en 24 heures. L'onglet **My Tickets** à côté liste les tickets que vous avez créés, du plus récent au plus ancien, avec leur statut (**New**, **In progress**, **Resolved** ou **Closed**) — l'envoi d'un ticket vous y amène, vous voyez donc celui que vous venez de créer. Selon votre rôle, vous pouvez voir plus d'onglets : **Setup Requests** (administrateur et finance) et **Support Tickets** (administrateur, support et finance). (Les administrateurs voient un formulaire de message sur Send Message au lieu du formulaire de contact, et n'ont pas d'onglet My Tickets.)
 
-Votre **lien de parrainage** se trouve sur votre **Profile**, dans la section **Refer and earn** — ouvrez le menu de profil en haut à droite. Il est affiché chaque fois que le programme de parrainage est actif, y compris lorsque les parrainages sont illimités (il n'est jamais affiché aux administrateurs), et la page **Credits** a un bouton **Referral link** qui vous y mène. Toute personne qui s'inscrit via votre lien est liée à votre compte.
+Votre **lien de parrainage** se trouve sur votre **Profile**, dans la section **Refer and earn** — ouvrez le menu de profil en haut à droite. Il est affiché chaque fois que le programme de parrainage est actif, y compris lorsque les parrainages sont illimités (il n'est jamais affiché aux administrateurs), et la page **Credits** a un bouton **Referral link** qui vous y mène. Toute personne qui s'inscrit via votre lien est liée à votre compte, et le bonus de parrainage est versé lorsqu'elle réussit son premier build ou achète des crédits, dans les 90 jours suivant son inscription.
 
 Vous pouvez également accéder à l'aide via le lien **Contact Us** dans le pied de page. Pour suggérer une amélioration plutôt que de signaler un problème, utilisez le lien **Feedback** à côté.
 
