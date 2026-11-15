@@ -15,7 +15,9 @@
 #        [--translate-pages "docs/labs/X.md ..."]  exactly these English pages
 #
 # translate calls an AI model (Anthropic, via scripts/i18n/translate.mjs) and
-# writes French pages under i18n/fr for you to review and commit. It needs
+# writes French pages under i18n/fr for you to review and commit. It stops after
+# 150 model calls (translate.mjs --max-calls); preview a run's calls and cost
+# with: node scripts/i18n/translate.mjs --from-stale --dry-run It needs
 # ANTHROPIC_API_KEY exported in your shell; without it the section is SKIPPED.
 # The key is only passed through the environment, never printed. The Vertex
 # provider the GitHub workflow uses is deliberately not used here: it would call
@@ -83,6 +85,7 @@ run_translate() {
       fi
       args+=("$p")
     done
+    args=(--force "${args[@]}")
   else
     args=(--from-stale --max "$TMAX")
   fi
