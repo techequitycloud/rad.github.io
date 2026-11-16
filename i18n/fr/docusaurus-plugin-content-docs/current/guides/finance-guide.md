@@ -3,7 +3,7 @@ title: "Guide financier"
 description: "Guide financier de la plateforme RAD — paramètres de tarification et de crédits, octrois de crédits et codes d'événement, revenus et paiements, rapprochement des coûts Google Cloud et supervision des sessions de lab."
 ---
 
-<!-- translated-from: docs/guides/finance-guide.md @ 442aa5bd sha256:b3f97bc4e263 -->
+<!-- translated-from: docs/guides/finance-guide.md @ 36c23464 sha256:bfb78818f01f -->
 
 # Guide financier {#finance-guide}
 
@@ -75,6 +75,14 @@ Configurez les paramètres globaux de l'économie des crédits.
 7. Enregistrez les **crédits promotionnels Google** de RAD lui-même, afin qu'une alerte se déclenche avant qu'ils ne s'épuisent : **Google Promotional Credits Left** (USD) et **Google Promotional Credits Expiry**, tous deux copiés depuis la console de facturation Google Cloud (**Billing** > **Credits**), et **Promotional Credits Warning** (combien de jours à l'avance avertir, 30 par défaut). Vide ou 0 signifie non enregistré.
 8. Listez les **Internal Accounts** : les domaines et adresses e-mail, séparés par des virgules, qui appartiennent à RAD. Les rapports Revenue et le rapport de campagne des labs les excluent par défaut (vide signifie les domaines TechEquity). Les versements, commissions, soldes et la facturation ne sont jamais affectés.
 9. Les cinq **interrupteurs de lab** désactivent chacun une fonctionnalité de lab sans arrêter tous les labs, et sont activés par défaut : **Lab Place-Price Check** (refuse les places payantes dont le prix est inférieur à leur propre coût ; ne le désactivez que si une estimation erronée bloque tous les labs payants), **Lab Automatic Retry** (une nouvelle tentative automatique d'un environnement en échec), **Lab Scheduled Start**, **Lab Trainer Reminders** et **Lab Follow-Up Emails**.
+
+10. Définissez les **limites IA**, qui bornent l'usage des fonctionnalités IA de RAD (Ask AI, l'Assistant conversationnel, Build Solution with AI, les correctifs suggérés et la réponse du formulaire de support). L'usage de l'IA n'est jamais facturé en crédits : ces réglages sont donc le seul contrôle de ce qu'il coûte à RAD. Une modification enregistrée prend effet en quelques minutes :
+   - **AI Calls per Day (per Paying Account)** — 100 par défaut (de 1 à 1 000), partagés par toutes les fonctionnalités IA. Un compte est considéré comme payant lorsqu'il a acheté des crédits dans la fenêtre ci-dessous, ou qu'il a un rôle de personnel (administrateur, partenaire, finance, support, agent ou formateur).
+   - **AI Calls per Day (per Free Account)** — 20 par défaut (de 1 à 1 000), et jamais plus que le chiffre payant. Un compte gratuit qui l'atteint est informé qu'acheter des crédits ou s'abonner le porte au chiffre payant.
+   - **Paid AI Allowance Lasts (Days After a Purchase)** — 90 par défaut (de 30 à 90). Une recharge ou un paiement d'abonnement maintient un compte au chiffre payant pendant ce nombre de jours ; détenir encore des crédits achetés lors d'un achat plus ancien ne suffit pas. Un renouvellement d'abonnement compte comme un achat.
+   - **AI Calls per Day (Platform)** — 1 000 par défaut (de 1 à 100 000) : le plafond pour l'ensemble de la plateforme sur une journée UTC.
+   - **AI Calls Kept for Paying Customers and Staff** — 50 % par défaut (de 0 % à 90 %) de ce plafond, de sorte que les comptes non payants ne peuvent jamais en utiliser plus que le reste.
+   - **Free AI-Advised Failed Builds** — 3 par défaut (de 0 à 10) : le nombre de ses propres builds en échec sur lesquels un propriétaire sans crédits achetés peut demander **Suggest fixes**.
 
 Cet onglet contient également **Adjust All Credits**, qui applique le montant que vous saisissez au solde de **chaque** utilisateur à la fois — positif pour accorder, négatif pour déduire. Cochez **Free** pour déplacer les crédits offerts, ou laissez-le vide pour déplacer les crédits achetés. Les ajustements importants ne seront pas soumis tant que vous n'aurez pas donné une raison et tapé la phrase de confirmation affichée. Utilisez Credit Management ci-dessous pour modifier une seule personne.
 

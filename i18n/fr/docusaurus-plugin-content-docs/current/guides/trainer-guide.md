@@ -3,7 +3,7 @@ title: "Guide du formateur"
 description: "Guide du formateur de la plateforme RAD — gérer des sessions de lab : créer une session, choisir qui paie, intégrer les participants, provisionner et démarrer les environnements, et comment les crédits inutilisés vous sont restitués."
 ---
 
-<!-- translated-from: docs/guides/trainer-guide.md @ 92769a4a sha256:124634214ffd -->
+<!-- translated-from: docs/guides/trainer-guide.md @ 36c23464 sha256:346275062e67 -->
 
 # Guide du formateur {#trainer-guide}
 
@@ -35,7 +35,7 @@ Sur **Solutions → Managed Environments**, filtrez sur **Lab sessions** et choi
 
 - **Session name** — jusqu'à 100 caractères.
 - **Participant emails** — collez une liste. La boîte de dialogue confirme le nombre d'adresses reconnues. Une adresse qu'elle ne peut pas lire empêche la création de toute la session, donc rien n'est facturé pour une liste qui n'a été que partiellement comprise. Le nombre de participants qu'une session peut contenir est défini par votre administrateur.
-- **Credits per participant** — l'allocation de chaque participant. Elle ne peut pas être inférieure au minimum dont un environnement de lab a besoin, ni supérieure au plafond fixé par votre administrateur.
+- **Credits per participant** — l'allocation de chaque participant. Elle ne peut pas être inférieure au minimum dont un environnement de lab a besoin, ni supérieure au plafond fixé par votre administrateur. Lorsque les participants achètent leur propre place, ce champ s'intitule **Price of a place (credits)**, et dans une session partagée **Credits held per participant** (rien n'est construit à partir de celui-ci, donc 1 suffit).
 - **Duration (minutes)** — combien de temps l'environnement de chaque participant s'exécute une fois que son chronomètre démarre, jusqu'à 24 heures.
 - **Countdown starts** — **By trainer** (vous démarrez les chronomètres) ou **When ready** (chaque chronomètre démarre dès que cet environnement est construit).
 - **Region** — l'une des régions de RAD, fixe pour la session.
@@ -55,7 +55,7 @@ Vous décidez lors de la création de la session. **Ce choix est figé une fois 
 
 **TVA.** Si l'équipe financière de RAD a défini un taux de TVA pour celui qui paie une place, cette place coûte l'allocation plus la TVA, de sorte que l'allocation dure aussi longtemps que le plan l'indique : votre taux pour une session que vous financez ou une place que vous payez, le propre taux du participant pour une place qu'il achète.
 
-**Le prix minimum de la place.** Dans une session où les participants paient pour des environnements individuels, **Provision** est refusé si une place coûte moins que ce dont un environnement a réellement besoin : ses builds (tarifées de manière conservative, car les builds de lab s'exécutent souvent plus lentement que d'habitude), son démantèlement et son coût d'exécution Google Cloud prévu pendant le cours — et, dans une session **By trainer**, pendant l'attente avant que vous n'appuyiez sur Start — plus une marge de 25 %. La boîte de dialogue nomme le prix le plus bas qui fonctionne. Augmentez le prix ; vous pourrez alors payer les places des participants qui ne peuvent pas se le permettre (ci-dessous). Les sessions partagées sont exemptées, car les participants n'ont pas leur propre environnement à configurer ; dans une session que vous financez, le plan ne fait qu'avertir.
+**Le prix minimum de la place.** Dans une session où les participants paient pour des environnements individuels, **Provision** est refusé si une place coûte moins que ce dont un environnement a réellement besoin : ses builds (tarifées de manière conservative, car les builds de lab s'exécutent souvent plus lentement que d'habitude), son démantèlement et son coût d'exécution Google Cloud prévu pendant le cours — et, dans une session **By trainer**, pendant l'attente avant que vous n'appuyiez sur Start — plus une marge de 25 %. La boîte de dialogue nomme le prix le plus bas qui fonctionne et propose **Raise the price to N credits** : les nouveaux participants paient alors le nouveau prix, ceux qui ont déjà payé gardent leur place sans rien payer de plus, et le prix peut être augmenté mais jamais baissé à nouveau. Les places déjà payées à l'ancien prix nécessitent **Add N credits to each of these places**, pris sur vos crédits achetés, que la même boîte de dialogue propose. Vous pouvez aussi payer les places des participants qui ne peuvent pas se le permettre (ci-dessous). Pour fixer le bon prix avant de créer la session, utilisez **Price my class** dans la boîte de dialogue de création : choisissez le module que vous prévoyez d'utiliser et elle affiche le prix par place le plus bas que RAD acceptera de provisionner pour cette durée de cours, avec **Use N credits** pour le reporter dans le champ. Les sessions partagées sont exemptées, car les participants n'ont pas leur propre environnement à configurer ; dans une session que vous financez, le plan ne fait qu'avertir.
 
 Les invitations et la bannière de paiement énoncent l'offre en une ligne, par exemple "10 crédits (1 $) pour un environnement de 3 heures", de sorte que la limite de temps n'est jamais une surprise.
 
@@ -132,6 +132,8 @@ Le lendemain de la fin d'une session, chaque participant qui a conservé sa plac
 Chaque participant reçoit un e-mail indiquant que son lab est terminé et pourquoi : son temps était écoulé, ses crédits étaient épuisés, ou il a été terminé plus tôt. Il indique que **vous** l'avez terminé seulement lorsque vous l'avez fait ; lorsqu'un administrateur ou le service financier l'a terminé, il indique que le lab a été terminé plus tôt.
 
 Utilisez **End now** pour terminer toute la session à tout moment. Cela arrête immédiatement les dépenses de la session mais ne déplace pas d'argent lui-même : RAD vérifie toutes les 10 minutes les sessions prêtes à être réglées, et règle la vôtre une fois que Google a signalé ses coûts cloud (voir [Quand une session est réglée](#when-a-session-settles)). Si aucun environnement n'a jamais été construit, il n'y a rien à attendre, et le remboursement arrive à la prochaine vérification. Une session que personne ne provisionne est automatiquement terminée après 14 jours.
+
+Une fois une session réglée, **How your class went** la résume — combien de participants ont démarré et combien d'environnements sont devenus prêts — à côté des chiffres du règlement, avec **Run this class again**, qui ouvre une nouvelle session pré-remplie à partir de celle-ci (comme **Duplicate session**).
 
 ### Exporter et réutiliser une session {#exporting-and-reusing-a-session}
 

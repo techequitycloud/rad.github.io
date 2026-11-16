@@ -3,7 +3,7 @@ title: "Guide de support"
 description: "Guide de support de la plateforme RAD — gestion de la file d'attente des tickets de support et visualisation des déploiements des clients dont les tickets ouverts vous sont attribués."
 ---
 
-<!-- translated-from: docs/guides/support-guide.md @ f38ac9d2 sha256:73c47869f1a1 -->
+<!-- translated-from: docs/guides/support-guide.md @ 36c23464 sha256:bd6fe7f934d8 -->
 
 # Guide de support {#support-guide}
 
@@ -46,7 +46,7 @@ Lorsqu'un utilisateur demande comment vous joindre, dirigez-le vers **Help → S
 
 Un ticket créé à partir de la fonction **Ask for help** (demander de l'aide) d'un déploiement échoué contient l'ID, le statut et le niveau de projet de ce déploiement, ainsi que **What the platform already found** (ce que la plateforme a déjà trouvé) : l'explication de l'échec connu qui a été montrée au client, toute suggestion d'IA déjà générée pour ce build, et s'il l'a vue avant de déposer le ticket. Un tel ticket est classé comme **Technical** (technique) à moins que le client n'ait choisi une autre catégorie, et est élevé à une priorité au moins **High** (élevée) lorsque le déploiement se trouve dans un projet de niveau production. Commencez par ce diagnostic : le client l'a déjà vu et a jugé qu'il ne résolvait pas son problème, donc le lui répéter aide rarement. Un déploiement n'est attaché que lorsque le client pouvait le voir lui-même.
 
-De nombreux échecs ne vous parviennent jamais. Lorsque RAD reconnaît un échec, il en explique la cause à l'étape échouée et dans l'e-mail d'échec, les **Suggested fixes** (correctifs suggérés) de l'IA couvrent une grande partie du reste, et avant qu'un ticket ne soit envoyé, le client se voit montrer ce que RAD sait déjà et on lui demande si cela résout le problème. Un client dont le déploiement est bloqué en cours peut utiliser **Check status** (vérifier le statut) pour le corriger lui-même, sans ticket.
+De nombreux échecs ne vous parviennent jamais. Lorsque RAD reconnaît un échec, il en explique la cause à l'étape échouée et dans l'e-mail d'échec, les **Suggested fixes** (correctifs suggérés) de l'IA couvrent une grande partie du reste, et avant qu'un ticket ne soit envoyé, le client se voit montrer ce que RAD sait déjà et on lui demande si cela résout le problème. Sur le formulaire **Send Message** aussi, le client voit d'abord **Before you send this** : une question de facturation reçoit une réponse tirée des enregistrements de son propre compte, et toute autre question une réponse IA tirée des guides de RAD (pour les clients disposant de crédits achetés et pour le personnel ; elle compte dans leur allocation IA quotidienne). Il peut toujours envoyer le ticket. Un client dont le déploiement est bloqué en cours peut utiliser **Check status** (vérifier le statut) pour le corriger lui-même, sans ticket.
 
 Les utilisateurs peuvent suivre leurs propres tickets : l'onglet **My Tickets** (mes tickets) de la page Help affiche chaque ticket qu'ils ont créé, le plus récent en premier, avec son statut (**New** (nouveau), **In progress** (en cours), **Resolved** (résolu) ou **Closed** (fermé)). Le statut que vous définissez est donc ce que le client voit. Vos **notes** sont internes et ne sont jamais montrées au client, pas plus que la personne à qui le ticket est attribué.
 
