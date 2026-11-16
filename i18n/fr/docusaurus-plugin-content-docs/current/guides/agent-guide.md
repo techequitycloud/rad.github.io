@@ -3,7 +3,7 @@ title: "Guide de l'agent"
 description: "Guide de l'agent de la plateforme RAD — partage de votre lien de parrainage, obtention de commissions en espèces sur les frais de module des utilisateurs parrainés, suivi sur Crédits → Ma commission, et fonctionnement des paiements."
 ---
 
-<!-- translated-from: docs/guides/agent-guide.md @ 442aa5bd sha256:0caad6376522 -->
+<!-- translated-from: docs/guides/agent-guide.md @ 36c23464 sha256:99b0fcea5713 -->
 
 # Guide de l'agent {#agent-guide}
 
@@ -42,7 +42,7 @@ Vous gagnez une part des **frais de module** que vos utilisateurs parrainés pai
 
 | Compte pour la commission | Ne compte jamais |
 |---|---|
-| Les frais propres à un module, y compris les frais du projet Google Cloud et des modules de services partagés que RAD configure à côté | Les frais de build (basés sur le temps) et l'utilisation du projet Google Cloud |
+| Les frais propres à un module, y compris les frais fixes d'un module de projet Google Cloud ou de services partagés déployé seul (configurés sous une application, ils sont inclus dans son prix et n'ont pas de frais propres) | Les frais de build (basés sur le temps) et l'utilisation du projet Google Cloud |
 | La partie des frais payée avec des crédits achetés | La partie payée avec des crédits gratuits ou offerts (inscription, mensuels, parrainage, codes d'événement) |
 | | La surtaxe du projet en libre-service |
 | | Tout ce qui est dépensé dans une session de **lab** (formation) |

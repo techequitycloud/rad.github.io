@@ -3,7 +3,7 @@ title: "Guide du partenaire"
 description: "Guide du partenaire de la plateforme RAD — connexion de votre dépôt GitHub, publication et synchronisation de vos propres modules, et partage des revenus lorsque d'autres les déploient."
 ---
 
-<!-- translated-from: docs/guides/partner-guide.md @ f38ac9d2 sha256:095759074b0a -->
+<!-- translated-from: docs/guides/partner-guide.md @ 36c23464 sha256:37e5df8dcf55 -->
 
 # Guide du partenaire {#partner-guide}
 
@@ -53,7 +53,7 @@ Sur **Solutions → Solution Catalog → RAD modules**, vous voyez deux sous-ong
 - **Partner modules** — les modules que vous avez publiés à partir de votre propre dépôt. C'est votre espace de travail pour les tests et les itérations.
 - **Platform modules** — les modules publiés par RAD, ainsi que les modules publics d'autres partenaires.
 
-Tous les autres voient un catalogue combiné unique de modules publics. Chaque carte de module affiche la description, un lien vers la documentation, une note moyenne en étoiles, le nombre de fois où il a été déployé et son prix : les frais de module (ou **Free module** s'il n'y en a pas) plus une estimation du build.
+Tous les autres voient un catalogue combiné unique de modules publics. Chaque carte de module affiche la description, un lien vers la documentation, une note moyenne en étoiles, le nombre de fois où il a été déployé et son prix : les frais de module (ou **Free module** s'il n'y en a pas), facturés une fois, lorsque le déploiement réussit pour la première fois. Le temps de build est inclus dans le prix.
 
 Le déploiement de votre propre module dispense des **frais de module** — le coût en crédits du module n'est pas facturé lorsque vous le déployez vous-même. Le temps de build est inclus dans le prix pour vous comme pour tout le monde, donc un auto-déploiement de votre propre module est gratuit, à l'exception des mises à jour au-delà de l'allocation mensuelle.
 

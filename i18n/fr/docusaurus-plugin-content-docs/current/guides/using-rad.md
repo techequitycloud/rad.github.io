@@ -3,7 +3,7 @@ title: "Utiliser RAD"
 description: "Comment utiliser la plateforme RAD : connexion, navigation, rôles, déploiement de modules sur votre propre projet Google Cloud, crédits et facturation."
 ---
 
-<!-- translated-from: docs/guides/using-rad.md @ 442aa5bd sha256:4409daad76a5 -->
+<!-- translated-from: docs/guides/using-rad.md @ 36c23464 sha256:40007ecf2468 -->
 
 # Utiliser RAD {#using-rad}
 
@@ -44,7 +44,7 @@ La barre de navigation supérieure n'affiche que les éléments pertinents pour 
 
 - Un **menu déroulant de profil** (en haut à droite) avec **Your Profile** et **Sign Out**.
 - Un **sélecteur de langue** dans la barre supérieure, à côté du contrôle du thème clair/sombre.
-- **Ask AI** dans la barre supérieure (dans le menu sur un téléphone) : posez des questions à l'assistant IA de RAD sur les modules, la tarification ou les déploiements en langage clair. Il se trouve également sur les pages de connexion, de tarification et de guides. Dans la console, il répond à partir de ces guides et lie la section qu'il a utilisée. Ses réponses peuvent être erronées, alors vérifiez tout ce qui est important ; chaque fois que vous l'ouvrez, la conversation recommence à zéro.
+- **Ask AI** dans la barre supérieure (dans le menu sur un téléphone) : posez des questions à l'assistant IA de RAD sur les modules, la tarification ou les déploiements en langage clair. Il se trouve également sur les pages de connexion, de tarification et de guides. Dans la console, il répond à partir de ces guides et lie la section qu'il a utilisée. Ses réponses peuvent être erronées, alors vérifiez tout ce qui est important ; chaque fois que vous l'ouvrez, la conversation recommence à zéro. Dans la console, il nécessite des crédits achetés ou un rôle de personnel.
 - **Pricing**, juste avant **Help** dans la navigation supérieure — les prix de RAD, affichés dans la console.
 - Dans le pied de page : **Contact Us** (vers la page **Help**), **Feedback** (le tableau de feedback public de RAD, sur fider.radmodules.dev, où vous pouvez suggérer et voter des améliorations), les documents Conditions et Confidentialité, **Cookie settings**, et **Pricing** à nouveau.
 
@@ -84,7 +84,7 @@ Voir les guides de rôle à la fin pour les listes complètes des tâches.
 
 ### Le catalogue de modules (Solutions → Solution Catalog → RAD modules) {#the-module-catalog-solutions--solution-catalog--rad-modules}
 
-**RAD modules**, sur l'onglet **Solution Catalog** de **Solutions**, est le catalogue de modules. Chaque module apparaît comme une **carte** affichant sa description, un lien vers la documentation, une note moyenne en étoiles, le nombre de fois où il a été déployé, et son prix : les **frais** uniques plus une estimation du **build**, affichés de la même manière sur chaque carte du catalogue.
+**RAD modules**, sur l'onglet **Solution Catalog** de **Solutions**, est le catalogue de modules. Chaque module apparaît comme une **carte** affichant sa description, un lien vers la documentation, une note moyenne en étoiles, le nombre de fois où il a été déployé, et son prix : les **frais** uniques, facturés lorsque le déploiement réussit pour la première fois, affichés de la même manière sur chaque carte du catalogue. Le temps de build est inclus dans le prix.
 
 Il existe deux types de modules :
 
@@ -162,6 +162,10 @@ La page **Credits** contient :
 Pour acheter des crédits, choisissez une devise et un montant, sélectionnez un fournisseur de paiement et finalisez le paiement sur la page sécurisée du fournisseur. Vos crédits sont ajoutés automatiquement une fois le paiement confirmé.
 
 Certaines plateformes exigent des crédits *achetés* (pas seulement des crédits offerts) pour certains déploiements — la boîte de dialogue de confirmation vous indiquera quand cela s'applique.
+
+### Les fonctionnalités IA et leur limite quotidienne {#ai-features-and-their-daily-limit}
+
+Les fonctionnalités IA de RAD — **Ask AI**, l'**Assistant conversationnel**, **Build Solution with AI**, **Suggest fixes** et la réponse IA du formulaire de support — ne coûtent jamais de crédits. Elles partagent une seule allocation par compte : **100 requêtes par jour** si vous avez acheté des crédits (une recharge ou un paiement d'abonnement) au cours des 90 derniers jours ou si vous avez un rôle de personnel, sinon **20**. Une fois les 20 utilisées, RAD vous le signale et vous indique qu'acheter des crédits ou vous abonner la porte à 100. Voir le [Guide de l'utilisateur](user-guide.md#ai-requests-each-day).
 
 ### Facturation et abonnements {#billing-and-subscriptions}
 
