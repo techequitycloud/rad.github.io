@@ -3,7 +3,7 @@ title: "Services GCP — Guide de lab"
 description: "Lab pratique : déployez le module de fondation Services GCP — VPC, réseau et infrastructure Google Cloud partagée requise par tous les modules RAD."
 ---
 
-<!-- translated-from: docs/labs/Services_GCP.md @ 3055034 sha256:6f2b796e01e9 -->
+<!-- translated-from: docs/labs/Services_GCP.md @ d8297b62 sha256:5f3966a133b3 -->
 
 # Services GCP — Guide de lab {#services-gcp--lab-guide}
 
@@ -90,7 +90,7 @@ export NFS_VM=$(gcloud compute instances list \
 
 ### Étape 1.1 — Configurer les variables {#step-11--configure-variables}
 
-Les variables se configurent dans le formulaire de configuration du module de la plateforme RAD. Le formulaire de création ne demande que la première page de paramètres (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et les régions) ; tout le reste se définit ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour. Le tableau ci-dessous présente les variables les plus couramment ajustées ; le **[Guide de configuration](https://docs.radmodules.dev/docs/modules/Services_GCP)** documente chaque variable, regroupées exactement comme le formulaire les présente, avec pour chaque groupe une note de décision *« Choosing… »* expliquant les compromis coût / disponibilité / sécurité qui sous-tendent le choix.
+Les variables se configurent dans le formulaire de configuration du module de la plateforme RAD. Le formulaire de création ne demande que la première page de paramètres (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et les régions) ; tout le reste se définit ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (sur un environnement de lab, seul un administrateur peut l'utiliser). Le tableau ci-dessous présente les variables les plus couramment ajustées ; le **[Guide de configuration](https://docs.radmodules.dev/docs/modules/Services_GCP)** documente chaque variable, regroupées exactement comme le formulaire les présente, avec pour chaque groupe une note de décision *« Choosing… »* expliquant les compromis coût / disponibilité / sécurité qui sous-tendent le choix.
 
 > **Les paramètres sont validés au moment du plan.** Vous n'avez pas à retenir de mémoire toutes les combinaisons valides — le module rejette les valeurs non valides (un `tenant_id` mal formé, une capacité Filestore inférieure au minimum du niveau, un seuil de budget hors de `0–1`) et les combinaisons non valides (un réplica en lecture sans instance principale, un périmètre VPC-SC appliqué sans IP autorisées, un module complémentaire GKE sans cluster) *avant* toute création, avec un message nommant la variable en cause. Considérez un plan sans erreur comme la confirmation que les règles de valeurs et de combinaisons sont respectées — le dimensionnement et les choix de topologie CIDR restent sous votre responsabilité.
 

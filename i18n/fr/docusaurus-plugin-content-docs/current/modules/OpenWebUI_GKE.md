@@ -3,7 +3,7 @@ title: "Open WebUI sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Open WebUI sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenWebUI_GKE.md @ 92769a4a sha256:21a10416d561 -->
+<!-- translated-from: docs/modules/OpenWebUI_GKE.md @ d8297b62 sha256:3713fe093a30 -->
 
 # Open WebUI sur GKE Autopilot {#open-webui-on-gke-autopilot}
 
@@ -116,7 +116,7 @@ GKE Autopilot ne se met pas à l'échelle à zéro entre les requêtes. L'option
 
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant
   obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite
-  d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant
+  d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant
   paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés
   reviennent au formateur.
 - **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute l'application pour un client à partir d'un

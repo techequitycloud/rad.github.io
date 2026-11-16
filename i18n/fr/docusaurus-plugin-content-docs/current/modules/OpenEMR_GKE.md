@@ -3,7 +3,7 @@ title: "OpenEMR sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'OpenEMR sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenEMR_GKE.md @ 92769a4a sha256:c5c996dc850e -->
+<!-- translated-from: docs/modules/OpenEMR_GKE.md @ d8297b62 sha256:9c34802daae9 -->
 
 # OpenEMR sur GKE Autopilot {#openemr-on-gke-autopilot}
 
@@ -124,7 +124,7 @@ GKE Autopilot ne s'adapte pas à zéro entre les requêtes. L'option ci-dessus n
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose de l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite fixée par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose de l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite fixée par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.

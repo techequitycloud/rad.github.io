@@ -3,7 +3,7 @@ title: "Jitsi sur GKE Autopilot — Guide de lab"
 description: "Lab pratique : déployez Jitsi sur GKE Autopilot dans votre propre projet Google Cloud — configuration guidée, vérification, opérations, observabilité et suppression."
 ---
 
-<!-- translated-from: docs/labs/Jitsi_GKE.md @ 2829548 sha256:59efc1e90409 -->
+<!-- translated-from: docs/labs/Jitsi_GKE.md @ d8297b62 sha256:94a58091fa38 -->
 
 # Jitsi sur GKE Autopilot — Guide de lab {#jitsi-on-gke-autopilot--lab-guide}
 
@@ -70,9 +70,7 @@ n'y a pas de base de données.
   entrées du Guide de configuration — y compris les entrées de mise à l'échelle et
   de version dans les tâches Day-2 — sont modifiées ultérieurement avec
   **Update** sur la page du déploiement après avoir coché **Enable advanced mode**,
-  ce qui nécessite un solde de crédits couvrant le coût de build estimé de la
-  mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un
-  environnement de lab, seul un administrateur peut utiliser le mode avancé.
+  ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le
   projet.
 - Un réseau qui autorise le **trafic UDP sortant vers le port 10000** pour les

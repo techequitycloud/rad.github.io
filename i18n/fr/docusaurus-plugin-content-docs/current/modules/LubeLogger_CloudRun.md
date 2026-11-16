@@ -3,7 +3,7 @@ title: "LubeLogger sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de LubeLogger sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LubeLogger_CloudRun.md @ 92769a4a sha256:b6f26551ca24 -->
+<!-- translated-from: docs/modules/LubeLogger_CloudRun.md @ d8297b62 sha256:2cee76ae6ca9 -->
 
 # LubeLogger sur Google Cloud Run {#lubelogger-on-google-cloud-run}
 
@@ -104,7 +104,7 @@ fenêtre de 30 jours passée, la façon d'arrêter de payer est de supprimer le 
 
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant reçoit
   l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le
-  formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+  formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
   Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un
   portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,

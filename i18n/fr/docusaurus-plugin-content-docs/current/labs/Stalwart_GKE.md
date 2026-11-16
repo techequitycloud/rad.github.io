@@ -3,7 +3,7 @@ title: "Stalwart sur GKE Autopilot — Guide de Lab"
 description: "Lab pratique : déployer Stalwart sur GKE Autopilot dans votre propre projet Google Cloud — configuration guidée, vérification, opérations, observabilité et suppression."
 ---
 
-<!-- translated-from: docs/labs/Stalwart_GKE.md @ 2829548 sha256:b4fea72c814e -->
+<!-- translated-from: docs/labs/Stalwart_GKE.md @ d8297b62 sha256:dce3ec1e76c4 -->
 
 # Stalwart sur GKE Autopilot — Guide de Lab {#stalwart-on-gke-autopilot--lab-guide}
 
@@ -54,7 +54,7 @@ lab ne duplique délibérément pas ces détails afin qu'ils restent exacts au f
   `gcloud auth application-default login` terminés.
 - Rôle **Propriétaire du projet** (ou équivalent) IAM sur le projet.
 - **Vous apportez votre propre projet ?** Avant le premier déploiement, la boîte de dialogue de confirmation du déploiement vous demande de prouver que vous le contrôlez (**Obtenir le code de vérification**, exécutez les commandes qu'elle affiche en tant que Propriétaire du projet, puis **Vérifier**) et de donner au compte de service de déploiement RAD le rôle **Propriétaire**. Un projet créé par RAD pour vous n'a besoin de rien de tout cela.
-- **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page d'entrées (et, dans un projet créé par RAD pour vous, guère plus que le nom du locataire et la région). Toute autre entrée du Guide de configuration — y compris les entrées de mise à l'échelle et de version dans les tâches de jour 2 — est modifiée ultérieurement avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui nécessite un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page d'entrées (et, dans un projet créé par RAD pour vous, guère plus que le nom du locataire et la région). Toute autre entrée du Guide de configuration — y compris les entrées de mise à l'échelle et de version dans les tâches de jour 2 — est modifiée ultérieurement avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 - **`openssl`** et **`nc`** (netcat) sur votre poste de travail, pour les vérifications de port de la Tâche 2.
 

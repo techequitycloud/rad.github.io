@@ -3,7 +3,7 @@ title: "Element sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement d'Element sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Element_GKE.md @ 92769a4a sha256:86cf2fd1cc37 -->
+<!-- translated-from: docs/modules/Element_GKE.md @ d8297b62 sha256:5a965e9f39a0 -->
 
 # Element sur GKE Autopilot {#element-on-gke-autopilot}
 
@@ -101,7 +101,7 @@ ne s'applique qu'à un projet géré par RAD ; **dans votre propre projet, ou un
 
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose
   d'Element dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par
-  le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+  le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
   Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute Element pour un client à partir d'un
   portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,

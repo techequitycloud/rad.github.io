@@ -3,7 +3,7 @@ title: "Radicale sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Radicale sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Radicale_GKE.md @ 92769a4a sha256:9a08514bf92f -->
+<!-- translated-from: docs/modules/Radicale_GKE.md @ d8297b62 sha256:f4cb94df6f77 -->
 
 # Radicale sur GKE Autopilot {#radicale-on-gke-autopilot}
 
@@ -171,7 +171,7 @@ la dernière sauvegarde avant de supprimer si vous voulez la conserver.
 - **Sessions de lab, pour la formation :** un formateur anime une session pour
   une classe. Chaque participant obtient l'application dans son propre projet
   Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une
-  autorisation définie par le formateur. Soit le formateur finance toutes les
+  autorisation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les
   places, soit chaque participant paie la sienne. Tout est supprimé à la fin
   de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les cabinets de conseil :** un partenaire

@@ -3,7 +3,7 @@ title: "NocoDB sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de NocoDB sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/NocoDB_GKE.md @ 92769a4a sha256:c8f752731c8f -->
+<!-- translated-from: docs/modules/NocoDB_GKE.md @ d8297b62 sha256:8bcbdb79cf69 -->
 
 # NocoDB sur GKE Autopilot {#nocodb-on-gke-autopilot}
 
@@ -193,7 +193,7 @@ besoin.**
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour
   une classe. Chaque participant dispose de NocoDB dans son propre projet Google
   Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie
-  par le formateur. Soit le formateur finance toutes les places, soit chaque
+  par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque
   participant paie la sienne. Tout est supprimé à la fin de la session et les
   crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute

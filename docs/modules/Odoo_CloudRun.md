@@ -167,7 +167,7 @@ stop paying is to delete the deployment and deploy it again when you need it.**
 
 - **Lab sessions, for training.** A trainer runs an Odoo session for a class. Each participant
   gets Odoo in their own Google Cloud project for 15 minutes to 24 hours, within an allowance
-  the trainer sets. Either the trainer funds every place up front, or each participant pays for
+  the trainer sets. Alternatively, the trainer builds one shared environment for the whole class, and everyone uses the same application and its data. Either the trainer funds every place up front, or each participant pays for
   their own. Everything is deleted when the session ends, and unused credits go back to the
   trainer. A three-hour session costs roughly 20 credits (US$2) per participant in builds and
   running cost, plus the module fee unless fees are waived for the session.

@@ -3,7 +3,7 @@ title: "Focalboard sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Focalboard sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Focalboard_CloudRun.md @ 92769a4a sha256:2fd07698b46a -->
+<!-- translated-from: docs/modules/Focalboard_CloudRun.md @ d8297b62 sha256:ac3f6ce2dde0 -->
 
 # Focalboard sur Google Cloud Run {#focalboard-on-google-cloud-run}
 
@@ -95,7 +95,7 @@ Cloud Run se met déjà à l'échelle à zéro entre les requêtes, de sorte que
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose de Focalboard dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite fixée par le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
+- **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose de Focalboard dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite fixée par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est suspendue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin, le partenaire transfère le projet et les déploiements deviennent la propriété du client.
 
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou argent mobile.

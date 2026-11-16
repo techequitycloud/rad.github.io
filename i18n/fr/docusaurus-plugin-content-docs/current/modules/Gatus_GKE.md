@@ -3,7 +3,7 @@ title: "Gatus sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Gatus sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Gatus_GKE.md @ 92769a4a sha256:10aa00556ad1 -->
+<!-- translated-from: docs/modules/Gatus_GKE.md @ d8297b62 sha256:fd66468b7a4d -->
 
 # Gatus sur GKE Autopilot {#gatus-on-gke-autopilot}
 
@@ -108,7 +108,7 @@ dernière sauvegarde avant de supprimer si vous voulez la conserver.
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
 - **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant obtient l'application dans son
-  propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur
+  propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur
   finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session et
   les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un portefeuille cloisonné qu'il

@@ -3,7 +3,7 @@ title: "Calibre-Web sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Calibre-Web sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/CalibreWeb_CloudRun.md @ 92769a4a sha256:30370b996a63 -->
+<!-- translated-from: docs/modules/CalibreWeb_CloudRun.md @ d8297b62 sha256:c28b5f974925 -->
 
 # Calibre-Web sur Google Cloud Run {#calibre-web-on-google-cloud-run}
 
@@ -112,7 +112,7 @@ supprimer le déploiement et de le redéployer lorsque vous en avez besoin.
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose de l'application dans
-  son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit
+  son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit
   le formateur finance toutes les places, soit chaque participant paie la sienne. Tout est supprimé à la fin de la
   session et les crédits non utilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un portefeuille

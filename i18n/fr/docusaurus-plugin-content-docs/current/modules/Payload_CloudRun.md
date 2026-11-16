@@ -3,7 +3,7 @@ title: "Payload CMS sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Payload CMS sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Payload_CloudRun.md @ 92769a4a sha256:4c65c08c3674 -->
+<!-- translated-from: docs/modules/Payload_CloudRun.md @ d8297b62 sha256:bf3ca74cd9ef -->
 
 # Payload CMS sur Google Cloud Run {#payload-cms-on-google-cloud-run}
 
@@ -123,7 +123,7 @@ Cloud Run se met déjà à l'échelle à zéro entre les requêtes. L'option ci-
 
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant
   obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans une
-  limite définie par le formateur. Soit le formateur finance toutes les places, soit chaque participant
+  limite définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant
   paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés retournent
   au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute l'application pour un client à partir d'un

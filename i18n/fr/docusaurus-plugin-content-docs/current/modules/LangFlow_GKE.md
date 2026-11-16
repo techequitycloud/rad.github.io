@@ -3,7 +3,7 @@ title: "LangFlow sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de LangFlow sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LangFlow_GKE.md @ 92769a4a sha256:03b97eb2c502 -->
+<!-- translated-from: docs/modules/LangFlow_GKE.md @ d8297b62 sha256:cfbf78c1a910 -->
 
 # LangFlow sur GKE Autopilot {#langflow-on-gke-autopilot}
 
@@ -116,7 +116,7 @@ supprimer le déploiement et de le déployer à nouveau lorsque vous en avez bes
 
 - **Sessions de lab, pour la formation.** Un formateur anime une session LangFlow pour une classe. Chaque
   participant obtient LangFlow dans son propre projet Google Cloud pendant 15 minutes à 24
-  heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places
+  heures, dans la limite d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places
   à l'avance, soit chaque participant paie la sienne. Tout est supprimé à la fin de la
   session, et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute LangFlow pour un client

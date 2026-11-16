@@ -3,7 +3,7 @@ title: "Strapi sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Strapi sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Strapi_GKE.md @ 92769a4a sha256:d39044278fa1 -->
+<!-- translated-from: docs/modules/Strapi_GKE.md @ d8297b62 sha256:b9510cf38725 -->
 
 # Strapi sur GKE Autopilot {#strapi-on-gke-autopilot}
 
@@ -177,7 +177,7 @@ dernière sauvegarde avant de la supprimer si vous voulez la conserver.
 - **Sessions de lab, pour la formation :** un formateur anime une session pour
   une classe. Chaque participant dispose de l'application dans son propre projet
   Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
-  définie par le formateur. Soit le formateur finance toutes les places, soit
+  définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit
   chaque participant paie la sienne. Tout est supprimé à la fin de la session et
   les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute

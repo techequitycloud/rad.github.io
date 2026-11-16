@@ -3,7 +3,7 @@ title: "Gemini Enterprise — Guide de labo pour l'instructeur"
 description: "Guide de l'instructeur pour la démo Gemini Enterprise de Cymbal Pools : ce que le module RAD automatise, les étapes manuelles avant le cours et le script de la démo en classe."
 ---
 
-<!-- translated-from: docs/labs/Gemini_Enterprise.md @ 15fd4c7 sha256:808dedbeb4a1 -->
+<!-- translated-from: docs/labs/Gemini_Enterprise.md @ d8297b62 sha256:591cb80c58a1 -->
 
 # Démo Gemini Enterprise (Cymbal Pools) — Guide de labo {#gemini-enterprise-demo-cymbal-pools--lab-guide}
 
@@ -43,7 +43,7 @@ Ce labo se concentre sur la préparation et l'exécution de la démo. Pour la li
   Un `denyAll` ou une liste d'autorisation sans `publishers/google/models/<agent_model>` signifie que la démo 3 ne peut pas s'exécuter dans ce projet ; demandez à l'administrateur du labo le modèle, ou définissez `agent_model` sur un modèle autorisé.
 - **Propriétaire du projet** (ou IAM équivalent) sur le projet.
 - **Votre propre projet uniquement.** Ce module masque l'option **Projet GCP sur RAD** (`enable_rad_gcpproject = false`) car elle active `modelarmor`, ce qu'aucun palier géré par RAD ne permet (et `aiplatform`, ce que les paliers sandbox et labo ne permettent pas), et Gemini Enterprise nécessite une licence par projet ou un essai gratuit, il se déploie donc toujours dans un projet que vous apportez. Avant le premier déploiement, la boîte de dialogue de confirmation de déploiement vous demande de prouver que vous le contrôlez (**Obtenir le code de vérification**, exécutez les commandes qu'il affiche en tant que Propriétaire du projet, puis **Vérifier**) et de donner au compte de service de déploiement RAD le rôle de **Propriétaire**.
-- **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page d'entrées. Toutes les autres entrées du Guide de configuration sont modifiées par la suite avec **Mettre à jour** sur la page du déploiement après avoir coché **Activer le mode avancé**, ce qui nécessite un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de labo, seul un administrateur peut utiliser le mode avancé.
+- **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page d'entrées. Toutes les autres entrées du Guide de configuration sont modifiées par la suite avec **Mettre à jour** sur la page du déploiement après avoir coché **Activer le mode avancé**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de labo, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 - Un **profil de navigateur dédié** connecté uniquement avec ce compte, utilisé pour chaque étape de Cloud Console, Drive, Agenda et Gemini Enterprise. Cela évite les collisions de compte lors des pop-ups OAuth. Pour un flux plus fluide, n'utilisez pas le mode Incognito.
 

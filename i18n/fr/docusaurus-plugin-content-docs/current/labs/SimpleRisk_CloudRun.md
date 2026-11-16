@@ -3,7 +3,7 @@ title: "SimpleRisk sur Cloud Run — Guide de Lab"
 description: "Lab pratique : déployez SimpleRisk sur Cloud Run dans votre propre projet Google Cloud — configuration guidée, vérification, opérations, observabilité et suppression."
 ---
 
-<!-- translated-from: docs/labs/SimpleRisk_CloudRun.md @ 2829548 sha256:85d4cafcd12b -->
+<!-- translated-from: docs/labs/SimpleRisk_CloudRun.md @ d8297b62 sha256:ef43bf9e0fbf -->
 
 # SimpleRisk sur Cloud Run — Guide de Lab {#simplerisk-on-cloud-run--lab-guide}
 
@@ -66,10 +66,7 @@ fil du temps.
   autres entrées du Guide de configuration — y compris les entrées de mise à
   l'échelle et de version dans les tâches Day-2 — sont modifiées par la suite
   avec **Update** sur la page du déploiement après avoir coché **Enable
-  advanced mode**, ce qui nécessite un solde de crédits couvrant le coût de
-  build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais
-  de module). Dans un environnement de lab, seul un administrateur peut utiliser
-  le mode avancé.
+  advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules
   dans le projet.
 

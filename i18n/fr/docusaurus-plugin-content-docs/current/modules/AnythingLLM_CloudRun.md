@@ -3,7 +3,7 @@ title: "AnythingLLM sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'AnythingLLM sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/AnythingLLM_CloudRun.md @ 92769a4a sha256:1323370ea3b4 -->
+<!-- translated-from: docs/modules/AnythingLLM_CloudRun.md @ d8297b62 sha256:e5e00d3cc7e3 -->
 
 # AnythingLLM sur Google Cloud Run {#anythingllm-on-google-cloud-run}
 
@@ -112,7 +112,7 @@ passée : **supprimez le déploiement, et déployez-le à nouveau lorsque vous e
 
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe. Chaque participant dispose
   d'AnythingLLM dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par
-  le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+  le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
   Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute AnythingLLM pour un client à partir d'un
   portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,

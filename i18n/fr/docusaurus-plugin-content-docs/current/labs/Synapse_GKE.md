@@ -3,7 +3,7 @@ title: "Synapse sur GKE Autopilot — Guide de Lab"
 description: "Lab pratique : déployer Synapse sur GKE Autopilot dans votre propre projet Google Cloud — configuration guidée, vérification, opérations, observabilité et suppression."
 ---
 
-<!-- translated-from: docs/labs/Synapse_GKE.md @ 15fd4c7 sha256:d820fc994acd -->
+<!-- translated-from: docs/labs/Synapse_GKE.md @ d8297b62 sha256:adaeb13db459 -->
 
 # Synapse sur GKE Autopilot — Guide de Lab {#synapse-on-gke-autopilot--lab-guide}
 
@@ -70,10 +70,7 @@ temps.
   autres entrées du Guide de configuration — y compris les entrées de mise à
   l'échelle et de version dans les tâches de jour 2 — sont modifiées
   ultérieurement avec **Update** sur la page du déploiement après avoir coché
-  **Enable advanced mode**, ce qui nécessite un solde de crédits couvrant le
-  coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais
-  de frais de module). Dans un environnement de lab, seul un administrateur
-  peut utiliser le mode avancé.
+  **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules
   dans le projet.
 - Un **domaine que vous contrôlez** pour `server_name` si vous avez l'intention de

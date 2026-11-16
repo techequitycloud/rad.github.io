@@ -3,7 +3,7 @@ title: "Nextcloud sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Nextcloud sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Nextcloud_CloudRun.md @ 92769a4a sha256:aea94c1bb31b -->
+<!-- translated-from: docs/modules/Nextcloud_CloudRun.md @ d8297b62 sha256:f88b9136a858 -->
 
 # Nextcloud sur Google Cloud Run {#nextcloud-on-google-cloud-run}
 
@@ -152,7 +152,7 @@ supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour une
   classe. Chaque participant obtient Nextcloud dans son propre projet Google Cloud
   pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le
-  formateur. Soit le formateur finance toutes les places, soit chaque participant
+  formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant
   paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés
   reviennent au formateur.
 - **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute

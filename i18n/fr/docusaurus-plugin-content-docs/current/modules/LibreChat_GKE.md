@@ -3,7 +3,7 @@ title: "LibreChat sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de LibreChat sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LibreChat_GKE.md @ 92769a4a sha256:7bda713eca49 -->
+<!-- translated-from: docs/modules/LibreChat_GKE.md @ d8297b62 sha256:1c8d8ec03e79 -->
 
 # LibreChat sur GKE Autopilot {#librechat-on-gke-autopilot}
 
@@ -159,7 +159,7 @@ supprimer le déploiement et de le redéployer lorsque vous en avez besoin.**
 
 - **Sessions de lab, pour la formation.** Un formateur anime une session LibreChat pour une
   classe. Chaque participant obtient LibreChat dans son propre projet Google Cloud pendant
-  15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le
+  15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le
   formateur finance toutes les places à l'avance, soit chaque participant paie la sienne.
   Tout est supprimé à la fin de la session, et les crédits non utilisés sont restitués au
   formateur.

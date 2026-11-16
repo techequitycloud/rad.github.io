@@ -3,7 +3,7 @@ title: "Medusa sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Medusa sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Medusa_CloudRun.md @ 92769a4a sha256:cd9443aac9ee -->
+<!-- translated-from: docs/modules/Medusa_CloudRun.md @ d8297b62 sha256:ca72973e4173 -->
 
 # Medusa sur Google Cloud Run {#medusa-on-google-cloud-run}
 
@@ -115,7 +115,7 @@ celui-ci, alors copiez la dernière sauvegarde avant de supprimer si vous voulez
 
 - **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant dispose de
   l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par
-  le formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+  le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
   Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un
   portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,

@@ -3,7 +3,7 @@ title: "Windmill sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Windmill sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Windmill_GKE.md @ 92769a4a sha256:b2f10dfc6981 -->
+<!-- translated-from: docs/modules/Windmill_GKE.md @ d8297b62 sha256:bb1758b8e52b -->
 
 # Windmill sur GKE Autopilot {#windmill-on-gke-autopilot}
 
@@ -92,7 +92,7 @@ donc copiez la dernière sauvegarde avant de supprimer si vous voulez la conserv
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
 Sessions de lab, pour la formation : un formateur anime une session pour une classe. Chaque participant obtient
-l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur.
+l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données.
 Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
 Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 

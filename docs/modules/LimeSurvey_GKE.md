@@ -120,7 +120,7 @@ delete the deployment and deploy it again when you need it.**
 
 - **Lab sessions, for training.** A trainer runs a LimeSurvey session for a class. Each
   participant gets LimeSurvey in their own Google Cloud project for 15 minutes to 24
-  hours, within an allowance the trainer sets. Either the trainer funds every place
+  hours, within an allowance the trainer sets. Alternatively, the trainer builds one shared environment for the whole class, and everyone uses the same application and its data. Either the trainer funds every place
   up front, or each participant pays for their own. Everything is deleted when the
   session ends, and unused credits go back to the trainer.
 - **Managed Environments, for consultancies.** A partner runs LimeSurvey for a client

@@ -3,7 +3,7 @@ title: "OpenEMR sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement d'OpenEMR sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/OpenEMR_CloudRun.md @ 92769a4a sha256:2e10cee6a815 -->
+<!-- translated-from: docs/modules/OpenEMR_CloudRun.md @ d8297b62 sha256:4fe1135f643a -->
 
 # OpenEMR sur Google Cloud Run {#openemr-on-google-cloud-run}
 
@@ -139,7 +139,7 @@ déploiement et de le redéployer lorsque vous en avez besoin.**
 
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour une classe.
   Chaque participant obtient l'application dans son propre projet Google Cloud pendant
-  15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit
+  15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit
   le formateur finance toutes les places, soit chaque participant paie la sienne. Tout
   est supprimé à la fin de la session et les crédits inutilisés sont reversés au
   formateur.
