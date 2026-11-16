@@ -28,7 +28,7 @@ Each certification also has per-section exploration guides at `.../docs/certific
 - [Finance Guide](https://docs.radmodules.dev/docs/guides/finance-guide): The Billing page — subscription tiers, credit settings and balances, event codes, module and agent revenue, project costs and invoices, payouts — plus lab oversight and the money-related audit log.
 - [Partner Guide](https://docs.radmodules.dev/docs/guides/partner-guide): Connecting a GitHub repository, publishing and syncing your own modules, and earning a revenue share when others deploy them.
 - [Support Guide](https://docs.radmodules.dev/docs/guides/support-guide): Handling support tickets raised through the Help page.
-- [Trainer Guide](https://docs.radmodules.dev/docs/guides/trainer-guide): Running lab sessions from the Lab Sessions tab on Solutions — one lab environment per participant, who pays, provisioning, clocks and settlement.
+- [Trainer Guide](https://docs.radmodules.dev/docs/guides/trainer-guide): Running lab sessions from Solutions → Managed Environments — an environment per participant or one shared class environment, who pays, provisioning, clocks and settlement.
 - [Client Projects Guide](https://docs.radmodules.dev/docs/guides/client-projects-guide): For subscribers running applications for their own clients — funding each project's wallet, inviting the client, deploying for them, pausing and handover.
 - [User Guide](https://docs.radmodules.dev/docs/guides/user-guide): Day-to-day tasks for regular users — building a solution from a plain description, deploying modules and solutions, managing deployments, and credits and subscriptions.
 

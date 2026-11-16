@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud DevOps Engineer (PDE)"
 description: "Associez chaque domaine de l'examen Professional Cloud DevOps Engineer (PDE) à des labs de déploiement RAD pratiques sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PDE_Certification_Guide.md @ cb682e8 sha256:d79faaf9fc2a -->
+<!-- translated-from: docs/certification/PDE_Certification_Guide.md @ d8297b62 sha256:3382b6951c66 -->
 
 # Carte des labs de la certification Professional Cloud DevOps Engineer (PDE) {#professional-cloud-devops-engineer-pde-certification-lab-map}
 
@@ -19,7 +19,7 @@ La certification Professional Cloud DevOps Engineer valide votre capacité à co
 ## Comment utiliser ce guide {#how-to-use-this-guide}
 
 - Choisissez un profil de déploiement ci-dessous et déployez-le depuis votre portail de déploiement.
-- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** Lors de la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode** (activer le mode avancé), ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour.
+- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** Lors de la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode** (activer le mode avancé), ouvert à tous les comptes tant que les builds sont inclus dans le prix (sur un environnement de lab, seul un administrateur peut l'utiliser).
 - Parcourez le guide de section correspondant (`PDE_Section_N_Exploration_Guide.md`) — chaque sous-section propose des étapes pratiques avec de vraies commandes `gcloud`, `kubectl` et `tofu`.
 - Utilisez la légende de couverture en toute honnêteté : les sujets 📘 (l'essentiel de la théorie SRE pure et du processus de gestion des incidents) doivent être étudiés en dehors de la plateforme ; les guides de section donnent des pistes.
 - La plateforme elle-même fait partie du lab — la section 1 traite les modules de déploiement comme l'artefact IaC sur lequel l'examen attend que vous raisonniez.

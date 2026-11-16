@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud Security Engineer (PSE)"
 description: "Associez chaque domaine de l'examen Professional Cloud Security Engineer (PSE) à des labs de déploiement RAD pratiques sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PSE_Certification_Guide.md @ cb682e8 sha256:a787a9e24dd9 -->
+<!-- translated-from: docs/certification/PSE_Certification_Guide.md @ d8297b62 sha256:3a294d1c6589 -->
 
 # Carte des labs de la certification Professional Cloud Security Engineer (PSE) {#professional-cloud-security-engineer-pse-certification-lab-map}
 
@@ -13,7 +13,7 @@ La certification PSE valide votre capacité à concevoir et à mettre en œuvre 
 ## Comment utiliser ce guide {#how-to-use-this-guide}
 
 - Déployez l'un des profils ci-dessous depuis votre portail de déploiement.
-- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** À la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode** (activer le mode avancé), ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour.
+- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** À la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode** (activer le mode avancé), ouvert à tous les comptes tant que les builds sont inclus dans le prix (sur un environnement de lab, seul un administrateur peut l'utiliser).
 - **Certains paramètres exigent un projet que vous apportez.** Lorsqu'un déploiement est placé dans un projet géré par RAD (un projet que RAD crée pour vous), le formulaire de déploiement omet tous les paramètres qu'un module signale comme indisponibles dans ce cas — des paramètres qui débordent du projet vers l'organisation de RAD, ou qui nécessitent une API que les paliers gérés par RAD n'autorisent pas. Dans ce guide, cela concerne les paramètres VPC Service Controls (`enable_vpc_sc`, `vpc_sc_dry_run`, `vpc_cidr_ranges`, `organization_id`, et `admin_ip_ranges` de `Services_GCP`), la paire Security Command Center (`enable_security_command_center`, `enable_scc_notifications`), Workload Identity Federation (`enable_workload_identity_federation` et les paramètres `wif_*`) ainsi que `configure_policy_controller` ; déployez les profils et labs qui les définissent dans un projet Google Cloud qui vous appartient.
 - Parcourez le guide de section correspondant (`PSE_Section_<N>_Exploration_Guide.md`) sujet par sujet.
 - Servez-vous de la légende de couverture pour savoir quels sujets de l'examen vous devez étudier en dehors de la plateforme — les guides de section donnent des pistes d'étude concrètes pour chaque sujet 🟡 et 📘.

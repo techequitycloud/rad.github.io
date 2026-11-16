@@ -10,7 +10,7 @@ The Associate Cloud Engineer certification validates that you can deploy and sec
 ## How to use this guide
 
 - Deploy one of the profiles below from your deployment portal, then work through the matching section guide.
-- **Profile settings are applied as an Update.** The deploy form asks only for the first page of a module's inputs on create (in a project RAD creates for you, little more than the tenant name and region). Deploy the module first, then set the profile's variables with **Update** on the deployment's page after ticking **Enable advanced mode**, which needs a credit balance that covers the update's estimated build cost.
+- **Profile settings are applied as an Update.** The deploy form asks only for the first page of a module's inputs on create (in a project RAD creates for you, little more than the tenant name and region). Deploy the module first, then set the profile's variables with **Update** on the deployment's page after ticking **Enable advanced mode**, which is open to every account while builds are included in the price (on a lab environment, only an administrator can use it).
 - Every section-guide subsection has a **Try it** block — do the CLI steps, not just the console clicks. The ACE exam assumes `gcloud`/`kubectl` fluency.
 - Use the coverage legend to know which exam topics you must study outside the platform; the section guides flag these in **Beyond the modules** blocks.
 - ACE is entry-level: focus on creating, inspecting, and modifying resources, not on architecture trade-offs.

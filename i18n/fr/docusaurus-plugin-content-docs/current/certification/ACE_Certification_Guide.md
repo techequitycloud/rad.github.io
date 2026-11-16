@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Associate Cloud Engineer (ACE)"
 description: "Faites correspondre chaque domaine de l'examen Associate Cloud Engineer (ACE) à des labs de déploiement RAD pratiques sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/ACE_Certification_Guide.md @ cb682e8 sha256:d0dc065595d3 -->
+<!-- translated-from: docs/certification/ACE_Certification_Guide.md @ d8297b62 sha256:5ff36cda89bb -->
 
 # Carte des labs de la certification Associate Cloud Engineer (ACE) {#associate-cloud-engineer-ace-certification-lab-map}
 
@@ -11,7 +11,7 @@ La certification Associate Cloud Engineer atteste que vous savez déployer et s�
 ## Comment utiliser ce guide {#how-to-use-this-guide}
 
 - Déployez l'un des profils ci-dessous depuis votre portail de déploiement, puis suivez le guide de section correspondant.
-- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** À la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode** (activer le mode avancé), ce qui nécessite un solde de crédits couvrant le coût de build estimé de la mise à jour.
+- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** À la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode** (activer le mode avancé), ouvert à tous les comptes tant que les builds sont inclus dans le prix (sur un environnement de lab, seul un administrateur peut l'utiliser).
 - Chaque sous-section des guides de section comporte un bloc **Essayez** — effectuez les étapes en ligne de commande, pas seulement les clics dans la console. L'examen ACE suppose une bonne maîtrise de `gcloud`/`kubectl`.
 - Utilisez la légende de couverture pour savoir quels sujets de l'examen vous devez étudier en dehors de la plateforme ; les guides de section les signalent dans des blocs **Au-delà des modules**.
 - ACE est un examen de niveau débutant : concentrez-vous sur la création, l'inspection et la modification des ressources, plutôt que sur les arbitrages d'architecture.

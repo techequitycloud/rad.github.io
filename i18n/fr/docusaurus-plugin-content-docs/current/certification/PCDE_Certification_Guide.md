@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud Database Engineer (PCDE)"
 description: "Associez chaque domaine de l'examen Professional Cloud Database Engineer (PCDE) à des labs pratiques de déploiement RAD sur Google Cloud : un parcours de révision concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PCDE_Certification_Guide.md @ cb682e8 sha256:07f7f62a1453 -->
+<!-- translated-from: docs/certification/PCDE_Certification_Guide.md @ d8297b62 sha256:f8f47c667d3e -->
 
 # Carte des labs de la certification Professional Cloud Database Engineer (PCDE) {#professional-cloud-database-engineer-pcde-certification-lab-map}
 
@@ -15,7 +15,7 @@ La certification Professional Cloud Database Engineer valide votre capacité à 
 ## Comment utiliser ce guide {#how-to-use-this-guide}
 
 - Déployez l'un des profils ci-dessous depuis votre portail de déploiement, puis parcourez le guide de section correspondant pendant que l'infrastructure est en service.
-- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** À la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du locataire et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** (mettre à jour) sur la page du déploiement après avoir coché **Enable advanced mode** (activer le mode avancé), ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour.
+- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** À la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du locataire et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** (mettre à jour) sur la page du déploiement après avoir coché **Enable advanced mode** (activer le mode avancé), ouvert à tous les comptes tant que les builds sont inclus dans le prix (sur un environnement de lab, seul un administrateur peut l'utiliser).
 - **Certains paramètres nécessitent un projet que vous apportez.** Lorsqu'un déploiement est effectué dans un projet géré par RAD (un projet que RAD crée pour vous), le formulaire de déploiement omet tout paramètre qu'un module signale comme indisponible dans ce cas — les paramètres qui dépassent le cadre du projet pour atteindre l'organisation de RAD, ou qui nécessitent une API que les paliers gérés par RAD n'autorisent pas. Dans ce guide, cela concerne `enable_alloydb` (l'API AlloyDB n'est autorisée sur aucun palier géré par RAD, donc RAD n'y déploie pas AlloyDB) et `enable_vpc_sc` ; déployez les profils qui les définissent dans votre propre projet Google Cloud.
 - Chaque guide de section associe une modification dans le portail à ce qu'il faut observer dans la console GCP et à une vraie commande `gcloud`/`psql`/`kubectl`.
 - Servez-vous de la légende de couverture pour savoir quels sujets de l'examen doivent être étudiés en dehors de la plateforme — Spanner, Bigtable, BigQuery et Database Migration Service ne sont *pas* mis en œuvre par ces modules, et les guides de section le disent clairement.
