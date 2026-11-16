@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud Architect (PCA)"
 description: "Associez chaque domaine de l'examen Professional Cloud Architect (PCA) à des labs pratiques de déploiement RAD sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PCA_Certification_Guide.md @ cb682e8 sha256:54382408a098 -->
+<!-- translated-from: docs/certification/PCA_Certification_Guide.md @ d8297b62 sha256:7848174b6f2d -->
 
 # Carte des labs de la certification Professional Cloud Architect (PCA) {#professional-cloud-architect-pca-certification-lab-map}
 
@@ -11,7 +11,7 @@ La certification Professional Cloud Architect valide votre capacité à concevoi
 ## Comment utiliser ce guide {#how-to-use-this-guide}
 
 - Déployez l'un des profils ci-dessous depuis votre portail de déploiement, puis parcourez le ou les guides de section correspondants.
-- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** À la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode** (activer le mode avancé), ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour.
+- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** À la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement, après avoir coché **Enable advanced mode** (activer le mode avancé), ouvert à tous les comptes tant que les builds sont inclus dans le prix (sur un environnement de lab, seul un administrateur peut l'utiliser).
 - **Certains paramètres nécessitent un projet que vous apportez.** Lorsqu'un déploiement est placé dans un projet géré par RAD (un projet que RAD crée pour vous), le formulaire de déploiement omet tous les paramètres qu'un module marque comme indisponibles dans ce cas — des paramètres qui dépassent le projet pour atteindre l'organisation de RAD, ou qui nécessitent une API que les paliers gérés par RAD n'autorisent pas. Dans ce guide, cela concerne `enable_vpc_sc` et ses paramètres associés (`vpc_sc_dry_run`, `admin_ip_ranges`) ; déployez les profils qui les définissent dans votre propre projet Google Cloud.
 - Chaque guide de section associe des critères de décision (« pourquoi l'examen s'y intéresse ») aux variables exactes qui mettent en œuvre le concept, à des étapes pratiques et à des questions d'auto-évaluation.
 - Utilisez la légende de couverture en toute honnêteté : les sujets 📘 (connectivité hybride, planification de migration, Gemini Enterprise Agent Platform et les API d'IA de Google, Gemini Cloud Assist, hiérarchie de l'organisation) doivent être étudiés en dehors de la plateforme — les encadrés « Au-delà des modules » vous indiquent quoi étudier et où.

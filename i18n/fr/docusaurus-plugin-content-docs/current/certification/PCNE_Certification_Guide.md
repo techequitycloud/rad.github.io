@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud Network Engineer (PCNE)"
 description: "Associez chaque domaine de l'examen Professional Cloud Network Engineer (PCNE) à des labs pratiques de déploiement RAD sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PCNE_Certification_Guide.md @ cb682e8 sha256:7f168005729e -->
+<!-- translated-from: docs/certification/PCNE_Certification_Guide.md @ d8297b62 sha256:d1b97b319733 -->
 
 # Carte des labs de la certification Professional Cloud Network Engineer (PCNE) {#professional-cloud-network-engineer-pcne-certification-lab-map}
 
@@ -13,7 +13,7 @@ La certification Professional Cloud Network Engineer valide la capacité à conc
 ## Comment utiliser ce guide {#how-to-use-this-guide}
 
 - Déployez l'un des profils ci-dessous depuis votre portail de déploiement, puis parcourez le guide d'exploration de la section correspondante pendant que l'infrastructure est en service.
-- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** À la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode** (activer le mode avancé), ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour.
+- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** À la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode** (activer le mode avancé), ouvert à tous les comptes tant que les builds sont inclus dans le prix (sur un environnement de lab, seul un administrateur peut l'utiliser).
 - **Certains paramètres nécessitent un projet que vous apportez.** Lorsqu'un déploiement est placé dans un projet géré par RAD (un projet que RAD crée pour vous), le formulaire de déploiement omet tous les paramètres qu'un module signale comme indisponibles dans ce cas — des paramètres qui dépassent le projet pour atteindre l'organisation de RAD, ou qui exigent une API que les paliers gérés par RAD n'autorisent pas. Dans ce guide, cela concerne `enable_vpc_sc`, ainsi que `gke_cluster_count` et `configure_cloud_service_mesh` pour la variante multicluster ; déployez les profils qui les définissent dans votre propre projet Google Cloud.
 - Utilisez la légende de couverture pour planifier votre temps d'étude : les sujets ✅ peuvent être appris de façon pratique dans RAD ; les sujets 📘 nécessitent la documentation officielle et un projet de test.
 - L'examen PCNE repose beaucoup sur des scénarios. Après chaque « Essayez », demandez-vous *pourquoi* les modules ont fait chaque choix (par exemple, pourquoi une plage PSA en /16, pourquoi Dataplane V2, pourquoi un ALB externe global).

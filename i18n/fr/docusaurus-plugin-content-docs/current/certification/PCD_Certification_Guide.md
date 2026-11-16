@@ -2,7 +2,7 @@
 title: "Carte des labs de la certification Professional Cloud Developer (PCD)"
 description: "Associez chaque domaine de l'examen Professional Cloud Developer (PCD) à des labs pratiques de déploiement RAD sur Google Cloud — un parcours d'étude concret, aligné sur l'examen."
 ---
-<!-- translated-from: docs/certification/PCD_Certification_Guide.md @ cb682e8 sha256:2368a05fe3da -->
+<!-- translated-from: docs/certification/PCD_Certification_Guide.md @ d8297b62 sha256:9ffc84b44a13 -->
 
 # Carte des labs de la certification Professional Cloud Developer (PCD) {#professional-cloud-developer-pcd-certification-lab-map}
 
@@ -11,7 +11,7 @@ La certification Professional Cloud Developer valide votre capacité à concevoi
 ## Comment utiliser ce guide {#how-to-use-this-guide}
 
 - Déployez l'un des profils ci-dessous depuis votre portail de déploiement, puis suivez le guide d'exploration de la section correspondante.
-- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** Lors de la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour.
+- **Les paramètres d'un profil s'appliquent par une mise à jour (Update).** Lors de la création, le formulaire de déploiement ne demande que la première page des entrées d'un module (dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Déployez d'abord le module, puis définissez les variables du profil avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (sur un environnement de lab, seul un administrateur peut l'utiliser).
 - **Certains paramètres exigent un projet que vous apportez.** Lorsqu'un déploiement est placé dans un projet géré par RAD (un projet que RAD crée pour vous), le formulaire de déploiement omet tous les paramètres qu'un module signale comme indisponibles dans ce cas — des paramètres qui dépassent le périmètre du projet pour atteindre l'organisation de RAD, ou qui nécessitent une API que les paliers gérés par RAD n'autorisent pas. Dans ce guide, cela concerne `enable_workload_identity_federation` et les autres paramètres `wif_*`, `enable_alloydb`, `configure_cloud_service_mesh`/`configure_service_mesh`, ainsi que les paramètres de Security Command Center ; déployez les profils qui les définissent dans votre propre projet Google Cloud.
 - Chaque guide de section associe les variables du portail aux vues de la console GCP et aux commandes `gcloud`/`kubectl` que l'examen attend que vous connaissiez.
 - Utilisez la légende de couverture pour planifier votre temps d'étude : les sujets 🟡 et 📘 comportent un encadré « Au-delà des modules » qui vous indique ce qu'il faut pratiquer en dehors de la plateforme.
