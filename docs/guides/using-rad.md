@@ -42,7 +42,7 @@ The top navigation bar shows only the items relevant to your role (or roles). Wh
 
 - A **profile dropdown** (top-right) with **Your Profile** and **Sign Out**.
 - A **language selector** in the top bar, beside the light/dark theme control.
-- **Ask AI** in the top bar (in the menu on a phone): ask RAD's AI assistant about modules, pricing or deployments in plain language. It is also on the sign-in, pricing and guide pages. Inside the console it answers from these guides and links the section it used. Its answers can be wrong, so check anything important; each time you open it, the conversation starts afresh.
+- **Ask AI** in the top bar (in the menu on a phone): ask RAD's AI assistant about modules, pricing or deployments in plain language. It is also on the sign-in, pricing and guide pages. Inside the console it answers from these guides and links the section it used. Its answers can be wrong, so check anything important; each time you open it, the conversation starts afresh. Inside the console it needs purchased credits or a staff role.
 - **Pricing**, just before **Help** in the top navigation — RAD's prices, shown inside the console.
 - In the footer: **Contact Us** (to the **Help** page), **Feedback** (RAD's public feedback board, at fider.radmodules.dev, where you can suggest and vote on improvements), the Terms and Privacy documents, **Cookie settings**, and **Pricing** again.
 
@@ -82,7 +82,7 @@ See the role guides at the end for the full task lists.
 
 ### The module catalog (Solutions → Solution Catalog → RAD modules)
 
-**RAD modules**, on the **Solution Catalog** tab of **Solutions**, is the module catalog. Each module appears as a **card** showing its description, a documentation link, an average star rating, how many times it has been deployed, and its price: the one-off **fee** plus an estimate of the **build**, shown the same way on every catalogue card.
+**RAD modules**, on the **Solution Catalog** tab of **Solutions**, is the module catalog. Each module appears as a **card** showing its description, a documentation link, an average star rating, how many times it has been deployed, and its price: the one-off **fee**, charged when the deployment first succeeds, shown the same way on every catalogue card. Build time is included in the price.
 
 There are two kinds of modules:
 
@@ -160,6 +160,10 @@ The **Credits** page has:
 To buy credits, choose a currency and amount, pick a payment provider, and complete checkout on the provider's secure page. Your credits are added automatically once the payment confirms.
 
 Some platforms require *purchased* credits (not just awarded ones) for certain deployments — the confirmation dialog will tell you when that applies.
+
+### AI features and their daily limit
+
+RAD's AI features — **Ask AI**, the **Conversational Assistant**, **Build Solution with AI**, **Suggest fixes** and the AI answer on the support form — never cost credits. They share one allowance per account: **100 requests a day** if you bought credits (a top-up or a subscription payment) in the last 90 days or hold a staff role, otherwise **20**. When the 20 are used up, RAD says so and that buying credits or subscribing raises it to 100. See the [User Guide](user-guide.md#ai-requests-each-day).
 
 ### Billing and subscriptions
 

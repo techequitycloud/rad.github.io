@@ -33,7 +33,7 @@ On **Solutions → Managed Environments**, filter to **Lab sessions** and choose
 
 - **Session name** — up to 100 characters.
 - **Participant emails** — paste a list. The dialog confirms how many addresses it recognised. An address it can't read stops the whole session from being created, so nothing is charged for a list that was only partly understood. How many participants a session may hold is set by your administrator.
-- **Credits per participant** — each participant's allowance. It can't be lower than the minimum a lab environment needs, or higher than the ceiling your administrator sets.
+- **Credits per participant** — each participant's allowance. It can't be lower than the minimum a lab environment needs, or higher than the ceiling your administrator sets. When participants buy their own place this field reads **Price of a place (credits)**, and in a shared session **Credits held per participant** (nothing is built from it, so 1 is enough).
 - **Duration (minutes)** — how long each participant's environment runs once their clock starts, up to 24 hours.
 - **Countdown starts** — **By trainer** (you start the clocks) or **When ready** (each clock starts as soon as that environment is built).
 - **Region** — one of RAD's regions, fixed for the session.
@@ -53,7 +53,7 @@ You decide when you create the session. **That choice is fixed once the session 
 
 **VAT.** If RAD's finance team has set a VAT rate for whoever pays for a place, that place costs the allowance plus VAT, so the allowance lasts as long as the plan says: your rate for a session you fund or a place you pay for, the participant's own rate for a place they buy.
 
-**The minimum place price.** In a session where participants pay for individual environments, **Provision** is refused if a place costs less than one environment really needs: its builds (priced conservatively, because lab builds often run slower than usual), its teardown, and its expected Google Cloud running cost over the class — and, in a **By trainer** session, over the wait before you press Start — plus a 25% margin. The dialog names the lowest price that works. Raise the price; you can then pay for the places of participants who can't afford it (below). Shared sessions are exempt, because participants have no environment of their own to set up; in a session you fund, the plan only warns.
+**The minimum place price.** In a session where participants pay for individual environments, **Provision** is refused if a place costs less than one environment really needs: its builds (priced conservatively, because lab builds often run slower than usual), its teardown, and its expected Google Cloud running cost over the class — and, in a **By trainer** session, over the wait before you press Start — plus a 25% margin. The dialog names the lowest price that works and offers **Raise the price to N credits**: new participants then pay the new price, anyone who has already paid keeps their place and pays nothing more, and the price can be raised but never lowered again. Places already paid at the old price need **Add N credits to each of these places** from your purchased credits, which the same dialog offers. You can also pay for the places of participants who can't afford it (below). To get the price right before you create the session, use **Price my class** in the create dialog: pick the module you plan to run and it shows the lowest price per place RAD will provision for that length of class, with **Use N credits** to fill it in. Shared sessions are exempt, because participants have no environment of their own to set up; in a session you fund, the plan only warns.
 
 Invitations and the payment banner state the offer in one line, for example "10 credits ($1) for a 3-hour environment", so the time limit is never a surprise.
 
@@ -130,6 +130,8 @@ The day after a session ends, each participant who kept their place is emailed a
 Each participant gets one email saying their lab has ended and why: its time was up, its credits were used up, or it was ended early. It says **you** ended it only when you did; when an administrator or Finance ended it, it says the lab was ended early.
 
 Use **End now** to end the whole session at any time. It stops the session's spending straight away but moves no money itself: RAD checks every 10 minutes for sessions ready to settle, and settles yours once Google has reported its cloud costs (see [When a session settles](#when-a-session-settles)). If no environment was ever built, there is nothing to wait for, and the refund arrives at the next check. A session nobody provisions is ended automatically after 14 days.
+
+Once a session has settled, **How your class went** sums it up — how many participants started and how many environments became ready — beside the settlement figures, with **Run this class again**, which opens a new session filled in from this one (as **Duplicate session** does).
 
 ### Exporting and reusing a session
 

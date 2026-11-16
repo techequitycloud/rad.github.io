@@ -40,7 +40,7 @@ You earn a share of the **module fees** your referred users pay **with credits t
 
 | Counts towards commission | Never counts |
 |---|---|
-| A module's own fee, including the fees of the Google Cloud project and shared-services modules RAD sets up alongside it | Build (time-based) charges, and Google Cloud project usage |
+| A module's own fee, including the flat fee of a Google Cloud project or shared-services module deployed on its own (set up beneath an application, they are included in its price and carry no fee) | Build (time-based) charges, and Google Cloud project usage |
 | The part of a fee paid with purchased credits | The part paid with free or awarded credits (signup, monthly, referral, event codes) |
 | | The self-serve project surcharge |
 | | Anything spent inside a **lab** (training) session |
