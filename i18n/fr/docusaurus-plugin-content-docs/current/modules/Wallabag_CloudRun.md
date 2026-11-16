@@ -3,7 +3,7 @@ title: "Wallabag sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Wallabag sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Wallabag_CloudRun.md @ 92769a4a sha256:e063c52d340d -->
+<!-- translated-from: docs/modules/Wallabag_CloudRun.md @ d8297b62 sha256:f9efd8150961 -->
 
 # Wallabag sur Google Cloud Run {#wallabag-on-google-cloud-run}
 
@@ -161,7 +161,7 @@ dernière sauvegarde avant de supprimer si vous voulez la conserver.
 Sessions de lab, pour la formation : un formateur anime une session pour une
 classe. Chaque participant obtient l'application dans son propre projet Google
 Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie
-par le formateur. Soit le formateur finance toutes les places, soit chaque
+par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque
 participant paie la sienne. Tout est supprimé à la fin de la session et les
 crédits inutilisés retournent au formateur.
 

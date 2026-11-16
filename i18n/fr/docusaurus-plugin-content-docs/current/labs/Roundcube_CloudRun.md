@@ -3,7 +3,7 @@ title: "Roundcube sur Cloud Run — Guide de lab"
 description: "Lab pratique : déployez Roundcube sur Cloud Run dans votre propre projet Google Cloud — configuration guidée, vérification, opérations, observabilité et suppression."
 ---
 
-<!-- translated-from: docs/labs/Roundcube_CloudRun.md @ 2829548 sha256:8036930c4c82 -->
+<!-- translated-from: docs/labs/Roundcube_CloudRun.md @ d8297b62 sha256:1b1d650a461b -->
 
 # Roundcube sur Cloud Run — Guide de lab {#roundcube-on-cloud-run--lab-guide}
 
@@ -67,10 +67,7 @@ au fil du temps.
   entrées du Guide de configuration — y compris les entrées de serveur de
   messagerie, de mise à l'échelle et de version des Tâches 3 et 4 — sont
   modifiées par la suite avec **Update** sur la page du déploiement après avoir
-  coché **Enable advanced mode**, ce qui nécessite un solde de crédits couvrant
-  le coût de build estimé de la mise à jour (les mises à jour n'entraînent
-  jamais de frais de module). Dans un environnement de lab, seul un
-  administrateur peut utiliser le mode avancé.
+  coché **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules
   dans le projet.
 - **Un compte de messagerie existant** pour la Tâche 3 : l'hôte et le port IMAP,

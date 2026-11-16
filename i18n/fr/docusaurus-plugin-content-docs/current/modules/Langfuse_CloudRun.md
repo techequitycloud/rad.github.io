@@ -3,7 +3,7 @@ title: "Langfuse sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Langfuse sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Langfuse_CloudRun.md @ 92769a4a sha256:8934481838e6 -->
+<!-- translated-from: docs/modules/Langfuse_CloudRun.md @ d8297b62 sha256:c3368ce36865 -->
 
 # Langfuse sur Google Cloud Run {#langfuse-on-google-cloud-run}
 
@@ -117,7 +117,7 @@ La configuration par défaut de ce module maintient Cloud Run en fonctionnement 
 - **Sessions de lab, pour la formation.** Un formateur anime une session Langfuse pour une
   classe. Chaque participant dispose de Langfuse dans son propre projet Google Cloud
   pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le
-  formateur. Soit le formateur finance toutes les places à l'avance, soit chaque
+  formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places à l'avance, soit chaque
   participant paie la sienne. Tout est supprimé à la fin de la session, et les crédits
   non utilisés sont reversés au formateur.
 - **Environnements gérés, pour les cabinets de conseil.** Un partenaire exécute Langfuse

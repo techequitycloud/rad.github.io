@@ -3,7 +3,7 @@ title: "Rocket.Chat sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Rocket.Chat sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/RocketChat_GKE.md @ 92769a4a sha256:fb377912be5a -->
+<!-- translated-from: docs/modules/RocketChat_GKE.md @ d8297b62 sha256:124c508d2a80 -->
 
 # Rocket.Chat sur GKE Autopilot {#rocketchat-on-gke-autopilot}
 
@@ -96,7 +96,7 @@ La suppression ne permet d'économiser de l'argent que si Rocket.Chat reste inut
 
 - **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant obtient l'
   application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le
-  formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+  formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
   Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client à partir d'un
   portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,

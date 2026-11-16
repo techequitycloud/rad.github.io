@@ -3,7 +3,7 @@ title: "Shlink sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Shlink sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Shlink_CloudRun.md @ 92769a4a sha256:c7497ff4e348 -->
+<!-- translated-from: docs/modules/Shlink_CloudRun.md @ d8297b62 sha256:effcaab496c4 -->
 
 # Shlink sur Google Cloud Run {#shlink-on-google-cloud-run}
 
@@ -87,7 +87,7 @@ La suppression ne permet d'économiser de l'argent que si Shlink reste inutilis�
 
 - **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant
   obtient l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite
-  d'une allocation définie par le formateur. Soit le formateur finance toutes les places, soit chaque
+  d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque
   participant paie la sienne. Tout est supprimé à la fin de la session et les crédits inutilisés
   retournent au formateur.
 - **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute l'application pour un client

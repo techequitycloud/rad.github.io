@@ -3,7 +3,7 @@ title: "InvenTree sur Cloud Run — Guide de lab"
 description: "Lab pratique : déployer InvenTree sur Cloud Run dans votre propre projet Google Cloud — configuration guidée, vérification, opérations, observabilité et suppression."
 ---
 
-<!-- translated-from: docs/labs/InvenTree_CloudRun.md @ 2829548 sha256:ddc7abaa8532 -->
+<!-- translated-from: docs/labs/InvenTree_CloudRun.md @ d8297b62 sha256:55cdd864d7ef -->
 
 # InvenTree sur Cloud Run — Guide de lab {#inventree-on-cloud-run--lab-guide}
 
@@ -68,10 +68,7 @@ temps.
   autres entrées du Guide de configuration — y compris les entrées de mise à
   l'échelle, de stockage et de version dans les tâches du deuxième jour — sont
   modifiées par la suite avec **Mettre à jour** sur la page du déploiement
-  après avoir coché **Activer le mode avancé**, ce qui nécessite un solde de
-  crédits couvrant le coût de build estimé de la mise à jour (les mises à jour
-  n'entraînent jamais de frais de module). Dans un environnement de lab, seul
-  un administrateur peut utiliser le mode avancé.
+  après avoir coché **Activer le mode avancé**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules
   dans le projet.
 

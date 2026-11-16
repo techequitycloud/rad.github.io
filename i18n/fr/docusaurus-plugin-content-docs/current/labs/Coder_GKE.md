@@ -3,7 +3,7 @@ title: "Coder sur GKE Autopilot — Guide de Lab"
 description: "Lab pratique : déployer Coder sur GKE Autopilot dans votre propre projet Google Cloud — configuration guidée, vérification, opérations, observabilité et suppression."
 ---
 
-<!-- translated-from: docs/labs/Coder_GKE.md @ 15fd4c7 sha256:9b6a3bfa73ea -->
+<!-- translated-from: docs/labs/Coder_GKE.md @ d8297b62 sha256:4ecea7f630e2 -->
 
 # Coder sur GKE Autopilot — Guide de Lab {#coder-on-gke-autopilot--lab-guide}
 
@@ -68,10 +68,7 @@ du temps.
   entrée du Guide de configuration — y compris les entrées de mise à l'échelle
   et de version dans les tâches de Jour 2 — est modifiée ultérieurement avec
   **Mettre à jour** sur la page du déploiement après avoir coché **Activer le
-  mode avancé**, ce qui nécessite un solde de crédits couvrant le coût de build
-  estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de
-  module). Dans un environnement de lab, seul un administrateur peut utiliser
-  le mode avancé.
+  mode avancé**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules
   dans le projet.
 

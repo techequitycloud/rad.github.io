@@ -3,7 +3,7 @@ title: "LimeSurvey sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de LimeSurvey sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LimeSurvey_CloudRun.md @ 92769a4a sha256:a99e62d213ed -->
+<!-- translated-from: docs/modules/LimeSurvey_CloudRun.md @ d8297b62 sha256:ca7723628bb2 -->
 
 # LimeSurvey sur Google Cloud Run {#limesurvey-on-google-cloud-run}
 
@@ -164,7 +164,7 @@ le déploiement et de le déployer à nouveau lorsque vous en avez besoin.**
 - **Sessions de lab, pour la formation.** Un formateur anime une session
   LimeSurvey pour une classe. Chaque participant reçoit LimeSurvey dans son
   propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite
-  fixée par le formateur. Soit le formateur finance toutes les places à
+  fixée par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places à
   l'avance, soit chaque participant paie la sienne. Tout est supprimé à la fin
   de la session, et les crédits non utilisés sont restitués au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute

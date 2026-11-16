@@ -3,7 +3,7 @@ title: "Google Cloud VMware Engine — Guide de Lab"
 description: "Lab pratique : provisionner Google Cloud VMware Engine dans votre propre projet — configuration, vérification, opérations et suppression du cloud privé."
 ---
 
-<!-- translated-from: docs/labs/VMware_Engine.md @ 15fd4c7 sha256:8837f3cd1009 -->
+<!-- translated-from: docs/labs/VMware_Engine.md @ d8297b62 sha256:120def6fe1e4 -->
 
 # Google Cloud VMware Engine — Guide de Lab {#google-cloud-vmware-engine--lab-guide}
 
@@ -36,7 +36,7 @@ Le lab se concentre sur l'exploitation du **module et de la plateforme Google Cl
 - Un **client RDP** (intégré sur Windows ; **Windows App** sur macOS ; Remmina/FreeRDP sur Linux) et un navigateur web pour les consoles de gestion.
 - Rôle IAM **Propriétaire du projet** (ou administrateur VMware Engine + Compute équivalent) sur le projet.
 - **Votre propre projet uniquement.** Ce module masque l'option **Projet GCP sur RAD** (`enable_rad_gcpproject = false`) car elle active `vmwareengine` et `vmmigration`, ce que les politiques de niveau géré par RAD ne permettent pas. Il se déploie donc toujours dans un projet que vous apportez. Avant le premier déploiement, la boîte de dialogue de confirmation de déploiement vous demande de prouver que vous le contrôlez (**Obtenir le code de vérification**, exécutez les commandes affichées en tant que Propriétaire du projet, puis **Vérifier**) et de donner le rôle **Propriétaire** au compte de service de déploiement RAD.
-- **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page d'entrées. Toutes les autres entrées du Guide de configuration — y compris les entrées de mise à l'échelle et de version dans les tâches de jour 2 — sont modifiées par la suite avec **Mettre à jour** sur la page du déploiement après avoir coché **Activer le mode avancé**, ce qui nécessite un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page d'entrées. Toutes les autres entrées du Guide de configuration — y compris les entrées de mise à l'échelle et de version dans les tâches de jour 2 — sont modifiées par la suite avec **Mettre à jour** sur la page du déploiement après avoir coché **Activer le mode avancé**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
 > **Note sur les coûts :** un nœud VMware Engine est facturé à un taux horaire élevé. Préférez un cloud privé `TIME_LIMITED` à nœud unique pour ce lab et supprimez-le rapidement une fois terminé.

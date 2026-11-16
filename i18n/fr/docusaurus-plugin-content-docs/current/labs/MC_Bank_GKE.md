@@ -3,7 +3,7 @@ title: "Bank of Anthos multicluster sur GKE — Guide de lab"
 description: "Lab pratique : déployez Bank of Anthos multicluster sur GKE Autopilot dans votre propre projet Google Cloud — configuration, vérification, exploitation et démantèlement."
 ---
 
-<!-- translated-from: docs/labs/MC_Bank_GKE.md @ 3055034 sha256:cc8182d713e5 -->
+<!-- translated-from: docs/labs/MC_Bank_GKE.md @ d8297b62 sha256:67cf78504700 -->
 
 # Bank of Anthos multicluster sur GKE — Guide de lab {#multi-cluster-bank-of-anthos-on-gke--lab-guide}
 
@@ -43,7 +43,7 @@ ne duplique volontairement pas ce détail afin de rester exact dans le temps.
 - **gcloud CLI** et **kubectl** installés ; `gcloud auth login` et `gcloud auth application-default login` effectués.
 - Le rôle IAM **Project Owner** (ou équivalent) sur le projet.
 - **Votre propre projet uniquement.** Ce module masque l'option **GCP Project on RAD** (`enable_rad_gcpproject = false`) car il active des API que les politiques des paliers gérés par RAD refusent ; il se déploie donc toujours dans un projet que vous apportez. Avant le premier déploiement dans celui-ci, la boîte de dialogue de confirmation du déploiement vous demande de prouver que vous le contrôlez (**Get verification code**, exécutez les commandes affichées en tant que propriétaire (Owner) du projet, puis **Verify**) et d'attribuer le rôle **Owner** au compte de service de déploiement RAD.
-- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres. Tout autre paramètre du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifie ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres. Tout autre paramètre du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifie ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (sur un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
 Ce module est **autonome** — il construit son propre VPC, ses clusters, sa flotte, son mesh et son équilibreur de charge ;

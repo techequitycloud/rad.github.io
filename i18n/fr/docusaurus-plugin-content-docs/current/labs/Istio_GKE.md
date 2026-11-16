@@ -3,7 +3,7 @@ title: "Istio sur GKE — Guide de lab"
 description: "Lab pratique : déployez Istio sur GKE Autopilot dans votre propre projet Google Cloud — configuration guidée, vérification, exploitation, observabilité et démantèlement."
 ---
 
-<!-- translated-from: docs/labs/Istio_GKE.md @ 3055034 sha256:71cb42908968 -->
+<!-- translated-from: docs/labs/Istio_GKE.md @ d8297b62 sha256:6d4ad69b7a28 -->
 
 # Istio sur GKE — Guide de lab {#istio-on-gke--lab-guide}
 
@@ -38,7 +38,7 @@ Ce lab porte sur l'exploitation du **module et de la plateforme Google Cloud**, 
 - **istioctl** installé localement (ou utilisez la copie que le module télécharge sur l'hôte de déploiement) — `curl -L https://istio.io/downloadIstio | sh -`.
 - Le rôle IAM **Project Owner** (ou `container.admin` + `compute.networkAdmin` + `iam.serviceAccountAdmin` + `resourcemanager.projectIamAdmin` + `serviceusage.serviceUsageAdmin` — les deux derniers sont requis parce que le module active des API du projet et crée des liaisons IAM au niveau du projet pour le compte de service des nœuds) sur le projet.
 - **Vous apportez votre propre projet ?** Avant le premier déploiement dans celui-ci, la boîte de dialogue de confirmation du déploiement vous demande de prouver que vous le contrôlez (**Get verification code**, exécutez les commandes qu'elle affiche en tant que Owner du projet, puis **Verify**) et d'accorder le rôle **Owner** au compte de service de déploiement RAD. Un projet que RAD crée pour vous ne requiert ni l'un ni l'autre.
-- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres. Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres. Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
 Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :

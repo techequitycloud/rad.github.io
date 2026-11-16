@@ -100,7 +100,7 @@ so copy the latest backup out before deleting if you want to keep it.
 
 Lab sessions, for training: a trainer runs a session for a class. Each participant gets the
 app in their own Google Cloud project for 15 minutes to 24 hours, within an allowance the
-trainer sets. Either the trainer funds every place, or each participant pays for their own.
+trainer sets. Alternatively, the trainer builds one shared environment for the whole class, and everyone uses the same application and its data. Either the trainer funds every place, or each participant pays for their own.
 Everything is deleted when the session ends and unused credits go back to the trainer.
 
 Managed Environments, for consultancies: a partner runs the app for a client from a

@@ -3,7 +3,7 @@ title: "Chibisafe sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Chibisafe sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Chibisafe_GKE.md @ 92769a4a sha256:d069998af3d1 -->
+<!-- translated-from: docs/modules/Chibisafe_GKE.md @ d8297b62 sha256:10c0fdd9bb5e -->
 
 # Chibisafe sur GKE Autopilot {#chibisafe-on-gke-autopilot}
 
@@ -185,7 +185,7 @@ déploiement et de le redéployer lorsque vous en avez besoin.
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour
   une classe. Chaque participant obtient l'application dans son propre projet
   Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
-  définie par le formateur. Soit le formateur finance toutes les places, soit
+  définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit
   chaque participant paie la sienne. Tout est supprimé à la fin de la session
   et les crédits inutilisés retournent au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute

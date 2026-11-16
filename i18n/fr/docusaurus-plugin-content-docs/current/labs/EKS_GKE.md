@@ -3,7 +3,7 @@ title: "AWS EKS attaché à une flotte Google Cloud — Guide de lab"
 description: "Lab pratique : attacher un cluster AWS EKS à une flotte Google Cloud — enregistrement multicloud, vérification, opérations et suppression."
 ---
 
-<!-- translated-from: docs/labs/EKS_GKE.md @ 15fd4c7 sha256:af72c7755ee4 -->
+<!-- translated-from: docs/labs/EKS_GKE.md @ d8297b62 sha256:6f79c0d1d3d0 -->
 
 # AWS EKS attaché à une flotte Google Cloud — Guide de lab {#aws-eks-attached-to-a-google-cloud-fleet--lab-guide}
 
@@ -35,7 +35,7 @@ Ce lab parcourt le cycle de vie opérationnel complet du module : le déployer,
 - **gcloud CLI**, **kubectl** et le **`aws` CLI** installés ; `gcloud auth login` et `gcloud auth application-default login` terminés.
 - **Propriétaire du projet** (ou équivalent) IAM sur le projet Google Cloud.
 - **Votre propre projet uniquement.** Ce module masque l'option **GCP Project on RAD** (`enable_rad_gcpproject = false`) car il active des API que les politiques du niveau géré par RAD refusent et attache un cluster exécuté dans un autre cloud, il se déploie donc toujours dans un projet que vous apportez. Avant le premier déploiement, la boîte de dialogue de confirmation de déploiement vous demande de prouver que vous le contrôlez (**Get verification code**, exécutez les commandes qu'il affiche en tant que propriétaire du projet, puis **Verify**) et de donner au compte de service de déploiement RAD le rôle de **Owner**.
-- **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page d'entrées. Toutes les autres entrées du Guide de configuration — y compris les entrées de mise à l'échelle et de version dans les tâches de jour 2 — sont modifiées ultérieurement avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui nécessite un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page d'entrées. Toutes les autres entrées du Guide de configuration — y compris les entrées de mise à l'échelle et de version dans les tâches de jour 2 — sont modifiées ultérieurement avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
 Définissez ces variables shell une fois ; chaque tâche ci-dessous les réutilise :

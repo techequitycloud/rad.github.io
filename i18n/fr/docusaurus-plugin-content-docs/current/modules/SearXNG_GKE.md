@@ -3,7 +3,7 @@ title: "SearXNG sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de SearXNG sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/SearXNG_GKE.md @ 92769a4a sha256:1f9683c0c02b -->
+<!-- translated-from: docs/modules/SearXNG_GKE.md @ d8297b62 sha256:5bafd9a9b4f9 -->
 
 # SearXNG sur GKE Autopilot {#searxng-on-gke-autopilot}
 
@@ -104,7 +104,7 @@ La suppression ne permet d'économiser de l'argent que si SearXNG reste inutilis
 
 - **Sessions de lab, pour la formation :** un formateur anime une session pour une classe.
   Chaque participant obtient l'application dans son propre projet Google Cloud pendant 15
-  minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le
+  minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le
   formateur finance toutes les places, soit chaque participant paie la sienne. Tout est
   supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil :** un partenaire exécute

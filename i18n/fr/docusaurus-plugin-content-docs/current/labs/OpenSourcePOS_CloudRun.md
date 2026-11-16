@@ -3,7 +3,7 @@ title: "OpenSourcePOS sur Cloud Run — Guide de Lab"
 description: "Lab pratique : déployez Open Source POS sur Cloud Run dans votre propre projet Google Cloud — configuration guidée, vérification, opérations, observabilité et suppression."
 ---
 
-<!-- translated-from: docs/labs/OpenSourcePOS_CloudRun.md @ 2829548 sha256:bb1e25d5a161 -->
+<!-- translated-from: docs/labs/OpenSourcePOS_CloudRun.md @ d8297b62 sha256:d795297fac6f -->
 
 # OpenSourcePOS sur Cloud Run — Guide de Lab {#opensourcepos-on-cloud-run--lab-guide}
 
@@ -65,10 +65,7 @@ dans le temps.
   autres entrées du Guide de configuration — y compris les entrées de mise à
   l'échelle et de version dans les tâches de jour 2 — sont modifiées
   ultérieurement avec **Update** sur la page du déploiement après avoir coché
-  **Enable advanced mode**, ce qui nécessite un solde de crédits couvrant le
-  coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais
-  de frais de module). Dans un environnement de lab, seul un administrateur
-  peut utiliser le mode avancé.
+  **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules
   dans le projet.
 

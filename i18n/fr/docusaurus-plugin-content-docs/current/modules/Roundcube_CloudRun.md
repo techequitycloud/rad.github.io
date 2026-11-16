@@ -3,7 +3,7 @@ title: "Roundcube sur Google Cloud Run"
 description: "Référence de configuration pour le déploiement de Roundcube sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Roundcube_CloudRun.md @ 92769a4a sha256:8f9500ca7d3c -->
+<!-- translated-from: docs/modules/Roundcube_CloudRun.md @ d8297b62 sha256:c4222e812035 -->
 
 # Roundcube sur Google Cloud Run {#roundcube-on-google-cloud-run}
 
@@ -94,7 +94,7 @@ La suppression ne permet d'économiser de l'argent que si Roundcube restait inut
 
 - **Sessions de lab, pour la formation :** un formateur anime une session pour une classe. Chaque participant dispose de
   l'application dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le
-  formateur. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
+  formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit chaque participant paie la sienne.
   Tout est supprimé à la fin de la session et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les cabinets de conseil :** un partenaire exécute l'application pour un client à partir d'un
   portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible,

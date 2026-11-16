@@ -3,7 +3,7 @@ title: "FreshRSS sur Cloud Run — Guide de lab"
 description: "Lab pratique : déployer FreshRSS sur Cloud Run dans votre propre projet Google Cloud — configuration guidée, vérification, opérations, observabilité et suppression."
 ---
 
-<!-- translated-from: docs/labs/FreshRSS_CloudRun.md @ 15fd4c7 sha256:bd82b2beb94a -->
+<!-- translated-from: docs/labs/FreshRSS_CloudRun.md @ d8297b62 sha256:3c5464271589 -->
 
 # FreshRSS sur Cloud Run — Guide de lab {#freshrss-on-cloud-run--lab-guide}
 
@@ -66,10 +66,7 @@ temps.
   autres entrées du Guide de configuration — y compris les entrées de mise à
   l'échelle et de version dans les tâches du deuxième jour — sont modifiées
   ensuite avec **Mettre à jour** sur la page du déploiement après avoir coché
-  **Activer le mode avancé**, ce qui nécessite un solde de crédits couvrant le
-  coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais
-  de frais de module). Dans un environnement de lab, seul un administrateur
-  peut utiliser le mode avancé.
+  **Activer le mode avancé**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules
   dans le projet.
 

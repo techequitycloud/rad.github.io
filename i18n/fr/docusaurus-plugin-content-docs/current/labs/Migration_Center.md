@@ -3,7 +3,7 @@ title: "Migration Center — Guide de lab"
 description: "Lab pratique : exécutez la découverte et l'évaluation de Google Cloud Migration Center dans votre propre projet — configuration, collecte de données, rapports et suppression."
 ---
 
-<!-- translated-from: docs/labs/Migration_Center.md @ 15fd4c7 sha256:86126173daba -->
+<!-- translated-from: docs/labs/Migration_Center.md @ d8297b62 sha256:b5412d2d3e4c -->
 
 # Migration Center — Guide de lab {#migration-center--lab-guide}
 
@@ -36,7 +36,7 @@ Le lab se concentre sur l'**exploitation du module et du service Migration Cente
 - Un **client RDP** (Microsoft Remote Desktop sur Windows/macOS, ou Remmina/FreeRDP sur Linux).
 - **Project Owner** (ou équivalent) IAM sur le projet. Le compte Google que vous utilisez pour la connexion MCDCv6 nécessite **Migration Center Admin** sur le projet.
 - **Votre propre projet uniquement.** Ce module masque l'option **GCP Project on RAD** (`enable_rad_gcpproject = false`) car il active `migrationcenter`, ce que les politiques du niveau géré par RAD ne permettent pas, il se déploie donc toujours dans un projet que vous apportez. Avant le premier déploiement, la boîte de dialogue de confirmation de déploiement vous demande de prouver que vous le contrôlez (**Get verification code**, exécutez les commandes qu'il affiche en tant que Project Owner, puis **Verify**) et de donner le rôle **Owner** au compte de service de déploiement RAD.
-- **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page d'entrées. Toutes les autres entrées du Guide de configuration sont modifiées par la suite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui nécessite un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- **Mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page d'entrées. Toutes les autres entrées du Guide de configuration sont modifiées par la suite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec la permission de déployer des modules dans le projet.
 - **(Facultatif) AWS** — uniquement si vous souhaitez importer automatiquement un inventaire EC2 en direct : un ensemble de **bootstrap AWS credentials avec des permissions d'écriture IAM** (le module crée un utilisateur IAM à portée limitée et en lecture seule à partir de celles-ci) et la **`aws` CLI** disponible dans l'environnement de déploiement. Laissez les entrées AWS vides pour ignorer AWS entièrement et importer un exemple de CSV pré-établi à la place.
 

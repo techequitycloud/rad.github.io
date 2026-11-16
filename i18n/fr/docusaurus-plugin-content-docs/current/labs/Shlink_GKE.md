@@ -3,7 +3,7 @@ title: "Shlink sur GKE Autopilot — Guide de lab"
 description: "Lab pratique : déployez Shlink sur GKE Autopilot dans votre propre projet Google Cloud — configuration guidée, vérification, exploitation, observabilité et suppression."
 ---
 
-<!-- translated-from: docs/labs/Shlink_GKE.md @ 3055034 sha256:8826692586b9 -->
+<!-- translated-from: docs/labs/Shlink_GKE.md @ d8297b62 sha256:a5c6e9b1f275 -->
 
 # Shlink sur GKE Autopilot — Guide de lab {#shlink-on-gke-autopilot--lab-guide}
 
@@ -50,7 +50,7 @@ ce lab ne reprend volontairement pas ce détail afin de rester exact dans le tem
   `gcloud auth application-default login` exécutés.
 - Le rôle IAM **Project Owner** (ou équivalent) sur le projet.
 - **Vous utilisez votre propre projet ?** Avant le premier déploiement dans ce projet, la boîte de dialogue de confirmation du déploiement vous demande de prouver que vous le contrôlez (**Get verification code**, exécutez les commandes affichées en tant que propriétaire (Owner) du projet, puis **Verify**) et d'attribuer le rôle **Owner** au compte de service de déploiement RAD. Un projet que RAD crée pour vous ne requiert ni l'un ni l'autre.
-- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Sur un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (sur un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
 Définissez une fois ces variables shell ; chaque tâche ci-dessous les réutilise :

@@ -3,7 +3,7 @@ title: "Odoo sur Cloud Run"
 description: "Référence de configuration pour le déploiement d'Odoo sur Google Cloud Run avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Odoo_CloudRun.md @ 92769a4a sha256:3a129b6c1170 -->
+<!-- translated-from: docs/modules/Odoo_CloudRun.md @ d8297b62 sha256:d29db26c8511 -->
 
 # Odoo sur Cloud Run {#odoo-on-cloud-run}
 
@@ -201,7 +201,7 @@ déployer à nouveau lorsque vous en avez besoin.**
 
 - **Sessions de lab, pour la formation.** Un formateur anime une session Odoo pour une
   classe. Chaque participant obtient Odoo dans son propre projet Google Cloud pendant 15
-  minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le
+  minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le
   formateur finance toutes les places à l'avance, soit chaque participant paie la sienne.
   Tout est supprimé à la fin de la session, et les crédits inutilisés sont reversés au
   formateur. Une session de trois heures coûte environ 20 crédits (2 $ US) par participant

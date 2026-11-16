@@ -3,7 +3,7 @@ title: "Jellystat sur GKE Autopilot — Guide de lab"
 description: "Lab pratique : déployez Jellystat sur GKE Autopilot dans votre propre projet Google Cloud — configuration guidée, vérification, exploitation, observabilité et démantèlement."
 ---
 
-<!-- translated-from: docs/labs/Jellystat_GKE.md @ 3055034 sha256:1c5276c1da9e -->
+<!-- translated-from: docs/labs/Jellystat_GKE.md @ d8297b62 sha256:8af4ce2559fa -->
 
 # Jellystat sur GKE Autopilot — Guide de lab {#jellystat-on-gke-autopilot--lab-guide}
 
@@ -49,7 +49,7 @@ le temps.
   `gcloud auth application-default login` exécutés.
 - Le rôle IAM **Project Owner** (ou équivalent) sur le projet.
 - **Vous apportez votre propre projet ?** Avant le premier déploiement dans celui-ci, la boîte de dialogue de confirmation du déploiement vous demande de prouver que vous le contrôlez (**Get verification code**, exécutez les commandes qu'elle affiche en tant que Owner du projet, puis **Verify**) et d'accorder le rôle **Owner** au compte de service de déploiement RAD. Un projet que RAD crée pour vous ne requiert ni l'un ni l'autre.
-- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ce qui exige un solde de crédits couvrant le coût de build estimé de la mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement de lab, seul un administrateur peut utiliser le mode avancé.
+- **Le mode avancé pour les modifications ultérieures.** Le formulaire de création ne demande que la première page de paramètres (et, dans un projet que RAD crée pour vous, guère plus que le nom du tenant et la région). Tous les autres paramètres du Guide de configuration — y compris les paramètres de mise à l'échelle et de version des tâches du jour 2 — se modifient ensuite avec **Update** sur la page du déploiement après avoir coché **Enable advanced mode**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - Un **accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 - (Facultatif, pour l'étape d'association de la tâche 2) Un serveur **Jellyfin** en cours d'exécution —
   déployez-en un d'abord avec le module **Jellyfin (GKE)** ou **Jellyfin (Cloud Run)**

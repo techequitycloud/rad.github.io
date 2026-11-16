@@ -3,7 +3,7 @@ title: "Azure AKS attaché à une flotte Google Cloud — Guide de lab"
 description: "Lab pratique : attacher un cluster Azure AKS à une flotte Google Cloud — enregistrement multicloud, vérification, opérations et suppression."
 ---
 
-<!-- translated-from: docs/labs/AKS_GKE.md @ 15fd4c7 sha256:afa67357b66f -->
+<!-- translated-from: docs/labs/AKS_GKE.md @ d8297b62 sha256:28679f393f4a -->
 
 # Azure AKS attaché à une flotte Google Cloud — Guide de lab {#azure-aks-attached-to-a-google-cloud-fleet--lab-guide}
 
@@ -66,9 +66,7 @@ que ce lab ne duplique délibérément pas.
   première page d'entrées. Toutes les autres entrées du Guide de configuration — y compris les
   entrées de mise à l'échelle et de version dans les tâches de jour 2 — sont modifiées
   ultérieurement avec **Mettre à jour** sur la page du déploiement après avoir coché **Activer
-  le mode avancé**, ce qui nécessite un solde de crédits couvrant le coût de build estimé de la
-  mise à jour (les mises à jour n'entraînent jamais de frais de module). Dans un environnement
-  de lab, seul un administrateur peut utiliser le mode avancé.
+  le mode avancé**, ouvert à tous les comptes tant que les builds sont inclus dans le prix (dans un environnement de lab, seul un administrateur peut l'utiliser). Les mises à jour n'entraînent jamais de frais de module.
 - **Accès à la plateforme RAD** avec l'autorisation de déployer des modules dans le projet.
 
 Définissez ces variables shell une fois ; chaque tâche ci-dessous les réutilise :

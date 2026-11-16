@@ -3,7 +3,7 @@ title: "LiteLLM sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de LiteLLM sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/LiteLLM_GKE.md @ 92769a4a sha256:476fd17679ed -->
+<!-- translated-from: docs/modules/LiteLLM_GKE.md @ d8297b62 sha256:8ba7afea47ee -->
 
 # LiteLLM sur GKE Autopilot {#litellm-on-gke-autopilot}
 
@@ -189,7 +189,7 @@ besoin.**
 - **Sessions de lab, pour la formation.** Un formateur anime une session pour
   une classe. Chaque participant obtient l'application dans son propre projet
   Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation
-  définie par le formateur. Soit le formateur finance toutes les places, soit
+  définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places, soit
   chaque participant paie la sienne. Tout est supprimé à la fin de la session
   et les crédits non utilisés sont restitués au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute

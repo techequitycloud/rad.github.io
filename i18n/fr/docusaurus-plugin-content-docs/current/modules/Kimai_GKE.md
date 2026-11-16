@@ -3,7 +3,7 @@ title: "Kimai sur GKE Autopilot"
 description: "Référence de configuration pour le déploiement de Kimai sur GKE Autopilot avec le module RAD — variables, architecture, réseau et opérations."
 ---
 
-<!-- translated-from: docs/modules/Kimai_GKE.md @ 92769a4a sha256:26669e7a14ba -->
+<!-- translated-from: docs/modules/Kimai_GKE.md @ d8297b62 sha256:bcfad4f064db -->
 
 # Kimai sur GKE Autopilot {#kimai-on-gke-autopilot}
 
@@ -84,7 +84,7 @@ GKE maintient au moins un pod en cours d'exécution, il ne se met donc jamais à
 
 ### Sessions de lab et environnements gérés {#lab-sessions-and-managed-environments}
 
-- **Sessions de lab, pour la formation.** Un formateur anime une session Kimai pour une classe. Chaque participant dispose de Kimai dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Soit le formateur finance toutes les places à l'avance, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session, et les crédits inutilisés sont reversés au formateur.
+- **Sessions de lab, pour la formation.** Un formateur anime une session Kimai pour une classe. Chaque participant dispose de Kimai dans son propre projet Google Cloud pendant 15 minutes à 24 heures, dans la limite d'une allocation définie par le formateur. Le formateur peut aussi créer un seul environnement partagé pour toute la classe, et chacun utilise alors la même application et ses données. Soit le formateur finance toutes les places à l'avance, soit chaque participant paie la sienne. Tout est supprimé à la fin de la session, et les crédits inutilisés sont reversés au formateur.
 - **Environnements gérés, pour les sociétés de conseil.** Un partenaire exécute Kimai pour un client à partir d'un portefeuille cloisonné qu'il finance, et règle directement avec le client. Si le portefeuille est faible, la facturation est interrompue et les données sont conservées, de sorte que personne ne reçoit de frais inattendus. À la fin de l'engagement, le partenaire transfère le projet, et les déploiements deviennent la propriété du client.
 
 Les crédits peuvent être achetés dans plus de 20 devises, y compris XAF, XOF, NGN, GHS, KES et ZAR, par carte, virement bancaire ou mobile money.
