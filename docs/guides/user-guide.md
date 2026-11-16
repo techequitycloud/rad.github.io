@@ -183,7 +183,7 @@ Your credits sit in four separate balances, and they behave differently:
 
 Spending draws on awards first, then event credits, then subscription, then top-up — so the credits that expire soonest are used first, and the ones you bought outright are kept until last.
 
-Deploying a module charges its **module fee** and nothing for build time: **builds are included in the price, so you pay only for success.** The fee is reserved when you confirm and charged when the deployment first succeeds — including when a failed deployment is later fixed by an update.
+Deploying a module charges its **module fee** and nothing for build time: **builds are included in the price.** The fee is reserved when you confirm and charged when the deployment first succeeds — including when a failed deployment is later fixed by an update.
 
 - **Create** — the module fee. **Your first successful deployment is free**, whatever the module and its fee: once per account, for a single module you deploy and pay for yourself (in a solution, one application's fee: the first to succeed; never a lab session or a client project). Project_GCP and Services_GCP deployed on their own are not covered: they are always charged (10 and 20 credits by default), and deploying them does not use the offer up.
 - **Update** — the first 5 successful updates of each deployment in a calendar month (UTC) are free; each further successful update costs 2 credits. Updates RAD makes itself (for example, adding a database to your shared services because a new app needs one) are free and do not count.
