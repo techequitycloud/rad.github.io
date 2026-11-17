@@ -31,6 +31,8 @@ Before you can sync anything, connect the repository that holds your modules. Op
 
 Until the second step is done, RAD does not know which repository is yours: **Sync** stays hidden from your navigation and **Solutions → Solution Catalog → RAD modules** shows no Partner tab. Note that leaving the dropdown on **Use platform default** and saving *clears* your repository rather than setting one.
 
+> **Your repository must belong to a GitHub owner RAD has approved.** For security, RAD accepts a partner module repository only from an approved GitHub owner. Choosing a repository owned by anyone else is refused (*"Partner module repositories must belong to an approved GitHub owner…"*), and a repository that isn't approved is never synced, and its modules can't be deployed. If yours isn't approved, contribute your modules through RAD's own repository, or contact support.
+
 > **Deploying your modules needs one step from an administrator.** The GitHub App lets RAD *read* your modules so they can be synced and listed. Building a deployment of one of your modules — by you or by anyone else — additionally needs deployment access to your repository, which an administrator sets up for each partner. Until they have, a deployment of your module stops before it starts with *"Deployment repository credentials are not configured"*. Ask an administrator to enable deployments for your repository when you are ready for your modules to be deployed.
 
 ## Syncing your modules
@@ -53,11 +55,11 @@ On **Solutions → Solution Catalog → RAD modules** you see two sub-tabs:
 
 Everyone else sees a single combined catalog of public modules. Each module card shows the description, a documentation link, an average star rating, how many times it's been deployed, and its price: the module fee (or **Free module** when there is none), charged once when the deployment first succeeds. Build time is included in the price.
 
-Deploying your own module waives the **module fee** — the module's own credit cost isn't charged when you deploy it yourself. Build time is included in the price for you as for everyone else, so a self-deploy of your own module is free, apart from updates beyond the monthly allowance.
+Deploying your own module waives the **module fee** — the module's own credit cost isn't charged when you deploy it yourself. This applies to deploying the module on its own: inside a solution, your module's fee is charged like any other member's. Build time is included in the price for you as for everyone else, so a self-deploy of your own module is free, apart from updates beyond the monthly allowance.
 
 ## Earning revenue
 
-You earn a partner revenue share when other users deploy your modules. The share is calculated on the module's own credit cost only — build cost is excluded — and only on the part of that cost a user paid for with **purchased** credits, so a deployment settled entirely from awarded credits earns you nothing. Where the customer is charged VAT, your share is worked out on the fee before VAT. A deployment a subscriber makes for their client through **Client Projects** is paid from a wallet funded with purchased credits, so it earns you your share in full.
+You earn a partner revenue share when other users deploy your modules. The share is calculated on the module's own credit cost only — build cost is excluded — and only on the part of that cost a user paid for with credits they **bought**. A deployment settled from awarded credits, event-code credits or credits staff granted by hand earns you nothing, and nor does your own spend on your own modules. Where the customer is charged VAT, your share is worked out on the fee before VAT. A deployment a subscriber makes for their client through **Client Projects** is paid from a wallet funded with purchased credits, so it earns you your share like any paid deployment (apart from any part of the wallet that came from credits staff granted).
 
 Track it on the **Credits** page, on the **Module Revenue** tab. There is no separate Revenue page any more, and no referral tab for partners — partners earn on their modules, not on referrals. The dates open on the last 7 days and the table loads on its own; change them if you need to, and use the refresh button to reload. You see only your own modules — there is no partner picker. **Export to CSV** downloads the whole filtered set, not just the page on screen. Finance also has an org-wide view on **Billing → Module Revenue**.
 
