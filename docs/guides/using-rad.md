@@ -26,7 +26,7 @@ Usage is priced in **credits**: most modules cost a set number of credits to dep
 
 The first time you sign in, your account is created automatically — there is no separate sign-up page: signing up and signing in are the same button on `/signin`, and any page you open while signed out sends you there. New accounts start with the **User** role and are active right away. You are asked to accept the platform terms before the console opens; that acceptance is recorded against your account, and you are asked again if the terms are later updated. Declining leaves you signed out rather than trapped — **Sign out** stays available on that screen.
 
-Where you land depends on your role. Admins open on **Users** and Finance on **Billing**, because each signs in to do a particular job; so do Support and Agent accounts that hold no other role, on **Help** and on **Credits → My Commission** respectively. A support operator or agent who is also a user, trainer or partner lands like one. Users and trainers open on **Solutions**: on **Build Solution with AI** if you have access to it — purchased credits, from a subscription or a top-up — otherwise on **Solution Catalog → RAD modules**. An agent who is also a user or trainer lands the same way. Partners always have access, so they open on **Build Solution with AI**. If you pressed **Deploy** on a module in the public catalogue on the sign-in page before signing in, you land on that module instead, ready to deploy. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
+Where you land depends on your role. Admins open on **Users** and Finance on **Billing**, because each signs in to do a particular job; so do Support and Agent accounts that hold no other role, on **Help** and on **Credits → My Commission** respectively. A support operator or agent who is also a user, trainer or partner lands like one. Users and trainers open on **Solutions**: on **Build Solution with AI** if you have access to it — purchased credits, from a subscription or a top-up — otherwise on **Solution Catalog → RAD modules**. An agent who is also a user or trainer lands the same way. Partners always have access, so they open on **Build Solution with AI**. A user or trainer without purchased credits who has not yet connected a Google Cloud project of their own is first offered **Connect your Google Cloud project**: RAD checks that you control the project, that it can deploy into it and that billing is switched on, so your first deployment does not fail halfway through; **Skip for now** goes straight on to the catalog. If you pressed **Deploy** on a module in the public catalogue on the sign-in page before signing in, you land on that module instead, ready to deploy. (If the platform is running in private mode, only people who already have a RAD account can sign in — new self-registration is turned off, so ask an administrator to create your account if you can't get in.)
 
 To sign out, open the **profile dropdown** in the top-right corner and choose **Sign Out**.
 
@@ -44,7 +44,7 @@ The top navigation bar shows only the items relevant to your role (or roles). Wh
 - A **language selector** in the top bar, beside the light/dark theme control.
 - **Ask AI** in the top bar (in the menu on a phone): ask RAD's AI assistant about modules, pricing or deployments in plain language. It is also on the sign-in, pricing and guide pages. Inside the console it answers from these guides and links the section it used. Its answers can be wrong, so check anything important; each time you open it, the conversation starts afresh. Inside the console it needs purchased credits or a staff role.
 - **Pricing**, just before **Help** in the top navigation — RAD's prices, shown inside the console.
-- In the footer: **Contact Us** (to the **Help** page), **Feedback** (RAD's public feedback board, at fider.radmodules.dev, where you can suggest and vote on improvements), the Terms and Privacy documents, **Cookie settings**, and **Pricing** again.
+- In the footer: **Contact Us** (to the **Help** page), **Feedback** (RAD's public feedback board, at fider.radmodules.dev, where you can suggest and vote on improvements), the Terms and Privacy documents, **Cookie settings**, **Pricing** again, the **Deployment Guide** and the **Blog**.
 
 There is no separate combined dashboard — each item in the top nav is its own page.
 
@@ -70,7 +70,7 @@ You can hold more than one role at once (for example Agent and Partner), and a *
 | **Admin** | Everything a user can do, plus full platform administration: users, settings, modules, and oversight | Users |
 | **Partner** | A user who also publishes their own modules and earns revenue from them | Solutions |
 | **Agent** | A sales role: earns a cash commission on the module fees that users they referred pay with purchased credits | Credits → My Commission (Solutions if also a User or Trainer) |
-| **Finance** | Financial reporting and payouts: subscription tiers, credit settings and grants, event codes, revenue, invoices; read-only lab oversight | Billing |
+| **Finance** | Financial reporting and payouts: subscription tiers, credit settings and grants, event codes, revenue, invoices; lab oversight (view every session, and end one) | Billing |
 | **Support** | Triages support tickets; sees deployments for the customers whose open tickets are assigned to them | Help |
 | **Trainer** | Runs lab sessions from **Solutions → Managed Environments** — one lab environment per participant — and manages the environments they provisioned; also has everything a User has | Solutions |
 
@@ -89,7 +89,7 @@ There are two kinds of modules:
 - **Platform modules** — published by RAD.
 - **Partner modules** — published by partners.
 
-If you're a partner you'll see two tabs (your own **Partner modules** and **Platform modules**, which also includes other partners' public modules). Everyone else sees a single combined catalog of public modules.
+If you're a partner with your own module repository connected you'll see two tabs (your own **Partner Modules** and **Platform Modules**, which also includes other partners' public modules). Everyone else sees a single combined catalog of public modules.
 
 You can **pin** the modules you use most so they stay at the top, **search** by name, filter by **category** from the list beside the grid, and page through the catalog. A stats strip at the top shows total deployments, your credit balance (when credits are enabled), and how long deployment history is kept.
 
@@ -103,7 +103,7 @@ You can **pin** the modules you use most so they stay at the top, **search** by 
 
 Basic and advanced are about which settings you can reach, not what you pay. A new deployment is always created with the essential settings only, and is charged the module's fee as described under [Credits](#credits). The full set of settings — **advanced mode** — is offered only when you **update** a deployment, and an update never charges a module fee.
 
-On the **Deployments** page each row shows the module, the deployment ID, an editable **star rating**, when it was created, how long it took, the status, and the action. There's no project or credits column — open a deployment for its project, and its **Builds** tab for what each build consumed. Admins and support see an extra column for who deployed it. Admins can switch between **All deployments** and **My deployments**; support has no switch and sees only the deployments of the customers whose open tickets are assigned to them, not the whole platform; everyone else sees their own. A **Deleted** deployment stays listed only for someone who can still purge it (or, for support, restore it) — for example, a lab participant does not see the environments their trainer has torn down.
+On the **Deployments** page each row shows the module, the deployment ID, an editable **star rating**, when it was created, how long it took, the status, and the action. There's no project or credits column — open a deployment for its project, and its **Builds** tab for what each build consumed. Admins and support see an extra column for who deployed it. Admins can switch between **All Deployments** and **My Deployments**; support has no switch and sees only the deployments of the customers whose open tickets are assigned to them, not the whole platform; everyone else sees their own. A **Deleted** deployment stays listed only for someone who can still purge it (or, for support, restore it) — for example, a lab participant does not see the environments their trainer has torn down.
 
 Click a deployment to open its details, which has three tabs:
 
@@ -116,16 +116,16 @@ From the details view you can:
 - **Update** — re-open the configuration form (pre-filled) and re-apply changes. Available once a deployment has finished.
 - **Delete** — choose **Delete** to tear down the cloud resources, or **Purge** to remove the deployment from RAD *without* destroying the cloud resources (useful when a deployment is stuck or was changed outside RAD). A deployment that belongs to a solution can be deleted or purged only from the solution's page. A RAD-managed GCP project ("GCP Project on RAD") is torn down the same way, but because that takes the whole project with it, RAD refuses while any other deployment is still running in that project and lists the ones to delete first. Google keeps a deleted project recoverable for about 30 days. Google Cloud's terms do not guarantee that a restored project will be usable, so a restore cannot be relied on to get a deleted project back: take appropriate backups of your data and configuration before you delete, and if a restore fails, redeploy the application and restore its configuration from those backups.
 - **Cancel** — releases a deployment that is still Queued or Waiting and has not started building, or a purge that has stalled.
-- **Check status** — offered when a deployment has shown Queued, Pending, Working or Deleting for 30 minutes with nothing changing. RAD asks Cloud Build whether a build is still running; if none is, the status is corrected so you can delete or update it, and if one is, it tells you when it will finish. See [When a deployment seems stuck](user-guide.md#when-a-deployment-seems-stuck).
+- **Check status** — offered when a deployment has shown Queued, Pending, Working or Deleting for an hour with nothing changing. RAD asks Cloud Build whether a build is still running; if none is, the status is corrected so you can delete or update it, and if one is, it tells you when it will finish. See [When a deployment seems stuck](user-guide.md#when-a-deployment-seems-stuck).
 
 Deployment statuses you may see include Queued, Pending, Working, Waiting (on a prerequisite deployment to finish), Success, Failure, Internal Error, Deleting, Deleted, Cancelled, Timeout, and Expire.
 
 ### Solutions
 
-**Solutions** holds everything you can deploy, on two tabs — and it is where users, partners and trainers land after signing in (see [Signing in](#signing-in)). After those two tabs comes **Managed Environments**: client projects while the platform offers them (see the [Client Projects Guide](client-projects-guide.md)) and, for trainers, finance and admins, lab sessions while they are enabled. Its **All** view lists both; the **Lab sessions** and **Client projects** views each have their own create button (**New lab session**, **New client project**) for those allowed to create one.
+**Solutions** holds everything you can deploy, on two tabs — and it is where users, partners and trainers land after signing in (see [Signing in](#signing-in)). After those two tabs comes **Managed Environments**: client projects while the platform offers them (see the [Client Projects Guide](client-projects-guide.md)) and, for trainers, finance and admins, lab sessions while they are enabled. Its **All** view lists both; the **Lab sessions** and **Client projects** views each have their own create button (**New lab session**, **New client project**) for those allowed to create one. If someone else runs an environment for you — a place in a trainer's lab, or a client project a partner runs for you — the tab appears for you too, with a **Run for you** view listing them.
 
 - **Build Solution with AI** — answer four plain questions and RAD works out which applications deliver what you described, prices the whole thing and estimates how long it takes. **Build this** saves it as one of your solutions and opens it ready to deploy. Start here if you know what you want to achieve but not what it is called. It is also reachable directly at **/build**. It needs purchased credits (partners always have access); without them the tab shows what it does, locked, with a **Buy credits** button while the platform is selling credits.
-- **Solution Catalog** — everything ready to deploy, with a type filter across the top (**All** · **My solutions** · **RAD solutions** · **RAD modules**) and a **New solution** button beside it that opens **Build Solution with AI**. **All** shows every kind on one page, each under its own heading, leaving out any kind with nothing to show; the category list beside the grid appears only when a single type (**RAD solutions** or **RAD modules**) is selected, because solutions and modules use different categories. The search box above the tabs searches the whole Solution Catalog, and your query stays in place as you switch types.
+- **Solution Catalog** — everything ready to deploy, with a type filter across the top (**All** · **My solutions** · **RAD solutions** · **RAD modules**). **All** shows every kind on one page, each under its own heading, leaving out any kind with nothing to show; the category list beside the grid appears only when a single type (**RAD solutions** or **RAD modules**) is selected, because solutions and modules use different categories. The search box above the tabs searches the whole Solution Catalog, and your query stays in place as you switch types.
   - **My solutions** — bundles you composed yourself. Describe what you want to build, and RAD suggests modules from the catalog with a short reason for each. Add the ones you want, name it, and save. Your custom solutions are private to you, show **Draft** until deployed and **Deployed** afterwards, and deploy through exactly the same pipeline as a RAD solution. Where two members have no known connection between them, RAD says so on the card rather than guessing.
   - **RAD solutions** — ready-made bundles of modules curated by RAD, grouped into categories. Each card shows a combined credit cost and an average rating derived from the modules it contains.
   - **RAD modules** — the module catalog described above.
@@ -136,7 +136,7 @@ A solution's modules are grouped into **waves**, a rough deploy order — but wh
 
 Usage is metered in credits, held in four separate balances:
 
-- **Awards** — free credits (signup, monthly, referral), reset each month. From 1 December 2026 the monthly grant goes only to accounts active in the previous 30 days.
+- **Awards** — free credits (signup, monthly, referral), reset each month; sign-up credits are kept for at least 30 days. From 1 December 2026 the monthly grant goes only to accounts active (a successful build or a purchase) in the previous 30 days, by default.
 - **Event credits** — free credits claimed with a code from a RAD partner event. They expire on their own date.
 - **Subscription** — credits from a subscription plan. Where the platform is set to reset them, a renewal replaces the allowance rather than adding to it.
 - **Top-up** — credits bought outright as a one-off. These never expire.
@@ -152,9 +152,10 @@ Within the daily allowance above, a **failed** deployment or update costs you no
 The **Credits** page has:
 
 - A **Credit Transactions** tab — your full history of awards, purchases, and spend, filterable by deployment and date, with **Export CSV**.
+- A **Project Transactions** tab — shown whenever project credits are enabled (see [Costs and invoices](#costs-and-invoices)).
 - A **Subscriptions** tab and a **Buy Credits** tab — shown only while the platform is selling credits (see below).
 - A **Linked Projects** tab — have RAD pay Google for a Google Cloud project you already own (see [Costs and invoices](#costs-and-invoices)).
-- Depending on your role, revenue tabs — **My Commission** (agents), **Module Revenue** (partners), **My Referral Revenue** (admins and finance) — sit here too. There is no separate Revenue page.
+- Depending on your role, revenue tabs — **My Commission** (agents), **Module Revenue** (partners, admins and finance), **My Referral Revenue** (admins and finance) — sit here too. There is no separate Revenue page.
 - A **Calculate ROI** tab, always last — the calculator described below.
 
 To buy credits, choose a currency and amount, pick a payment provider, and complete checkout on the provider's secure page. Your credits are added automatically once the payment confirms.
@@ -163,7 +164,7 @@ Some platforms require *purchased* credits (not just awarded ones) for certain d
 
 ### AI features and their daily limit
 
-RAD's AI features — **Ask AI**, the **Conversational Assistant**, **Build Solution with AI**, **Suggest fixes** and the AI answer on the support form — never cost credits. They share one allowance per account: **100 requests a day** if you bought credits (a top-up or a subscription payment) in the last 90 days or hold a staff role, otherwise **20**. When the 20 are used up, RAD says so and that buying credits or subscribing raises it to 100. See the [User Guide](user-guide.md#ai-requests-each-day).
+RAD's AI features — **Ask AI**, the **Conversational Assistant**, **Build Solution with AI**, **Suggest fixes** and the AI answer on the support form — never cost credits. They share one allowance per account, set by RAD's finance team: by default **100 requests a day** if you bought credits (a top-up or a subscription payment) in the last 90 days or hold a staff role, otherwise **20**. When the smaller allowance is used up, RAD says so and that buying credits or subscribing raises it. See the [User Guide](user-guide.md#ai-requests-each-day).
 
 ### Billing and subscriptions
 
@@ -189,7 +190,7 @@ Platform-wide reporting stays an administrator and finance view: the **Module Co
 
 ## Getting help
 
-The **Help** page's **Send Message** tab is a contact form that raises a support ticket and emails the support team. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale, and you can raise up to 5 in 24 hours. The **My Tickets** tab beside it lists the tickets you have raised, newest first, with where each one stands (**New**, **In progress**, **Resolved** or **Closed**) — sending a ticket takes you there, so you see the one you just raised. Depending on your role you may see more tabs: **Setup Requests** (admin and finance) and **Support Tickets** (admin, support, and finance). (Administrators see a message form on Send Message instead of the contact form, and have no My Tickets tab.)
+The **Help** page's **Send Message** tab is a contact form that raises a support ticket and emails the support team. Raising a ticket needs purchased credits (a subscription or a top-up) while credits are on sale, unless you hold a staff role, and you can raise up to 5 in 24 hours. The **My Tickets** tab beside it lists the tickets you have raised, newest first, with where each one stands (**New**, **In progress**, **Resolved** or **Closed**) — sending a ticket takes you there, so you see the one you just raised. Depending on your role you may see more tabs: **Setup Requests** (admin and finance) and **Support Tickets** (admin, support, and finance). (Administrators see a message form on Send Message instead of the contact form, and have no My Tickets tab.)
 
 Your **referral link** is on your **Profile**, in the **Refer and earn** section — open the profile menu at the top right. It is shown whenever the referral program is on, including when referrals are unlimited (it is never shown to administrators), and the **Credits** page has a **Referral link** button that takes you there. Everyone who signs up through your link is linked to your account, and the referral bonus is paid when one of their builds first succeeds (a create or an update) or they buy credits, within 90 days of signing up.
 

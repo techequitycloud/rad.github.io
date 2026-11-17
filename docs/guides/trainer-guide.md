@@ -125,7 +125,7 @@ In a **Shared** session, **Provision** builds one environment for the whole clas
 
 ### After the class
 
-The day after a session ends, each participant who kept their place is emailed a link to set up the same module or solution in their own account, mentioning that their free credits can pay the module fee.
+The day after a session ends, each participant who kept their place is emailed a link to set up the same module or solution in their own account, mentioning that their first deployment on RAD is free (once per account) and that, after that, their free credits can pay the module fee. Finance can switch this email off.
 
 Each participant gets one email saying their lab has ended and why: its time was up, its credits were used up, or it was ended early. It says **you** ended it only when you did; when an administrator or Finance ended it, it says the lab was ended early.
 

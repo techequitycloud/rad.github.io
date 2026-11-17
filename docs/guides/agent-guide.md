@@ -41,7 +41,8 @@ You earn a share of the **module fees** your referred users pay **with credits t
 | Counts towards commission | Never counts |
 |---|---|
 | A module's own fee, including the flat fee of a Google Cloud project or shared-services module deployed on its own (set up beneath an application, they are included in its price and carry no fee) | Build (time-based) charges, and Google Cloud project usage |
-| The part of a fee paid with purchased credits | The part paid with free or awarded credits (signup, monthly, referral, event codes) |
+| The part of a fee paid with purchased credits | The part paid with free or awarded credits (signup, monthly, referral, event codes), or with credits RAD's finance team granted |
+| | A fee RAD waives, such as a user's free first deployment |
 | | The self-serve project surcharge |
 | | Anything spent inside a **lab** (training) session |
 | | Anything spent in a **client project** (a subscriber's managed service for their client) |
@@ -64,7 +65,7 @@ The **My Commission** tab is your statement.
   - **Payable**: past the hold, waiting for the next payout.
   - **In payout**: included in a payout Finance is making.
   - **Paid**: included in a payout Finance has marked as paid.
-  - **Reversed — not paid** / **Deducted from next payout**: Finance reversed it (for example, the fee was refunded), with the reason shown on the row.
+  - **Reversed — not paid** / **Deducted from next payout**: it was reversed, with the reason shown on the row — by Finance (for example, the fee was refunded), or automatically when a refund or chargeback of the user's payment leaves their purchased balance negative while the commission is still on hold. Commission already paid is never reversed automatically.
 - **Your payouts** lists every payout batch that paid you, marked *paid* with a date or *being paid*.
 
 ## How you get paid
