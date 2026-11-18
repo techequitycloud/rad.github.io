@@ -415,6 +415,40 @@ const reserve = (n) => {
   return true;
 };
 
+/**
+ * Write the expected {#id} onto each translated heading, in order. The ids are
+ * derived from the English and handed to the model, but a small model copies
+ * them imperfectly (task-4--observe--logging for task-4--observe-logging), and
+ * one wrong id fails the page. Only when the piece has exactly as many headings
+ * as ids: a different count means the structure itself changed, which the
+ * validator must still reject.
+ */
+function stampIds(text, ids) {
+  if (!ids || !ids.length) return text;
+  const lines = text.split('\n');
+  const at = [];
+  let fence = null;
+  lines.forEach((line, i) => {
+    const f = line.match(/^\s*(`{3,}|~{3,})/);
+    if (fence) {
+      if (f && line.trim().startsWith(fence)) fence = null;
+      return;
+    }
+    if (f) {
+      fence = f[1];
+      return;
+    }
+    if (/^#{1,6}\s+\S/.test(line)) at.push(i);
+  });
+  if (at.length !== ids.length) return text;
+  at.forEach((i, k) => {
+    const h = lines[i].match(/^(#{1,6})\s+(.*?)\s*$/);
+    const title = h[2].replace(/\s*\{#[^}]*\}\s*$/, '').trim();
+    lines[i] = `${h[1]} ${title} {#${ids[k]}}`;
+  });
+  return lines.join('\n');
+}
+
 async function translatePlan(enRel, plan, feedback, tally) {
   const toSend = plan.pieces.filter((p) => p.en !== undefined);
   const out = [];
@@ -427,7 +461,7 @@ async function translatePlan(enRel, plan, feedback, tally) {
     const u = userPrompt(piece, {enRel, label: pieceLabel(plan, toSend.indexOf(piece), toSend.length), feedback});
     budget.used++;
     tally.calls++;
-    const fr = unmaskCode((await callModel(u.text)).replace(/\s+$/, ''), u.saved);
+    const fr = stampIds(unmaskCode((await callModel(u.text)).replace(/\s+$/, ''), u.saved), piece.ids);
     // Keep the English piece's trailing blank lines, so the next section starts where it did.
     out.push(fr + piece.en.match(/\s*$/)[0]);
   }
