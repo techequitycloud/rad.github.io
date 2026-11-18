@@ -463,7 +463,7 @@ specific to or notable for Odoo are listed; every other input is inherited from
 
 | Variable | Default | Description |
 |---|---|---|
-| `service_type` | `LoadBalancer` | How the Service is exposed. |
+| `service_type` | `LoadBalancer` | How the Service is exposed. While a Gateway is in use (the Odoo default), `LoadBalancer` is created as `ClusterIP`, so the Gateway is the only public entry. |
 | `session_affinity` | `ClientIP` | Sticky routing; required when Redis is not enabled for session sharing. |
 | `workload_type` | `null` | Auto-resolves to StatefulSet when `stateful_pvc_enabled = true`. |
 | `network_tags` | `['nfsserver']` | Pod tags; `nfsserver` is required for NFS firewall connectivity. |

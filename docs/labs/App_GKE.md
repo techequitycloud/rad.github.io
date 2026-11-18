@@ -569,7 +569,7 @@ Then delete the lab secret: `gcloud secrets delete lab-gke-api-key --project="$P
 | `gke_cluster_selection_mode` | `"primary"` | Yes | `primary`, `round-robin`, or `explicit` (requires `gke_cluster_name`; plan-time check). |
 | `namespace_name` | `""` | Yes (flag) | Explicit namespace; empty = `SERVICE`. Changing it on a running app moves every Kubernetes object to a new namespace — treat it as create-time. |
 | `workload_type` | `null` (Deployment) | **No** | `Deployment` or `StatefulSet`. See Lab 7. |
-| `service_type` | `"LoadBalancer"` | **No** | `LoadBalancer` (external L4 IP), `ClusterIP` (internal), `NodePort`. |
+| `service_type` | `"LoadBalancer"` | **No** | `LoadBalancer` (external L4 IP), `ClusterIP` (internal), `NodePort`. While a Gateway is in use (Lab 19, CDN or Cloud Armor), `LoadBalancer` is created as `ClusterIP`, so the Gateway is the only public entry. |
 | `service_port` | `80` | Yes | Port clients connect to on the Service. |
 | `extra_service_ports` | `[]` | Yes | Extra Service ports: `name` (unique, plan-checked), `port`, optional `target_port`, `protocol` (default `TCP`). |
 | `session_affinity` | `"ClientIP"` | Yes | `ClientIP` (sticky per client IP) or `None`. |
@@ -1669,7 +1669,7 @@ A fresh Gateway can return `404`/`502` or refuse TLS for 5–15 minutes after it
 
 #### Explore further
 
-- **Check for a second door.** `kubectl get svc "$SERVICE" -n "$NS"`: with `service_type = "LoadBalancer"` the Service can still carry its own external L4 IP, which reaches the pods directly and bypasses anything you attach to the Gateway (IAP, Cloud Armor). For a Gateway-only app set `service_type = "ClusterIP"` (Lab 6) — `enable_custom_domain = true` keeps the Gateway working.
+- **Confirm there is no second door.** `kubectl get svc "$SERVICE" -n "$NS"` now shows `ClusterIP` with `EXTERNAL-IP <none>`: while the Gateway is active, a `LoadBalancer` setting is created as `ClusterIP`, so nothing reaches the pods around IAP or Cloud Armor. The old L4 IP is released when you switch the Gateway on, and a new one is assigned if you switch it off again. `NodePort` is not converted and its node ports are not behind the Gateway — avoid it with IAP or Cloud Armor.
 - With the Gateway active, add `uptime_check_config = { enabled = true, path = "/" }` (Lab 10): the check now probes `https://<a-b-c-d>.nip.io`.
 - **Static IP rename (not update-safe):** `static_ip_name = "lab-gke-ip"` re-addresses the Gateway — new IP, new `nip.io` host, new certificate. Verify with `gcloud compute addresses list --filter="name=lab-gke-ip"`.
 - Set `network_tags = ["lab-tag", "nfsserver"]` and confirm nothing changes (`kubectl get nodes -o wide` shows no new tags, NFS still mounted).
@@ -1751,7 +1751,7 @@ Open `https://$HOST/` in a browser signed in as an authorised user: after sign-i
 
 #### Watch out for
 
-- IAP protects only the **Gateway** path. If the Service still has its own external L4 IP (see Lab 19 *Explore further*), that address bypasses IAP — use `service_type = "ClusterIP"` for an IAP-only app.
+- IAP protects only the **Gateway** path. With the Gateway on, a `LoadBalancer` Service is created as `ClusterIP`, so there is no second address (see Lab 19 *Explore further*); `service_type = "NodePort"` is not converted and is not behind IAP — don't combine them.
 - The IAP accessor role is granted at **project** level, so it also opens other IAP-protected apps in the same project to the same people.
 - An empty allowlist is refused at plan time rather than locking everyone out.
 
