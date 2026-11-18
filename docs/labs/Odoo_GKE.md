@@ -206,9 +206,11 @@ database password in Secret Manager; buckets `gcs-<service>-addons`, `gcs-<servi
    echo "$URL"
    ```
 
-   The `LoadBalancer` Service also has its own external IP and serves Odoo over plain HTTP,
-   **without passing through the Gateway** — so IAP (Lab 20) and Cloud Armor (Lab 21) do not
-   apply to that address: `kubectl get svc "$SERVICE" -n "$NS"`.
+   The Gateway is the only public entry point. Because Odoo_GKE turns the Gateway on, the
+   Odoo Service is created as `ClusterIP` even though `service_type` defaults to
+   `LoadBalancer`, so it has no external IP of its own and nothing can bypass IAP (Lab 20) or
+   Cloud Armor (Lab 21): `kubectl get svc "$SERVICE" -n "$NS"` shows `ClusterIP` and
+   `EXTERNAL-IP <none>`.
 
 ---
 
@@ -628,11 +630,11 @@ then delete the secret: `gcloud secrets delete odoo-lab-marker --project="$PROJE
 | `gke_cluster_name` | `""` | Yes | Target cluster; empty auto-discovers the Services_GCP cluster. Changing it moves the app to another cluster. |
 | `namespace_name` | `""` | Yes | Namespace; empty uses the service name. Changing it moves every namespaced resource. |
 | `workload_type` | `null` | **No** | `Deployment` or `StatefulSet`; `null` picks StatefulSet when `stateful_pvc_enabled = true` (Lab 7). |
-| `service_type` | `LoadBalancer` | **No** | Kubernetes Service type. The Gateway reaches Odoo either way. |
+| `service_type` | `LoadBalancer` | **No** | Kubernetes Service type. While a Gateway is in use (custom domain, CDN or Cloud Armor — the Odoo default), `LoadBalancer` is created as `ClusterIP` so the Gateway is the only way in. `NodePort` is honoured as set. |
 | `session_affinity` | `ClientIP` | Yes | Sticky routing on the Service. |
 | `enable_multi_cluster_service` | `false` | Yes | Creates a `ServiceExport` for fleet-wide consumption. Needs a fleet with MCS. |
 | `configure_service_mesh` | `false` | **No** | Labels the namespace for Istio sidecar injection. Needs Cloud Service Mesh. |
-| `deployment_strategy` | `null` | **No** | Not used by this module — the foundation already uses `Recreate` because Odoo is NFS-backed. |
+| `deployment_strategy` | `null` | **No** | `RollingUpdate` or `Recreate`. `null` lets the foundation choose — `Recreate` here, because Odoo is NFS-backed. |
 | `enable_network_segmentation` | `false` | **No** | Creates the NetworkPolicy `<tenant-prefix>-namespace-isolation`. |
 | `termination_grace_period_seconds` | `30` | Yes | Seconds Odoo gets after SIGTERM before it is killed. |
 | `deployment_timeout` | `1800` | Yes | How long an apply waits for the rollout to finish. |
@@ -678,7 +680,7 @@ ranges, DNS, the Cloud SQL instance's private IP, the NFS server and Redis.
 - `gke_cluster_name` and `namespace_name` are flagged update-safe but changing them relocates the
   app (and recreates the Gateway and its reserved IP). If you ever pin them, pin them to the
   derived values you see today (`$CLUSTER`, `$NS`).
-- `deployment_strategy` is declared but not passed through; setting it changes nothing.
+- `deployment_strategy = "RollingUpdate"` briefly runs two Odoo pods on the same NFS share and database during an update. The inferred `Recreate` avoids exactly that; override it only if you accept the overlap. Check the result with `kubectl get deploy "$SERVICE" -n "$NS" -o jsonpath='{.spec.strategy.type}'`.
 - Turning on `configure_service_mesh` or `enable_multi_cluster_service` without the platform
   feature behind it fails the apply or does nothing useful.
 
@@ -1718,13 +1720,13 @@ authorised user, Odoo's own login page follows (IAP is in front of Odoo's login,
 
 #### Watch out for
 
-- **IAP protects only the Gateway.** With the default `service_type = "LoadBalancer"` the Odoo
-  Service keeps its own external IP, and that address serves Odoo directly without passing
-  through IAP. Check it — this returns `200` while the Gateway host redirects to Google sign-in:
+- **IAP guards only what goes through the Gateway.** With the Gateway on, the Odoo Service is
+  `ClusterIP` and has no external IP, so there is no way around IAP. `service_type = "NodePort"`
+  is not converted and does not pass through IAP — keep the default. Confirm there is no second
+  address:
 
   ```bash
-  SVC_IP=$(kubectl get svc "$SERVICE" -n "$NS" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-  curl -s -o /dev/null -w '%{http_code}\n' "http://$SVC_IP/web/login"
+  kubectl get svc "$SERVICE" -n "$NS"     # TYPE ClusterIP, EXTERNAL-IP <none>
   ```
 - The uptime check (Lab 10) cannot sign in, so with IAP on it reports the service as failing.
 - Odoo's mobile apps and external integrations (XML-RPC/JSON-RPC from outside) cannot pass IAP.
@@ -1790,10 +1792,10 @@ curl -s -o /dev/null -w "%{http_code}\n" "${URL}/web/login?id=1%27%20OR%20%271%2
 
 #### Watch out for
 
-- **Cloud Armor protects only the Gateway.** The Service's own external IP (default
-  `service_type = "LoadBalancer"`) reaches Odoo directly, so a request sent there is never
-  filtered by Cloud Armor — send the lab's XSS probe to that IP and it is answered by Odoo, not
-  blocked with a 403.
+- **Cloud Armor filters only what goes through the Gateway.** With the Gateway on, the Odoo
+  Service is `ClusterIP` with no external IP, so every request passes Cloud Armor. Deployments
+  updated before this behaviour existed lose their old Service IP on their next update — that
+  is intended.
 - Probes return `200` for the first few minutes — that is propagation, not a broken policy.
 - Odoo's own forms can trip generic WAF rules when users paste HTML or code into fields; check the
   policy's logs before blaming Odoo.
@@ -1992,7 +1994,7 @@ every group of this module was tested on a live deployment.
   If you set `initialization_jobs`, check `nfs-init` and `db-init` are still in the list (Lab 11).
 - **A setting "did nothing".** Check the lab's table: `container_resources`, `stateful_fs_group`,
   `service_annotations` and `service_labels` are create-time only; `network_tags`,
-  `application_database_name`/`_user`, `deployment_strategy` and `cloud_armor_policy_name` are inert.
+  `application_database_name`/`_user` and `cloud_armor_policy_name` are inert.
 - **Update refused at plan time.** Read the message — it names the conflicting settings (VPA with
   `min_instance_count` above 1, IAP without an OAuth client, a PVC on the NFS path, a bare-number
   memory quota, Cloud Deploy without a trigger…). Nothing was changed.
