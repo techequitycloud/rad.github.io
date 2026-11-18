@@ -212,9 +212,18 @@ jobs:
             require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
           "
 
-      - name: Re-check everything
+      # Re-check the French files THIS run wrote, not the whole site. With --all,
+      # one stale page anywhere (even one this run never touched) failed the step
+      # and blocked the PR for every page that did pass, contradicting "continue
+      # so the good ones still ship" above. Failed pages are restored, not written,
+      # so they are not in the diff; `validate` mode still checks everything.
+      - name: Re-check the pages this run wrote
         if: steps.plan.outputs.go == 'true'
-        run: node scripts/i18n/check.mjs --all
+        run: |
+          changed=$( { git diff --name-only -- i18n/fr; git ls-files --others --exclude-standard i18n/fr; } | grep -E '\.mdx?$' | sort -u)
+          if [ -z "$changed" ]; then echo "No French page written."; exit 0; fi
+          echo "$changed"
+          node scripts/i18n/check.mjs $changed
 
       - name: Open a PR
         if: steps.plan.outputs.go == 'true'
