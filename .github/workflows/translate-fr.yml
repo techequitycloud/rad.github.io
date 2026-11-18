@@ -27,8 +27,10 @@ name: French translations
 # Workload Identity Federation as rad-docs-translator (rad-automation
 # docs_translator.tf): no key is stored, and that identity can only call models.
 # Repository variables it needs: GCP_WIF_PROVIDER, GCP_TRANSLATOR_SA,
-# VERTEX_PROJECT; optional VERTEX_LOCATION (us-central1), TRANSLATE_MODEL
-# (gemini-2.5-flash-lite; gemini-2.5-flash costs ~5x -- cost review 2026-11-15).
+# VERTEX_PROJECT; optional VERTEX_LOCATION (global), TRANSLATE_MODEL
+# (gemini-3.5-flash-lite, the lite tier chosen in the 2026-11-15 cost review;
+# gemini-2.5-* stopped being served to the project in 2026-11. 3.x models are
+# served only on `global` -- change the model and the location together).
 
 # MANUAL-ONLY by owner decision 2026-10-13 (Actions spending limit): this no
 # longer runs on pull requests or on pushes to main. Start it with "Run workflow"
@@ -94,9 +96,9 @@ jobs:
     env:
       AUTO_TRANSLATE: ${{ vars.FR_AUTO_TRANSLATE }}
       TRANSLATE_PROVIDER: vertex
-      TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'gemini-2.5-flash-lite' }}
+      TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'gemini-3.5-flash-lite' }}
       VERTEX_PROJECT: ${{ vars.VERTEX_PROJECT }}
-      VERTEX_LOCATION: ${{ vars.VERTEX_LOCATION || 'us-central1' }}
+      VERTEX_LOCATION: ${{ vars.VERTEX_LOCATION || 'global' }}
       WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
       TRANSLATOR_SA: ${{ vars.GCP_TRANSLATOR_SA }}
     steps:

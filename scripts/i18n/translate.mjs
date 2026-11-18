@@ -19,8 +19,8 @@
 //
 // Providers (TRANSLATE_PROVIDER):
 //   vertex     Gemini on Vertex AI (default). Env: VERTEX_PROJECT, VERTEX_LOCATION
-//              (default us-central1), TRANSLATE_MODEL (default gemini-2.5-flash-lite;
-//              gemini-2.5-flash is ~5x the cost and is opt-in with --model).
+//              (default global), TRANSLATE_MODEL (default gemini-3.5-flash-lite;
+//              a larger model, e.g. gemini-3.8-flash, is opt-in with --model).
 //              Auth: GOOGLE_ACCESS_TOKEN if set, else `gcloud auth print-access-token`
 //              (refreshed every 45 minutes) -- in CI, gcloud is signed in through
 //              Workload Identity Federation, so no key is stored anywhere.
@@ -58,7 +58,7 @@ const flagValue = (name) => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 const PROVIDER = process.env.TRANSLATE_PROVIDER || 'vertex';
-const MODEL = flagValue('--model') || process.env.TRANSLATE_MODEL || (PROVIDER === 'vertex' ? 'gemini-2.5-flash-lite' : 'claude-sonnet-5');
+const MODEL = flagValue('--model') || process.env.TRANSLATE_MODEL || (PROVIDER === 'vertex' ? 'gemini-3.5-flash-lite' : 'claude-sonnet-5');
 const MAX_CALLS = Number(flagValue('--max-calls') ?? 150);
 const DRY_RUN = args.includes('--dry-run');
 const FORCE = args.includes('--force');
@@ -74,7 +74,10 @@ const PRICES = {
 const CONCURRENCY = Number(process.env.TRANSLATE_CONCURRENCY || 4);
 const KEY = process.env.ANTHROPIC_API_KEY;
 const VERTEX_PROJECT = process.env.VERTEX_PROJECT;
-const VERTEX_LOCATION = process.env.VERTEX_LOCATION || 'us-central1';
+// Gemini 3.x is served only on the `global` location (NOT_FOUND in us-central1),
+// and `global` has no regional host prefix: https://aiplatform.googleapis.com.
+const VERTEX_LOCATION = process.env.VERTEX_LOCATION || 'global';
+const VERTEX_HOST = VERTEX_LOCATION === 'global' ? 'aiplatform.googleapis.com' : `${VERTEX_LOCATION}-aiplatform.googleapis.com`;
 const CHUNK_WORDS = 4500;
 const RULES = readFileSync(path.join(ROOT, 'scripts/i18n/prompt.md'), 'utf8');
 
@@ -116,7 +119,7 @@ async function readSse(res, onData) {
 }
 
 async function callGemini(user) {
-  const url = `https://${VERTEX_LOCATION}-aiplatform.googleapis.com/v1/projects/${VERTEX_PROJECT}/locations/${VERTEX_LOCATION}/publishers/google/models/${MODEL}:streamGenerateContent?alt=sse`;
+  const url = `https://${VERTEX_HOST}/v1/projects/${VERTEX_PROJECT}/locations/${VERTEX_LOCATION}/publishers/google/models/${MODEL}:streamGenerateContent?alt=sse`;
   for (let attempt = 1; ; attempt++) {
     const res = await fetch(url, {
       method: 'POST',
