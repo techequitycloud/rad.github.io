@@ -1334,15 +1334,6 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
-          label: 'Plain Ledger',
-          collapsed: true,
-          items: [
-            {type: 'doc', id: 'modules/PlainLedger_CloudRun', label: 'Cloud Run'},
-            {type: 'doc', id: 'modules/PlainLedger_Common', label: 'Common'},
-          ],
-        },
-        {
-          type: 'category',
           label: 'Twenty',
           collapsed: true,
           items: [
